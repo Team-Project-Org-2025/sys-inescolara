@@ -1,0 +1,29 @@
+# Secrets and environment files
+.env
+.env.*
+!.env.example
+
+# PHP dependencies and build artifacts
+/vendor/
+/composer.phar
+
+# Logs and cache
+*.log
+*.cache
+/tmp/
+/cache/
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Docker and local data
+docker-data/
+pgadmin-data/
+postgres-data/
+
+# Test/coverage outputs
+/coverage/
+/.phpunit.result.cache

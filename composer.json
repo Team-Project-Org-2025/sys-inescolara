@@ -1,0 +1,13 @@
+{
+    "name": "root/html",
+    "require": {
+        "dompdf/dompdf": "^3.1"
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Root\\Html\\": "app/"
+        }
+    },
+    "minimum-stability": "stable"
+}
