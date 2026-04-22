@@ -6,7 +6,6 @@
 # PHP dependencies and build artifacts
 /vendor/
 /composer.phar
-
 # Logs and cache
 *.log
 *.cache
