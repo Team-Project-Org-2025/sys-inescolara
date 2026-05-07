@@ -28,6 +28,3 @@ postgres-data/
 /.phpunit.result.cache
 
 
-# Ignore composer files
-composer.json
-composer.lock
