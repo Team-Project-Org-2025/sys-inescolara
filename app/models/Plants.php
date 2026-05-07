@@ -1,12 +1,16 @@
 <?php
-namespace Inescolara\models;
-use Inescolara\core\Database;
+
+namespace SysInescolara\models;
+
+use SysInescolara\core\Database;
 use PDO;
 use Exception;
 
-class Plants extends Database {
+class Plants extends Database
+{
 
-    public function getAll() {
+    public function getAll()
+    {
         try {
             $sql = "SELECT e.nombre_comun, e.nombre_tecnico, l.* FROM lotes l
                     JOIN especies e ON l.especie_id = e.id 
@@ -18,13 +22,15 @@ class Plants extends Database {
         }
     }
 
-    public function exists($id) {
+    public function exists($id)
+    {
         $stmt = $this->db->prepare("SELECT COUNT(*) FROM lotes WHERE id = :id");
         $stmt->execute([':id' => $id]);
         return $stmt->fetchColumn() > 0;
     }
 
-    public function getById($id) {
+    public function getById($id)
+    {
         $stmt = $this->db->prepare("
             SELECT l.*, e.nombre_comun, e.nombre_tecnico 
             FROM lotes l
@@ -35,7 +41,8 @@ class Plants extends Database {
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 
-    public function add($especie_id, $fecha_siembra, $cantidad_inicial, $cantidad_actual, $estado, $ubicacion) {
+    public function add($especie_id, $fecha_siembra, $cantidad_inicial, $cantidad_actual, $estado, $ubicacion)
+    {
         $stmt = $this->db->prepare("
             INSERT INTO lotes (especie_id, fecha_siembra, cantidad_inicial, cantidad_actual, estado, ubicacion, creado_at)
             VALUES (:especie_id, :fecha_siembra, :cantidad_inicial, :cantidad_actual, :estado, :ubicacion, CURRENT_TIMESTAMP)
@@ -50,9 +57,10 @@ class Plants extends Database {
         ]);
     }
 
-    public function update($id, $especie_id, $fecha_siembra, $cantidad_inicial, $cantidad_actual, $estado, $ubicacion) {
+    public function update($id, $especie_id, $fecha_siembra, $cantidad_inicial, $cantidad_actual, $estado, $ubicacion)
+    {
         if (!$this->exists($id)) throw new Exception("No existe el registro con este ID");
-        
+
         $stmt = $this->db->prepare("
             UPDATE lotes 
             SET especie_id = :especie_id, 
@@ -74,12 +82,14 @@ class Plants extends Database {
         ]);
     }
 
-    public function delete($id) {
+    public function delete($id)
+    {
         $stmt = $this->db->prepare("DELETE FROM lotes WHERE id = :id");
         return $stmt->execute([':id' => $id]);
     }
 
-    public function searchByLocation($query) {
+    public function searchByLocation($query)
+    {
         try {
             $stmt = $this->db->prepare("
                 SELECT l.id, e.nombre_comun, l.estado, l.ubicacion

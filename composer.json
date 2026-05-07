@@ -1,5 +1,5 @@
 {
-    "name": "root/html",
+    "name": "root/sysinescolara",
     "type": "project",
     "require": {
         "dompdf/dompdf": "^3.1"
@@ -7,7 +7,7 @@
     "license": "MIT",
     "autoload": {
         "psr-4": {
-            "Root\\Html\\": "app/"
+            "SysInescolara\\": "app/"
         }
     },
     "minimum-stability": "stable"
