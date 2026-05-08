@@ -59,7 +59,6 @@ class Suppliers extends Database {
             ':informacion_contacto' => $informacion_contacto
         ]);
     }
-
     public function delete($id) {
         $stmt = $this->db->prepare("DELETE FROM proveedores WHERE id = :id");
         return $stmt->execute([':id' => $id]);         
