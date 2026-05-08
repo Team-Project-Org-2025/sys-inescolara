@@ -7,10 +7,10 @@
 <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
         <a href="/dashboard" class="sidebar-logo">
-            <img src="/public/assets/images/logo.png" alt="INECOLARA" class="sidebar-logo-img">
+            <img src="/public/assets/images/logo_de_inecolara-sin-fondo.png" alt="INECOLARA" class="sidebar-logo-img">
             <div class="sidebar-logo-text">
                 <span class="sidebar-logo-title">INECOLARA</span>
-                <span class="sidebar-logo-subtitle">Sistema de Gestión</span>
+                <span class="sidebar-logo-subtitle">Ecosocialismo</span>
             </div>
         </a>
         <button class="sidebar-close" id="sidebarClose" aria-label="Cerrar menú">
