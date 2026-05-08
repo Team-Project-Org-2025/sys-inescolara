@@ -1,0 +1,325 @@
+/* ============================================
+   SIDEBAR - INECOLARA Dashboard
+   Colores basados en el logo institucional
+   ============================================ */
+
+/* Sidebar Container */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 260px;
+  height: 100vh;
+  background-color: #1a1f2e;
+  color: #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  z-index: 40;
+  transition: transform 0.3s ease;
+  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Sidebar cerrado en móvil */
+@media (max-width: 1023px) {
+  .sidebar {
+    transform: translateX(-100%);
+  }
+  
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+}
+
+@media (min-width: 1024px) {
+  .sidebar {
+    transform: translateX(0);
+  }
+}
+
+/* ============================================
+   SIDEBAR HEADER
+   ============================================ */
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.25rem 1rem;
+  border-bottom: 1px solid rgba(229, 168, 53, 0.15);
+  background: linear-gradient(
+    to bottom,
+    rgba(229, 168, 53, 0.08) 0%,
+    rgba(229, 168, 53, 0.02) 100%
+  );
+}
+
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+}
+
+.sidebar-logo:hover {
+  opacity: 0.9;
+}
+
+.sidebar-logo-img {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  object-fit: contain;
+  background-color: rgba(255, 255, 255, 0.95);
+  padding: 3px;
+  box-shadow: 0 2px 8px rgba(229, 168, 53, 0.2);
+}
+
+.sidebar-logo-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.sidebar-logo-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #e5a835;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+}
+
+.sidebar-logo-subtitle {
+  font-size: 0.65rem;
+  font-weight: 400;
+  color: #94a3b8;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* Botón cerrar sidebar (móvil) */
+.sidebar-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  color: #94a3b8;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sidebar-close:hover {
+  color: #e5a835;
+  background-color: rgba(229, 168, 53, 0.1);
+}
+
+.sidebar-close svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* Ocultar botón cerrar en desktop */
+@media (min-width: 1024px) {
+  .sidebar-close {
+    display: none;
+  }
+}
+
+/* ============================================
+   SIDEBAR NAVIGATION
+   ============================================ */
+
+.sidebar-nav {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 1rem 0.75rem;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(229, 168, 53, 0.2) transparent;
+}
+
+/* Scrollbar personalizado */
+.sidebar-nav::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sidebar-nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+  background-color: rgba(229, 168, 53, 0.2);
+  border-radius: 4px;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(229, 168, 53, 0.4);
+}
+
+/* Sección del menú */
+.sidebar-section {
+  margin-bottom: 1.5rem;
+}
+
+.sidebar-section:last-child {
+  margin-bottom: 0;
+}
+
+/* Título de sección */
+.sidebar-section-title {
+  display: block;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #64748b;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Lista del menú */
+.sidebar-menu {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sidebar-menu li {
+  margin-bottom: 2px;
+}
+
+/* Enlace del menú */
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: 10px;
+  color: #a0aec0;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.sidebar-link:hover {
+  color: #e2e8f0;
+  background-color: rgba(229, 168, 53, 0.08);
+}
+
+/* Enlace activo */
+.sidebar-link.active {
+  color: #1a1f2e;
+  background: linear-gradient(135deg, #e5a835 0%, #c48f2a 100%);
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(229, 168, 53, 0.3);
+}
+
+.sidebar-link.active:hover {
+  color: #1a1f2e;
+  background: linear-gradient(135deg, #f5c85c 0%, #e5a835 100%);
+}
+
+/* Indicador sutil de enlace activo (borde izquierdo) */
+.sidebar-link.active::before {
+  content: '';
+  position: absolute;
+  left: -0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 20px;
+  background-color: #e5a835;
+  border-radius: 0 3px 3px 0;
+}
+
+/* Iconos del menú */
+.sidebar-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  stroke-width: 1.8;
+}
+
+.sidebar-link.active .sidebar-icon {
+  stroke-width: 2.2;
+}
+
+/* ============================================
+   SIDEBAR FOOTER
+   ============================================ */
+
+.sidebar-footer {
+  padding: 0.75rem;
+  border-top: 1px solid rgba(229, 168, 53, 0.12);
+  background-color: rgba(0, 0, 0, 0.15);
+}
+
+/* Enlace de cerrar sesión */
+.logout-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: 10px;
+  color: #94a3b8;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.logout-link:hover {
+  color: #f87171;
+  background-color: rgba(248, 113, 113, 0.08);
+}
+
+.logout-link svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  stroke-width: 1.8;
+}
+
+/* ============================================
+   OVERLAY PARA MÓVIL
+   ============================================ */
+
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 39;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+@media (max-width: 1023px) {
+  .sidebar-overlay.active {
+    display: block;
+    opacity: 1;
+  }
+}
+
+/* ============================================
+   AJUSTE DEL CONTENIDO PRINCIPAL
+   ============================================ */
+
+/* Si tienes un contenedor principal al lado del sidebar */
+.main-content {
+  margin-left: 0;
+  transition: margin-left 0.3s ease;
+}
+
+@media (min-width: 1024px) {
+  .main-content {
+    margin-left: 260px;
+  }
+}

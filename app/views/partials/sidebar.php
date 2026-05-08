@@ -7,7 +7,7 @@
 <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
         <a href="/dashboard" class="sidebar-logo">
-            <img src="/public/images/logo.png" alt="INECOLARA" class="sidebar-logo-img">
+            <img src="/public/assets/images/logo.png" alt="INECOLARA" class="sidebar-logo-img">
             <div class="sidebar-logo-text">
                 <span class="sidebar-logo-title">INECOLARA</span>
                 <span class="sidebar-logo-subtitle">Sistema de Gestión</span>
@@ -33,7 +33,7 @@
                             <rect x="14" y="14" width="7" height="7"></rect>
                             <rect x="3" y="14" width="7" height="7"></rect>
                         </svg>
-                        <span>Dashboard</span>
+                        <span>Inicio</span>
                     </a>
                 </li>
             </ul>
@@ -52,7 +52,7 @@
                         <span>Inventario</span>
                     </a>
                 </li>
-                <li>
+<!--                 <li>
                     <a href="/dashboard/lotes" class="sidebar-link <?= ($currentPage ?? '') === 'lotes' ? 'active' : '' ?>">
                         <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
@@ -61,8 +61,8 @@
                         </svg>
                         <span>Lotes</span>
                     </a>
-                </li>
-                <li>
+                </li> -->
+<!--                 <li>
                     <a href="/dashboard/plantas" class="sidebar-link <?= ($currentPage ?? '') === 'plantas' ? 'active' : '' ?>">
                         <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M7 20h10"></path>
@@ -72,7 +72,7 @@
                         </svg>
                         <span>Plantas</span>
                     </a>
-                </li>
+                </li> -->
             </ul>
         </div>
         
@@ -86,10 +86,10 @@
                             <circle cx="20" cy="21" r="1"></circle>
                             <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
                         </svg>
-                        <span>Punto de Venta</span>
+                        <span>Venta</span>
                     </a>
                 </li>
-                <li>
+<!--                 <li>
                     <a href="/dashboard/despachos" class="sidebar-link <?= ($currentPage ?? '') === 'despachos' ? 'active' : '' ?>">
                         <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <rect x="1" y="3" width="15" height="13"></rect>
@@ -113,7 +113,7 @@
                 </li>
             </ul>
         </div>
-        
+         -->
         <div class="sidebar-section">
             <span class="sidebar-section-title">Herramientas</span>
             <ul class="sidebar-menu">
@@ -130,7 +130,7 @@
                         <span>Asistente IA</span>
                     </a>
                 </li>
-                <li>
+ <!--                <li>
                     <a href="/dashboard/reportes" class="sidebar-link <?= ($currentPage ?? '') === 'reportes' ? 'active' : '' ?>">
                         <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -141,7 +141,7 @@
                         </svg>
                         <span>Reportes</span>
                     </a>
-                </li>
+                </li> -->
             </ul>
         </div>
         
