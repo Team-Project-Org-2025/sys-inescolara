@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Sidebar para el dashboard
  * Variables esperadas: $currentPage, $user
@@ -20,7 +21,7 @@
             </svg>
         </button>
     </div>
-    
+
     <nav class="sidebar-nav">
         <div class="sidebar-section">
             <span class="sidebar-section-title">Principal</span>
@@ -38,7 +39,7 @@
                 </li>
             </ul>
         </div>
-        
+
         <div class="sidebar-section">
             <span class="sidebar-section-title">Gestión</span>
             <ul class="sidebar-menu">
@@ -52,7 +53,7 @@
                         <span>Inventario</span>
                     </a>
                 </li>
-<!--                 <li>
+                <!--                 <li>
                     <a href="/dashboard/lotes" class="sidebar-link <?= ($currentPage ?? '') === 'lotes' ? 'active' : '' ?>">
                         <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
@@ -62,7 +63,7 @@
                         <span>Lotes</span>
                     </a>
                 </li> -->
-<!--                 <li>
+                <!--                 <li>
                     <a href="/dashboard/plantas" class="sidebar-link <?= ($currentPage ?? '') === 'plantas' ? 'active' : '' ?>">
                         <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M7 20h10"></path>
@@ -75,7 +76,7 @@
                 </li> -->
             </ul>
         </div>
-        
+
         <div class="sidebar-section">
             <span class="sidebar-section-title">Operaciones</span>
             <ul class="sidebar-menu">
@@ -89,7 +90,7 @@
                         <span>Venta</span>
                     </a>
                 </li>
-<!--                 <li>
+                <!--                 <li>
                     <a href="/dashboard/despachos" class="sidebar-link <?= ($currentPage ?? '') === 'despachos' ? 'active' : '' ?>">
                         <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <rect x="1" y="3" width="15" height="13"></rect>
@@ -114,23 +115,23 @@
             </ul>
         </div>
          -->
-        <div class="sidebar-section">
-            <span class="sidebar-section-title">Herramientas</span>
-            <ul class="sidebar-menu">
-                <li>
-                    <a href="/dashboard/asistente" class="sidebar-link <?= ($currentPage ?? '') === 'asistente' ? 'active' : '' ?>">
-                        <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5"></path>
-                            <path d="M8.5 8.5v.01"></path>
-                            <path d="M16 15.5v.01"></path>
-                            <path d="M12 12v.01"></path>
-                            <path d="M11 17v.01"></path>
-                            <path d="M7 14v.01"></path>
-                        </svg>
-                        <span>Asistente IA</span>
-                    </a>
-                </li>
- <!--                <li>
+                <div class="sidebar-section">
+                    <span class="sidebar-section-title">Herramientas</span>
+                    <ul class="sidebar-menu">
+                        <li>
+                            <a href="/dashboard/asistente" class="sidebar-link <?= ($currentPage ?? '') === 'asistente' ? 'active' : '' ?>">
+                                <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5"></path>
+                                    <path d="M8.5 8.5v.01"></path>
+                                    <path d="M16 15.5v.01"></path>
+                                    <path d="M12 12v.01"></path>
+                                    <path d="M11 17v.01"></path>
+                                    <path d="M7 14v.01"></path>
+                                </svg>
+                                <span>Asistente IA</span>
+                            </a>
+                        </li>
+                        <!--                <li>
                     <a href="/dashboard/reportes" class="sidebar-link <?= ($currentPage ?? '') === 'reportes' ? 'active' : '' ?>">
                         <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -142,34 +143,25 @@
                         <span>Reportes</span>
                     </a>
                 </li> -->
-            </ul>
-        </div>
-        
-        <div class="sidebar-section">
-            <span class="sidebar-section-title">Configuración</span>
-            <ul class="sidebar-menu">
-                <li>
-                    <a href="/dashboard/usuarios" class="sidebar-link <?= ($currentPage ?? '') === 'usuarios' ? 'active' : '' ?>">
-                        <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                            <circle cx="12" cy="7" r="4"></circle>
-                        </svg>
-                        <span>Usuarios</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="/dashboard/configuracion" class="sidebar-link <?= ($currentPage ?? '') === 'configuracion' ? 'active' : '' ?>">
-                        <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="3"></circle>
-                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-                        </svg>
-                        <span>Configuración</span>
-                    </a>
-                </li>
-            </ul>
-        </div>
+                    </ul>
+                </div>
+
+                <div class="sidebar-section">
+                    <span class="sidebar-section-title">Configuración</span>
+                    <ul class="sidebar-menu">
+                        <li>
+                            <a href="#" class="sidebar-link <?= ($currentPage ?? '') === 'configuracion' ? 'active' : '' ?>">
+                                <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                                </svg>
+                                <span>Configuración</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
     </nav>
-    
+
     <div class="sidebar-footer">
         <a href="/logout" class="sidebar-link logout-link">
             <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
