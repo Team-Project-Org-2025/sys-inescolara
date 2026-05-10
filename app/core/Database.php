@@ -15,13 +15,13 @@ abstract class Database extends PDO
             $this->loadEnv();
 
             $host = getenv('DB_HOST') ?: 'localhost';
-            $port = getenv('DB_PORT') ?: '5432';
+            $port = getenv('DB_PORT') ?: '3306';
             $dbname = getenv('DB_NAME') ?: 'sys_inescolara_db';
-            $username = getenv('DB_USER') ?: 'postgres';
+            $username = getenv('DB_USER') ?: 'root';
             $password = getenv('DB_PASSWORD') ?: '';
 
             $dsn = sprintf(
-                'pgsql:host=%s;port=%s;dbname=%s',
+                'mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4',
                 $host,
                 $port,
                 $dbname
