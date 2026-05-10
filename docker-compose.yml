@@ -23,54 +23,51 @@ services:
       - sys-inescolara-network
     restart: unless-stopped
 
-  # PostgreSQL
+  # MySQL
   sys-inescolara-db:
-    image: postgres:16
-    container_name: sys-inescolara-postgres
+    image: mysql:8.0
+    container_name: sys-inescolara-mysql
     ports:
-      - "${DB_PORT:-5432}:5432"
+      - "${DB_PORT:-3306}:3306"
     environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
     volumes:
-      - sys-inescolara-postgres-data:/var/lib/postgresql/data
+      - sys-inescolara-mysql-data:/var/lib/mysql
     networks:
       - sys-inescolara-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 5s
       timeout: 10s
       retries: 5
       start_period: 30s
 
-  # pgAdmin
+  # phpMyAdmin
   sys-inescolara-admin:
-    image: dpage/pgadmin4:latest
-    container_name: sys-inescolara-pgadmin
+    image: phpmyadmin/phpmyadmin
+    container_name: sys-inescolara-phpmyadmin
     ports:
-      - "${PGADMIN_PORT:-9000}:80"
+      - "${PMA_PORT:-9000}:80"
     environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
-      PGADMIN_CONFIG_SERVER_MODE: "False"
+      PMA_HOST: sys-inescolara-db
+      PMA_USER: ${DB_USER}
+      PMA_PASSWORD: ${DB_PASSWORD}
+      UPLOAD_LIMIT: 50M
     depends_on:
       sys-inescolara-db:
         condition: service_healthy
     networks:
       - sys-inescolara-network
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/misc/ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 40s
+
 
 networks:
   sys-inescolara-network:
     driver: bridge
 
 volumes:
-  sys-inescolara-postgres-data:
+  sys-inescolara-mysql-data:

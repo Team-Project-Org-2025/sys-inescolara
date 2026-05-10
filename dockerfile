@@ -5,19 +5,18 @@ FROM php:8.2-apache
 LABEL org.opencontainers.image.title="sys-inescolara" \
       org.opencontainers.image.description="Contenedor PHP Apache para sys-inescolara"
 
-# 2. Instalamos dependencias del sistema y extensiones de PHP necesarias para PostgreSQL
+# 2. Instalamos dependencias del sistema y extensiones de PHP necesarias para MySQL
 RUN apt-get update && apt-get install -y \
     --no-install-recommends \
     libpng-dev \
     libjpeg-dev \
     libfreetype6-dev \
-    libpq-dev \
     zip \
     unzip \
     git \
     curl \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install pdo_pgsql gd \
+    && docker-php-ext-install pdo_mysql gd \
     && rm -rf /var/lib/apt/lists/*
 
 # 3. Habilitamos el módulo rewrite de Apache (crucial para rutas en PHP/Laravel/proyectos web)
