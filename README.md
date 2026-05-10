@@ -7,14 +7,17 @@ Sistema integral para la gestión y administración del Vivero INESCOLARA, desar
 La forma más sencilla de iniciar el proyecto es utilizando Docker y Docker Compose.
 
 ### Requisitos previos
+
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) instalado.
 - [Git](https://git-scm.com/) instalado.
 
 ### Pasos para iniciar el entorno
+
 1. **Configurar el archivo `.env`**:
    Asegúrate de tener un archivo `.env` en la raíz del proyecto configurado. Puedes guiarte por los valores actuales del archivo.
 
 2. **Levantar los servicios**:
+
    ```bash
    docker-compose up -d --build
    ```
@@ -44,7 +47,7 @@ El sistema utiliza **MySQL 8.0**. Para restaurar la base de datos con el esquema
    ```bash
    docker exec -i sys-inescolara-mysql mysql -u root -p sys_inescolara_db < "backups/sys-inescolara(spanish-version).sql"
    ```
-   *(Nota: Se te pedirá la contraseña del root definida en el `.env`)*
+   _(Nota: Se te pedirá la contraseña del root definida en el `.env`)_
 
 ## 📂 Estructura del Proyecto
 
@@ -67,5 +70,5 @@ sys-inescolara/
 - **Reportes**: Dompdf
 
 ---
-© 2025 - Vivero INESCOLARA
 
+© 2026 - INESCOLARA
