@@ -1,74 +1,100 @@
-# SYS INESCOLARA - Sistema de Gestión de Vivero 🌿
+<p align="center">
+  <img src="public/assets/images/logo_de_inecolara-sin-fondo.png" alt="Logo INESCOLARA" width="200">
+</p>
 
-Sistema integral para la gestión y administración del Vivero INESCOLARA, desarrollado en PHP con una arquitectura MVC robusta y despliegue mediante Docker. El sistema ahora utiliza MySQL para una mejor compatibilidad y rendimiento.
+<h1 align="center">SYS INESCOLARA</h1>
 
-## 🚀 Inicio Rápido con Docker
+<p align="center">
+  <strong>Sistema Integral de Gestión y Administración para Vivero</strong><br>
+  <em>Una solución robusta, moderna y escalable para el control administrativo 🌿</em>
+</p>
 
-La forma más sencilla de iniciar el proyecto es utilizando Docker y Docker Compose.
+---
+
+## 📖 Descripción
+
+**SYS INESCOLARA** es una plataforma web desarrollada para optimizar la gestión operativa del Vivero INESCOLARA. Construida bajo una arquitectura **MVC (Modelo-Vista-Controlador)** personalizada en PHP 8.2, el sistema ofrece una experiencia de usuario premium con un enfoque en la eficiencia, seguridad y facilidad de despliegue mediante contenedores **Docker**.
+
+Recientemente, el sistema ha sido migrado a **MySQL 8.0** para garantizar una mayor compatibilidad con entornos de producción y herramientas de análisis de datos.
+
+## ✨ Características Principales
+
+### 🔐 Gestión de Usuarios Avanzada
+- **CRUD Completo**: Creación, lectura, actualización y eliminación de usuarios.
+- **DataTables Integration**: Listado interactivo con paginación, búsqueda instantánea y ordenamiento dinámico.
+- **Seguridad**: Manejo de contraseñas mediante `password_hash` y validaciones robustas en servidor y cliente.
+- **Roles y Permisos**: Sistema preparado para la asignación de roles (Administrador, etc.).
+
+### 📊 Panel de Control (Dashboard)
+- **Interfaz Moderna**: Diseño limpio basado en CSS personalizado y Bootstrap 5.
+- **Sidebar Dinámico**: Navegación fluida entre módulos (Ventas, Inventario, Usuarios).
+- **Skeleton Loaders**: Experiencia de carga suave y profesional en tablas y formularios.
+
+### 🏗️ Arquitectura y Backend
+- **Vanilla MVC**: Implementación pura de Modelo-Vista-Controlador sin dependencias externas pesadas.
+- **FrontController**: Sistema de enrutamiento centralizado para un control total de las peticiones.
+- **Database Wrapper**: Conexión segura mediante PDO con soporte nativo para MySQL 8.0.
+
+### 🚀 Infraestructura Dockerizada
+- **Contenedores Optimizados**: Imágenes ligeras basadas en PHP 8.2 Apache.
+- **Orquestación**: Configuración lista de la aplicación, base de datos y phpMyAdmin.
+- **Persistencia**: Manejo de volúmenes para asegurar que los datos no se pierdan entre reinicios.
+
+## 🚀 Inicio Rápido
 
 ### Requisitos previos
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+- [Git](https://git-scm.com/)
 
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) instalado.
-- [Git](https://git-scm.com/) instalado.
+### Instalación en 3 pasos
 
-### Pasos para iniciar el entorno
+1. **Clonar y Configurar**:
+   ```bash
+   git clone https://github.com/Team-Project-Org-2025/sys-inescolara.git
+   cd sys-inescolara
+   cp .env.example .env # Configura tus credenciales aquí
+   ```
 
-1. **Configurar el archivo `.env`**:
-   Asegúrate de tener un archivo `.env` en la raíz del proyecto configurado. Puedes guiarte por los valores actuales del archivo.
-
-2. **Levantar los servicios**:
-
+2. **Levantar Entorno**:
    ```bash
    docker-compose up -d --build
    ```
 
-3. **Acceder a la aplicación**:
-   Una vez levantados los contenedores, puedes acceder desde tu navegador:
-   - **Aplicación**: [http://localhost:9080](http://localhost:9080)
-   - **phpMyAdmin (Gestión DB)**: [http://localhost:9000](http://localhost:9000)
-
-## ⚙️ Configuración (.env)
-
-El archivo `.env` controla el comportamiento de la aplicación. Los parámetros principales son:
-
-- `APP_PORT`: Puerto donde correrá la web (por defecto `9080`).
-- `DB_NAME`: Nombre de la base de datos.
-- `DB_USER`: Usuario de la base de datos.
-- `DB_PASSWORD`: Contraseña para la base de datos MySQL.
-- `DB_PORT`: Puerto de la base de datos (por defecto `3306`).
-- `PMA_PORT`: Puerto para acceder a phpMyAdmin (por defecto `9000`).
-
-## 🗄️ Base de Datos
-
-El sistema utiliza **MySQL 8.0**. Para restaurar la base de datos con el esquema inicial:
-
-1. El esquema inicial se encuentra en `backups/sys-inescolara(spanish-version).sql`.
-2. Puedes importarlo ejecutando el siguiente comando:
+3. **Restaurar Base de Datos**:
    ```bash
    docker exec -i sys-inescolara-mysql mysql -u root -p sys_inescolara_db < "backups/sys-inescolara(spanish-version).sql"
    ```
-   _(Nota: Se te pedirá la contraseña del root definida en el `.env`)_
 
-## 📂 Estructura del Proyecto
+## 🛠️ Stack Tecnológico
 
-```text
-sys-inescolara/
-├── app/            # Lógica central (Controladores, Modelos, Core, Views)
-├── backups/        # Respaldos de la base de datos (SQL)
-├── public/         # Punto de acceso para assets (CSS, JS, Imágenes)
-├── index.php       # Punto de entrada de la aplicación (Enrutamiento)
-├── dockerfile      # Configuración de la imagen PHP 8.2 + Apache + Extensiones MySQL
-└── docker-compose.yml # Orquestación de contenedores (App, MySQL, phpMyAdmin)
-```
+| Capa | Tecnologías |
+| :--- | :--- |
+| **Backend** | PHP 8.2 (Vanilla MVC) |
+| **Base de Datos** | MySQL 8.0 |
+| **Frontend** | Bootstrap 5, jQuery, DataTables, SweetAlert2 |
+| **Servidor** | Apache (Dockerizado) |
+| **Utilidades** | Dompdf, Composer, Skeleton Loaders |
 
-## 🛠️ Tecnologías principales
+## ⚙️ Variables de Entorno (.env)
 
-- **Backend**: PHP 8.2 (Arquitectura MVC personalizada)
-- **Base de Datos**: MySQL 8.0
-- **Frontend**: Bootstrap 5, DataTables, jQuery, SweetAlert2
-- **Infraestructura**: Docker & Docker Compose
-- **Reportes**: Dompdf
+| Variable | Descripción | Valor por defecto |
+| :--- | :--- | :--- |
+| `APP_PORT` | Puerto de la aplicación web | `9080` |
+| `DB_NAME` | Nombre de la BD MySQL | `sys_inescolara_db` |
+| `DB_PORT` | Puerto interno de MySQL | `3306` |
+| `PMA_PORT` | Puerto de phpMyAdmin | `9000` |
+
+## 📂 Estructura de Directorios
+
+- `app/`: El corazón del sistema (Controladores, Modelos y Vistas).
+- `public/`: Assets estáticos (CSS, JS, Imágenes) y punto de entrada.
+- `backups/`: Esquemas SQL y respaldos históricos.
+- `docker/`: Configuraciones adicionales de infraestructura.
 
 ---
 
-© 2026 - INESCOLARA
+<p align="center">
+  Desarrollado con ❤️ para <strong>INESCOLARA</strong><br>
+  © 2026 - Todos los derechos reservados
+</p>
+
