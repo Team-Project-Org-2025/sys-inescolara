@@ -94,8 +94,7 @@ function handleError($e, $isAjax)
 function validateUserData($data, $mode)
 {
     $rules = [
-        'nombre' => 'nombre',
-        'email' => 'email',
+        'nombre_usuario' => ['type' => null, 'required' => true],
         'password' => ['type' => 'password', 'required' => ($mode === 'add')],
         'id' => ['type' => null, 'required' => ($mode === 'edit')]
     ];
@@ -114,7 +113,7 @@ function validateUserData($data, $mode)
 function handleAddEdit($userModel, $mode)
 {
     try {
-        $fields = ['nombre', 'email'];
+        $fields = ['nombre_usuario'];
         if ($mode === 'add') $fields[] = 'password';
         if ($mode === 'edit') $fields[] = 'id';
 
@@ -126,20 +125,20 @@ function handleAddEdit($userModel, $mode)
         }
 
         $id = intval($_POST['id'] ?? 0);
-        $nombre = trim($_POST['nombre']);
-        $email = trim($_POST['email']);
+        $nombreUsuario = trim($_POST['nombre_usuario']);
         $password = $_POST['password'] ?? null;
+        $rolId = intval($_POST['rol_id'] ?? 1); // Por defecto 1 hasta que exista el módulo de roles
 
         if ($mode === 'add') {
-            if ($userModel->userExists(null, $email)) {
-                header("Location: users-admin.php?error=email_duplicado&email=$email");
+            if ($userModel->userExists(null, $nombreUsuario)) {
+                header("Location: users-admin.php?error=usuario_duplicado&nombre_usuario=$nombreUsuario");
                 exit();
             }
-            $userModel->add($nombre, $email, $password);
+            $userModel->add($nombreUsuario, $password, $rolId);
             header("Location: users-admin.php?success=add");
             exit();
         } else {
-            $userModel->update($id, $nombre, $email, $password);
+            $userModel->update($id, $nombreUsuario, $rolId, $password);
             header("Location: users-admin.php?success=edit");
             exit();
         }
@@ -174,25 +173,25 @@ function handleAddEditAjax($userModel, $mode)
         validateUserData($_POST, $mode);
 
         $id = intval($_POST['id'] ?? 0);
-        $nombre = trim($_POST['nombre']);
-        $email = trim($_POST['email']);
+        $nombreUsuario = trim($_POST['nombre_usuario']);
         $password = $_POST['password'] ?? null;
+        $rolId = intval($_POST['rol_id'] ?? 1); // Por defecto 1 hasta que exista el módulo de roles
 
         if ($mode === 'add') {
-            if ($userModel->userExists(null, $email)) {
-                throw new Exception("El email ya está registrado");
+            if ($userModel->userExists(null, $nombreUsuario)) {
+                throw new Exception("El nombre de usuario ya está registrado");
             }
-            $userModel->add($nombre, $email, $password);
+            $userModel->add($nombreUsuario, $password, $rolId);
 
             $user = [
                 'id' => $userModel->getLastInsertId() ?? 0,
-                'nombre' => $nombre,
-                'email' => $email
+                'nombre_usuario' => $nombreUsuario,
+                'rol_id' => $rolId
             ];
             $msg = 'Usuario agregado';
         } else {
-            $userModel->update($id, $nombre, $email, $password);
-            $user = ['id' => $id, 'nombre' => $nombre, 'email' => $email];
+            $userModel->update($id, $nombreUsuario, $rolId, $password);
+            $user = ['id' => $id, 'nombre_usuario' => $nombreUsuario, 'rol_id' => $rolId];
             $msg = 'Usuario actualizado';
         }
 
