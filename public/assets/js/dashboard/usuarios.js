@@ -3,7 +3,7 @@ import * as Helpers from '/public/assets/js/utils/helpers.js';
 import * as Ajax from '/public/assets/js/utils/ajax-handler.js';
 
 $(document).ready(function() {
-    const baseUrl = '/admin/users';
+    const baseUrl = '/user';
     let usersTable = null;
     
     const initDataTable = () => {

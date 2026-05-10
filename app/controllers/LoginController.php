@@ -21,7 +21,13 @@ function checkAuth()
     }
 
     if (!isset($_SESSION['user_id'])) {
-        header('Location: /admin/login/show');
+        $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+        if ($isAjax) {
+            http_response_code(401);
+            echo json_encode(['success' => false, 'message' => 'No autorizado']);
+            exit();
+        }
+        header('Location: /login/show');
         exit();
     }
 }
@@ -30,12 +36,18 @@ function checkAuth()
 function show()
 {
     if (isset($_SESSION['user_id'])) {
-        header('Location: /admin/login/dashboard');
+        header('Location: /dashboard');
         exit();
     }
 
     $error = null;
-    require_once ROOT_PATH . 'app/views/admin/login.php';
+    // Assuming the view is in auth/login.php based on folder structure
+    $viewPath = ROOT_PATH . 'app/views/auth/login.php';
+    if (!file_exists($viewPath)) {
+        // Fallback if not moved yet
+        $viewPath = ROOT_PATH . 'app/views/admin/login.php';
+    }
+    require_once $viewPath;
 }
 
 function login()
@@ -43,46 +55,34 @@ function login()
     $userModel = $GLOBALS['userModel'];
 
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        header('Location: /admin/login/show');
+        header('Location: /login/show');
         exit();
     }
 
-    $email = trim($_POST['email'] ?? '');
+    $nombre_usuario = trim($_POST['nombre_usuario'] ?? ($_POST['email'] ?? ''));
     $password = $_POST['password'] ?? '';
     $error = null;
 
-    if ($email === '' || $password === '') {
+    if ($nombre_usuario === '' || $password === '') {
         $error = "Por favor, complete todos los campos.";
-        require_once ROOT_PATH . 'app/views/admin/login.php';
+        $viewPath = file_exists(ROOT_PATH . 'app/views/auth/login.php') ? ROOT_PATH . 'app/views/auth/login.php' : ROOT_PATH . 'app/views/admin/login.php';
+        require_once $viewPath;
         return;
     }
 
-
-    if (!preg_match('/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/', $email)) {
-        $error = "El correo electrónico no tiene un formato válido.";
-        require_once ROOT_PATH . 'app/views/admin/login.php';
-        return;
-    }
-
-    if (!preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&._-])[A-Za-z\d@$!%*?&._-]{8,}$/', $password)) {
-        $error = "La contraseña debe tener al menos 8 caracteres, con mayúsculas, minúsculas, números y símbolos.";
-        require_once ROOT_PATH . 'app/views/admin/login.php';
-        return;
-    }
-
-    $user = $userModel->authenticate($email, $password);
+    $user = $userModel->authenticate($nombre_usuario, $password);
 
     if ($user) {
         $_SESSION['user_id'] = $user['id'] ?? $user['user_id'] ?? null;
-        $_SESSION['user_email'] = $user['email'] ?? $user['user_email'] ?? null;
-        $_SESSION['user_nombre'] = $user['nombre'] ?? $user['user_nombre'] ?? null;
+        $_SESSION['user_nombre'] = $user['nombre_usuario'] ?? $user['nombre'] ?? null;
         $_SESSION['is_admin'] = true;
 
-        header('Location: /admin/login/dashboard');
+        header('Location: /dashboard');
         exit();
     } else {
         $error = "Usuario o contraseña incorrectos.";
-        require_once ROOT_PATH . 'app/views/admin/login.php';
+        $viewPath = file_exists(ROOT_PATH . 'app/views/auth/login.php') ? ROOT_PATH . 'app/views/auth/login.php' : ROOT_PATH . 'app/views/admin/login.php';
+        require_once $viewPath;
     }
 }
 

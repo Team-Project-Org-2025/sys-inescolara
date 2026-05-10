@@ -16,7 +16,7 @@ $userModel = new User();
 function index()
 {
     global $dolarBCVRate;
-    require __DIR__ . '/../views/admin/users-admin.php';
+    require __DIR__ . '/../views/dashboard/usuarios.php';
 }
 
 handleRequest($userModel);
