@@ -3,8 +3,8 @@
 ?>
 <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
-        <a href="/dashboard" class="sidebar-logo">
-            <img src="/public/assets/images/logo_de_inecolara-sin-fondo.png" alt="INECOLARA" class="sidebar-logo-img">
+        <a href="<?= BASE_URL ?>dashboard" class="sidebar-logo">
+            <img src="<?= BASE_URL ?>public/assets/images/logo_de_inecolara-sin-fondo.png" alt="INECOLARA" class="sidebar-logo-img">
             <div class="sidebar-logo-text">
                 <span class="sidebar-logo-title">INECOLARA</span>
                 <span class="sidebar-logo-subtitle">Ecosocialismo</span>
@@ -23,7 +23,7 @@
             <span class="sidebar-section-title">Principal</span>
             <ul class="sidebar-menu">
                 <li>
-                    <a href="/dashboard" class="sidebar-link <?= ($currentPage ?? '') === 'dashboard' ? 'active' : '' ?>">
+                    <a href="<?= BASE_URL ?>dashboard" class="sidebar-link <?= ($currentPage ?? '') === 'dashboard' ? 'active' : '' ?>">
                         <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <rect x="3" y="3" width="7" height="7"></rect>
                             <rect x="14" y="3" width="7" height="7"></rect>
@@ -40,7 +40,7 @@
             <span class="sidebar-section-title">Gestión</span>
             <ul class="sidebar-menu">
                 <li>
-                    <a href="/dashboard/inventario" class="sidebar-link <?= ($currentPage ?? '') === 'inventario' ? 'active' : '' ?>">
+                    <a href="<?= BASE_URL ?>dashboard/inventario" class="sidebar-link <?= ($currentPage ?? '') === 'inventario' ? 'active' : '' ?>">
                         <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
                             <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
@@ -50,7 +50,7 @@
                     </a>
                 </li>
                 <!--                 <li>
-                    <a href="/dashboard/lotes" class="sidebar-link <?= ($currentPage ?? '') === 'lotes' ? 'active' : '' ?>">
+                    <a href="<?= BASE_URL ?>dashboard/lotes" class="sidebar-link <?= ($currentPage ?? '') === 'lotes' ? 'active' : '' ?>">
                         <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
                             <path d="M2 17l10 5 10-5"></path>
@@ -60,7 +60,7 @@
                     </a>
                 </li> -->
                 <!--                 <li>
-                    <a href="/dashboard/plantas" class="sidebar-link <?= ($currentPage ?? '') === 'plantas' ? 'active' : '' ?>">
+                    <a href="<?= BASE_URL ?>dashboard/plantas" class="sidebar-link <?= ($currentPage ?? '') === 'plantas' ? 'active' : '' ?>">
                         <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M7 20h10"></path>
                             <path d="M12 20v-6"></path>
@@ -77,7 +77,7 @@
             <span class="sidebar-section-title">Operaciones</span>
             <ul class="sidebar-menu">
                 <li>
-                    <a href="/dashboard/ventas" class="sidebar-link <?= ($currentPage ?? '') === 'ventas' ? 'active' : '' ?>">
+                    <a href="<?= BASE_URL ?>dashboard/ventas" class="sidebar-link <?= ($currentPage ?? '') === 'ventas' ? 'active' : '' ?>">
                         <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <circle cx="9" cy="21" r="1"></circle>
                             <circle cx="20" cy="21" r="1"></circle>
@@ -87,7 +87,7 @@
                     </a>
                 </li>
                 <!--                 <li>
-                    <a href="/dashboard/despachos" class="sidebar-link <?= ($currentPage ?? '') === 'despachos' ? 'active' : '' ?>">
+                    <a href="<?= BASE_URL ?>dashboard/despachos" class="sidebar-link <?= ($currentPage ?? '') === 'despachos' ? 'active' : '' ?>">
                         <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <rect x="1" y="3" width="15" height="13"></rect>
                             <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
@@ -98,7 +98,7 @@
                     </a>
                 </li>
                 <li>
-                    <a href="/dashboard/cuadrillas" class="sidebar-link <?= ($currentPage ?? '') === 'cuadrillas' ? 'active' : '' ?>">
+                    <a href="<?= BASE_URL ?>dashboard/cuadrillas" class="sidebar-link <?= ($currentPage ?? '') === 'cuadrillas' ? 'active' : '' ?>">
                         <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
                             <circle cx="9" cy="7" r="4"></circle>
@@ -115,7 +115,7 @@
                     <span class="sidebar-section-title">Herramientas</span>
                     <ul class="sidebar-menu">
                         <li>
-                            <a href="/dashboard/asistente" class="sidebar-link <?= ($currentPage ?? '') === 'asistente' ? 'active' : '' ?>">
+                            <a href="<?= BASE_URL ?>dashboard/asistente" class="sidebar-link <?= ($currentPage ?? '') === 'asistente' ? 'active' : '' ?>">
                                 <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5"></path>
                                     <path d="M8.5 8.5v.01"></path>
@@ -128,7 +128,7 @@
                             </a>
                         </li>
                         <!--                <li>
-                    <a href="/dashboard/reportes" class="sidebar-link <?= ($currentPage ?? '') === 'reportes' ? 'active' : '' ?>">
+                    <a href="<?= BASE_URL ?>dashboard/reportes" class="sidebar-link <?= ($currentPage ?? '') === 'reportes' ? 'active' : '' ?>">
                         <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                             <polyline points="14 2 14 8 20 8"></polyline>
@@ -146,7 +146,7 @@
                     <span class="sidebar-section-title">Configuración</span>
                     <ul class="sidebar-menu">
                         <li>
-                            <a href="/dashboard/usuarios" class="sidebar-link <?= ($currentPage ?? '') === 'usuarios' ? 'active' : '' ?>">
+                            <a href="<?= BASE_URL ?>dashboard/usuarios" class="sidebar-link <?= ($currentPage ?? '') === 'usuarios' ? 'active' : '' ?>">
                                 <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
                                     <circle cx="9" cy="7" r="4"></circle>
@@ -170,7 +170,7 @@
     </nav>
 
     <div class="sidebar-footer">
-        <a href="/logout" class="sidebar-link logout-link">
+        <a href="<?= BASE_URL ?>logout" class="sidebar-link logout-link">
             <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
                 <polyline points="16 17 21 12 16 7"></polyline>

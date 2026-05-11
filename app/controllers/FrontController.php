@@ -47,32 +47,28 @@ class FrontController
 
     private function parseUrl(): void
     {
-
         $requestUri = $_SERVER['REQUEST_URI'] ?? '/';
-
         $uri = parse_url($requestUri, PHP_URL_PATH);
 
+        // Detectar dinámicamente el prefijo de subcarpeta (ej: /sys-inescolara/)
+        // usando SCRIPT_NAME que apunta al index.php real
+        $basePath = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME']));
+        $basePath = rtrim($basePath, '/');
 
-
-        // Desde la raíz del proyecto (Docker / Apache); sin prefijo de subcarpeta de app.
+        // Quitar el prefijo de subcarpeta del URI
+        if ($basePath !== '' && strpos($uri, $basePath) === 0) {
+            $uri = substr($uri, strlen($basePath));
+        }
 
         $segments = array_values(array_filter(explode('/', $uri)));
 
-
-
         if (empty($segments)) {
-
             $this->controllerName = 'inicio';
-
             $this->action = 'index';
-
             $this->params = [];
         } else {
-
             $this->controllerName = $this->sanitize($segments[0]);
-
             $this->action = $this->sanitize($segments[1] ?? 'index');
-
             $this->params = array_slice($segments, 2);
         }
     }
@@ -175,7 +171,7 @@ class FrontController
 
     <title>Error 404 | Sys Inescolara</title>
 
-    <link rel=\"shortcut icon\" href=\"/public/assets/icons/Logo - Sys Inescolara.webp\" type=\"image/x-icon\">
+    <link rel=\"shortcut icon\" href=\"" . BASE_URL . "public/assets/icons/Logo - Sys Inescolara.webp\" type=\"image/x-icon\">
 
     <style>
 
@@ -311,7 +307,7 @@ class FrontController
 
         <p>Lo sentimos, la página que buscas no existe o se ha movido.</p>
 
-        <a href='/'>Volver al Inicio</a>
+        <a href='" . BASE_URL . "'>Volver al Inicio</a>
 
     </div>
 

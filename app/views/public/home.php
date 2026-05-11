@@ -14,8 +14,8 @@
             para la reforestación y embellecimiento del Estado Lara.
         </p>
         <div class="hero-actions">
-            <a href="/catalogo" class="btn btn-primary btn-lg">Ver Catálogo</a>
-            <a href="/contacto" class="btn btn-outline btn-lg">Contáctanos</a>
+            <a href="<?= BASE_URL ?>catalogo" class="btn btn-primary btn-lg">Ver Catálogo</a>
+            <a href="<?= BASE_URL ?>contacto" class="btn btn-outline btn-lg">Contáctanos</a>
         </div>
     </div>
 </section>
@@ -42,7 +42,7 @@
                     Amplia variedad de plantas ornamentales para jardines, parques y espacios públicos. 
                     Flores, arbustos y árboles de sombra.
                 </p>
-                <a href="/servicios#ornamentales" class="service-link">Conocer más</a>
+                <a href="<?= BASE_URL ?>servicios#ornamentales" class="service-link">Conocer más</a>
             </div>
             
             <div class="service-card">
@@ -63,7 +63,7 @@
                     Producción de especies nativas para programas de reforestación y recuperación 
                     de áreas degradadas en el Estado Lara.
                 </p>
-                <a href="/servicios#reforestacion" class="service-link">Conocer más</a>
+                <a href="<?= BASE_URL ?>servicios#reforestacion" class="service-link">Conocer más</a>
             </div>
             
             <div class="service-card">
@@ -84,7 +84,7 @@
                     Asesoría y suministro de plantas para proyectos de instituciones públicas, 
                     escuelas, hospitales y comunidades organizadas.
                 </p>
-                <a href="/servicios#proyectos" class="service-link">Conocer más</a>
+                <a href="<?= BASE_URL ?>servicios#proyectos" class="service-link">Conocer más</a>
             </div>
         </div>
     </div>
@@ -103,7 +103,7 @@
         </div>
         
         <div class="section-footer">
-            <a href="/catalogo" class="btn btn-primary">Ver Catálogo Completo</a>
+            <a href="<?= BASE_URL ?>catalogo" class="btn btn-primary">Ver Catálogo Completo</a>
         </div>
     </div>
 </section>
@@ -174,10 +174,10 @@
                         Precios accesibles para instituciones
                     </li>
                 </ul>
-                <a href="/nosotros" class="btn btn-primary">Conocer Más</a>
+                <a href="<?= BASE_URL ?>nosotros" class="btn btn-primary">Conocer Más</a>
             </div>
             <div class="about-image">
-                <img src="/public/images/vivero-about.jpg" alt="Vivero INECOLARA" loading="lazy">
+                <img src="<?= BASE_URL ?>public/images/vivero-about.jpg" alt="Vivero INECOLARA" loading="lazy">
             </div>
         </div>
     </div>
@@ -193,7 +193,7 @@
                 de reforestación, jardinería o paisajismo.
             </p>
             <div class="cta-actions">
-                <a href="/contacto" class="btn btn-white btn-lg">Solicitar Asesoría</a>
+                <a href="<?= BASE_URL ?>contacto" class="btn btn-white btn-lg">Solicitar Asesoría</a>
                 <a href="tel:+582511234567" class="btn btn-outline-white btn-lg">Llamar Ahora</a>
             </div>
         </div>

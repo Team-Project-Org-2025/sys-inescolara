@@ -158,6 +158,6 @@ include_once __DIR__ . '/../common/links.php';
     </main>
     
     <?= $scripts_links ?>
-    <script type="module" src="/public/assets/js/dashboard/usuarios.js"></script>
+    <script type="module" src="<?= BASE_URL ?>public/assets/js/dashboard/usuarios.js"></script>
 </body>
 </html>
