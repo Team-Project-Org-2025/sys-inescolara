@@ -27,7 +27,7 @@ function checkAuth()
             echo json_encode(['success' => false, 'message' => 'No autorizado']);
             exit();
         }
-        header('Location: /login/show');
+        header('Location: ' . BASE_URL . 'login/show');
         exit();
     }
 }
@@ -36,7 +36,7 @@ function checkAuth()
 function show()
 {
     if (isset($_SESSION['user_id'])) {
-        header('Location: /dashboard');
+        header('Location: ' . BASE_URL . 'dashboard');
         exit();
     }
 
@@ -55,7 +55,7 @@ function login()
     $userModel = $GLOBALS['userModel'];
 
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        header('Location: /login/show');
+        header('Location: ' . BASE_URL . 'login/show');
         exit();
     }
 
@@ -77,7 +77,7 @@ function login()
         $_SESSION['user_nombre'] = $user['nombre_usuario'] ?? $user['nombre'] ?? null;
         $_SESSION['is_admin'] = true;
 
-        header('Location: /dashboard');
+        header('Location: ' . BASE_URL . 'dashboard');
         exit();
     } else {
         $error = "Usuario o contraseña incorrectos.";
@@ -98,7 +98,7 @@ function logout()
     session_unset();
     session_destroy();
 
-    header('Location: /admin/login/show');
+    header('Location: ' . BASE_URL . 'login/show');
     exit();
 }
 
@@ -122,7 +122,7 @@ function logout_ajax()
     echo json_encode([
         'success' => true,
         'message' => 'Sesión cerrada correctamente',
-        'redirect' => '/admin/login/show'
+        'redirect' => BASE_URL . 'login/show'
     ]);
     exit();
 }

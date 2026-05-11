@@ -8,7 +8,7 @@
     <!-- Left Panel - Decorative -->
     <div class="auth-panel-left">
         <div class="auth-panel-content">
-            <img src="/public/images/logo.png" alt="INECOLARA" class="auth-logo">
+            <img src="<?= BASE_URL ?>public/images/logo.png" alt="INECOLARA" class="auth-logo">
             <h1 class="auth-panel-title">Sistema de Gestión del Vivero</h1>
             <p class="auth-panel-text">
                 Plataforma integral para la administración de inventario, ventas y operaciones del Vivero Institucional INECOLARA.
@@ -57,7 +57,7 @@
     <div class="auth-panel-right">
         <div class="auth-form-container">
             <div class="auth-form-header">
-                <a href="/" class="auth-back-link">
+                <a href="<?= BASE_URL ?>" class="auth-back-link">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <line x1="19" y1="12" x2="5" y2="12"></line>
                         <polyline points="12 19 5 12 12 5"></polyline>
@@ -79,7 +79,7 @@
             </div>
             <?php endif; ?>
             
-            <form action="/login" method="POST" class="auth-form" id="loginForm">
+            <form action="<?= BASE_URL ?>login" method="POST" class="auth-form" id="loginForm">
                 <div class="form-group">
                     <label for="email" class="form-label">Correo Electrónico</label>
                     <div class="input-wrapper">
@@ -135,7 +135,7 @@
                         <span class="checkbox-custom"></span>
                         Recordarme
                     </label>
-                    <a href="/recuperar-password" class="form-link">¿Olvidaste tu contraseña?</a>
+                    <a href="<?= BASE_URL ?>recuperar-password" class="form-link">¿Olvidaste tu contraseña?</a>
                 </div>
                 
                 <button type="submit" class="btn btn-primary btn-block btn-lg" id="loginBtn">
