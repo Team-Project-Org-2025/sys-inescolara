@@ -16,10 +16,10 @@ $css_links = '
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
     
     <!-- CSS Principal (Design System) -->
-    <link rel="stylesheet" href="/public/assets/css/styles.css">
+    <link rel="stylesheet" href="' . BASE_URL . 'public/assets/css/styles.css">
     
     <!-- CSS del Sidebar -->
-    <link rel="stylesheet" href="/public/assets/css/sidebar.css">
+    <link rel="stylesheet" href="' . BASE_URL . 'public/assets/css/sidebar.css">
 ';
 
 // JS Links (cargados al final del body)
@@ -37,9 +37,12 @@ $scripts_links = '
     <!-- SweetAlert2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
+    <!-- BASE_URL para JavaScript -->
+    <script>window.BASE_URL = "' . BASE_URL . '";</script>
+    
     <!-- Utils Globales -->
-    <script src="/public/assets/js/utils/skeleton.js"></script>
+    <script src="' . BASE_URL . 'public/assets/js/utils/skeleton.js"></script>
     
     <!-- Script del Sidebar -->
-    <script src="/public/assets/js/sidebar.js"></script>
+    <script src="' . BASE_URL . 'public/assets/js/sidebar.js"></script>
 ';

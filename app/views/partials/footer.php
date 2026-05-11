@@ -9,7 +9,7 @@
         <div class="footer-grid">
             <div class="footer-col">
                 <div class="footer-logo">
-                    <img src="/public/images/logo.png" alt="INECOLARA" class="footer-logo-img">
+                    <img src="<?= BASE_URL ?>public/images/logo.png" alt="INECOLARA" class="footer-logo-img">
                     <div>
                         <span class="footer-logo-title">INECOLARA</span>
                         <span class="footer-logo-subtitle">Instituto de Ecosocialismo del Estado Lara</span>
@@ -23,21 +23,21 @@
             <div class="footer-col">
                 <h4 class="footer-title">Enlaces Rápidos</h4>
                 <ul class="footer-links">
-                    <li><a href="/">Inicio</a></li>
-                    <li><a href="/catalogo">Catálogo</a></li>
-                    <li><a href="/servicios">Servicios</a></li>
-                    <li><a href="/nosotros">Nosotros</a></li>
-                    <li><a href="/contacto">Contacto</a></li>
+                    <li><a href="<?= BASE_URL ?>">Inicio</a></li>
+                    <li><a href="<?= BASE_URL ?>catalogo">Catálogo</a></li>
+                    <li><a href="<?= BASE_URL ?>servicios">Servicios</a></li>
+                    <li><a href="<?= BASE_URL ?>nosotros">Nosotros</a></li>
+                    <li><a href="<?= BASE_URL ?>contacto">Contacto</a></li>
                 </ul>
             </div>
 
             <div class="footer-col">
                 <h4 class="footer-title">Servicios</h4>
                 <ul class="footer-links">
-                    <li><a href="/servicios#ornamentales">Plantas Ornamentales</a></li>
-                    <li><a href="/servicios#reforestacion">Reforestación</a></li>
-                    <li><a href="/servicios#proyectos">Proyectos Institucionales</a></li>
-                    <li><a href="/servicios#asesoria">Asesoría Técnica</a></li>
+                    <li><a href="<?= BASE_URL ?>servicios#ornamentales">Plantas Ornamentales</a></li>
+                    <li><a href="<?= BASE_URL ?>servicios#reforestacion">Reforestación</a></li>
+                    <li><a href="<?= BASE_URL ?>servicios#proyectos">Proyectos Institucionales</a></li>
+                    <li><a href="<?= BASE_URL ?>servicios#asesoria">Asesoría Técnica</a></li>
                 </ul>
             </div>
 

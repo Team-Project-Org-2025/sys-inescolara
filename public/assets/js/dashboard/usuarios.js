@@ -1,9 +1,9 @@
-import * as Validations from '/public/assets/js/utils/validation.js';
-import * as Helpers from '/public/assets/js/utils/helpers.js';
-import * as Ajax from '/public/assets/js/utils/ajax-handler.js';
+import * as Validations from '../utils/validation.js';
+import * as Helpers from '../utils/helpers.js';
+import * as Ajax from '../utils/ajax-handler.js';
 
 $(document).ready(function() {
-    const baseUrl = '/user';
+    const baseUrl = (window.BASE_URL || '/') + 'user';
     let usersTable = null;
     
     const initDataTable = () => {
