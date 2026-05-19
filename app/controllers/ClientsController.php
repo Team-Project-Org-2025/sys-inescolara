@@ -2,28 +2,28 @@
 
 require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
 
-use SysInescolara\models\Supplies;
+use SysInescolara\models\Clients;
 use SysInescolara\helpers\Validation;
 
 require_once __DIR__ . '/LoginController.php';
 
 checkAuth();
 
-$suppliesModel = new Supplies();
+$clientModel = new Clients();
 
 function index()
 {
     global $dolarBCVRate;
-    require __DIR__ . '/../views/dashboard/insumos.php';
+    require __DIR__ . '/../views/dashboard/clientes.php';
 }
 
-handleRequest($suppliesModel);
+handleRequest($clientModel);
 
 // ============================================
 // CORE REQUEST HANDLER
 // ============================================
 
-function handleRequest($suppliesModel)
+function handleRequest($clientModel)
 {
     $action = $_GET['action'] ?? '';
     $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&
@@ -34,10 +34,10 @@ function handleRequest($suppliesModel)
             header('Content-Type: application/json; charset=utf-8');
 
             $routes = [
-                'POST_add_ajax'    => fn() => handleAddEditAjax($suppliesModel, 'add'),
-                'POST_edit_ajax'   => fn() => handleAddEditAjax($suppliesModel, 'edit'),
-                'POST_delete_ajax' => fn() => handleDeleteAjax($suppliesModel),
-                'GET_get_supplies' => fn() => getSuppliesAjax($suppliesModel)
+                'POST_add_ajax'    => fn() => handleAddEditAjax($clientModel, 'add'),
+                'POST_edit_ajax'   => fn() => handleAddEditAjax($clientModel, 'edit'),
+                'POST_delete_ajax' => fn() => handleDeleteAjax($clientModel),
+                'GET_get_clients'  => fn() => getClientsAjax($clientModel)
             ];
 
             $route = "{$_SERVER['REQUEST_METHOD']}_$action";
@@ -49,9 +49,9 @@ function handleRequest($suppliesModel)
             }
         } else {
             $routes = [
-                'POST_add'   => fn() => handleAddEdit($suppliesModel, 'add'),
-                'POST_edit'  => fn() => handleAddEdit($suppliesModel, 'edit'),
-                'GET_delete' => fn() => handleDelete($suppliesModel)
+                'POST_add'   => fn() => handleAddEdit($clientModel, 'add'),
+                'POST_edit'  => fn() => handleAddEdit($clientModel, 'edit'),
+                'GET_delete' => fn() => handleDelete($clientModel)
             ];
 
             $route = "{$_SERVER['REQUEST_METHOD']}_$action";
@@ -89,13 +89,12 @@ function handleError($e, $isAjax)
 // VALIDATION
 // ============================================
 
-function validateSupplyData($data, $mode)
+function validateClientData($data, $mode)
 {
     $rules = [
-        'nombre' => ['type' => null, 'required' => true],
-        'tipo'   => ['type' => null, 'required' => true],
-        'unidad' => ['type' => null, 'required' => true],
-        'id'     => ['type' => null, 'required' => ($mode === 'edit')]
+        'nombre'               => ['type' => null, 'required' => true],
+        'informacion_contacto' => ['type' => null, 'required' => true],
+        'id'                   => ['type' => null, 'required' => ($mode === 'edit')]
     ];
 
     $validation = Validation::validate($data, $rules);
@@ -109,10 +108,10 @@ function validateSupplyData($data, $mode)
 // NON-AJAX HANDLERS
 // ============================================
 
-function handleAddEdit($suppliesModel, $mode)
+function handleAddEdit($clientModel, $mode)
 {
     try {
-        $fields = ['nombre', 'tipo', 'unidad'];
+        $fields = ['nombre', 'informacion_contacto'];
         if ($mode === 'edit') $fields[] = 'id';
 
         foreach ($fields as $f) {
@@ -123,16 +122,15 @@ function handleAddEdit($suppliesModel, $mode)
 
         $id = intval($_POST['id'] ?? 0);
         $nombre = trim($_POST['nombre']);
-        $tipo = trim($_POST['tipo']);
-        $unidad = trim($_POST['unidad']);
+        $informacion_contacto = trim($_POST['informacion_contacto']);
 
         if ($mode === 'add') {
-            $suppliesModel->add($nombre, $tipo, $unidad);
-            header("Location: supplies-admin.php?success=add");
+            $clientModel->add($nombre, $informacion_contacto);
+            header("Location: clients-admin.php?success=add");
             exit();
         } else {
-            $suppliesModel->update($id, $nombre, $tipo, $unidad);
-            header("Location: supplies-admin.php?success=edit");
+            $clientModel->update($id, $nombre, $informacion_contacto);
+            header("Location: clients-admin.php?success=edit");
             exit();
         }
     } catch (Exception $e) {
@@ -140,7 +138,7 @@ function handleAddEdit($suppliesModel, $mode)
     }
 }
 
-function handleDelete($suppliesModel)
+function handleDelete($clientModel)
 {
     try {
         if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
@@ -148,8 +146,8 @@ function handleDelete($suppliesModel)
         }
 
         $id = intval($_GET['id']);
-        $suppliesModel->delete($id);
-        header("Location: supplies-admin.php?success=delete");
+        $clientModel->delete($id);
+        header("Location: clients-admin.php?success=delete");
         exit();
     } catch (Exception $e) {
         die("Error: " . $e->getMessage());
@@ -160,44 +158,41 @@ function handleDelete($suppliesModel)
 // AJAX HANDLERS
 // ============================================
 
-function handleAddEditAjax($suppliesModel, $mode)
+function handleAddEditAjax($clientModel, $mode)
 {
     try {
-        validateSupplyData($_POST, $mode);
+        validateClientData($_POST, $mode);
 
         $id = intval($_POST['id'] ?? 0);
         $nombre = trim($_POST['nombre']);
-        $tipo = trim($_POST['tipo']);
-        $unidad = trim($_POST['unidad']);
+        $informacion_contacto = trim($_POST['informacion_contacto']);
 
         if ($mode === 'add') {
-            $suppliesModel->add($nombre, $tipo, $unidad);
+            $clientModel->add($nombre, $informacion_contacto);
             
-            $msg = 'Insumo agregado con éxito';
-            $supply = [
+            $msg = 'Cliente registrado con éxito';
+            $client = [
                 'nombre' => $nombre,
-                'tipo'   => $tipo,
-                'unidad' => $unidad
+                'informacion_contacto' => $informacion_contacto
             ];
         } else {
-            $suppliesModel->update($id, $nombre, $tipo, $unidad);
+            $clientModel->update($id, $nombre, $informacion_contacto);
             
-            $supply = [
-                'id'     => $id,
+            $client = [
+                'id' => $id,
                 'nombre' => $nombre,
-                'tipo'   => $tipo,
-                'unidad' => $unidad
+                'informacion_contacto' => $informacion_contacto
             ];
-            $msg = 'Insumo actualizado con éxito';
+            $msg = 'Cliente actualizado con éxito';
         }
 
-        jsonResponse(['success' => true, 'message' => $msg, 'supply' => $supply]);
+        jsonResponse(['success' => true, 'message' => $msg, 'client' => $client]);
     } catch (Exception $e) {
         jsonResponse(['success' => false, 'message' => $e->getMessage()], 400);
     }
 }
 
-function handleDeleteAjax($suppliesModel)
+function handleDeleteAjax($clientModel)
 {
     try {
         $validation = Validation::validateField($_POST['id'] ?? '', 'id');
@@ -206,30 +201,30 @@ function handleDeleteAjax($suppliesModel)
         }
 
         $id = intval($_POST['id']);
-        if (!$suppliesModel->exists($id)) {
-            throw new Exception("No existe el insumo solicitado");
+        if (!$clientModel->exists($id)) {
+            throw new Exception("No existe el cliente solicitado");
         }
 
-        $suppliesModel->delete($id);
-        jsonResponse(['success' => true, 'message' => 'Insumo eliminado de forma exitosa', 'supplyId' => $id]);
+        $clientModel->delete($id);
+        jsonResponse(['success' => true, 'message' => 'Cliente eliminado con éxito', 'clientId' => $id]);
     } catch (Exception $e) {
         jsonResponse(['success' => false, 'message' => $e->getMessage()], 400);
     }
 }
 
-function getSuppliesAjax($suppliesModel)
+function getClientsAjax($clientModel)
 {
     try {
         if (isset($_GET['id'])) {
-            $supply = $suppliesModel->getById(intval($_GET['id']));
-            if (!$supply) {
-                throw new Exception("Insumo no encontrado");
+            $client = $clientModel->getById(intval($_GET['id']));
+            if (!$client) {
+                throw new Exception("Cliente no encontrado");
             }
-            jsonResponse(['success' => true, 'supplies' => [$supply]]);
+            jsonResponse(['success' => true, 'clients' => [$client]]);
         }
 
-        $supplies = $suppliesModel->getAll();
-        jsonResponse(['success' => true, 'supplies' => $supplies, 'count' => count($supplies)]);
+        $clients = $clientModel->getAll();
+        jsonResponse(['success' => true, 'clients' => $clients, 'count' => count($clients)]);
     } catch (Exception $e) {
         jsonResponse(['success' => false, 'message' => $e->getMessage()], 500);
     }

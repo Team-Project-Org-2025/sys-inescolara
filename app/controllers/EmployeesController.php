@@ -7,9 +7,6 @@ namespace SysInescolara\controllers;
 use SysInescolara\models\Employees;
 use Exception;
 
-/**
- * Controlador para la gestión de Trabajadores / Empleados
- */
 class EmployeesController 
 {
     private Employees $employeeModel;
