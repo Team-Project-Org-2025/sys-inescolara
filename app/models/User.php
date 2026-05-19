@@ -18,12 +18,84 @@ class User extends Database
     private function bootstrapDefaults(): void
     {
         try {
-            $rolesCount = (int)$this->db->query("SELECT COUNT(*) FROM roles")->fetchColumn();
-            if ($rolesCount === 0) {
-                $stmt = $this->db->prepare("INSERT INTO roles (id_rol, nombre_rol, descripcion_rol) VALUES (1, 'Administrador', 'Acceso total al sistema')");
-                $stmt->execute();
+            // Migración: agregar columna avatar si no existe
+            try {
+                $stmt = $this->db->query("SHOW COLUMNS FROM usuarios LIKE 'avatar'");
+                if (!$stmt->fetch()) {
+                    $this->db->exec("ALTER TABLE usuarios ADD COLUMN avatar VARCHAR(255) DEFAULT NULL AFTER correo_electronico");
+                }
+            } catch (\Throwable $e) {
+                error_log('Error al migrar columna avatar: ' . $e->getMessage());
             }
 
+            // Asegurar roles
+            $adminExists = (int)$this->db->query("SELECT COUNT(*) FROM roles WHERE id_rol = 1")->fetchColumn();
+            if (!$adminExists) {
+                $this->db->exec("INSERT INTO roles (id_rol, nombre_rol, descripcion_rol) VALUES (1, 'Administrador', 'Acceso total al sistema')");
+            }
+
+            $trabajadorExists = (int)$this->db->query("SELECT COUNT(*) FROM roles WHERE id_rol = 2")->fetchColumn();
+            if (!$trabajadorExists) {
+                $this->db->exec("INSERT IGNORE INTO roles (id_rol, nombre_rol, descripcion_rol) VALUES (2, 'Trabajador', 'Acceso a inventario, plantas, clientes y ventas')");
+            }
+
+            // Asegurar permisos
+            $permisos = [
+                ['codigo' => 'DASHBOARD_VIEW', 'desc' => 'Ver panel principal'],
+                ['codigo' => 'INVENTARIO_VIEW', 'desc' => 'Ver inventario'],
+                ['codigo' => 'VENTAS_ACCESS', 'desc' => 'Acceder a ventas/POS'],
+                ['codigo' => 'USUARIOS_MANAGE', 'desc' => 'Gestionar usuarios'],
+                ['codigo' => 'PLANTAS_VIEW', 'desc' => 'Ver plantas'],
+                ['codigo' => 'PLANTAS_MANAGE', 'desc' => 'Gestionar plantas'],
+                ['codigo' => 'PROVEEDORES_VIEW', 'desc' => 'Ver proveedores'],
+                ['codigo' => 'PROVEEDORES_MANAGE', 'desc' => 'Gestionar proveedores'],
+                ['codigo' => 'INSUMOS_VIEW', 'desc' => 'Ver insumos'],
+                ['codigo' => 'INSUMOS_MANAGE', 'desc' => 'Gestionar insumos'],
+                ['codigo' => 'TRABAJADORES_VIEW', 'desc' => 'Ver trabajadores'],
+                ['codigo' => 'TRABAJADORES_MANAGE', 'desc' => 'Gestionar trabajadores'],
+                ['codigo' => 'CLIENTES_VIEW', 'desc' => 'Ver clientes'],
+                ['codigo' => 'CLIENTES_MANAGE', 'desc' => 'Gestionar clientes'],
+                ['codigo' => 'ASISTENTE_ACCESS', 'desc' => 'Acceder al asistente IA'],
+            ];
+
+            $stmtCheckPermiso = $this->db->prepare("SELECT COUNT(*) FROM permisos WHERE codigo_permiso = :codigo");
+            $stmtInsertPermiso = $this->db->prepare("INSERT IGNORE INTO permisos (codigo_permiso, descripcion_permiso) VALUES (:codigo, :descripcion)");
+            foreach ($permisos as $p) {
+                $stmtCheckPermiso->execute([':codigo' => $p['codigo']]);
+                if ((int)$stmtCheckPermiso->fetchColumn() === 0) {
+                    $stmtInsertPermiso->execute([':codigo' => $p['codigo'], ':descripcion' => $p['desc']]);
+                }
+            }
+
+            // Mapa permisos -> id
+            $allPermisos = $this->db->query("SELECT id_permiso, codigo_permiso FROM permisos")->fetchAll(PDO::FETCH_ASSOC);
+            $permMap = [];
+            foreach ($allPermisos as $p) {
+                $permMap[$p['codigo_permiso']] = $p['id_permiso'];
+            }
+
+            // Asegurar rol_permisos para Administrador (rol 1) — todos
+            $stmtCheckRP = $this->db->prepare("SELECT COUNT(*) FROM rol_permisos WHERE id_rol = :rol AND id_permiso = :perm");
+            $stmtInsertRP = $this->db->prepare("INSERT IGNORE INTO rol_permisos (id_rol, id_permiso) VALUES (:rol, :perm)");
+            foreach ($permMap as $pid) {
+                $stmtCheckRP->execute([':rol' => 1, ':perm' => $pid]);
+                if ((int)$stmtCheckRP->fetchColumn() === 0) {
+                    $stmtInsertRP->execute([':rol' => 1, ':perm' => $pid]);
+                }
+            }
+
+            // Asegurar rol_permisos para Trabajador (rol 2) — limitados
+            $trabajadorPermisos = ['DASHBOARD_VIEW', 'INVENTARIO_VIEW', 'VENTAS_ACCESS', 'PLANTAS_VIEW', 'PLANTAS_MANAGE', 'CLIENTES_VIEW', 'CLIENTES_MANAGE', 'ASISTENTE_ACCESS'];
+            foreach ($trabajadorPermisos as $cod) {
+                if (isset($permMap[$cod])) {
+                    $stmtCheckRP->execute([':rol' => 2, ':perm' => $permMap[$cod]]);
+                    if ((int)$stmtCheckRP->fetchColumn() === 0) {
+                        $stmtInsertRP->execute([':rol' => 2, ':perm' => $permMap[$cod]]);
+                    }
+                }
+            }
+
+            // Asegurar usuario admin por defecto si no existe
             $usersCount = (int)$this->db->query("SELECT COUNT(*) FROM usuarios")->fetchColumn();
             if ($usersCount === 0) {
                 $hash = password_hash('Admin123!', PASSWORD_DEFAULT);
@@ -46,7 +118,9 @@ class User extends Database
             'id' => (int)($user['id_usuario'] ?? $user['id'] ?? 0),
             'nombre_usuario' => $user['nombre_usuario'] ?? null,
             'correo_electronico' => $user['correo_electronico'] ?? null,
+            'avatar' => $user['avatar'] ?? null,
             'rol_id' => $user['id_rol'] ?? $user['rol_id'] ?? null,
+            'nombre_rol' => $user['nombre_rol'] ?? null,
             'estatus' => $user['estatus'] ?? null,
         ];
     }
@@ -63,7 +137,7 @@ class User extends Database
     public function authenticate($identificador, $password)
     {
         try {
-            $sql = "SELECT id_usuario, nombre_usuario, password_hash, id_rol, correo_electronico, estatus FROM usuarios WHERE nombre_usuario = :nombre_usuario OR correo_electronico = :correo_electronico";
+            $sql = "SELECT id_usuario, nombre_usuario, avatar, password_hash, id_rol, correo_electronico, estatus FROM usuarios WHERE nombre_usuario = :nombre_usuario OR correo_electronico = :correo_electronico";
             $stmt = $this->db->prepare($sql);
             $stmt->execute([
                 ':nombre_usuario' => $identificador,
@@ -102,7 +176,12 @@ class User extends Database
     public function getAll()
     {
         try {
-            $stmt = $this->db->query("SELECT id_usuario, nombre_usuario, id_rol, correo_electronico, estatus FROM usuarios ORDER BY id_usuario ASC");
+            $stmt = $this->db->query("
+                SELECT u.id_usuario, u.nombre_usuario, u.avatar, u.id_rol, r.nombre_rol, u.correo_electronico, u.estatus 
+                FROM usuarios u
+                LEFT JOIN roles r ON r.id_rol = u.id_rol
+                ORDER BY u.id_usuario ASC
+            ");
             if (!$stmt) {
                 return [];
             }
@@ -138,7 +217,7 @@ class User extends Database
     public function getById(int $id)
     {
         try {
-            $stmt = $this->db->prepare("SELECT id_usuario, nombre_usuario, id_rol, correo_electronico, estatus FROM usuarios WHERE id_usuario = :id");
+            $stmt = $this->db->prepare("SELECT id_usuario, nombre_usuario, avatar, id_rol, correo_electronico, estatus FROM usuarios WHERE id_usuario = :id");
             $stmt->execute([':id' => $id]);
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
             return $user ? $this->normalizeUserRow($user) : null;
@@ -148,7 +227,7 @@ class User extends Database
         }
     }
 
-    public function add(string $nombreUsuario, string $password, int $rolId)
+    public function add(string $nombreUsuario, string $password, int $rolId, ?string $avatar = null)
     {
         if ($this->userExists(null, $nombreUsuario)) {
             throw new Exception("Ya existe un usuario con este nombre de usuario.");
@@ -161,19 +240,20 @@ class User extends Database
         }
 
         $stmt = $this->db->prepare("
-            INSERT INTO usuarios (nombre_usuario, password_hash, id_rol)
-            VALUES (:nombre_usuario, :password_hash, :id_rol)
+            INSERT INTO usuarios (nombre_usuario, password_hash, id_rol, avatar)
+            VALUES (:nombre_usuario, :password_hash, :id_rol, :avatar)
         ");
 
         return $stmt->execute([
             ':nombre_usuario' => $nombreUsuario,
             ':password_hash' => $passwordHash,
-            ':id_rol' => $rolId
+            ':id_rol' => $rolId,
+            ':avatar' => $avatar,
         ]);
     }
 
 
-    public function update(int $id, string $nombreUsuario, int $rolId, string $password = null)
+    public function update(int $id, string $nombreUsuario, int $rolId, ?string $password = null, ?string $avatar = null)
     {
         if (!$this->userExists($id)) {
             throw new Exception("No existe el usuario con ID: $id");
@@ -183,7 +263,7 @@ class User extends Database
         $params = [
             ':id' => $id,
             ':nombre_usuario' => $nombreUsuario,
-            ':id_rol' => $rolId
+            ':id_rol' => $rolId,
         ];
 
         if ($password !== null && $password !== '') {
@@ -196,6 +276,9 @@ class User extends Database
             $sql .= ", password_hash = :password_hash";
             $params[':password_hash'] = $passwordHash;
         }
+
+        $sql .= ", avatar = :avatar";
+        $params[':avatar'] = $avatar;
 
         $sql .= " WHERE id_usuario = :id";
 
@@ -212,6 +295,34 @@ class User extends Database
         } catch (\Throwable $e) {
             error_log("Error en delete: " . $e->getMessage());
             return false;
+        }
+    }
+
+    public function getRoles(): array
+    {
+        try {
+            $stmt = $this->db->query("SELECT id_rol, nombre_rol, descripcion_rol FROM roles ORDER BY id_rol ASC");
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (\Throwable $e) {
+            error_log("Error al obtener roles: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    public function getRolePermissions(int $rolId): array
+    {
+        try {
+            $stmt = $this->db->prepare("
+                SELECT p.codigo_permiso
+                FROM rol_permisos rp
+                JOIN permisos p ON p.id_permiso = rp.id_permiso
+                WHERE rp.id_rol = :rol_id
+            ");
+            $stmt->execute([':rol_id' => $rolId]);
+            return array_column($stmt->fetchAll(PDO::FETCH_ASSOC), 'codigo_permiso');
+        } catch (\Throwable $e) {
+            error_log("Error al obtener permisos del rol: " . $e->getMessage());
+            return [];
         }
     }
 

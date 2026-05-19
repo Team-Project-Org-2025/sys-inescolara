@@ -27,11 +27,19 @@
         <div class="user-dropdown" id="userDropdown">
             <button class="user-dropdown-btn" id="userDropdownBtn">
                 <div class="user-avatar">
-                    <?= strtoupper(substr($user['nombre'] ?? 'U', 0, 1)) ?>
+                    <?php
+                    $dhAvatar = $_SESSION['user_avatar'] ?? null;
+                    $dhName = $_SESSION['user_nombre'] ?? 'U';
+                    $dhDisplay = htmlspecialchars($dhName);
+                    if ($dhAvatar): ?>
+                        <img src="<?= BASE_URL . htmlspecialchars($dhAvatar) ?>" alt="Avatar" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">
+                    <?php else: ?>
+                        <?= strtoupper(substr($dhName, 0, 1)) ?>
+                    <?php endif; ?>
                 </div>
                 <div class="user-info">
-                    <span class="user-name"><?= htmlspecialchars($user['nombre'] ?? 'Usuario') ?></span>
-                    <span class="user-role"><?= htmlspecialchars($user['rol'] ?? 'Operador') ?></span>
+                    <span class="user-name"><?= $dhDisplay ?></span>
+                    <span class="user-role"><?= htmlspecialchars($_SESSION['user_rol_id'] == 1 ? 'Administrador' : 'Trabajador') ?></span>
                 </div>
                 <svg class="dropdown-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polyline points="6 9 12 15 18 9"></polyline>

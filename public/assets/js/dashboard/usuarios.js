@@ -6,9 +6,24 @@ $(document).ready(function () {
   const baseUrl = `${window.BASE_URL || '/'}user`;
   let usersTable = null;
 
+  const updateSidebarUser = (avatarUrl, userName) => {
+    const $avatar = $('.sidebar-user-avatar').first();
+    const $name = $('.sidebar-user-name').first();
+    if ($name.length) {
+      $name.text(userName);
+    }
+    if ($avatar.length) {
+      if (avatarUrl) {
+        $avatar.html(`<img src="${avatarUrl}" alt="Avatar" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`);
+      } else {
+        $avatar.html(`<span class="sidebar-user-initial">${(userName || 'U')[0].toUpperCase()}</span>`);
+      }
+    }
+  };
+
   const initDataTable = () => {
     if (typeof SkeletonHelper !== 'undefined') {
-      SkeletonHelper.showTableSkeleton('usersTable', 5, 4);
+      SkeletonHelper.showTableSkeleton('usersTable', 5, 3);
     }
     usersTable = $('#usersTable').DataTable({
       ajax: {
@@ -19,26 +34,30 @@ $(document).ready(function () {
         dataSrc: 'users',
       },
       columns: [
-        { data: 'id' },
         { data: 'nombre_usuario' },
-        { data: 'rol_id' },
+        { data: 'nombre_rol' },
         {
           data: null,
           orderable: false,
           render: (data) => {
+            const isSuper = data.id == 1;
             return `
-                            <button class="btn btn-sm btn-outline-primary btn-edit" 
-                                    data-id="${Helpers.escapeHtml(data.id)}"
-                                    data-nombre_usuario="${Helpers.escapeHtml(data.nombre_usuario)}"
-                                    data-rol_id="${Helpers.escapeHtml(data.rol_id)}">
-                                <i class="fas fa-edit"></i> Editar
-                            </button>
-                            <button class="btn btn-sm btn-outline-danger btn-delete"
-                                    data-id="${Helpers.escapeHtml(data.id)}"
-                                    data-nombre_usuario="${Helpers.escapeHtml(data.nombre_usuario)}">
-                                <i class="fas fa-trash"></i> Eliminar
-                            </button>
-                        `;
+              <div class="d-flex gap-1">
+                <button class="btn btn-sm btn-outline-primary btn-edit" 
+                        data-id="${Helpers.escapeHtml(data.id)}"
+                        data-nombre_usuario="${Helpers.escapeHtml(data.nombre_usuario)}"
+                        data-rol_id="${Helpers.escapeHtml(data.rol_id)}"
+                        data-avatar="${Helpers.escapeHtml(data.avatar || '')}">
+                    <i class="fas fa-edit"></i> Editar
+                </button>
+                ${isSuper ? '' : `
+                <button class="btn btn-sm btn-outline-danger btn-delete"
+                        data-id="${Helpers.escapeHtml(data.id)}"
+                        data-nombre_usuario="${Helpers.escapeHtml(data.nombre_usuario)}">
+                    <i class="fas fa-trash"></i> Eliminar
+                </button>`}
+              </div>
+            `;
           },
         },
       ],
@@ -63,6 +82,14 @@ $(document).ready(function () {
   };
 
   //Agregar usuario
+  $('#btnAddUser').on('click', function () {
+    const $editModal = $('#editUserModal');
+    if ($editModal.hasClass('show')) {
+      $editModal.modal('hide');
+    }
+    $('#addUserModal').modal({ focus: false }).modal('show');
+  });
+
   $('#addUserForm').on('submit', function (e) {
     e.preventDefault();
 
@@ -76,10 +103,18 @@ $(document).ready(function () {
       return;
     }
 
-    const formData = $(this).serialize();
+    const formData = new FormData(this);
 
-    Ajax.post(`${baseUrl}?action=add_ajax`, formData)
-      .then((response) => {
+    $.ajax({
+      url: `${baseUrl}?action=add_ajax`,
+      method: 'POST',
+      data: formData,
+      processData: false,
+      contentType: false,
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+      dataType: 'json',
+    })
+      .done((response) => {
         if (response.success) {
           Helpers.toast('success', 'Usuario agregado correctamente');
           $('#addUserModal').modal('hide');
@@ -88,8 +123,8 @@ $(document).ready(function () {
           Helpers.toast('error', response.message);
         }
       })
-      .catch((err) => {
-        Helpers.toast('error', err);
+      .fail((err) => {
+        Helpers.toast('error', err.responseJSON?.message || 'Error al agregar usuario');
       });
   });
 
@@ -97,13 +132,32 @@ $(document).ready(function () {
   $(document).on('click', '.btn-edit', function () {
     const $btn = $(this);
 
-    $('#editUserIdHidden').val($btn.data('id'));
+    // Cerrar cualquier otro modal abierto primero
+    const $addModal = $('#addUserModal');
+    if ($addModal.hasClass('show')) {
+      $addModal.modal('hide');
+    }
+
+    const userId = parseInt($btn.data('id'), 10);
+    const isSuper = userId === 1;
+
+    $('#editUserIdHidden').val(userId);
     $('#editUserName').val($btn.data('nombre_usuario'));
-    $('#editUserRole').val($btn.data('rol_id'));
+    $('#editUserRole').val($btn.data('rol_id')).prop('disabled', false).css('pointerEvents', isSuper ? 'none' : '').toggleClass('readonly-look', isSuper);
     $('#editUserPassword').val('');
+    $('#editUserRoleNote').toggle(isSuper);
+
+    // Mostrar preview del avatar actual
+    const avatar = $btn.data('avatar');
+    const $preview = $('#editAvatarPreview');
+    if (avatar) {
+      $preview.show().find('img').attr('src', `${window.BASE_URL || '/'}${avatar}`);
+    } else {
+      $preview.hide();
+    }
 
     Validations.clearValidation($('#editUserForm'));
-    $('#editUserModal').modal('show');
+    $('#editUserModal').modal({ focus: false }).modal('show');
   });
 
   $('#editUserForm').on('submit', function (e) {
@@ -119,22 +173,41 @@ $(document).ready(function () {
       return;
     }
 
-    // Filtrar password vacío
-    let data = $(this).serializeArray();
-    data = data.filter((item) => item.name !== 'password' || item.value !== '');
+    const formData = new FormData(this);
+    // Eliminar password si está vacío
+    if (!formData.get('password')) {
+      formData.delete('password');
+    }
 
-    Ajax.post(`${baseUrl}?action=edit_ajax`, $.param(data))
-      .then((response) => {
+    $.ajax({
+      url: `${baseUrl}?action=edit_ajax`,
+      method: 'POST',
+      data: formData,
+      processData: false,
+      contentType: false,
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+      dataType: 'json',
+    })
+      .done((response) => {
         if (response.success) {
           Helpers.toast('success', 'Usuario actualizado correctamente');
           $('#editUserModal').modal('hide');
           usersTable.ajax.reload(null, false);
+
+          // Si el usuario editado es el mismo de la sesión, actualizar el sidebar
+          if (response.user && response.user.id == $('#currentUserId').val()) {
+            const avatarUrl = response.user.avatar
+              ? `${window.BASE_URL || '/'}${response.user.avatar}`
+              : null;
+            const userName = response.user.nombre_usuario;
+            updateSidebarUser(avatarUrl, userName);
+          }
         } else {
           Helpers.toast('error', response.message);
         }
       })
-      .catch((err) => {
-        Helpers.toast('error', err);
+      .fail((err) => {
+        Helpers.toast('error', err.responseJSON?.message || 'Error al actualizar usuario');
       });
   });
 

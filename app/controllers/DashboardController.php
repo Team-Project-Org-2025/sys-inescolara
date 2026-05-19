@@ -16,11 +16,33 @@ function dashboardCheckAuth(): void
         header('Location: ' . BASE_URL . 'login');
         exit();
     }
+
+    // Si el usuario está autenticado pero no tiene permisos en sesión (o están vacíos), recargarlos
+    if (empty($_SESSION['user_permisos'])) {
+        require_once ROOT_PATH . 'vendor/autoload.php';
+        $userModel = new \SysInescolara\models\User();
+        $_SESSION['user_permisos'] = $userModel->getRolePermissions((int)($_SESSION['user_rol_id'] ?? 0));
+    }
+}
+
+function dashboardCheckPermiso(string $codigo): void
+{
+    dashboardCheckAuth();
+    $permisos = $_SESSION['user_permisos'] ?? [];
+    if (!in_array($codigo, $permisos, true)) {
+        http_response_code(403);
+        echo '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Acceso denegado</title>';
+        echo '<link rel="icon" type="image/x-icon" href="' . BASE_URL . 'public/assets/images/favicon.ico">';
+        echo '<style>body{font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;background:#f5f5f5;}.card{text-align:center;padding:3rem;background:#fff;border-radius:1rem;box-shadow:0 4px 24px rgba(0,0,0,.08)}h1{font-size:4rem;margin:0;color:#1b5e20}p{color:#666;margin:1.5rem 0}a{display:inline-block;padding:.75rem 2rem;background:#1b5e20;color:#fff;text-decoration:none;border-radius:.5rem}</style>';
+        echo '</head><body><div class="card"><h1>403</h1><p>No tienes permisos para acceder a este módulo.</p>';
+        echo '<a href="' . BASE_URL . 'dashboard">Volver al inicio</a></div></body></html>';
+        exit();
+    }
 }
 
 function index(): void
 {
-    dashboardCheckAuth();
+    dashboardCheckPermiso('DASHBOARD_VIEW');
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'index.php';
 
@@ -35,7 +57,7 @@ function index(): void
 
 function asistente(): void
 {
-    dashboardCheckAuth();
+    dashboardCheckPermiso('ASISTENTE_ACCESS');
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'asistente.php';
 
@@ -50,7 +72,7 @@ function asistente(): void
 
 function inventario(): void
 {
-    dashboardCheckAuth();
+    dashboardCheckPermiso('INVENTARIO_VIEW');
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'inventario.php';
 
@@ -65,7 +87,7 @@ function inventario(): void
 
 function ventas(): void
 {
-    dashboardCheckAuth();
+    dashboardCheckPermiso('VENTAS_ACCESS');
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'ventas.php';
 
@@ -80,7 +102,12 @@ function ventas(): void
 
 function usuarios(): void
 {
-    dashboardCheckAuth();
+    dashboardCheckPermiso('USUARIOS_MANAGE');
+
+    require_once ROOT_PATH . 'vendor/autoload.php';
+    $userModel = new \SysInescolara\models\User();
+    $roles = $userModel->getRoles();
+
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'usuarios.php';
 
@@ -95,6 +122,7 @@ function usuarios(): void
 
 function plants(): void
 {
+    dashboardCheckPermiso('PLANTAS_VIEW');
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'plants.php';
 
@@ -109,6 +137,7 @@ function plants(): void
 
 function suppliers(): void
 {
+    dashboardCheckPermiso('PROVEEDORES_VIEW');
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'suppliers.php';
 
@@ -123,6 +152,7 @@ function suppliers(): void
 
 function supplies(): void
 {
+    dashboardCheckPermiso('INSUMOS_VIEW');
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'supplies.php';
 
@@ -137,6 +167,7 @@ function supplies(): void
 
 function employees(): void
 {
+    dashboardCheckPermiso('TRABAJADORES_VIEW');
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'employees.php';
 
@@ -151,6 +182,7 @@ function employees(): void
 
 function clients(): void
 {
+    dashboardCheckPermiso('CLIENTES_VIEW');
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'clients.php';
 

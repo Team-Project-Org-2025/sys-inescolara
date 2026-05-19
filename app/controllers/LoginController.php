@@ -97,8 +97,9 @@ function login()
         $_SESSION['user_id'] = $user['id'] ?? null;
         $_SESSION['user_nombre'] = $user['nombre_usuario'] ?? null;
         $_SESSION['user_email'] = $user['correo_electronico'] ?? null;
+        $_SESSION['user_avatar'] = $user['avatar'] ?? null;
         $_SESSION['user_rol_id'] = $user['rol_id'] ?? null;
-        $_SESSION['is_admin'] = true;
+        $_SESSION['user_permisos'] = $userModel->getRolePermissions((int)($user['rol_id'] ?? 0));
 
         // Remember me: guardar cookie por 30 días si marcó la opción
         if (!empty($_POST['remember'])) {
@@ -176,6 +177,7 @@ function check_session()
         'user_id' => $_SESSION['user_id'] ?? null,
         'user_email' => $_SESSION['user_email'] ?? null,
         'user_nombre' => $_SESSION['user_nombre'] ?? null,
+        'user_avatar' => $_SESSION['user_avatar'] ?? null,
         'user_rol_id' => $_SESSION['user_rol_id'] ?? null
     ]);
     exit();
