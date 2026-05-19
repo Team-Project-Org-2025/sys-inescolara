@@ -50,7 +50,7 @@ include_once __DIR__ . '/../common/links.php';
                 
                 <div class="sidebar-user" style="padding: 0.5rem; border-radius: 8px; display: flex; align-items: center; gap: 0.75rem;">
                     <div class="sidebar-user-avatar" style="width: 36px; height: 36px; background-color: #e5a835; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; color: #1a1f2e;">
-                        <?= strtoupper(substr($user['name'] ?? 'U', 0, 1)) ?>
+                        <?= strtoupper(substr($user['user_nombre'] ?? 'U', 0, 1)) ?>
                     </div>
                 </div>
             </div>

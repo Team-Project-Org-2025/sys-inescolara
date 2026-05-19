@@ -13,6 +13,29 @@ if (!defined('ROOT_PATH')) {
 
 $GLOBALS['userModel'] = new User();
 
+function renderLoginView(?string $error = null, array $old = []): void
+{
+    $title = 'Iniciar Sesión';
+    $layout = ROOT_PATH . 'app/views/layouts/auth.php';
+    $view = ROOT_PATH . 'app/views/auth/login.php';
+
+    ob_start();
+    require $view;
+    $content = ob_get_clean();
+
+    require $layout;
+}
+
+function index()
+{
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        login();
+        return;
+    }
+
+    show();
+}
+
 
 function checkAuth()
 {
@@ -24,10 +47,11 @@ function checkAuth()
         $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
         if ($isAjax) {
             http_response_code(401);
-            echo json_encode(['success' => false, 'message' => 'No autorizado']);
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'No autorizado', 'redirect' => BASE_URL . 'login']);
             exit();
         }
-        header('Location: ' . BASE_URL . 'login/show');
+        header('Location: ' . BASE_URL . 'login');
         exit();
     }
 }
@@ -40,14 +64,7 @@ function show()
         exit();
     }
 
-    $error = null;
-    // Assuming the view is in auth/login.php based on folder structure
-    $viewPath = ROOT_PATH . 'app/views/auth/login.php';
-    if (!file_exists($viewPath)) {
-        // Fallback if not moved yet
-        $viewPath = ROOT_PATH . 'app/views/admin/login.php';
-    }
-    require_once $viewPath;
+    renderLoginView();
 }
 
 function login()
@@ -55,34 +72,33 @@ function login()
     $userModel = $GLOBALS['userModel'];
 
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        header('Location: ' . BASE_URL . 'login/show');
+        header('Location: ' . BASE_URL . 'login');
         exit();
     }
 
-    $nombre_usuario = trim($_POST['nombre_usuario'] ?? ($_POST['email'] ?? ''));
+    $identificador = trim($_POST['nombre_usuario'] ?? ($_POST['email'] ?? ''));
     $password = $_POST['password'] ?? '';
     $error = null;
 
-    if ($nombre_usuario === '' || $password === '') {
-        $error = "Por favor, complete todos los campos.";
-        $viewPath = file_exists(ROOT_PATH . 'app/views/auth/login.php') ? ROOT_PATH . 'app/views/auth/login.php' : ROOT_PATH . 'app/views/admin/login.php';
-        require_once $viewPath;
+    if ($identificador === '' || $password === '') {
+        renderLoginView("Por favor, complete todos los campos.", ['email' => $identificador]);
         return;
     }
 
-    $user = $userModel->authenticate($nombre_usuario, $password);
+    $user = $userModel->authenticate($identificador, $password);
 
     if ($user) {
-        $_SESSION['user_id'] = $user['id'] ?? $user['user_id'] ?? null;
-        $_SESSION['user_nombre'] = $user['nombre_usuario'] ?? $user['nombre'] ?? null;
+        session_regenerate_id(true);
+        $_SESSION['user_id'] = $user['id'] ?? null;
+        $_SESSION['user_nombre'] = $user['nombre_usuario'] ?? null;
+        $_SESSION['user_email'] = $user['correo_electronico'] ?? null;
+        $_SESSION['user_rol_id'] = $user['rol_id'] ?? null;
         $_SESSION['is_admin'] = true;
 
         header('Location: ' . BASE_URL . 'dashboard');
         exit();
     } else {
-        $error = "Usuario o contraseña incorrectos.";
-        $viewPath = file_exists(ROOT_PATH . 'app/views/auth/login.php') ? ROOT_PATH . 'app/views/auth/login.php' : ROOT_PATH . 'app/views/admin/login.php';
-        require_once $viewPath;
+        renderLoginView("Usuario o contraseña incorrectos.", ['email' => $identificador]);
     }
 }
 
@@ -90,15 +106,20 @@ function login()
 function dashboard()
 {
     checkAuth();
-    require_once ROOT_PATH . 'app/views/admin/home-admin.php';
+    header('Location: ' . BASE_URL . 'dashboard');
+    exit();
 }
 
 function logout()
 {
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+
     session_unset();
     session_destroy();
 
-    header('Location: ' . BASE_URL . 'login/show');
+    header('Location: ' . BASE_URL . 'login');
     exit();
 }
 
@@ -122,7 +143,7 @@ function logout_ajax()
     echo json_encode([
         'success' => true,
         'message' => 'Sesión cerrada correctamente',
-        'redirect' => BASE_URL . 'login/show'
+        'redirect' => BASE_URL . 'login'
     ]);
     exit();
 }
@@ -142,7 +163,8 @@ function check_session()
         'active' => $active,
         'user_id' => $_SESSION['user_id'] ?? null,
         'user_email' => $_SESSION['user_email'] ?? null,
-        'user_nombre' => $_SESSION['user_nombre'] ?? null
+        'user_nombre' => $_SESSION['user_nombre'] ?? null,
+        'user_rol_id' => $_SESSION['user_rol_id'] ?? null
     ]);
     exit();
 }

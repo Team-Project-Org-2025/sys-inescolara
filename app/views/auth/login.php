@@ -66,6 +66,7 @@
                 </a>
                 <h2 class="auth-form-title">Iniciar Sesión</h2>
                 <p class="auth-form-subtitle">Ingresa tus credenciales para acceder al sistema</p>
+                <p class="auth-form-hint">Prueba: <strong>admin</strong> / <strong>Admin123!</strong> o <strong>admin@inecolara.gob.ve</strong></p>
             </div>
             
             <?php if (!empty($error)): ?>
@@ -81,21 +82,21 @@
             
             <form action="<?= BASE_URL ?>login" method="POST" class="auth-form" id="loginForm">
                 <div class="form-group">
-                    <label for="email" class="form-label">Correo Electrónico</label>
+                    <label for="email" class="form-label">Usuario o Correo Electrónico</label>
                     <div class="input-wrapper">
                         <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
                             <polyline points="22,6 12,13 2,6"></polyline>
                         </svg>
                         <input 
-                            type="email" 
+                            type="text" 
                             id="email" 
                             name="email" 
                             class="form-input" 
-                            placeholder="usuario@inecolara.gob.ve"
+                            placeholder="admin o usuario@inecolara.gob.ve"
                             value="<?= htmlspecialchars($old['email'] ?? '') ?>"
                             required
-                            autocomplete="email"
+                            autocomplete="username"
                         >
                     </div>
                 </div>
