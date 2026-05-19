@@ -778,6 +778,26 @@ function loadLowStockAlerts() {
 }
 
 // ============================================
+// PASSWORD TOGGLE
+// ============================================
+
+function initPasswordToggle() {
+  const toggle = document.getElementById('passwordToggle');
+  if (!toggle) return;
+
+  const eyeIcon = toggle.querySelector('.eye-icon');
+  const eyeOffIcon = toggle.querySelector('.eye-off-icon');
+  const input = document.getElementById('password');
+
+  toggle.addEventListener('click', function () {
+    const isPassword = input.type === 'password';
+    input.type = isPassword ? 'text' : 'password';
+    eyeIcon.classList.toggle('hidden', !isPassword);
+    eyeOffIcon.classList.toggle('hidden', isPassword);
+  });
+}
+
+// ============================================
 // INITIALIZATION
 // ============================================
 
@@ -796,4 +816,6 @@ document.addEventListener('DOMContentLoaded', function () {
   } else if (path.includes('asistente')) {
     initAIAssistant();
   }
+
+  initPasswordToggle();
 });

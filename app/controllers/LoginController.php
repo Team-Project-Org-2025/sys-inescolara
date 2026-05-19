@@ -64,7 +64,12 @@ function show()
         exit();
     }
 
-    renderLoginView();
+    $old = [];
+    if (!empty($_COOKIE['remember_email'])) {
+        $old['email'] = $_COOKIE['remember_email'];
+    }
+
+    renderLoginView(null, $old);
 }
 
 function login()
@@ -94,6 +99,13 @@ function login()
         $_SESSION['user_email'] = $user['correo_electronico'] ?? null;
         $_SESSION['user_rol_id'] = $user['rol_id'] ?? null;
         $_SESSION['is_admin'] = true;
+
+        // Remember me: guardar cookie por 30 días si marcó la opción
+        if (!empty($_POST['remember'])) {
+            setcookie('remember_email', $identificador, time() + 86400 * 30, '/');
+        } else {
+            setcookie('remember_email', '', time() - 3600, '/');
+        }
 
         header('Location: ' . BASE_URL . 'dashboard');
         exit();
