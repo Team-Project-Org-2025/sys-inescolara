@@ -11,7 +11,7 @@ class User extends Database
 
     public function __construct()
     {
-        parent::__construct();
+        parent::__construct('security');
     }
 
     public function getLastInsertId(): ?int

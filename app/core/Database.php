@@ -9,16 +9,24 @@ abstract class Database extends PDO
 {
     protected $db;
 
-    public function __construct()
+    public function __construct($connection = 'default')
     {
         try {
             $this->loadEnv();
 
-            $host = getenv('DB_HOST') ?: 'localhost';
-            $port = getenv('DB_PORT') ?: '3306';
-            $dbname = getenv('DB_NAME') ?: 'sys_inescolara_db';
-            $username = getenv('DB_USER') ?: 'root';
-            $password = getenv('DB_PASSWORD') ?: '';
+            if ($connection === 'security') {
+                $host = getenv('DB_SEC_HOST') !== false ? getenv('DB_SEC_HOST') : (getenv('DB_HOST') ?: 'localhost');
+                $port = getenv('DB_SEC_PORT') !== false ? getenv('DB_SEC_PORT') : (getenv('DB_PORT') ?: '3306');
+                $dbname = getenv('DB_SEC_NAME') !== false ? getenv('DB_SEC_NAME') : (getenv('DB_NAME') ?: 'sys_inescolara_db');
+                $username = getenv('DB_SEC_USER') !== false ? getenv('DB_SEC_USER') : (getenv('DB_USER') ?: 'root');
+                $password = getenv('DB_SEC_PASSWORD') !== false ? getenv('DB_SEC_PASSWORD') : (getenv('DB_PASSWORD') ?: '');
+            } else {
+                $host = getenv('DB_HOST') ?: 'localhost';
+                $port = getenv('DB_PORT') ?: '3306';
+                $dbname = getenv('DB_NAME') ?: 'sys_inescolara_db';
+                $username = getenv('DB_USER') ?: 'root';
+                $password = getenv('DB_PASSWORD') ?: '';
+            }
 
             $dsn = sprintf(
                 'mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4',
