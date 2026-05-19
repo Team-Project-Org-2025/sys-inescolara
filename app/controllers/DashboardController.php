@@ -6,8 +6,21 @@ declare(strict_types=1);
  * Controlador del Dashboard
  */
 
+function dashboardCheckAuth(): void
+{
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+
+    if (!isset($_SESSION['user_id'])) {
+        header('Location: ' . BASE_URL . 'login');
+        exit();
+    }
+}
+
 function index(): void
 {
+    dashboardCheckAuth();
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'index.php';
 
@@ -22,6 +35,7 @@ function index(): void
 
 function asistente(): void
 {
+    dashboardCheckAuth();
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'asistente.php';
 
@@ -36,6 +50,7 @@ function asistente(): void
 
 function inventario(): void
 {
+    dashboardCheckAuth();
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'inventario.php';
 
@@ -50,6 +65,7 @@ function inventario(): void
 
 function ventas(): void
 {
+    dashboardCheckAuth();
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'ventas.php';
 
@@ -64,6 +80,7 @@ function ventas(): void
 
 function usuarios(): void
 {
+    dashboardCheckAuth();
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'usuarios.php';
 

@@ -1,238 +1,213 @@
 <?php
 
+declare(strict_types=1);
+
 require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
 
-use SysInescolara\models\User;
 use SysInescolara\helpers\Validation;
+use SysInescolara\models\User;
 
-require_once __DIR__ . '/LoginController.php';
-
-checkAuth();
-
-$userModel = new User();
-
-function index()
-{
-    global $dolarBCVRate;
-    require __DIR__ . '/../views/dashboard/usuarios.php';
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
 }
 
-handleRequest($userModel);
+function userCheckAuth(): void
+{
+    if (!isset($_SESSION['user_id'])) {
+        $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
 
-// ============================================
-// CORE REQUEST HANDLER
-// ============================================
+        if ($isAjax) {
+            header('Content-Type: application/json; charset=utf-8');
+            http_response_code(401);
+            echo json_encode(['success' => false, 'message' => 'No autorizado', 'redirect' => BASE_URL . 'login']);
+            exit();
+        }
 
-function handleRequest($userModel)
+        header('Location: ' . BASE_URL . 'login');
+        exit();
+    }
+}
+
+$GLOBALS['userModel'] = new User();
+
+function index(): void
+{
+    $userModel = $GLOBALS['userModel'] ?? new User();
+
+    userCheckAuth();
+
+    handleRequest($userModel);
+
+    $view = ROOT_PATH . 'app/views/dashboard/usuarios.php';
+    if (!is_file($view)) {
+        http_response_code(500);
+        echo 'Vista de usuarios no encontrada.';
+        return;
+    }
+
+    require $view;
+}
+
+function get_users(): void
+{
+    $userModel = $GLOBALS['userModel'] ?? new User();
+    userCheckAuth();
+    getUsersAjax($userModel);
+}
+
+function add_ajax(): void
+{
+    $userModel = $GLOBALS['userModel'] ?? new User();
+    userCheckAuth();
+    handleAddEditAjax($userModel, 'add');
+}
+
+function edit_ajax(): void
+{
+    $userModel = $GLOBALS['userModel'] ?? new User();
+    userCheckAuth();
+    handleAddEditAjax($userModel, 'edit');
+}
+
+function delete_ajax(): void
+{
+    $userModel = $GLOBALS['userModel'] ?? new User();
+    userCheckAuth();
+    handleDeleteAjax($userModel);
+}
+
+function handleRequest(User $userModel): void
 {
     $action = $_GET['action'] ?? '';
-    $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&
-        strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+    $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
 
     try {
         if ($isAjax) {
             header('Content-Type: application/json; charset=utf-8');
 
             $routes = [
+                'GET_get_users' => fn() => getUsersAjax($userModel),
                 'POST_add_ajax' => fn() => handleAddEditAjax($userModel, 'add'),
                 'POST_edit_ajax' => fn() => handleAddEditAjax($userModel, 'edit'),
                 'POST_delete_ajax' => fn() => handleDeleteAjax($userModel),
-                'GET_get_users' => fn() => getUsersAjax($userModel)
             ];
 
-            $route = "{$_SERVER['REQUEST_METHOD']}_$action";
-
-            if (isset($routes[$route])) {
-                $routes[$route]();
-            } else {
-                jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400);
-            }
-        } else {
-            $routes = [
-                'POST_add' => fn() => handleAddEdit($userModel, 'add'),
-                'POST_edit' => fn() => handleAddEdit($userModel, 'edit'),
-                'GET_delete' => fn() => handleDelete($userModel)
-            ];
-
-            $route = "{$_SERVER['REQUEST_METHOD']}_$action";
+            $route = $_SERVER['REQUEST_METHOD'] . '_' . $action;
 
             if (isset($routes[$route])) {
                 $routes[$route]();
             }
+
+            jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400);
         }
     } catch (Exception $e) {
         handleError($e, $isAjax);
     }
 }
 
-// ============================================
-// UTILITY FUNCTIONS
-// ============================================
-
-function jsonResponse($data, $statusCode = 200)
+function jsonResponse(array $data, int $statusCode = 200): void
 {
     http_response_code($statusCode);
-    echo json_encode($data);
+    echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
     exit();
 }
 
-function handleError($e, $isAjax)
+function handleError(Exception $e, bool $isAjax): void
 {
     if ($isAjax) {
-        jsonResponse(['success' => false, 'message' => 'Error del servidor: ' . $e->getMessage()], 500);
-    } else {
-        die("Error: " . $e->getMessage());
+        jsonResponse(['success' => false, 'message' => $e->getMessage()], 500);
     }
+
+    http_response_code(500);
+    echo 'Error: ' . htmlspecialchars($e->getMessage());
+    exit();
 }
 
-// ============================================
-// VALIDATION
-// ============================================
-
-function validateUserData($data, $mode)
+function validateUserData(array $data, string $mode): void
 {
     $rules = [
         'nombre_usuario' => ['type' => null, 'required' => true],
-        'password' => ['type' => 'password', 'required' => ($mode === 'add')],
-        'id' => ['type' => null, 'required' => ($mode === 'edit')]
+        'password' => ['type' => 'password', 'required' => $mode === 'add'],
+        'rol_id' => ['type' => null, 'required' => true],
     ];
 
     $validation = Validation::validate($data, $rules);
-
     if (!$validation['valid']) {
         throw new Exception(implode(', ', $validation['errors']));
     }
 }
 
-// ============================================
-// NON-AJAX HANDLERS
-// ============================================
-
-function handleAddEdit($userModel, $mode)
+function handleAddEditAjax(User $userModel, string $mode): void
 {
-    try {
-        $fields = ['nombre_usuario'];
-        if ($mode === 'add') $fields[] = 'password';
-        if ($mode === 'edit') $fields[] = 'id';
+    validateUserData($_POST, $mode);
 
-        foreach ($fields as $f) {
-            if ($mode === 'edit' && $f === 'password' && empty($_POST[$f])) continue;
-            if (empty($_POST[$f])) {
-                throw new Exception("El campo '$f' es requerido");
-            }
+    $id = (int)($_POST['id'] ?? 0);
+    $nombreUsuario = trim((string)($_POST['nombre_usuario'] ?? ''));
+    $password = trim((string)($_POST['password'] ?? ''));
+    $rolId = (int)($_POST['rol_id'] ?? 1);
+
+    if ($mode === 'add') {
+        if ($userModel->userExists(null, $nombreUsuario)) {
+            throw new Exception('El nombre de usuario ya está registrado');
         }
 
-        $id = intval($_POST['id'] ?? 0);
-        $nombreUsuario = trim($_POST['nombre_usuario']);
-        $password = $_POST['password'] ?? null;
-        $rolId = intval($_POST['rol_id'] ?? 1); // Por defecto 1 hasta que exista el módulo de roles
+        $userModel->add($nombreUsuario, $password, $rolId);
 
-        if ($mode === 'add') {
-            if ($userModel->userExists(null, $nombreUsuario)) {
-                header("Location: users-admin.php?error=usuario_duplicado&nombre_usuario=$nombreUsuario");
-                exit();
-            }
-            $userModel->add($nombreUsuario, $password, $rolId);
-            header("Location: users-admin.php?success=add");
-            exit();
-        } else {
-            $userModel->update($id, $nombreUsuario, $rolId, $password);
-            header("Location: users-admin.php?success=edit");
-            exit();
-        }
-    } catch (Exception $e) {
-        die("Error: " . $e->getMessage());
-    }
-}
-
-function handleDelete($userModel)
-{
-    try {
-        if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
-            throw new Exception("ID inválido");
-        }
-
-        $id = intval($_GET['id']);
-        $userModel->delete($id);
-        header("Location: users-admin.php?success=delete");
-        exit();
-    } catch (Exception $e) {
-        die("Error: " . $e->getMessage());
-    }
-}
-
-// ============================================
-// AJAX HANDLERS
-// ============================================
-
-function handleAddEditAjax($userModel, $mode)
-{
-    try {
-        validateUserData($_POST, $mode);
-
-        $id = intval($_POST['id'] ?? 0);
-        $nombreUsuario = trim($_POST['nombre_usuario']);
-        $password = $_POST['password'] ?? null;
-        $rolId = intval($_POST['rol_id'] ?? 1); // Por defecto 1 hasta que exista el módulo de roles
-
-        if ($mode === 'add') {
-            if ($userModel->userExists(null, $nombreUsuario)) {
-                throw new Exception("El nombre de usuario ya está registrado");
-            }
-            $userModel->add($nombreUsuario, $password, $rolId);
-
-            $user = [
+        jsonResponse([
+            'success' => true,
+            'message' => 'Usuario agregado',
+            'user' => [
                 'id' => $userModel->getLastInsertId() ?? 0,
                 'nombre_usuario' => $nombreUsuario,
-                'rol_id' => $rolId
-            ];
-            $msg = 'Usuario agregado';
-        } else {
-            $userModel->update($id, $nombreUsuario, $rolId, $password);
-            $user = ['id' => $id, 'nombre_usuario' => $nombreUsuario, 'rol_id' => $rolId];
-            $msg = 'Usuario actualizado';
-        }
-
-        jsonResponse(['success' => true, 'message' => $msg, 'user' => $user]);
-    } catch (Exception $e) {
-        jsonResponse(['success' => false, 'message' => $e->getMessage()], 400);
+                'rol_id' => $rolId,
+            ],
+        ]);
     }
+
+    if ($id <= 0) {
+        throw new Exception('ID inválido');
+    }
+
+    $userModel->update($id, $nombreUsuario, $rolId, $password !== '' ? $password : null);
+
+    jsonResponse([
+        'success' => true,
+        'message' => 'Usuario actualizado',
+        'user' => [
+            'id' => $id,
+            'nombre_usuario' => $nombreUsuario,
+            'rol_id' => $rolId,
+        ],
+    ]);
 }
 
-function handleDeleteAjax($userModel)
+function handleDeleteAjax(User $userModel): void
 {
-    try {
-        $validation = Validation::validateField($_POST['id'] ?? '', 'id');
-        if (!$validation['valid']) {
-            throw new Exception($validation['message']);
-        }
-
-        $id = intval($_POST['id']);
-        if (!$userModel->userExists($id)) {
-            throw new Exception("No existe el usuario");
-        }
-
-        $userModel->delete($id);
-        jsonResponse(['success' => true, 'message' => 'Usuario eliminado', 'userId' => $id]);
-    } catch (Exception $e) {
-        jsonResponse(['success' => false, 'message' => $e->getMessage()], 400);
+    $id = (int)($_POST['id'] ?? 0);
+    if ($id <= 0) {
+        throw new Exception('ID inválido');
     }
+
+    if (!$userModel->userExists($id)) {
+        throw new Exception('No existe el usuario');
+    }
+
+    $userModel->delete($id);
+
+    jsonResponse([
+        'success' => true,
+        'message' => 'Usuario eliminado',
+        'userId' => $id,
+    ]);
 }
 
-function getUsersAjax($userModel)
+function getUsersAjax(User $userModel): void
 {
-    try {
-        if (isset($_GET['id'])) {
-            $user = $userModel->getById(intval($_GET['id']));
-            if (!$user) {
-                throw new Exception("Usuario no encontrado");
-            }
-            jsonResponse(['success' => true, 'users' => [$user]]);
-        }
+    $users = $userModel->getAll();
 
-        $users = $userModel->getAll();
-        jsonResponse(['success' => true, 'users' => $users, 'count' => count($users)]);
-    } catch (Exception $e) {
-        jsonResponse(['success' => false, 'message' => $e->getMessage()], 500);
-    }
+    jsonResponse([
+        'success' => true,
+        'users' => $users,
+        'count' => count($users),
+    ]);
 }

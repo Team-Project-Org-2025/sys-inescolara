@@ -3,15 +3,18 @@ import * as Helpers from '../utils/helpers.js';
 import * as Ajax from '../utils/ajax-handler.js';
 
 $(document).ready(function() {
-    const baseUrl = (window.BASE_URL || '/') + 'user';
+    const baseUrl = `${window.BASE_URL || '/'}user`;
     let usersTable = null;
     
     const initDataTable = () => {
+        if (typeof SkeletonHelper !== 'undefined') {
         SkeletonHelper.showTableSkeleton('usersTable', 5, 4);
+        }
         usersTable = $('#usersTable').DataTable({
             ajax: {
                 url: `${baseUrl}?action=get_users`,
                 method: 'GET',
+                dataType: 'json',
                 headers: { 'X-Requested-With': 'XMLHttpRequest' },
                 dataSrc: 'users'
             },
@@ -93,7 +96,6 @@ $(document).ready(function() {
     $(document).on('click', '.btn-edit', function() {
         const $btn = $(this);
         
-        $('#editUserId').val($btn.data('id'));
         $('#editUserIdHidden').val($btn.data('id'));
         $('#editUserName').val($btn.data('nombre_usuario'));
         $('#editUserRole').val($btn.data('rol_id'));
