@@ -117,3 +117,17 @@ function supplies(): void
 
     require $view;
 }
+
+function employees(): void
+{
+    $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
+        . 'dashboard' . DIRECTORY_SEPARATOR . 'employees.php';
+
+    if (!is_file($view)) {
+        http_response_code(500);
+        echo 'Vista de empleados no encontrada.';
+        return;
+    }
+
+    require $view;
+}
