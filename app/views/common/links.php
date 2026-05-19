@@ -1,6 +1,9 @@
 <?php
 
 $css_links = '
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="' . BASE_URL . 'public/assets/images/favicon.ico">
+
     <!-- Google Fonts (Inter + Playfair Display) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

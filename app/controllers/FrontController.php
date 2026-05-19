@@ -19,6 +19,13 @@ class FrontController
 
     private $params = [];
 
+    private array $routes = [
+        'catalogo'  => ['controller' => 'public', 'action' => 'catalogo'],
+        'servicios' => ['controller' => 'public', 'action' => 'servicios'],
+        'nosotros'  => ['controller' => 'public', 'action' => 'nosotros'],
+        'contacto'  => ['controller' => 'public', 'action' => 'contacto'],
+    ];
+
 
 
     public function __construct()
@@ -63,13 +70,21 @@ class FrontController
         $segments = array_values(array_filter(explode('/', $uri)));
 
         if (empty($segments)) {
-            $this->controllerName = 'inicio';
-            $this->action = 'index';
+            $this->controllerName = 'public';
+            $this->action = 'home';
             $this->params = [];
         } else {
-            $this->controllerName = $this->sanitize($segments[0]);
-            $this->action = $this->sanitize($segments[1] ?? 'index');
-            $this->params = array_slice($segments, 2);
+            $routeKey = $segments[0];
+            // Rutas públicas de un solo segmento: catalogo, servicios, nosotros, contacto
+            if (isset($this->routes[$routeKey])) {
+                $this->controllerName = $this->routes[$routeKey]['controller'];
+                $this->action = $this->routes[$routeKey]['action'];
+                $this->params = array_slice($segments, 1);
+            } else {
+                $this->controllerName = $this->sanitize($segments[0]);
+                $this->action = $this->sanitize($segments[1] ?? 'index');
+                $this->params = array_slice($segments, 2);
+            }
         }
     }
 

@@ -8,7 +8,7 @@
     <!-- Left Panel - Decorative -->
     <div class="auth-panel-left">
         <div class="auth-panel-content">
-            <img src="<?= BASE_URL ?>public/images/logo.png" alt="INECOLARA" class="auth-logo">
+            <img src="<?= BASE_URL ?>public/assets/images/logo.png" alt="INECOLARA" class="auth-logo">
             <h1 class="auth-panel-title">Sistema de Gestión del Vivero</h1>
             <p class="auth-panel-text">
                 Plataforma integral para la administración de inventario, ventas y operaciones del Vivero Institucional INECOLARA.

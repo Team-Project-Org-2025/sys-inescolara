@@ -7,14 +7,6 @@ declare(strict_types=1);
  */
 function index(): void
 {
-    $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
-        . 'inicio' . DIRECTORY_SEPARATOR . 'index.php';
-
-    if (!is_file($view)) {
-        http_response_code(500);
-        echo 'Vista de inicio no encontrada.';
-        return;
-    }
-
-    require $view;
+    header('Location: ' . BASE_URL);
+    exit();
 }

@@ -12,6 +12,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($title ?? 'Dashboard') ?> - INECOLARA</title>
+    <link rel="icon" type="image/x-icon" href="<?= BASE_URL ?>public/assets/images/favicon.ico">
     <link rel="stylesheet" href="<?= BASE_URL ?>public/assets/css/styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
