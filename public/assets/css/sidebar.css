@@ -47,7 +47,7 @@
   justify-content: space-between;
   padding: 1.25rem 1.25rem 1rem;
   border-bottom: 1px solid #f3f4f6;
-  background: linear-gradient(to bottom, #fafafa 0%, #ffffff 100%);
+  background: linear-gradient(to bottom, #2e7d32, #2e7d32);
 }
 
 .sidebar-logo {
@@ -78,10 +78,10 @@
 }
 
 .sidebar-logo-title {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: 'Poppins', sans-serif;
   font-size: 1.125rem;
   font-weight: 700;
-  color: #000000; /* Cambiado de #1f2937 a negro puro */
+  color: #ffffff; /* Cambiado de #1f2937 a negro puro */
   letter-spacing: 0.02em;
   line-height: 1.2;
 }

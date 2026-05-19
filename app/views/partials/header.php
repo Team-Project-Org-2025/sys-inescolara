@@ -6,7 +6,7 @@
 <header class="site-header">
     <div class="container">
         <a href="<?= BASE_URL ?>" class="site-logo">
-            <img src="<?= BASE_URL ?>public/assets/images/logo.png" alt="INECOLARA">
+            <img src="<?= BASE_URL ?>public/assets/images/logo_de_inecolara-sin-fondo.png" alt="INECOLARA">
             <div class="site-logo-text">
                 <span>INECOLARA</span>
                 <span>Vivero Institucional</span>
@@ -43,12 +43,12 @@
                 </button>
             </div>
             <nav>
-                <a href="<?= BASE_URL ?>">Inicio</a>
-                <a href="<?= BASE_URL ?>catalogo">Catálogo</a>
-                <a href="<?= BASE_URL ?>servicios">Servicios</a>
-                <a href="<?= BASE_URL ?>nosotros">Nosotros</a>
-                <a href="<?= BASE_URL ?>contacto">Contacto</a>
-                <a href="<?= BASE_URL ?>login" class="btn btn-primary" style="margin-top:1rem">Acceso Personal</a>
+                <a href="<?= BASE_URL ?>" class="<?= ($currentPage ?? '') === 'home' ? 'active' : '' ?>">Inicio</a>
+                <a href="<?= BASE_URL ?>catalogo" class="<?= ($currentPage ?? '') === 'catalogo' ? 'active' : '' ?>">Catálogo</a>
+                <a href="<?= BASE_URL ?>servicios" class="<?= ($currentPage ?? '') === 'servicios' ? 'active' : '' ?>">Servicios</a>
+                <a href="<?= BASE_URL ?>nosotros" class="<?= ($currentPage ?? '') === 'nosotros' ? 'active' : '' ?>">Nosotros</a>
+                <a href="<?= BASE_URL ?>contacto" class="<?= ($currentPage ?? '') === 'contacto' ? 'active' : '' ?>">Contacto</a>
+                <a href="<?= BASE_URL ?>login" class="btn btn-primary">Acceso Personal</a>
             </nav>
         </div>
     </div>

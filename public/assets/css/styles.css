@@ -46,8 +46,8 @@
   --text-light: var(--color-white);
 
   /* Typography */
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-sans: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-serif: 'Poppins', Georgia, serif;
 
   /* Spacing Scale */
   --space-1: 0.25rem;
@@ -219,7 +219,7 @@ p {
 
 .btn-primary {
   background-color: var(--color-primary);
-  color: var(--color-black);
+  color: var(--text-light);
 }
 
 .btn-primary:hover {
@@ -864,6 +864,7 @@ p {
 }
 
 .auth-panel-title {
+  color: var(--text-light);
   font-size: clamp(2rem, 4vw, 3.5rem);
   max-width: 12ch;
   margin-bottom: 1rem;
@@ -1317,7 +1318,27 @@ p {
 
 .mobile-menu-btn {
   display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
   padding: var(--space-2);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-light);
+  border-radius: var(--radius-md);
+  transition: background var(--transition-fast);
+}
+
+.mobile-menu-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.mobile-menu-btn svg {
+  width: 24px;
+  height: 24px;
+  color: var(--text-light);
 }
 
 @media (min-width: 768px) {
@@ -1375,8 +1396,25 @@ p {
   font-size: 1.125rem;
   font-weight: 500;
   color: var(--text-primary);
-  padding: var(--space-2) 0;
-  border-bottom: 1px solid var(--color-gray-200);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--color-gray-100);
+  transition: color var(--transition-fast);
+}
+
+.mobile-menu nav a:hover {
+  color: var(--color-primary);
+}
+
+.mobile-menu nav a.active {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.mobile-menu nav a.btn-primary {
+  display: inline-flex;
+  margin-top: var(--space-4);
+  padding: var(--space-3) var(--space-6);
+  border-bottom: none;
 }
 
 /* Hero Section */

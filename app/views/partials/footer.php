@@ -8,7 +8,7 @@
     <div class="container">
         <div class="footer-grid">
             <div class="footer-column">
-                <img src="<?= BASE_URL ?>public/assets/images/logo.png" alt="INECOLARA" class="footer-logo-img" style="height:48px;margin-bottom:1rem">
+                <img src="<?= BASE_URL ?>public/assets/images/logo_de_inecolara-sin-fondo.png" alt="INECOLARA" class="footer-logo-img" style="height:48px;margin-bottom:1rem">
                 <p style="color:var(--color-gray-400);font-size:0.875rem;margin-bottom:1.5rem">
                     Promoviendo la conservación ambiental y el desarrollo sustentable a través de la producción de plantas nativas y ornamentales.
                 </p>

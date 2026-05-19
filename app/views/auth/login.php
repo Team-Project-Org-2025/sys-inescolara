@@ -8,8 +8,8 @@
     <!-- Left Panel - Decorative -->
     <div class="auth-panel-left">
         <div class="auth-panel-content">
-            <img src="<?= BASE_URL ?>public/assets/images/logo.png" alt="INECOLARA" class="auth-logo">
-            <h1 class="auth-panel-title">Sistema de Gestión del Vivero</h1>
+            <img src="<?= BASE_URL ?>public/assets/images/logo_de_inecolara-sin-fondo.png" alt="INECOLARA" class="auth-logo">
+            <h1 class="auth-panel-title">SysInescolara</h1>
             <p class="auth-panel-text">
                 Plataforma integral para la administración de inventario, ventas y operaciones del Vivero Institucional INECOLARA.
             </p>
@@ -66,7 +66,6 @@
                 </a>
                 <h2 class="auth-form-title">Iniciar Sesión</h2>
                 <p class="auth-form-subtitle">Ingresa tus credenciales para acceder al sistema</p>
-                <p class="auth-form-hint">Prueba: <strong>admin</strong> / <strong>Admin123!</strong> o <strong>admin@inecolara.gob.ve</strong></p>
             </div>
             
             <?php if (!empty($error)): ?>
