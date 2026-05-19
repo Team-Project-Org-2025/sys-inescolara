@@ -49,9 +49,17 @@ include_once __DIR__ . '/../common/links.php';
                 </button>
                 
                 <div class="sidebar-user" style="padding: 0.5rem; border-radius: 8px; display: flex; align-items: center; gap: 0.75rem;">
-                    <div class="sidebar-user-avatar" style="width: 36px; height: 36px; background-color: #e5a835; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; color: #1a1f2e;">
-                        <?= strtoupper(substr($user['name'] ?? 'U', 0, 1)) ?>
+                    <div class="sidebar-user-avatar" style="width: 36px; height: 36px; background-color: #e5a835; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; color: #1a1f2e; overflow: hidden; flex-shrink: 0;">
+                        <?php
+                        $headerAvatar = $_SESSION['user_avatar'] ?? null;
+                        $headerName = $_SESSION['user_nombre'] ?? 'U';
+                        if ($headerAvatar): ?>
+                            <img src="<?= BASE_URL . htmlspecialchars($headerAvatar) ?>" alt="Avatar" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">
+                        <?php else: ?>
+                            <?= strtoupper(substr($headerName, 0, 1)) ?>
+                        <?php endif; ?>
                     </div>
+                    <span style="font-size:0.875rem;font-weight:500;color:#374151;white-space:nowrap;"><?= htmlspecialchars($headerName) ?></span>
                 </div>
             </div>
         </header>

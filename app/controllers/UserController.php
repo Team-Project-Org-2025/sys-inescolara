@@ -38,6 +38,8 @@ function index(): void
 
     handleRequest($userModel);
 
+    $roles = $userModel->getRoles();
+
     $view = ROOT_PATH . 'app/views/dashboard/usuarios.php';
     if (!is_file($view)) {
         http_response_code(500);
@@ -146,12 +148,29 @@ function handleAddEditAjax(User $userModel, string $mode): void
     $password = trim((string)($_POST['password'] ?? ''));
     $rolId = (int)($_POST['rol_id'] ?? 1);
 
+    // El superusuario (ID 1) siempre es Administrador
+    if ($id === 1) {
+        $rolId = 1;
+    }
+
+    $avatar = null;
+
+    // Subir avatar si viene un archivo
+    if (!empty($_FILES['avatar']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK) {
+        $uploader = new \SysInescolara\helpers\ImageUploader('assets/uploads/avatars');
+        $result = $uploader->upload($_FILES['avatar'], 'avatar');
+        if (!$result['success']) {
+            throw new Exception(implode(', ', $result['errors']));
+        }
+        $avatar = $result['data']['url'];
+    }
+
     if ($mode === 'add') {
         if ($userModel->userExists(null, $nombreUsuario)) {
             throw new Exception('El nombre de usuario ya está registrado');
         }
 
-        $userModel->add($nombreUsuario, $password, $rolId);
+        $userModel->add($nombreUsuario, $password, $rolId, $avatar);
 
         jsonResponse([
             'success' => true,
@@ -160,6 +179,7 @@ function handleAddEditAjax(User $userModel, string $mode): void
                 'id' => $userModel->getLastInsertId() ?? 0,
                 'nombre_usuario' => $nombreUsuario,
                 'rol_id' => $rolId,
+                'avatar' => $avatar,
             ],
         ]);
     }
@@ -168,7 +188,26 @@ function handleAddEditAjax(User $userModel, string $mode): void
         throw new Exception('ID inválido');
     }
 
-    $userModel->update($id, $nombreUsuario, $rolId, $password !== '' ? $password : null);
+    // Si no se subió nuevo avatar, mantener el existente
+    if ($avatar === null) {
+        $existing = $userModel->getById($id);
+        $avatar = $existing['avatar'] ?? null;
+    } else {
+        // Eliminar avatar anterior
+        $existing = $userModel->getById($id);
+        if (!empty($existing['avatar'])) {
+            $uploader = new \SysInescolara\helpers\ImageUploader();
+            $uploader->delete($existing['avatar']);
+        }
+    }
+
+    $userModel->update($id, $nombreUsuario, $rolId, $password !== '' ? $password : null, $avatar);
+
+    // Si el usuario editado es el mismo de la sesión, actualizar sus datos en sesión
+    if (isset($_SESSION['user_id']) && (int)$_SESSION['user_id'] === $id) {
+        $_SESSION['user_nombre'] = $nombreUsuario;
+        $_SESSION['user_avatar'] = $avatar;
+    }
 
     jsonResponse([
         'success' => true,
@@ -177,6 +216,7 @@ function handleAddEditAjax(User $userModel, string $mode): void
             'id' => $id,
             'nombre_usuario' => $nombreUsuario,
             'rol_id' => $rolId,
+            'avatar' => $avatar,
         ],
     ]);
 }
@@ -186,6 +226,11 @@ function handleDeleteAjax(User $userModel): void
     $id = (int)($_POST['id'] ?? 0);
     if ($id <= 0) {
         throw new Exception('ID inválido');
+    }
+
+    if ($id === 1) {
+        jsonResponse(['success' => false, 'message' => 'No se puede eliminar el superusuario principal'], 400);
+        return;
     }
 
     if (!$userModel->userExists($id)) {
