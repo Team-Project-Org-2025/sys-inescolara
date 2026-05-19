@@ -7,22 +7,16 @@ use SysInescolara\helpers\Validation;
 
 require_once __DIR__ . '/LoginController.php';
 
-// Aseguramos que la sesión y autenticación se verifiquen
 checkAuth();
 
-// Instanciamos el modelo de Proveedores
 $supplierModel = new Suppliers();
 
-/**
- * Acción principal que renderiza la vista de proveedores
- */
 function index()
 {
     global $dolarBCVRate;
     require __DIR__ . '/../views/dashboard/suppliers.php';
 }
 
-// Procesamos la petición delegando al manejador central
 handleRequest($supplierModel);
 
 // ============================================

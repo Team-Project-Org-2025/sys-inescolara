@@ -11,16 +11,12 @@ checkAuth();
 
 $plantModel = new Plants();
 
-/**
- * Acción principal que renderiza la vista de lotes/plantas
- */
 function index()
 {
     global $dolarBCVRate;
     require __DIR__ . '/../views/dashboard/plantas.php';
 }
 
-// Procesamos la petición delegando al manejador central
 handleRequest($plantModel);
 
 // ============================================

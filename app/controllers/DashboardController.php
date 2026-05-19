@@ -131,3 +131,17 @@ function employees(): void
 
     require $view;
 }
+
+function clients(): void
+{
+    $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
+        . 'dashboard' . DIRECTORY_SEPARATOR . 'clients.php';
+
+    if (!is_file($view)) {
+        http_response_code(500);
+        echo 'Vista de clientes no encontrada.';
+        return;
+    }
+
+    require $view;
+}

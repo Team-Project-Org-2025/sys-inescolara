@@ -7,10 +7,8 @@ use SysInescolara\helpers\Validation;
 
 require_once __DIR__ . '/LoginController.php';
 
-// Aseguramos que la sesión y autenticación se verifiquen
 checkAuth();
 
-// Instanciamos el modelo directamente, sin AdminContext ya que no existe
 $userModel = new User();
 
 function index()
