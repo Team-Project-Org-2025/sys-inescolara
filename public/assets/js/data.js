@@ -10,7 +10,8 @@ const PLANTS_DATA = [
     name: 'Heliconia Caribaea',
     scientificName: 'Heliconia caribaea',
     type: 'Ornamental',
-    description: 'Planta tropical con flores rojas y amarillas muy vistosas. Ideal para jardines tropicales y arreglos florales. Requiere suelo humedo y sombra parcial.',
+    description:
+      'Planta tropical con flores rojas y amarillas muy vistosas. Ideal para jardines tropicales y arreglos florales. Requiere suelo humedo y sombra parcial.',
     price: 85000,
     stock: 450,
     lot: 'LOT-2024-001',
@@ -19,14 +20,15 @@ const PLANTS_DATA = [
     water: 'Frecuente',
     temperature: '18-28°C',
     image: 'https://images.unsplash.com/photo-1598880940371-c756e015fea1?w=400&h=300&fit=crop',
-    featured: true
+    featured: true,
   },
   {
     id: 2,
     name: 'Palma Areca',
     scientificName: 'Dypsis lutescens',
     type: 'Ornamental',
-    description: 'Elegante palma de interior con hojas arqueadas de color verde brillante. Excelente purificadora de aire. Crece bien en interiores luminosos.',
+    description:
+      'Elegante palma de interior con hojas arqueadas de color verde brillante. Excelente purificadora de aire. Crece bien en interiores luminosos.',
     price: 120000,
     stock: 380,
     lot: 'LOT-2024-002',
@@ -35,14 +37,15 @@ const PLANTS_DATA = [
     water: 'Moderado',
     temperature: '16-24°C',
     image: 'https://images.unsplash.com/photo-1545241047-6083a3684587?w=400&h=300&fit=crop',
-    featured: true
+    featured: true,
   },
   {
     id: 3,
     name: 'Croton Variegado',
     scientificName: 'Codiaeum variegatum',
     type: 'Ornamental',
-    description: 'Planta con hojas multicolores en tonos de rojo, naranja, amarillo y verde. Ideal para interiores luminosos y jardines tropicales.',
+    description:
+      'Planta con hojas multicolores en tonos de rojo, naranja, amarillo y verde. Ideal para interiores luminosos y jardines tropicales.',
     price: 65000,
     stock: 320,
     lot: 'LOT-2024-003',
@@ -51,14 +54,15 @@ const PLANTS_DATA = [
     water: 'Moderado',
     temperature: '18-30°C',
     image: 'https://images.unsplash.com/photo-1459411552884-841db9b3cc2a?w=400&h=300&fit=crop',
-    featured: true
+    featured: true,
   },
   {
     id: 4,
     name: 'Samán',
     scientificName: 'Samanea saman',
     type: 'Forestal',
-    description: 'Arbol emblematico de Venezuela con amplia copa. Ideal para reforestacion, sombra en parques y avenidas. Arbol nacional de Venezuela.',
+    description:
+      'Arbol emblematico de Venezuela con amplia copa. Ideal para reforestacion, sombra en parques y avenidas. Arbol nacional de Venezuela.',
     price: 45000,
     stock: 280,
     lot: 'LOT-2024-004',
@@ -67,14 +71,15 @@ const PLANTS_DATA = [
     water: 'Bajo',
     temperature: '20-35°C',
     image: 'https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=400&h=300&fit=crop',
-    featured: true
+    featured: true,
   },
   {
     id: 5,
     name: 'Orquidea Cattleya',
     scientificName: 'Cattleya labiata',
     type: 'Ornamental',
-    description: 'Flor nacional de Venezuela, con flores grandes y fragantes. Requiere cuidados especiales pero recompensa con floraciones espectaculares.',
+    description:
+      'Flor nacional de Venezuela, con flores grandes y fragantes. Requiere cuidados especiales pero recompensa con floraciones espectaculares.',
     price: 180000,
     stock: 8,
     lot: 'LOT-2024-005',
@@ -83,14 +88,15 @@ const PLANTS_DATA = [
     water: 'Moderado',
     temperature: '15-25°C',
     image: 'https://images.unsplash.com/photo-1566907225172-7f9d867a6563?w=400&h=300&fit=crop',
-    featured: false
+    featured: false,
   },
   {
     id: 6,
     name: 'Helecho Boston',
     scientificName: 'Nephrolepis exaltata',
     type: 'Ornamental',
-    description: 'Helecho colgante con frondas elegantes y arqueadas. Excelente para cestas colgantes, purifica el aire y agrega frescura a cualquier espacio.',
+    description:
+      'Helecho colgante con frondas elegantes y arqueadas. Excelente para cestas colgantes, purifica el aire y agrega frescura a cualquier espacio.',
     price: 55000,
     stock: 12,
     lot: 'LOT-2024-006',
@@ -99,14 +105,15 @@ const PLANTS_DATA = [
     water: 'Frecuente',
     temperature: '16-24°C',
     image: 'https://images.unsplash.com/photo-1446071103084-c257b5f70672?w=400&h=300&fit=crop',
-    featured: false
+    featured: false,
   },
   {
     id: 7,
     name: 'Apamate',
     scientificName: 'Tabebuia rosea',
     type: 'Forestal',
-    description: 'Arbol de flores rosadas muy ornamental. Usado en reforestacion urbana y rural. Florece espectacularmente en la temporada seca.',
+    description:
+      'Arbol de flores rosadas muy ornamental. Usado en reforestacion urbana y rural. Florece espectacularmente en la temporada seca.',
     price: 35000,
     stock: 420,
     lot: 'LOT-2024-007',
@@ -115,14 +122,15 @@ const PLANTS_DATA = [
     water: 'Bajo',
     temperature: '20-32°C',
     image: 'https://images.unsplash.com/photo-1518495973542-4542c06a5843?w=400&h=300&fit=crop',
-    featured: false
+    featured: false,
   },
   {
     id: 8,
     name: 'Monstera Deliciosa',
     scientificName: 'Monstera deliciosa',
     type: 'Ornamental',
-    description: 'Planta tropical con hojas grandes y perforadas. Muy popular en decoracion de interiores. Facil de cuidar y de rapido crecimiento.',
+    description:
+      'Planta tropical con hojas grandes y perforadas. Muy popular en decoracion de interiores. Facil de cuidar y de rapido crecimiento.',
     price: 95000,
     stock: 156,
     lot: 'LOT-2024-008',
@@ -131,14 +139,15 @@ const PLANTS_DATA = [
     water: 'Moderado',
     temperature: '18-30°C',
     image: 'https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=400&h=300&fit=crop',
-    featured: false
+    featured: false,
   },
   {
     id: 9,
     name: 'Palma Kentia',
     scientificName: 'Howea forsteriana',
     type: 'Ornamental',
-    description: 'Palma elegante de crecimiento lento, ideal para interiores. Muy resistente y de bajo mantenimiento. Puede alcanzar varios metros de altura.',
+    description:
+      'Palma elegante de crecimiento lento, ideal para interiores. Muy resistente y de bajo mantenimiento. Puede alcanzar varios metros de altura.',
     price: 250000,
     stock: 15,
     lot: 'LOT-2024-009',
@@ -147,14 +156,15 @@ const PLANTS_DATA = [
     water: 'Bajo',
     temperature: '15-25°C',
     image: 'https://images.unsplash.com/photo-1598880940942-9ad96ece5bf5?w=400&h=300&fit=crop',
-    featured: false
+    featured: false,
   },
   {
     id: 10,
     name: 'Ceiba',
     scientificName: 'Ceiba pentandra',
     type: 'Forestal',
-    description: 'Arbol majestuoso de gran tamano, sagrado en culturas indigenas. Ideal para proyectos de reforestacion a gran escala y areas verdes amplias.',
+    description:
+      'Arbol majestuoso de gran tamano, sagrado en culturas indigenas. Ideal para proyectos de reforestacion a gran escala y areas verdes amplias.',
     price: 55000,
     stock: 180,
     lot: 'LOT-2024-010',
@@ -163,14 +173,15 @@ const PLANTS_DATA = [
     water: 'Bajo',
     temperature: '22-35°C',
     image: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=400&h=300&fit=crop',
-    featured: false
+    featured: false,
   },
   {
     id: 11,
     name: 'Rosa del Desierto',
     scientificName: 'Adenium obesum',
     type: 'Ornamental',
-    description: 'Suculenta con flores rosadas espectaculares y tronco engrosado. Requiere poco riego y mucho sol. Ideal para coleccionistas.',
+    description:
+      'Suculenta con flores rosadas espectaculares y tronco engrosado. Requiere poco riego y mucho sol. Ideal para coleccionistas.',
     price: 145000,
     stock: 18,
     lot: 'LOT-2024-011',
@@ -179,14 +190,15 @@ const PLANTS_DATA = [
     water: 'Bajo',
     temperature: '20-35°C',
     image: 'https://images.unsplash.com/photo-1509587584298-0f3b3a3a1797?w=400&h=300&fit=crop',
-    featured: false
+    featured: false,
   },
   {
     id: 12,
     name: 'Planta de Jade',
     scientificName: 'Crassula ovata',
     type: 'Ornamental',
-    description: 'Suculenta de hojas carnosas verde jade. Simbolo de buena suerte y prosperidad. Muy facil de cuidar y de larga vida.',
+    description:
+      'Suculenta de hojas carnosas verde jade. Simbolo de buena suerte y prosperidad. Muy facil de cuidar y de larga vida.',
     price: 48000,
     stock: 20,
     lot: 'LOT-2024-012',
@@ -195,14 +207,15 @@ const PLANTS_DATA = [
     water: 'Bajo',
     temperature: '15-25°C',
     image: 'https://images.unsplash.com/photo-1509423350716-97f9360b4e09?w=400&h=300&fit=crop',
-    featured: false
+    featured: false,
   },
   {
     id: 13,
     name: 'Araguaney',
     scientificName: 'Handroanthus chrysanthus',
     type: 'Forestal',
-    description: 'Arbol nacional de Venezuela con espectacular floracion amarilla. Ideal para reforestacion y embellecimiento urbano.',
+    description:
+      'Arbol nacional de Venezuela con espectacular floracion amarilla. Ideal para reforestacion y embellecimiento urbano.',
     price: 40000,
     stock: 350,
     lot: 'LOT-2024-013',
@@ -211,14 +224,15 @@ const PLANTS_DATA = [
     water: 'Bajo',
     temperature: '20-32°C',
     image: 'https://images.unsplash.com/photo-1476842384041-a57a4f124e2e?w=400&h=300&fit=crop',
-    featured: false
+    featured: false,
   },
   {
     id: 14,
     name: 'Anturio Rojo',
     scientificName: 'Anthurium andraeanum',
     type: 'Ornamental',
-    description: 'Planta tropical con flores rojas brillantes en forma de corazon. Florece durante todo el ano con cuidados adecuados.',
+    description:
+      'Planta tropical con flores rojas brillantes en forma de corazon. Florece durante todo el ano con cuidados adecuados.',
     price: 75000,
     stock: 210,
     lot: 'LOT-2024-014',
@@ -227,14 +241,15 @@ const PLANTS_DATA = [
     water: 'Moderado',
     temperature: '18-28°C',
     image: 'https://images.unsplash.com/photo-1567331711402-509c12c41959?w=400&h=300&fit=crop',
-    featured: false
+    featured: false,
   },
   {
     id: 15,
     name: 'Ficus Lyrata',
     scientificName: 'Ficus lyrata',
     type: 'Ornamental',
-    description: 'Planta de interior muy popular con hojas grandes en forma de violin. Aporta elegancia y frescura a cualquier espacio.',
+    description:
+      'Planta de interior muy popular con hojas grandes en forma de violin. Aporta elegancia y frescura a cualquier espacio.',
     price: 185000,
     stock: 85,
     lot: 'LOT-2024-015',
@@ -243,14 +258,15 @@ const PLANTS_DATA = [
     water: 'Moderado',
     temperature: '16-24°C',
     image: 'https://images.unsplash.com/photo-1459411552884-841db9b3cc2a?w=400&h=300&fit=crop',
-    featured: false
+    featured: false,
   },
   {
     id: 16,
     name: 'Caoba',
     scientificName: 'Swietenia macrophylla',
     type: 'Forestal',
-    description: 'Arbol maderable de alto valor. Importante para proyectos de reforestacion y conservacion. Madera muy apreciada.',
+    description:
+      'Arbol maderable de alto valor. Importante para proyectos de reforestacion y conservacion. Madera muy apreciada.',
     price: 65000,
     stock: 120,
     lot: 'LOT-2024-016',
@@ -259,38 +275,182 @@ const PLANTS_DATA = [
     water: 'Moderado',
     temperature: '22-32°C',
     image: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&h=300&fit=crop',
-    featured: false
-  }
+    featured: false,
+  },
 ];
 
 const LOTS_DATA = [
-  { code: 'LOT-2024-001', species: 'Heliconia Caribaea', quantity: 450, location: 'Sector A - Nave 1', status: 'Activo', plantingDate: '15/01/2024' },
-  { code: 'LOT-2024-002', species: 'Palma Areca', quantity: 380, location: 'Sector A - Nave 2', status: 'Activo', plantingDate: '20/01/2024' },
-  { code: 'LOT-2024-003', species: 'Croton Variegado', quantity: 320, location: 'Sector B - Nave 1', status: 'Activo', plantingDate: '25/01/2024' },
-  { code: 'LOT-2024-004', species: 'Samán', quantity: 280, location: 'Sector C - Exterior', status: 'Activo', plantingDate: '01/02/2024' },
-  { code: 'LOT-2024-005', species: 'Orquidea Cattleya', quantity: 8, location: 'Sector A - Invernadero', status: 'Cuarentena', plantingDate: '05/02/2024' },
-  { code: 'LOT-2024-006', species: 'Helecho Boston', quantity: 12, location: 'Sector B - Nave 2', status: 'Trasplante', plantingDate: '10/02/2024' },
-  { code: 'LOT-2024-007', species: 'Apamate', quantity: 420, location: 'Sector C - Exterior', status: 'Activo', plantingDate: '12/02/2024' },
-  { code: 'LOT-2024-008', species: 'Monstera Deliciosa', quantity: 156, location: 'Sector B - Nave 1', status: 'Activo', plantingDate: '15/02/2024' },
-  { code: 'LOT-2024-009', species: 'Palma Kentia', quantity: 15, location: 'Sector A - Invernadero', status: 'Germinacion', plantingDate: '18/02/2024' },
-  { code: 'LOT-2024-010', species: 'Ceiba', quantity: 180, location: 'Sector C - Exterior', status: 'Activo', plantingDate: '20/02/2024' },
-  { code: 'LOT-2024-011', species: 'Rosa del Desierto', quantity: 18, location: 'Sector A - Invernadero', status: 'Activo', plantingDate: '22/02/2024' },
-  { code: 'LOT-2024-012', species: 'Planta de Jade', quantity: 20, location: 'Sector B - Nave 2', status: 'Trasplante', plantingDate: '25/02/2024' },
-  { code: 'LOT-2024-013', species: 'Araguaney', quantity: 350, location: 'Sector C - Exterior', status: 'Activo', plantingDate: '28/02/2024' },
-  { code: 'LOT-2024-014', species: 'Anturio Rojo', quantity: 210, location: 'Sector A - Nave 1', status: 'Activo', plantingDate: '01/03/2024' },
-  { code: 'LOT-2024-015', species: 'Ficus Lyrata', quantity: 85, location: 'Sector B - Nave 1', status: 'Activo', plantingDate: '05/03/2024' },
-  { code: 'LOT-2024-016', species: 'Caoba', quantity: 120, location: 'Sector C - Exterior', status: 'Germinacion', plantingDate: '08/03/2024' }
+  {
+    code: 'LOT-2024-001',
+    species: 'Heliconia Caribaea',
+    quantity: 450,
+    location: 'Sector A - Nave 1',
+    status: 'Activo',
+    plantingDate: '15/01/2024',
+  },
+  {
+    code: 'LOT-2024-002',
+    species: 'Palma Areca',
+    quantity: 380,
+    location: 'Sector A - Nave 2',
+    status: 'Activo',
+    plantingDate: '20/01/2024',
+  },
+  {
+    code: 'LOT-2024-003',
+    species: 'Croton Variegado',
+    quantity: 320,
+    location: 'Sector B - Nave 1',
+    status: 'Activo',
+    plantingDate: '25/01/2024',
+  },
+  {
+    code: 'LOT-2024-004',
+    species: 'Samán',
+    quantity: 280,
+    location: 'Sector C - Exterior',
+    status: 'Activo',
+    plantingDate: '01/02/2024',
+  },
+  {
+    code: 'LOT-2024-005',
+    species: 'Orquidea Cattleya',
+    quantity: 8,
+    location: 'Sector A - Invernadero',
+    status: 'Cuarentena',
+    plantingDate: '05/02/2024',
+  },
+  {
+    code: 'LOT-2024-006',
+    species: 'Helecho Boston',
+    quantity: 12,
+    location: 'Sector B - Nave 2',
+    status: 'Trasplante',
+    plantingDate: '10/02/2024',
+  },
+  {
+    code: 'LOT-2024-007',
+    species: 'Apamate',
+    quantity: 420,
+    location: 'Sector C - Exterior',
+    status: 'Activo',
+    plantingDate: '12/02/2024',
+  },
+  {
+    code: 'LOT-2024-008',
+    species: 'Monstera Deliciosa',
+    quantity: 156,
+    location: 'Sector B - Nave 1',
+    status: 'Activo',
+    plantingDate: '15/02/2024',
+  },
+  {
+    code: 'LOT-2024-009',
+    species: 'Palma Kentia',
+    quantity: 15,
+    location: 'Sector A - Invernadero',
+    status: 'Germinacion',
+    plantingDate: '18/02/2024',
+  },
+  {
+    code: 'LOT-2024-010',
+    species: 'Ceiba',
+    quantity: 180,
+    location: 'Sector C - Exterior',
+    status: 'Activo',
+    plantingDate: '20/02/2024',
+  },
+  {
+    code: 'LOT-2024-011',
+    species: 'Rosa del Desierto',
+    quantity: 18,
+    location: 'Sector A - Invernadero',
+    status: 'Activo',
+    plantingDate: '22/02/2024',
+  },
+  {
+    code: 'LOT-2024-012',
+    species: 'Planta de Jade',
+    quantity: 20,
+    location: 'Sector B - Nave 2',
+    status: 'Trasplante',
+    plantingDate: '25/02/2024',
+  },
+  {
+    code: 'LOT-2024-013',
+    species: 'Araguaney',
+    quantity: 350,
+    location: 'Sector C - Exterior',
+    status: 'Activo',
+    plantingDate: '28/02/2024',
+  },
+  {
+    code: 'LOT-2024-014',
+    species: 'Anturio Rojo',
+    quantity: 210,
+    location: 'Sector A - Nave 1',
+    status: 'Activo',
+    plantingDate: '01/03/2024',
+  },
+  {
+    code: 'LOT-2024-015',
+    species: 'Ficus Lyrata',
+    quantity: 85,
+    location: 'Sector B - Nave 1',
+    status: 'Activo',
+    plantingDate: '05/03/2024',
+  },
+  {
+    code: 'LOT-2024-016',
+    species: 'Caoba',
+    quantity: 120,
+    location: 'Sector C - Exterior',
+    status: 'Germinacion',
+    plantingDate: '08/03/2024',
+  },
 ];
 
 const ACTIVITY_DATA = [
-  { type: 'sale', text: '<strong>Venta completada:</strong> 25 Palmas Areca a Alcaldia de Iribarren', time: 'Hace 15 minutos' },
-  { type: 'inventory', text: '<strong>Lote LOT-2024-016</strong> actualizado: 120 Caobas en germinacion', time: 'Hace 45 minutos' },
-  { type: 'alert', text: '<strong>Stock bajo:</strong> Orquidea Cattleya tiene solo 8 unidades', time: 'Hace 1 hora' },
-  { type: 'sale', text: '<strong>Venta completada:</strong> 50 Heliconias a Proyecto Escuelas Verdes', time: 'Hace 2 horas' },
-  { type: 'inventory', text: '<strong>Trasplante completado:</strong> 200 plantulas de Helecho Boston', time: 'Hace 3 horas' },
-  { type: 'sale', text: '<strong>Venta completada:</strong> 15 Monstera Deliciosa a cliente particular', time: 'Hace 4 horas' },
-  { type: 'alert', text: '<strong>Recordatorio:</strong> Fumigacion programada para manana en Sector B', time: 'Hace 5 horas' },
-  { type: 'inventory', text: '<strong>Nuevo lote registrado:</strong> LOT-2024-017 con 300 plantulas de Croton', time: 'Ayer' }
+  {
+    type: 'sale',
+    text: '<strong>Venta completada:</strong> 25 Palmas Areca a Alcaldia de Iribarren',
+    time: 'Hace 15 minutos',
+  },
+  {
+    type: 'inventory',
+    text: '<strong>Lote LOT-2024-016</strong> actualizado: 120 Caobas en germinacion',
+    time: 'Hace 45 minutos',
+  },
+  {
+    type: 'alert',
+    text: '<strong>Stock bajo:</strong> Orquidea Cattleya tiene solo 8 unidades',
+    time: 'Hace 1 hora',
+  },
+  {
+    type: 'sale',
+    text: '<strong>Venta completada:</strong> 50 Heliconias a Proyecto Escuelas Verdes',
+    time: 'Hace 2 horas',
+  },
+  {
+    type: 'inventory',
+    text: '<strong>Trasplante completado:</strong> 200 plantulas de Helecho Boston',
+    time: 'Hace 3 horas',
+  },
+  {
+    type: 'sale',
+    text: '<strong>Venta completada:</strong> 15 Monstera Deliciosa a cliente particular',
+    time: 'Hace 4 horas',
+  },
+  {
+    type: 'alert',
+    text: '<strong>Recordatorio:</strong> Fumigacion programada para manana en Sector B',
+    time: 'Hace 5 horas',
+  },
+  {
+    type: 'inventory',
+    text: '<strong>Nuevo lote registrado:</strong> LOT-2024-017 con 300 plantulas de Croton',
+    time: 'Ayer',
+  },
 ];
 
 const KPI_DATA = {
@@ -303,5 +463,5 @@ const KPI_DATA = {
   pendingValidations: 5,
   validationsChange: '-3',
   crewTasks: 12,
-  tasksChange: '+4'
+  tasksChange: '+4',
 };

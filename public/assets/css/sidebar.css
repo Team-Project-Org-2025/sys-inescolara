@@ -25,7 +25,7 @@
   .sidebar {
     transform: translateX(-100%);
   }
-  
+
   .sidebar.mobile-open {
     transform: translateX(0);
   }
@@ -47,11 +47,7 @@
   justify-content: space-between;
   padding: 1.25rem 1.25rem 1rem;
   border-bottom: 1px solid #f3f4f6;
-  background: linear-gradient(
-    to bottom,
-    #fafafa 0%,
-    #ffffff 100%
-  );
+  background: linear-gradient(to bottom, #fafafa 0%, #ffffff 100%);
 }
 
 .sidebar-logo {
@@ -85,7 +81,7 @@
   font-family: 'Playfair Display', Georgia, serif;
   font-size: 1.125rem;
   font-weight: 700;
-  color: #000000;  /* Cambiado de #1f2937 a negro puro */
+  color: #000000; /* Cambiado de #1f2937 a negro puro */
   letter-spacing: 0.02em;
   line-height: 1.2;
 }
@@ -93,7 +89,7 @@
 .sidebar-logo-subtitle {
   font-size: 0.65rem;
   font-weight: 500;
-  color: #000000;  /* Cambiado de #6b7280 a negro puro */
+  color: #000000; /* Cambiado de #6b7280 a negro puro */
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }

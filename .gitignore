@@ -6,6 +6,8 @@
 # PHP dependencies and build artifacts
 /vendor/
 /composer.phar
+# Node dependencies
+/node_modules/
 # Logs and cache
 *.log
 *.cache
