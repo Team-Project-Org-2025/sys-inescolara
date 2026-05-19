@@ -92,3 +92,73 @@ function usuarios(): void
 
     require $view;
 }
+
+function plants(): void
+{
+    $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
+        . 'dashboard' . DIRECTORY_SEPARATOR . 'plants.php';
+
+    if (!is_file($view)) {
+        http_response_code(500);
+        echo 'Vista de plantas no encontrada.';
+        return;
+    }
+
+    require $view;
+}
+
+function suppliers(): void
+{
+    $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
+        . 'dashboard' . DIRECTORY_SEPARATOR . 'suppliers.php';
+
+    if (!is_file($view)) {
+        http_response_code(500);
+        echo 'Vista de proveedores no encontrada.';
+        return;
+    }
+
+    require $view;
+}
+
+function supplies(): void
+{
+    $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
+        . 'dashboard' . DIRECTORY_SEPARATOR . 'supplies.php';
+
+    if (!is_file($view)) {
+        http_response_code(500);
+        echo 'Vista de suministros no encontrada.';
+        return;
+    }
+
+    require $view;
+}
+
+function employees(): void
+{
+    $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
+        . 'dashboard' . DIRECTORY_SEPARATOR . 'employees.php';
+
+    if (!is_file($view)) {
+        http_response_code(500);
+        echo 'Vista de empleados no encontrada.';
+        return;
+    }
+
+    require $view;
+}
+
+function clients(): void
+{
+    $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
+        . 'dashboard' . DIRECTORY_SEPARATOR . 'clients.php';
+
+    if (!is_file($view)) {
+        http_response_code(500);
+        echo 'Vista de clientes no encontrada.';
+        return;
+    }
+
+    require $view;
+}
