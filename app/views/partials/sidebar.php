@@ -6,8 +6,7 @@
         <a href="<?= BASE_URL ?>dashboard" class="sidebar-logo">
             <img src="<?= BASE_URL ?>public/assets/images/logo_de_inecolara-sin-fondo.png" alt="INECOLARA" class="sidebar-logo-img">
             <div class="sidebar-logo-text">
-                <span class="sidebar-logo-title">INECOLARA</span>
-                <span class="sidebar-logo-subtitle">Ecosocialismo</span>
+                <span class="sidebar-logo-title">SYSINECOLARA</span>
             </div>
         </a>
         <button class="sidebar-close" id="sidebarClose" aria-label="Cerrar menú">
