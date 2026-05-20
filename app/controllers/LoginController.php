@@ -15,6 +15,9 @@ $GLOBALS['userModel'] = new User();
 
 function renderLoginView(?string $error = null, array $old = []): void
 {
+    // Obtener la Site Key de reCAPTCHA desde el .env (cargado por Database)
+    $recaptchaSiteKey = getenv('RECAPTCHA_SITE_KEY') ?: '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI';
+
     $title = 'Iniciar Sesión';
     $layout = ROOT_PATH . 'app/views/layouts/auth.php';
     $view = ROOT_PATH . 'app/views/auth/login.php';
@@ -89,6 +92,33 @@ function login()
         renderLoginView("Por favor, complete todos los campos.", ['email' => $identificador]);
         return;
     }
+
+    // --- Validación del token reCAPTCHA ---
+    $recaptchaToken = $_POST['g-recaptcha-response'] ?? '';
+    if (empty($recaptchaToken)) {
+        renderLoginView("Por favor, completa la verificación de seguridad.", ['email' => $identificador]);
+        return;
+    }
+
+    $recaptchaSecret = getenv('RECAPTCHA_SECRET_KEY') ?: '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe';
+    $verifyResponse = file_get_contents('https://www.google.com/recaptcha/api/siteverify', false, stream_context_create([
+        'http' => [
+            'method' => 'POST',
+            'header' => 'Content-type: application/x-www-form-urlencoded',
+            'content' => http_build_query([
+                'secret' => $recaptchaSecret,
+                'response' => $recaptchaToken,
+                'remoteip' => $_SERVER['REMOTE_ADDR'] ?? '',
+            ]),
+        ],
+    ]));
+    $verifyData = json_decode($verifyResponse, true);
+
+    if (!($verifyData['success'] ?? false)) {
+        renderLoginView("Verificación de seguridad fallida. Intenta de nuevo.", ['email' => $identificador]);
+        return;
+    }
+    // --- Fin validación reCAPTCHA ---
 
     $user = $userModel->authenticate($identificador, $password);
 

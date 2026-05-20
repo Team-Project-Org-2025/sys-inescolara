@@ -1416,6 +1416,12 @@ div.dataTables_wrapper .dt-buttons .btn {
   color: var(--color-secondary);
 }
 
+.recaptcha-wrapper {
+  display: flex;
+  justify-content: center;
+  margin: 1.25rem 0;
+}
+
 .btn-block {
   width: 100%;
 }

@@ -138,6 +138,11 @@
                     <a href="<?= BASE_URL ?>recuperar-password" class="form-link">¿Olvidaste tu contraseña?</a>
                 </div>
                 
+                <!-- Google reCAPTCHA - Verificación de seguridad -->
+                <div class="form-group recaptcha-wrapper">
+                    <div class="g-recaptcha" data-sitekey="<?= htmlspecialchars($recaptchaSiteKey) ?>"></div>
+                </div>
+
                 <button type="submit" class="btn btn-primary btn-block btn-lg" id="loginBtn">
                     <span class="btn-text">Iniciar Sesión</span>
                     <span class="btn-loader hidden">
@@ -152,8 +157,6 @@
                 </button>
             </form>
             
-            <div class="auth-form-footer">
-                <p>¿Necesitas acceso? Contacta al administrador del sistema.</p>
             </div>
         </div>
     </div>

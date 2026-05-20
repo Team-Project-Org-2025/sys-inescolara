@@ -48,4 +48,7 @@ $scripts_links = '
     
     <!-- Script del Sidebar -->
     <script src="' . BASE_URL . 'public/assets/js/sidebar.js"></script>
+
+    <!-- Google reCAPTCHA v2 -->
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 ';
