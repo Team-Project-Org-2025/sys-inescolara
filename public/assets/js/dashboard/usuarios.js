@@ -23,7 +23,7 @@ $(document).ready(function () {
 
   const initDataTable = () => {
     if (typeof SkeletonHelper !== 'undefined') {
-      SkeletonHelper.showTableSkeleton('usersTable', 5, 3);
+      SkeletonHelper.showTableSkeleton('usersTable', 5, 4);
     }
     usersTable = $('#usersTable').DataTable({
       ajax: {
@@ -35,6 +35,10 @@ $(document).ready(function () {
       },
       columns: [
         { data: 'nombre_usuario' },
+        {
+          data: 'correo_electronico',
+          render: (data) => data || '<span class="text-muted">—</span>',
+        },
         { data: 'nombre_rol' },
         {
           data: null,
@@ -46,6 +50,7 @@ $(document).ready(function () {
                 <button class="btn btn-sm btn-outline-primary btn-edit" 
                         data-id="${Helpers.escapeHtml(data.id)}"
                         data-nombre_usuario="${Helpers.escapeHtml(data.nombre_usuario)}"
+                        data-correo_electronico="${Helpers.escapeHtml(data.correo_electronico || '')}"
                         data-rol_id="${Helpers.escapeHtml(data.rol_id)}"
                         data-avatar="${Helpers.escapeHtml(data.avatar || '')}">
                     <i class="fas fa-edit"></i> Editar
@@ -143,6 +148,7 @@ $(document).ready(function () {
 
     $('#editUserIdHidden').val(userId);
     $('#editUserName').val($btn.data('nombre_usuario'));
+    $('#editUserEmail').val($btn.data('correo_electronico'));
     $('#editUserRole').val($btn.data('rol_id')).prop('disabled', false).css('pointerEvents', isSuper ? 'none' : '').toggleClass('readonly-look', isSuper);
     $('#editUserPassword').val('');
     $('#editUserRoleNote').toggle(isSuper);

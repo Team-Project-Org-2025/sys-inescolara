@@ -82,6 +82,7 @@ include_once __DIR__ . '/../common/links.php';
                             <thead>
                                 <tr>
                                     <th>Nombre de Usuario</th>
+                                    <th>Correo Electrónico</th>
                                     <th>Rol</th>
                                     <th>Acciones</th>
                                 </tr>
@@ -97,7 +98,7 @@ include_once __DIR__ . '/../common/links.php';
     <!-- Modals fuera de main-content para evitar conflictos con Bootstrap 5.3 -->
     
     <!-- Add User Modal -->
-    <div class="modal fade" id="addUserModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal fade" id="addUserModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog">
             <div class="modal-content">
                 <form id="addUserForm">
@@ -108,11 +109,16 @@ include_once __DIR__ . '/../common/links.php';
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label">Nombre de Usuario</label>
-                            <input type="text" class="form-control" name="nombre_usuario">
+                            <input type="text" class="form-control" name="nombre_usuario" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Correo Electrónico</label>
+                            <input type="email" class="form-control" name="correo_electronico" placeholder="usuario@correo.com">
+                            <small class="text-muted">Opcional, necesario para recuperación de contraseña.</small>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Contraseña</label>
-                            <input type="password" class="form-control" name="password">
+                            <input type="password" class="form-control" name="password" required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Rol</label>
@@ -138,7 +144,7 @@ include_once __DIR__ . '/../common/links.php';
     </div>
 
     <!-- Edit User Modal -->
-    <div class="modal fade" id="editUserModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal fade" id="editUserModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog">
             <div class="modal-content">
                 <form id="editUserForm">
@@ -150,7 +156,12 @@ include_once __DIR__ . '/../common/links.php';
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label">Nombre de Usuario</label>
-                            <input type="text" class="form-control" name="nombre_usuario" id="editUserName">
+                            <input type="text" class="form-control" name="nombre_usuario" id="editUserName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Correo Electrónico</label>
+                            <input type="email" class="form-control" name="correo_electronico" id="editUserEmail" placeholder="usuario@correo.com">
+                            <small class="text-muted">Opcional, necesario para recuperación de contraseña.</small>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Contraseña (Dejar en blanco para no cambiar)</label>
