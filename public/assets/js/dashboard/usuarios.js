@@ -145,13 +145,34 @@ $(document).ready(function () {
 
     const userId = parseInt($btn.data('id'), 10);
     const isSuper = userId === 1;
+    const currentUserId = parseInt($('#currentUserId').val(), 10);
+    const currentUserRole = parseInt($('#currentUserRole').val(), 10);
+    const isOwnAccount = userId === currentUserId;
+    const isAdmin = currentUserRole === 1;
 
     $('#editUserIdHidden').val(userId);
     $('#editUserName').val($btn.data('nombre_usuario'));
     $('#editUserEmail').val($btn.data('correo_electronico'));
     $('#editUserRole').val($btn.data('rol_id')).prop('disabled', false).css('pointerEvents', isSuper ? 'none' : '').toggleClass('readonly-look', isSuper);
     $('#editUserPassword').val('');
+    $('#editCurrentPassword').val('');
     $('#editUserRoleNote').toggle(isSuper);
+
+    // Mostrar campo de contraseña actual si edita su propia cuenta O es administrador
+    const $currentPwGroup = $('#currentPasswordGroup');
+    const $currentPwHelp = $('#currentPasswordHelp');
+    if (isOwnAccount || isAdmin) {
+      $currentPwGroup.show();
+      $('#editUserPassword').attr('placeholder', 'Nueva contraseña (dejar en blanco para no cambiar)');
+      if (isOwnAccount) {
+        $currentPwHelp.text('Ingresa tu contraseña actual para cambiarla.');
+      } else {
+        $currentPwHelp.text('Como administrador, debes ingresar tu propia contraseña para autorizar el cambio.');
+      }
+    } else {
+      $currentPwGroup.hide();
+      $('#editUserPassword').attr('placeholder', 'Contraseña (dejar en blanco para no cambiar)');
+    }
 
     // Mostrar preview del avatar actual
     const avatar = $btn.data('avatar');
@@ -183,6 +204,10 @@ $(document).ready(function () {
     // Eliminar password si está vacío
     if (!formData.get('password')) {
       formData.delete('password');
+    }
+    // Eliminar current_password si está vacío para no enviarlo
+    if (!formData.get('current_password')) {
+      formData.delete('current_password');
     }
 
     $.ajax({

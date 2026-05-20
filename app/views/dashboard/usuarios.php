@@ -163,9 +163,14 @@ include_once __DIR__ . '/../common/links.php';
                             <input type="email" class="form-control" name="correo_electronico" id="editUserEmail" placeholder="usuario@correo.com">
                             <small class="text-muted">Opcional, necesario para recuperación de contraseña.</small>
                         </div>
+                        <div class="mb-3" id="currentPasswordGroup" style="display:none;">
+                            <label class="form-label">Tu Contraseña Actual</label>
+                            <input type="password" class="form-control" name="current_password" id="editCurrentPassword" placeholder="Ingresa tu contraseña actual para autorizar el cambio">
+                            <small class="text-muted" id="currentPasswordHelp">Debes ingresar tu propia contraseña para realizar este cambio.</small>
+                        </div>
                         <div class="mb-3">
-                            <label class="form-label">Contraseña (Dejar en blanco para no cambiar)</label>
-                            <input type="password" class="form-control" name="password" id="editUserPassword">
+                            <label class="form-label">Nueva Contraseña (Dejar en blanco para no cambiar)</label>
+                            <input type="password" class="form-control" name="password" id="editUserPassword" placeholder="Nueva contraseña">
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Rol</label>
@@ -196,6 +201,7 @@ include_once __DIR__ . '/../common/links.php';
 
     <?= $scripts_links ?>
     <input type="hidden" id="currentUserId" value="<?= (int)($_SESSION['user_id'] ?? 0) ?>">
+    <input type="hidden" id="currentUserRole" value="<?= (int)($_SESSION['user_rol_id'] ?? 0) ?>">
     <script type="module" src="<?= BASE_URL ?>public/assets/js/dashboard/usuarios.js"></script>
 </body>
 </html>

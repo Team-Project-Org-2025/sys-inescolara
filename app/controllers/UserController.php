@@ -165,6 +165,24 @@ function handleAddEditAjax(User $userModel, string $mode): void
         $rolId = 1;
     }
 
+    // Verificar contraseña actual si se cambia la contraseña:
+    // - El usuario editándose a sí mismo debe ingresar SU contraseña
+    // - Un administrador editando a cualquier usuario debe ingresar SU (admin) contraseña
+    $isChangingPassword = ($mode === 'edit' && $password !== '');
+    $isOwnAccount = isset($_SESSION['user_id']) && (int)$_SESSION['user_id'] === $id;
+    $isAdmin = isset($_SESSION['user_rol_id']) && (int)$_SESSION['user_rol_id'] === 1;
+    if ($isChangingPassword && ($isOwnAccount || $isAdmin)) {
+        $currentPassword = $_POST['current_password'] ?? '';
+        if ($currentPassword === '') {
+            throw new Exception('Debes ingresar tu contraseña actual para realizar este cambio.');
+        }
+        // Si es admin editando a otro, verificar la contraseña del admin, no la del usuario destino
+        $verifyUserId = $isOwnAccount ? $id : (int)$_SESSION['user_id'];
+        if (!$userModel->verifyPassword($verifyUserId, $currentPassword)) {
+            throw new Exception('La contraseña actual no es correcta.');
+        }
+    }
+
     $avatar = null;
 
     // Subir avatar si viene un archivo

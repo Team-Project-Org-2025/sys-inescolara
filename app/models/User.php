@@ -162,6 +162,22 @@ class User extends Database
         }
     }
 
+    public function verifyPassword(int $id, string $password): bool
+    {
+        try {
+            $stmt = $this->db->prepare("SELECT password_hash FROM usuarios WHERE id_usuario = :id");
+            $stmt->execute([':id' => $id]);
+            $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+            if (!$row) {
+                return false;
+            }
+            return password_verify($password, $row['password_hash']);
+        } catch (\Throwable $e) {
+            error_log("Error en verifyPassword: " . $e->getMessage());
+            return false;
+        }
+    }
+
     private function updatePasswordHash(int $userId, string $plainPassword): void
     {
         try {
