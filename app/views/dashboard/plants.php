@@ -6,7 +6,7 @@ include_once __DIR__ . '/../common/links.php';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Plants - INECOLARA</title>
+    <title>Plantas - INECOLARA</title>
     <?= $css_links ?>
     <style>
         .plant-thumb {
@@ -60,7 +60,7 @@ include_once __DIR__ . '/../common/links.php';
                         <line x1="3" y1="18" x2="21" y2="18"></line>
                     </svg>
                 </button>
-                <h1 class="dashboard-page-title">Plants</h1>
+                <h1 class="dashboard-page-title">Plantas</h1>
             </div>
             <div class="dashboard-header-right">
                 <div class="dashboard-search">
@@ -96,11 +96,11 @@ include_once __DIR__ . '/../common/links.php';
         <div class="dashboard-content">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
-                    <h1>Plant Catalog</h1>
-                    <p style="color: var(--text-secondary);">Individual plant registry in the nursery.</p>
+                    <h1>Catálogo de Plantas</h1>
+                    <p style="color: var(--text-secondary);">Registro individual de plantas del vivero.</p>
                 </div>
                 <button class="btn btn-primary" id="btnAddPlant">
-                    <i class="fas fa-plus"></i> New Plant
+                    <i class="fas fa-plus"></i> Nueva Planta
                 </button>
             </div>
 
@@ -110,11 +110,11 @@ include_once __DIR__ . '/../common/links.php';
                         <table id="plantsTable" class="table table-striped table-hover w-100">
                             <thead>
                                 <tr>
-                                    <th>Image</th>
-                                    <th>Common Name</th>
-                                    <th>Technical Name</th>
-                                    <th>Species</th>
-                                    <th>Actions</th>
+                                    <th>Imagen</th>
+                                    <th>Nombre Común</th>
+                                    <th>Nombre Técnico</th>
+                                    <th>Especie</th>
+                                    <th>Acciones</th>
                                 </tr>
                             </thead>
                             <tbody></tbody>
@@ -131,40 +131,40 @@ include_once __DIR__ . '/../common/links.php';
             <div class="modal-content">
                 <form id="addPlantForm">
                     <div class="modal-header">
-                        <h5 class="modal-title">Add Plant</h5>
+                        <h5 class="modal-title">Agregar Planta</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label class="form-label">Common Name</label>
-                            <input type="text" class="form-control" name="nombre_comun" required placeholder="E.g: Rose, Cactus, Succulent">
+                            <label class="form-label">Nombre Común</label>
+                            <input type="text" class="form-control" name="nombre_comun" required placeholder="Ej: Rosa, Cactus, Suculenta">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Technical Name (Scientific)</label>
-                            <input type="text" class="form-control" name="nombre_tecnico" placeholder="E.g: Rosa gallica, Echinocactus grusonii">
+                            <label class="form-label">Nombre Técnico (Científico)</label>
+                            <input type="text" class="form-control" name="nombre_tecnico" placeholder="Ej: Rosa gallica, Echinocactus grusonii">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Species / Family Group</label>
+                            <label class="form-label">Especie / Grupo Familiar</label>
                             <select class="form-select" name="especie_id">
-                                <option value="">No species</option>
+                                <option value="">Sin especie</option>
                                 <?php foreach ($species as $s): ?>
                                 <option value="<?= $s['id'] ?>"><?= htmlspecialchars($s['nombre_comun']) ?></option>
                                 <?php endforeach; ?>
                             </select>
-                            <small class="text-muted">Optional. Select the species this plant belongs to.</small>
+                            <small class="text-muted">Opcional. Selecciona la especie a la que pertenece.</small>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Image</label>
+                            <label class="form-label">Imagen</label>
                             <input type="file" class="form-control" name="imagen" accept="image/jpeg,image/png,image/gif,image/webp" id="addPlantImage">
-                            <small class="text-muted">Formats: jpg, png, gif, webp. Max 5MB.</small>
+                            <small class="text-muted">Formatos: jpg, png, gif, webp. Máx 5MB.</small>
                             <div class="mt-2">
                                 <img id="addPlantPreview" class="img-preview">
                             </div>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Save</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Guardar</button>
                     </div>
                 </form>
             </div>
@@ -178,42 +178,42 @@ include_once __DIR__ . '/../common/links.php';
                 <form id="editPlantForm">
                     <input type="hidden" name="id" id="editPlantId">
                     <div class="modal-header">
-                        <h5 class="modal-title">Edit Plant</h5>
+                        <h5 class="modal-title">Editar Planta</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label class="form-label">Common Name</label>
+                            <label class="form-label">Nombre Común</label>
                             <input type="text" class="form-control" name="nombre_comun" id="editPlantName" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Technical Name</label>
+                            <label class="form-label">Nombre Técnico</label>
                             <input type="text" class="form-control" name="nombre_tecnico" id="editPlantTecnico">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Species / Family Group</label>
+                            <label class="form-label">Especie / Grupo Familiar</label>
                             <select class="form-select" name="especie_id" id="editPlantSpecies">
-                                <option value="">No species</option>
+                                <option value="">Sin especie</option>
                                 <?php foreach ($species as $s): ?>
                                 <option value="<?= $s['id'] ?>"><?= htmlspecialchars($s['nombre_comun']) ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Image</label>
+                            <label class="form-label">Imagen</label>
                             <div id="editImageCurrent" class="mb-2" style="display:none;">
-                                <img src="" alt="Current image" style="width:100px;height:100px;object-fit:cover;border-radius:8px;border:2px solid var(--color-primary);">
+                                <img src="" alt="Imagen actual" style="width:100px;height:100px;object-fit:cover;border-radius:8px;border:2px solid var(--color-primary);">
                             </div>
                             <input type="file" class="form-control" name="imagen" accept="image/jpeg,image/png,image/gif,image/webp" id="editPlantImage">
-                            <small class="text-muted">Leave empty to keep current image.</small>
+                            <small class="text-muted">Dejar vacío para mantener la imagen actual.</small>
                             <div class="mt-2">
                                 <img id="editPlantPreview" class="img-preview">
                             </div>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Update</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Actualizar</button>
                     </div>
                 </form>
             </div>
@@ -226,7 +226,7 @@ include_once __DIR__ . '/../common/links.php';
             <div class="modal-content bg-transparent border-0">
                 <div class="modal-body text-center p-0">
                     <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" data-bs-dismiss="modal" style="z-index:10;"></button>
-                    <img id="lightboxImg" src="" alt="Plant image" class="img-fluid rounded shadow">
+                    <img id="lightboxImg" src="" alt="Imagen de planta" class="img-fluid rounded shadow">
                 </div>
             </div>
         </div>

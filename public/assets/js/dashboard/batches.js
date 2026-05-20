@@ -42,7 +42,7 @@ $(document).ready(function () {
           render: (data) => {
             const url = data ? `${window.BASE_URL || '/'}${data}` : null;
             return url
-              ? `<img src="${url}" class="batch-thumb" data-img="${url}" data-bs-toggle="modal" data-bs-target="#imageLightbox" title="View image">`
+              ? `<img src="${url}" class="batch-thumb" data-img="${url}" data-bs-toggle="modal" data-bs-target="#imageLightbox" title="Ver imagen">`
               : `<div class="batch-thumb-placeholder"><i class="fas fa-leaf"></i></div>`;
           },
           orderable: false,
@@ -99,7 +99,7 @@ $(document).ready(function () {
       dom: '<"d-flex justify-content-between align-items-center mb-2"lfB>tip',
       buttons: [
         {
-          text: '<i class="fas fa-sync-alt"></i> Refresh',
+          text: '<i class="fas fa-sync-alt"></i> Actualizar',
           className: 'btn btn-outline-secondary btn-sm',
           action: () => {
             if (typeof SkeletonHelper !== 'undefined') {
@@ -148,7 +148,7 @@ $(document).ready(function () {
     })
       .done((response) => {
         if (response.success) {
-          Helpers.toast('success', 'Batch added successfully');
+          Helpers.toast('success', 'Lote agregado correctamente');
           $('#addBatchModal').modal('hide');
           batchesTable.ajax.reload(null, false);
         } else {
@@ -156,7 +156,7 @@ $(document).ready(function () {
         }
       })
       .fail((err) => {
-        Helpers.toast('error', err.responseJSON?.message || 'Error adding batch');
+        Helpers.toast('error', err.responseJSON?.message || 'Error al agregar lote');
       });
   });
 
@@ -203,7 +203,7 @@ $(document).ready(function () {
     })
       .done((response) => {
         if (response.success) {
-          Helpers.toast('success', 'Batch updated successfully');
+          Helpers.toast('success', 'Lote actualizado correctamente');
           $('#editBatchModal').modal('hide');
           batchesTable.ajax.reload(null, false);
         } else {
@@ -211,7 +211,7 @@ $(document).ready(function () {
         }
       })
       .fail((err) => {
-        Helpers.toast('error', err.responseJSON?.message || 'Error updating batch');
+        Helpers.toast('error', err.responseJSON?.message || 'Error al actualizar lote');
       });
   });
 
@@ -220,13 +220,13 @@ $(document).ready(function () {
     const nombre = $(this).data('nombre');
 
     Helpers.confirmDialog(
-      'Delete batch?',
-      `Are you sure you want to delete the batch of <strong>${Helpers.escapeHtml(nombre)}</strong>?`,
+      '¿Eliminar lote?',
+      `¿Deseas eliminar el lote de <strong>${Helpers.escapeHtml(nombre)}</strong>?`,
       () => {
         Ajax.post(`${baseUrl}?action=delete_ajax`, { id })
           .then((response) => {
             if (response.success) {
-              Helpers.toast('success', 'Batch deleted successfully');
+              Helpers.toast('success', 'Lote eliminado correctamente');
               batchesTable.ajax.reload(null, false);
             } else {
               Helpers.toast('error', response.message);
@@ -236,7 +236,7 @@ $(document).ready(function () {
             Helpers.toast('error', err);
           });
       },
-      'Yes, delete'
+      'Sí, eliminar'
     );
   });
 
