@@ -269,6 +269,18 @@ function handleDeleteAjax(User $userModel): void
         throw new Exception('No existe el usuario');
     }
 
+    // Verificar contraseña del usuario autenticado antes de eliminar
+    $currentPassword = $_POST['current_password'] ?? '';
+    if ($currentPassword === '') {
+        jsonResponse(['success' => false, 'message' => 'Debes ingresar tu contraseña para eliminar un usuario.'], 400);
+        return;
+    }
+    $userId = (int)($_SESSION['user_id'] ?? 0);
+    if ($userId <= 0 || !$userModel->verifyPassword($userId, $currentPassword)) {
+        jsonResponse(['success' => false, 'message' => 'Contraseña incorrecta. No se puede eliminar el usuario.'], 403);
+        return;
+    }
+
     $userModel->delete($id);
 
     jsonResponse([

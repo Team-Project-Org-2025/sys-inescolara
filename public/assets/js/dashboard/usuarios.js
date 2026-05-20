@@ -242,30 +242,57 @@ $(document).ready(function () {
       });
   });
 
-  //Eliminar usuario
+  //Eliminar usuario — requiere contraseña actual del administrador
   $(document).on('click', '.btn-delete', function () {
     const id = $(this).data('id');
     const nombre = $(this).data('nombre_usuario');
 
-    Helpers.confirmDialog(
-      '¿Eliminar usuario?',
-      `¿Deseas eliminar a <strong>${Helpers.escapeHtml(nombre)}</strong>?`,
-      () => {
-        Ajax.post(`${baseUrl}?action=delete_ajax`, { id })
-          .then((response) => {
-            if (response.success) {
-              Helpers.toast('success', 'Usuario eliminado correctamente');
-              usersTable.ajax.reload(null, false);
-            } else {
-              Helpers.toast('error', response.message);
-            }
-          })
-          .catch((err) => {
-            Helpers.toast('error', err);
-          });
+    Swal.fire({
+      title: '¿Eliminar usuario?',
+      html: `
+        <p>¿Deseas eliminar a <strong>${Helpers.escapeHtml(nombre)}</strong>?</p>
+        <p style="font-size:0.85rem;color:#6b7280;">Esta acción no se puede deshacer.</p>
+        <hr>
+        <div class="text-start">
+          <label class="form-label" style="font-weight:600;">Ingresa la contraseña de tu usuario:</label>
+          <input type="password" id="swal-delete-password" class="form-control" placeholder="Contraseña" autocomplete="off">
+        </div>
+      `,
+      icon: 'warning',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+      showCancelButton: true,
+      confirmButtonColor: '#dc3545',
+      cancelButtonColor: '#6c757d',
+      preConfirm: () => {
+        const password = document.getElementById('swal-delete-password').value;
+        if (!password) {
+          Swal.showValidationMessage('Debes ingresar tu contraseña');
+          return false;
+        }
+        return password;
       },
-      'Sí, eliminar'
-    );
+      didOpen: () => {
+        const input = document.getElementById('swal-delete-password');
+        if (input) setTimeout(() => input.focus(), 100);
+      },
+    }).then((result) => {
+      if (!result.isConfirmed || !result.value) return;
+
+      const password = result.value;
+      Ajax.post(`${baseUrl}?action=delete_ajax`, { id, current_password: password })
+        .then((response) => {
+          if (response.success) {
+            Helpers.toast('success', 'Usuario eliminado correctamente');
+            usersTable.ajax.reload(null, false);
+          } else {
+            Helpers.toast('error', response.message);
+          }
+        })
+        .catch((err) => {
+          Helpers.toast('error', err);
+        });
+    });
   });
 
   const addRules = {
