@@ -22,6 +22,8 @@
 <body class="auth-body">
     <?= $content ?>
 
+    <?php include __DIR__ . '/../common/links.php'; ?>
+    <?= $scripts_links ?>
     <script src="<?= BASE_URL ?>public/assets/js/main.js"></script>
 </body>
 
