@@ -109,6 +109,14 @@ RECAPTCHA_SECRET_KEY=tu_secret_key
 
 ---
 
+<a href="https://next.ossinsight.io/widgets/official/compose-recent-top-contributors?repo_id=1195424621" target="_blank" style="display: block" align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://next.ossinsight.io/widgets/official/compose-recent-top-contributors/thumbnail.png?repo_id=1195424621&image_size=auto&color_scheme=dark" width="373" height="auto">
+    <img alt="Top Contributors of Team-Project-Org-2025/sys-inescolara - Last 28 days" src="https://next.ossinsight.io/widgets/official/compose-recent-top-contributors/thumbnail.png?repo_id=1195424621&image_size=auto&color_scheme=light" width="373" height="auto">
+  </picture>
+</a>
+
+---
 <p align="center">
   Desarrollado para <strong>INESCOLARA</strong><br>
   © 2026
