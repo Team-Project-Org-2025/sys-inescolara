@@ -16,11 +16,11 @@ function toggleMobileMenu() {
 }
 
 // Close mobile menu when clicking outside
-document.addEventListener('click', function(e) {
+document.addEventListener('click', function (e) {
   const mobileMenu = document.getElementById('mobileMenu');
   const mobileMenuContent = document.querySelector('.mobile-menu-content');
   const menuBtn = document.querySelector('.mobile-menu-btn');
-  
+
   if (mobileMenu && mobileMenu.classList.contains('active')) {
     if (!mobileMenuContent.contains(e.target) && !menuBtn.contains(e.target)) {
       toggleMobileMenu();
@@ -35,10 +35,12 @@ document.addEventListener('click', function(e) {
 function loadFeaturedPlants() {
   const container = document.getElementById('featuredPlants');
   if (!container || typeof PLANTS_DATA === 'undefined') return;
-  
-  const featured = PLANTS_DATA.filter(p => p.featured).slice(0, 4);
-  
-  container.innerHTML = featured.map(plant => `
+
+  const featured = PLANTS_DATA.filter((p) => p.featured).slice(0, 4);
+
+  container.innerHTML = featured
+    .map(
+      (plant) => `
     <div class="plant-card" onclick="openPlantModal(${plant.id})">
       <div class="plant-card-image">
         <img src="${plant.image}" alt="${plant.name}" loading="lazy">
@@ -55,7 +57,9 @@ function loadFeaturedPlants() {
         </div>
       </div>
     </div>
-  `).join('');
+  `
+    )
+    .join('');
 }
 
 // ============================================
@@ -66,62 +70,62 @@ let currentFilters = {
   search: '',
   type: 'all',
   care: 'all',
-  availability: 'all'
+  availability: 'all',
 };
 
 function initCatalog() {
   const container = document.getElementById('catalogGrid');
   if (!container || typeof PLANTS_DATA === 'undefined') return;
-  
+
   // Setup filter listeners
   const searchInput = document.getElementById('catalogSearch');
   if (searchInput) {
-    searchInput.addEventListener('input', function(e) {
+    searchInput.addEventListener('input', function (e) {
       currentFilters.search = e.target.value.toLowerCase();
       renderCatalog();
     });
   }
-  
+
   renderCatalog();
 }
 
 function setFilter(filterType, value) {
   currentFilters[filterType] = value;
-  
+
   // Update active state on filter buttons
   const buttons = document.querySelectorAll(`[data-filter="${filterType}"]`);
-  buttons.forEach(btn => {
+  buttons.forEach((btn) => {
     btn.classList.toggle('active', btn.dataset.value === value);
   });
-  
+
   renderCatalog();
 }
 
 function renderCatalog() {
   const container = document.getElementById('catalogGrid');
   if (!container || typeof PLANTS_DATA === 'undefined') return;
-  
-  let filtered = PLANTS_DATA.filter(plant => {
+
+  let filtered = PLANTS_DATA.filter((plant) => {
     // Search filter
     if (currentFilters.search) {
       const searchTerm = currentFilters.search;
-      const matchesSearch = 
+      const matchesSearch =
         plant.name.toLowerCase().includes(searchTerm) ||
         plant.scientificName.toLowerCase().includes(searchTerm) ||
         plant.description.toLowerCase().includes(searchTerm);
       if (!matchesSearch) return false;
     }
-    
+
     // Type filter
     if (currentFilters.type !== 'all' && plant.type !== currentFilters.type) {
       return false;
     }
-    
+
     // Care filter
     if (currentFilters.care !== 'all' && plant.careLevel !== currentFilters.care) {
       return false;
     }
-    
+
     // Availability filter
     if (currentFilters.availability === 'available' && plant.stock === 0) {
       return false;
@@ -129,10 +133,10 @@ function renderCatalog() {
     if (currentFilters.availability === 'low' && plant.stock > 10) {
       return false;
     }
-    
+
     return true;
   });
-  
+
   if (filtered.length === 0) {
     container.innerHTML = `
       <div class="text-center py-12" style="grid-column: 1 / -1;">
@@ -146,8 +150,10 @@ function renderCatalog() {
     `;
     return;
   }
-  
-  container.innerHTML = filtered.map(plant => `
+
+  container.innerHTML = filtered
+    .map(
+      (plant) => `
     <div class="plant-card" onclick="openPlantModal(${plant.id})">
       <div class="plant-card-image">
         <img src="${plant.image}" alt="${plant.name}" loading="lazy">
@@ -164,7 +170,9 @@ function renderCatalog() {
         </div>
       </div>
     </div>
-  `).join('');
+  `
+    )
+    .join('');
 }
 
 // ============================================
@@ -172,12 +180,12 @@ function renderCatalog() {
 // ============================================
 
 function openPlantModal(plantId) {
-  const plant = PLANTS_DATA.find(p => p.id === plantId);
+  const plant = PLANTS_DATA.find((p) => p.id === plantId);
   if (!plant) return;
-  
+
   const modal = document.getElementById('plantModal');
   if (!modal) return;
-  
+
   const modalBody = modal.querySelector('.modal-body');
   modalBody.innerHTML = `
     <div class="modal-plant-image">
@@ -246,7 +254,7 @@ function openPlantModal(plantId) {
       </div>
     </div>
   `;
-  
+
   modal.classList.add('active');
   document.body.style.overflow = 'hidden';
 }
@@ -260,14 +268,14 @@ function closePlantModal() {
 }
 
 // Close modal when clicking overlay
-document.addEventListener('click', function(e) {
+document.addEventListener('click', function (e) {
   if (e.target.classList.contains('modal-overlay')) {
     closePlantModal();
   }
 });
 
 // Close modal with Escape key
-document.addEventListener('keydown', function(e) {
+document.addEventListener('keydown', function (e) {
   if (e.key === 'Escape') {
     closePlantModal();
     toggleMobileMenu();
@@ -291,55 +299,57 @@ function toggleDashboardSidebar() {
 
 let inventoryFilters = {
   search: '',
-  status: 'all'
+  status: 'all',
 };
 
 function initInventory() {
   const container = document.getElementById('inventoryTable');
   if (!container || typeof LOTS_DATA === 'undefined') return;
-  
+
   const searchInput = document.getElementById('inventorySearch');
   if (searchInput) {
-    searchInput.addEventListener('input', function(e) {
+    searchInput.addEventListener('input', function (e) {
       inventoryFilters.search = e.target.value.toLowerCase();
       renderInventory();
     });
   }
-  
+
   renderInventory();
 }
 
 function setInventoryFilter(status) {
   inventoryFilters.status = status;
-  
+
   const buttons = document.querySelectorAll('.inventory-status-filter');
-  buttons.forEach(btn => {
+  buttons.forEach((btn) => {
     btn.classList.toggle('active', btn.dataset.status === status);
   });
-  
+
   renderInventory();
 }
 
 function renderInventory() {
   const tbody = document.getElementById('inventoryTableBody');
   if (!tbody || typeof LOTS_DATA === 'undefined') return;
-  
-  let filtered = LOTS_DATA.filter(lot => {
+
+  let filtered = LOTS_DATA.filter((lot) => {
     if (inventoryFilters.search) {
-      const matchesSearch = 
+      const matchesSearch =
         lot.species.toLowerCase().includes(inventoryFilters.search) ||
         lot.code.toLowerCase().includes(inventoryFilters.search);
       if (!matchesSearch) return false;
     }
-    
+
     if (inventoryFilters.status !== 'all' && lot.status !== inventoryFilters.status) {
       return false;
     }
-    
+
     return true;
   });
-  
-  tbody.innerHTML = filtered.map(lot => `
+
+  tbody.innerHTML = filtered
+    .map(
+      (lot) => `
     <tr class="${lot.quantity < 20 ? 'table-low-stock' : ''}">
       <td><strong>${lot.code}</strong></td>
       <td>${lot.species}</td>
@@ -369,15 +379,17 @@ function renderInventory() {
         </div>
       </td>
     </tr>
-  `).join('');
+  `
+    )
+    .join('');
 }
 
 function getStatusBadge(status) {
   const badges = {
-    'Activo': 'success',
-    'Germinacion': 'info',
-    'Trasplante': 'warning',
-    'Cuarentena': 'error'
+    Activo: 'success',
+    Germinacion: 'info',
+    Trasplante: 'warning',
+    Cuarentena: 'error',
   };
   return badges[status] || 'primary';
 }
@@ -405,11 +417,13 @@ function initPOS() {
 function renderPOSProducts() {
   const container = document.getElementById('posProductGrid');
   if (!container || typeof PLANTS_DATA === 'undefined') return;
-  
-  const availablePlants = PLANTS_DATA.filter(p => p.stock > 0);
-  
-  container.innerHTML = availablePlants.map(plant => `
-    <div class="pos-product-card ${cart.some(item => item.id === plant.id) ? 'selected' : ''}" 
+
+  const availablePlants = PLANTS_DATA.filter((p) => p.stock > 0);
+
+  container.innerHTML = availablePlants
+    .map(
+      (plant) => `
+    <div class="pos-product-card ${cart.some((item) => item.id === plant.id) ? 'selected' : ''}" 
          onclick="addToCart(${plant.id})">
       <div class="pos-product-image">
         <img src="${plant.image}" alt="${plant.name}" loading="lazy">
@@ -418,15 +432,17 @@ function renderPOSProducts() {
       <div class="pos-product-stock">${plant.stock} disponibles</div>
       <div class="pos-product-price">Bs. ${plant.price.toLocaleString()}</div>
     </div>
-  `).join('');
+  `
+    )
+    .join('');
 }
 
 function addToCart(plantId) {
-  const plant = PLANTS_DATA.find(p => p.id === plantId);
+  const plant = PLANTS_DATA.find((p) => p.id === plantId);
   if (!plant) return;
-  
-  const existingItem = cart.find(item => item.id === plantId);
-  
+
+  const existingItem = cart.find((item) => item.id === plantId);
+
   if (existingItem) {
     if (existingItem.quantity < plant.stock) {
       existingItem.quantity++;
@@ -438,44 +454,44 @@ function addToCart(plantId) {
       price: plant.price,
       image: plant.image,
       quantity: 1,
-      maxStock: plant.stock
+      maxStock: plant.stock,
     });
   }
-  
+
   renderCart();
   renderPOSProducts();
 }
 
 function removeFromCart(plantId) {
-  cart = cart.filter(item => item.id !== plantId);
+  cart = cart.filter((item) => item.id !== plantId);
   renderCart();
   renderPOSProducts();
 }
 
 function updateCartQuantity(plantId, delta) {
-  const item = cart.find(i => i.id === plantId);
+  const item = cart.find((i) => i.id === plantId);
   if (!item) return;
-  
+
   item.quantity += delta;
-  
+
   if (item.quantity <= 0) {
     removeFromCart(plantId);
     return;
   }
-  
+
   if (item.quantity > item.maxStock) {
     item.quantity = item.maxStock;
   }
-  
+
   renderCart();
 }
 
 function renderCart() {
   const container = document.getElementById('cartItems');
   const summaryContainer = document.getElementById('cartSummary');
-  
+
   if (!container) return;
-  
+
   if (cart.length === 0) {
     container.innerHTML = `
       <div class="pos-cart-empty">
@@ -493,8 +509,10 @@ function renderCart() {
     }
     return;
   }
-  
-  container.innerHTML = cart.map(item => `
+
+  container.innerHTML = cart
+    .map(
+      (item) => `
     <div class="pos-cart-item">
       <div class="pos-cart-item-image">
         <img src="${item.image}" alt="${item.name}">
@@ -516,13 +534,15 @@ function renderCart() {
         </svg>
       </button>
     </div>
-  `).join('');
-  
+  `
+    )
+    .join('');
+
   // Calculate totals
-  const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const iva = subtotal * 0.16;
   const total = subtotal + iva;
-  
+
   if (summaryContainer) {
     summaryContainer.innerHTML = `
       <div class="pos-cart-row">
@@ -543,9 +563,9 @@ function renderCart() {
 
 function selectPaymentMethod(method) {
   selectedPaymentMethod = method;
-  
+
   const buttons = document.querySelectorAll('.payment-method-btn');
-  buttons.forEach(btn => {
+  buttons.forEach((btn) => {
     btn.classList.toggle('selected', btn.dataset.method === method);
   });
 }
@@ -555,18 +575,18 @@ function processSale() {
     alert('El carrito esta vacio');
     return;
   }
-  
-  const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+  const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const total = subtotal * 1.16;
-  
+
   const confirmation = confirm(
     `Confirmar venta:\n\n` +
-    `Total: Bs. ${total.toLocaleString()}\n` +
-    `Metodo de pago: ${selectedPaymentMethod}\n` +
-    `Articulos: ${cart.reduce((sum, item) => sum + item.quantity, 0)}\n\n` +
-    `¿Procesar venta?`
+      `Total: Bs. ${total.toLocaleString()}\n` +
+      `Metodo de pago: ${selectedPaymentMethod}\n` +
+      `Articulos: ${cart.reduce((sum, item) => sum + item.quantity, 0)}\n\n` +
+      `¿Procesar venta?`
   );
-  
+
   if (confirmation) {
     alert('Venta procesada exitosamente');
     cart = [];
@@ -577,7 +597,7 @@ function processSale() {
 
 function clearCart() {
   if (cart.length === 0) return;
-  
+
   if (confirm('¿Cancelar la venta actual?')) {
     cart = [];
     renderCart();
@@ -590,15 +610,24 @@ function clearCart() {
 // ============================================
 
 const aiResponses = {
-  'stock': 'Actualmente tenemos 15,234 plantas en stock, distribuidas en 48 lotes activos. Las especies con mayor disponibilidad son: Heliconia Caribaea (450 unidades), Palma Areca (380 unidades), y Croton Variegado (320 unidades).',
-  'ventas': 'Las ventas de esta semana suman Bs. 2,450,000, un incremento del 12% respecto a la semana anterior. Los productos mas vendidos son plantas ornamentales para jardines residenciales.',
-  'bajo stock': 'Hay 5 especies con stock critico: Orquidea Cattleya (8 unidades), Helecho Boston (12 unidades), Palma Kentia (15 unidades), Rosa del Desierto (18 unidades), y Planta de Jade (20 unidades).',
-  'proyectos': 'Hay 3 proyectos institucionales activos: Reforestacion Parque del Este (entrega: 15/02), Jardineria Alcaldia (entrega: 28/02), y Escuelas Verdes (entrega: 10/03). Total comprometido: 2,500 plantas.',
-  'cuadrillas': 'Las cuadrillas tienen 12 tareas pendientes para hoy: 5 de riego, 4 de trasplante, y 3 de fumigacion. El equipo A esta asignado al sector de ornamentales y el equipo B al sector forestal.'
+  stock:
+    'Actualmente tenemos 15,234 plantas en stock, distribuidas en 48 lotes activos. Las especies con mayor disponibilidad son: Heliconia Caribaea (450 unidades), Palma Areca (380 unidades), y Croton Variegado (320 unidades).',
+  ventas:
+    'Las ventas de esta semana suman Bs. 2,450,000, un incremento del 12% respecto a la semana anterior. Los productos mas vendidos son plantas ornamentales para jardines residenciales.',
+  'bajo stock':
+    'Hay 5 especies con stock critico: Orquidea Cattleya (8 unidades), Helecho Boston (12 unidades), Palma Kentia (15 unidades), Rosa del Desierto (18 unidades), y Planta de Jade (20 unidades).',
+  proyectos:
+    'Hay 3 proyectos institucionales activos: Reforestacion Parque del Este (entrega: 15/02), Jardineria Alcaldia (entrega: 28/02), y Escuelas Verdes (entrega: 10/03). Total comprometido: 2,500 plantas.',
+  cuadrillas:
+    'Las cuadrillas tienen 12 tareas pendientes para hoy: 5 de riego, 4 de trasplante, y 3 de fumigacion. El equipo A esta asignado al sector de ornamentales y el equipo B al sector forestal.',
 };
 
 let aiMessages = [
-  { role: 'assistant', content: '¡Hola! Soy tu asistente virtual del vivero. Puedo ayudarte con informacion sobre inventario, ventas, lotes, proyectos y mas. ¿En que te puedo ayudar hoy?' }
+  {
+    role: 'assistant',
+    content:
+      '¡Hola! Soy tu asistente virtual del vivero. Puedo ayudarte con informacion sobre inventario, ventas, lotes, proyectos y mas. ¿En que te puedo ayudar hoy?',
+  },
 ];
 
 function initAIAssistant() {
@@ -608,45 +637,66 @@ function initAIAssistant() {
 function renderAIMessages() {
   const container = document.getElementById('aiMessages');
   if (!container) return;
-  
-  container.innerHTML = aiMessages.map(msg => `
+
+  container.innerHTML = aiMessages
+    .map(
+      (msg) => `
     <div class="ai-message ${msg.role}">
       ${msg.content}
     </div>
-  `).join('');
-  
+  `
+    )
+    .join('');
+
   container.scrollTop = container.scrollHeight;
 }
 
 function sendAIMessage(message) {
   if (!message || message.trim() === '') return;
-  
+
   // Add user message
   aiMessages.push({ role: 'user', content: message });
   renderAIMessages();
-  
+
   // Clear input
   const input = document.getElementById('aiInput');
   if (input) input.value = '';
-  
+
   // Simulate AI response
   setTimeout(() => {
-    let response = 'Lo siento, no tengo informacion especifica sobre eso. Puedo ayudarte con consultas sobre stock, ventas, lotes con bajo stock, proyectos activos o tareas de cuadrillas.';
-    
+    let response =
+      'Lo siento, no tengo informacion especifica sobre eso. Puedo ayudarte con consultas sobre stock, ventas, lotes con bajo stock, proyectos activos o tareas de cuadrillas.';
+
     const lowerMessage = message.toLowerCase();
-    
-    if (lowerMessage.includes('stock') || lowerMessage.includes('inventario') || lowerMessage.includes('plantas')) {
+
+    if (
+      lowerMessage.includes('stock') ||
+      lowerMessage.includes('inventario') ||
+      lowerMessage.includes('plantas')
+    ) {
       response = aiResponses['stock'];
     } else if (lowerMessage.includes('venta') || lowerMessage.includes('vendido')) {
       response = aiResponses['ventas'];
-    } else if (lowerMessage.includes('bajo') || lowerMessage.includes('critico') || lowerMessage.includes('falta')) {
+    } else if (
+      lowerMessage.includes('bajo') ||
+      lowerMessage.includes('critico') ||
+      lowerMessage.includes('falta')
+    ) {
       response = aiResponses['bajo stock'];
-    } else if (lowerMessage.includes('proyecto') || lowerMessage.includes('institucional') || lowerMessage.includes('entrega')) {
+    } else if (
+      lowerMessage.includes('proyecto') ||
+      lowerMessage.includes('institucional') ||
+      lowerMessage.includes('entrega')
+    ) {
       response = aiResponses['proyectos'];
-    } else if (lowerMessage.includes('cuadrilla') || lowerMessage.includes('tarea') || lowerMessage.includes('equipo')) {
+    } else if (
+      lowerMessage.includes('cuadrilla') ||
+      lowerMessage.includes('tarea') ||
+      lowerMessage.includes('equipo')
+    ) {
       response = aiResponses['cuadrillas'];
     }
-    
+
     aiMessages.push({ role: 'assistant', content: response });
     renderAIMessages();
   }, 800);
@@ -677,8 +727,10 @@ function loadDashboardData() {
 function loadActivityFeed() {
   const container = document.getElementById('activityFeed');
   if (!container || typeof ACTIVITY_DATA === 'undefined') return;
-  
-  container.innerHTML = ACTIVITY_DATA.slice(0, 5).map(activity => `
+
+  container.innerHTML = ACTIVITY_DATA.slice(0, 5)
+    .map(
+      (activity) => `
     <div class="activity-item">
       <div class="activity-icon ${activity.type}">
         ${getActivityIcon(activity.type)}
@@ -688,14 +740,18 @@ function loadActivityFeed() {
         <span class="activity-time">${activity.time}</span>
       </div>
     </div>
-  `).join('');
+  `
+    )
+    .join('');
 }
 
 function getActivityIcon(type) {
   const icons = {
-    'sale': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>',
-    'inventory': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>',
-    'alert': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>'
+    sale: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>',
+    inventory:
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>',
+    alert:
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>',
   };
   return icons[type] || icons['inventory'];
 }
@@ -703,10 +759,12 @@ function getActivityIcon(type) {
 function loadLowStockAlerts() {
   const container = document.getElementById('lowStockAlerts');
   if (!container || typeof PLANTS_DATA === 'undefined') return;
-  
-  const lowStock = PLANTS_DATA.filter(p => p.stock < 25).slice(0, 4);
-  
-  container.innerHTML = lowStock.map(plant => `
+
+  const lowStock = PLANTS_DATA.filter((p) => p.stock < 25).slice(0, 4);
+
+  container.innerHTML = lowStock
+    .map(
+      (plant) => `
     <div class="low-stock-item">
       <div class="low-stock-info">
         <h5>${plant.name}</h5>
@@ -714,17 +772,39 @@ function loadLowStockAlerts() {
       </div>
       <div class="low-stock-count">${plant.stock}</div>
     </div>
-  `).join('');
+  `
+    )
+    .join('');
+}
+
+// ============================================
+// PASSWORD TOGGLE
+// ============================================
+
+function initPasswordToggle() {
+  const toggle = document.getElementById('passwordToggle');
+  if (!toggle) return;
+
+  const eyeIcon = toggle.querySelector('.eye-icon');
+  const eyeOffIcon = toggle.querySelector('.eye-off-icon');
+  const input = document.getElementById('password');
+
+  toggle.addEventListener('click', function () {
+    const isPassword = input.type === 'password';
+    input.type = isPassword ? 'text' : 'password';
+    eyeIcon.classList.toggle('hidden', !isPassword);
+    eyeOffIcon.classList.toggle('hidden', isPassword);
+  });
 }
 
 // ============================================
 // INITIALIZATION
 // ============================================
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
   // Initialize based on current page
   const path = window.location.pathname;
-  
+
   if (path.includes('catalogo')) {
     initCatalog();
   } else if (path.includes('dashboard')) {
@@ -736,4 +816,6 @@ document.addEventListener('DOMContentLoaded', function() {
   } else if (path.includes('asistente')) {
     initAIAssistant();
   }
+
+  initPasswordToggle();
 });

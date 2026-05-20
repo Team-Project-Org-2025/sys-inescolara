@@ -4,45 +4,39 @@
  * Footer para páginas públicas
  */
 ?>
-<footer class="footer">
+<footer class="site-footer">
     <div class="container">
         <div class="footer-grid">
-            <div class="footer-col">
-                <div class="footer-logo">
-                    <img src="/public/images/logo.png" alt="INECOLARA" class="footer-logo-img">
-                    <div>
-                        <span class="footer-logo-title">INECOLARA</span>
-                        <span class="footer-logo-subtitle">Instituto de Ecosocialismo del Estado Lara</span>
-                    </div>
-                </div>
-                <p class="footer-desc">
+            <div class="footer-column">
+                <img src="<?= BASE_URL ?>public/assets/images/logo_de_inecolara-sin-fondo.png" alt="INECOLARA" class="footer-logo-img" style="height:48px;margin-bottom:1rem">
+                <p style="color:var(--color-gray-400);font-size:0.875rem;margin-bottom:1.5rem">
                     Promoviendo la conservación ambiental y el desarrollo sustentable a través de la producción de plantas nativas y ornamentales.
                 </p>
             </div>
 
-            <div class="footer-col">
-                <h4 class="footer-title">Enlaces Rápidos</h4>
-                <ul class="footer-links">
-                    <li><a href="/">Inicio</a></li>
-                    <li><a href="/catalogo">Catálogo</a></li>
-                    <li><a href="/servicios">Servicios</a></li>
-                    <li><a href="/nosotros">Nosotros</a></li>
-                    <li><a href="/contacto">Contacto</a></li>
+            <div class="footer-column">
+                <h4>Enlaces Rápidos</h4>
+                <ul>
+                    <li><a href="<?= BASE_URL ?>">Inicio</a></li>
+                    <li><a href="<?= BASE_URL ?>catalogo">Catálogo</a></li>
+                    <li><a href="<?= BASE_URL ?>servicios">Servicios</a></li>
+                    <li><a href="<?= BASE_URL ?>nosotros">Nosotros</a></li>
+                    <li><a href="<?= BASE_URL ?>contacto">Contacto</a></li>
                 </ul>
             </div>
 
-            <div class="footer-col">
-                <h4 class="footer-title">Servicios</h4>
-                <ul class="footer-links">
-                    <li><a href="/servicios#ornamentales">Plantas Ornamentales</a></li>
-                    <li><a href="/servicios#reforestacion">Reforestación</a></li>
-                    <li><a href="/servicios#proyectos">Proyectos Institucionales</a></li>
-                    <li><a href="/servicios#asesoria">Asesoría Técnica</a></li>
+            <div class="footer-column">
+                <h4>Servicios</h4>
+                <ul>
+                    <li><a href="<?= BASE_URL ?>servicios#ornamentales">Plantas Ornamentales</a></li>
+                    <li><a href="<?= BASE_URL ?>servicios#reforestacion">Reforestación</a></li>
+                    <li><a href="<?= BASE_URL ?>servicios#proyectos">Proyectos Institucionales</a></li>
+                    <li><a href="<?= BASE_URL ?>servicios#asesoria">Asesoría Técnica</a></li>
                 </ul>
             </div>
 
-            <div class="footer-col">
-                <h4 class="footer-title">Contacto</h4>
+            <div class="footer-column">
+                <h4>Contacto</h4>
                 <ul class="footer-contact">
                     <li>
                         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

@@ -3,29 +3,53 @@
  * Header para páginas públicas
  */
 ?>
-<header class="header">
+<header class="site-header">
     <div class="container">
-        <nav class="nav">
-            <a href="/" class="logo">
-                <img src="/public/images/logo.png" alt="INECOLARA" class="logo-img">
-                <div class="logo-text">
-                    <span class="logo-title">INECOLARA</span>
-                    <span class="logo-subtitle">Vivero Institucional</span>
-                </div>
-            </a>
-            
-            <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Abrir menú">
-                <span class="hamburger"></span>
-            </button>
-            
-            <ul class="nav-menu" id="navMenu">
-                <li><a href="/" class="nav-link <?= ($currentPage ?? '') === 'home' ? 'active' : '' ?>">Inicio</a></li>
-                <li><a href="/catalogo" class="nav-link <?= ($currentPage ?? '') === 'catalogo' ? 'active' : '' ?>">Catálogo</a></li>
-                <li><a href="/servicios" class="nav-link <?= ($currentPage ?? '') === 'servicios' ? 'active' : '' ?>">Servicios</a></li>
-                <li><a href="/nosotros" class="nav-link <?= ($currentPage ?? '') === 'nosotros' ? 'active' : '' ?>">Nosotros</a></li>
-                <li><a href="/contacto" class="nav-link <?= ($currentPage ?? '') === 'contacto' ? 'active' : '' ?>">Contacto</a></li>
-                <li><a href="/login" class="btn btn-primary">Acceso Personal</a></li>
-            </ul>
+        <a href="<?= BASE_URL ?>" class="site-logo">
+            <img src="<?= BASE_URL ?>public/assets/images/logo_de_inecolara-sin-fondo.png" alt="INECOLARA">
+            <div class="site-logo-text">
+                <span>INECOLARA</span>
+                <span>Vivero Institucional</span>
+            </div>
+        </a>
+
+        <button class="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="Abrir menú">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+        </button>
+
+        <nav class="site-nav">
+            <a href="<?= BASE_URL ?>" class="<?= ($currentPage ?? '') === 'home' ? 'active' : '' ?>">Inicio</a>
+            <a href="<?= BASE_URL ?>catalogo" class="<?= ($currentPage ?? '') === 'catalogo' ? 'active' : '' ?>">Catálogo</a>
+            <a href="<?= BASE_URL ?>servicios">Servicios</a>
+            <a href="<?= BASE_URL ?>nosotros">Nosotros</a>
+            <a href="<?= BASE_URL ?>contacto">Contacto</a>
+            <a href="<?= BASE_URL ?>login" class="btn btn-primary">Acceso Personal</a>
         </nav>
+    </div>
+
+    <!-- Mobile Menu overlay -->
+    <div class="mobile-menu" id="mobileMenu">
+        <div class="mobile-menu-content">
+            <div class="mobile-menu-header">
+                <button class="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="Cerrar menú">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <nav>
+                <a href="<?= BASE_URL ?>" class="<?= ($currentPage ?? '') === 'home' ? 'active' : '' ?>">Inicio</a>
+                <a href="<?= BASE_URL ?>catalogo" class="<?= ($currentPage ?? '') === 'catalogo' ? 'active' : '' ?>">Catálogo</a>
+                <a href="<?= BASE_URL ?>servicios" class="<?= ($currentPage ?? '') === 'servicios' ? 'active' : '' ?>">Servicios</a>
+                <a href="<?= BASE_URL ?>nosotros" class="<?= ($currentPage ?? '') === 'nosotros' ? 'active' : '' ?>">Nosotros</a>
+                <a href="<?= BASE_URL ?>contacto" class="<?= ($currentPage ?? '') === 'contacto' ? 'active' : '' ?>">Contacto</a>
+                <a href="<?= BASE_URL ?>login" class="btn btn-primary">Acceso Personal</a>
+            </nav>
+        </div>
     </div>
 </header>

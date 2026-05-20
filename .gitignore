@@ -5,12 +5,14 @@
 
 # PHP dependencies and build artifacts
 /vendor/
-/composer.phar
+composer.phar
+# Node dependencies
+/node_modules/
 # Logs and cache
 *.log
 *.cache
 /tmp/
-/cache/
+ /cache/
 
 # OS and editor files
 .DS_Store
@@ -25,6 +27,7 @@ postgres-data/
 
 # Test/coverage outputs
 /coverage/
-/.phpunit.result.cache
+.phpunit.result.cache
 
-
+/uploads/
+/public/assets/uploads/

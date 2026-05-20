@@ -1,0 +1,207 @@
+<?php
+include_once __DIR__ . '/../common/links.php';
+?>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Usuarios - INECOLARA</title>
+    <?= $css_links ?>
+</head>
+<body>
+    
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    
+    <?php 
+    $currentPage = 'usuarios';
+    include_once __DIR__ . '/../partials/sidebar.php'; 
+    ?>
+    
+    <main class="main-content">
+        <header class="dashboard-header">
+            <div class="dashboard-header-left">
+                <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Abrir menú">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24">
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+                <h1 class="dashboard-page-title">Usuarios</h1>
+            </div>
+            
+            <div class="dashboard-header-right">
+                <div class="dashboard-search">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input type="text" placeholder="Buscar...">
+                </div>
+                
+                <button class="header-icon-btn" aria-label="Notificaciones">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                    </svg>
+                    <span class="notification-badge"></span>
+                </button>
+                
+                <div class="sidebar-user" style="padding: 0.5rem; border-radius: 8px; display: flex; align-items: center; gap: 0.75rem;">
+                    <div class="sidebar-user-avatar" style="width: 36px; height: 36px; background-color: #e5a835; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; color: #1a1f2e; overflow: hidden; flex-shrink: 0;">
+                        <?php
+                        $headerAvatar = $_SESSION['user_avatar'] ?? null;
+                        $headerName = $_SESSION['user_nombre'] ?? 'U';
+                        if ($headerAvatar): ?>
+                            <img src="<?= BASE_URL . htmlspecialchars($headerAvatar) ?>" alt="Avatar" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">
+                        <?php else: ?>
+                            <?= strtoupper(substr($headerName, 0, 1)) ?>
+                        <?php endif; ?>
+                    </div>
+                    <span style="font-size:0.875rem;font-weight:500;color:#374151;white-space:nowrap;"><?= htmlspecialchars($headerName) ?></span>
+                </div>
+            </div>
+        </header>
+        
+        <div class="dashboard-content">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1>Gestión de Usuarios</h1>
+                    <p style="color: var(--text-secondary);">Módulo para administrar los usuarios del sistema.</p>
+                </div>
+                <button class="btn btn-primary" id="btnAddUser">
+                    <i class="fas fa-plus"></i> Nuevo Usuario
+                </button>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table id="usersTable" class="table table-striped table-hover w-100">
+                            <thead>
+                                <tr>
+                                    <th>Nombre de Usuario</th>
+                                    <th>Correo Electrónico</th>
+                                    <th>Rol</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modals fuera de main-content para evitar conflictos con Bootstrap 5.3 -->
+    
+    <!-- Add User Modal -->
+    <div class="modal fade" id="addUserModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="addUserForm">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Agregar Usuario</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Nombre de Usuario</label>
+                            <input type="text" class="form-control" name="nombre_usuario" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Correo Electrónico</label>
+                            <input type="email" class="form-control" name="correo_electronico" placeholder="usuario@correo.com">
+                            <small class="text-muted">Opcional, necesario para recuperación de contraseña.</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Contraseña</label>
+                            <input type="password" class="form-control" name="password" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Rol</label>
+                            <select class="form-select" name="rol_id">
+                                <?php foreach ($roles as $rol): ?>
+                                <option value="<?= $rol['id_rol'] ?>"><?= htmlspecialchars($rol['nombre_rol']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Foto de perfil</label>
+                            <input type="file" class="form-control" name="avatar" accept="image/jpeg,image/png,image/gif,image/webp">
+                            <small class="text-muted">Formatos: jpg, png, gif, webp. Máx 5MB.</small>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div class="modal fade" id="editUserModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="editUserForm">
+                    <input type="hidden" name="id" id="editUserIdHidden">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Editar Usuario</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Nombre de Usuario</label>
+                            <input type="text" class="form-control" name="nombre_usuario" id="editUserName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Correo Electrónico</label>
+                            <input type="email" class="form-control" name="correo_electronico" id="editUserEmail" placeholder="usuario@correo.com">
+                            <small class="text-muted">Opcional, necesario para recuperación de contraseña.</small>
+                        </div>
+                        <div class="mb-3" id="currentPasswordGroup" style="display:none;">
+                            <label class="form-label">Tu Contraseña Actual</label>
+                            <input type="password" class="form-control" name="current_password" id="editCurrentPassword" placeholder="Ingresa tu contraseña actual para autorizar el cambio">
+                            <small class="text-muted" id="currentPasswordHelp">Debes ingresar tu propia contraseña para realizar este cambio.</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Nueva Contraseña (Dejar en blanco para no cambiar)</label>
+                            <input type="password" class="form-control" name="password" id="editUserPassword" placeholder="Nueva contraseña">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Rol</label>
+                            <select class="form-select" name="rol_id" id="editUserRole">
+                                <?php foreach ($roles as $rol): ?>
+                                <option value="<?= $rol['id_rol'] ?>"><?= htmlspecialchars($rol['nombre_rol']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                            <small class="text-muted" id="editUserRoleNote" style="display:none;">El rol del superusuario no se puede modificar.</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Foto de perfil</label>
+                            <div id="editAvatarPreview" class="mb-2" style="display:none;">
+                                <img src="" alt="Avatar actual" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid var(--color-primary);">
+                            </div>
+                            <input type="file" class="form-control" name="avatar" accept="image/jpeg,image/png,image/gif,image/webp">
+                            <small class="text-muted">Formatos: jpg, png, gif, webp. Máx 5MB.</small>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Actualizar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <?= $scripts_links ?>
+    <input type="hidden" id="currentUserId" value="<?= (int)($_SESSION['user_id'] ?? 0) ?>">
+    <input type="hidden" id="currentUserRole" value="<?= (int)($_SESSION['user_rol_id'] ?? 0) ?>">
+    <script type="module" src="<?= BASE_URL ?>public/assets/js/dashboard/usuarios.js"></script>
+</body>
+</html>
