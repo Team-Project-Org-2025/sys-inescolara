@@ -6,10 +6,10 @@ include_once __DIR__ . '/../common/links.php';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Plants - INECOLARA</title>
+    <title>Batches - INECOLARA</title>
     <?= $css_links ?>
     <style>
-        .plant-thumb {
+        .batch-thumb {
             width: 60px;
             height: 60px;
             object-fit: cover;
@@ -18,8 +18,8 @@ include_once __DIR__ . '/../common/links.php';
             transition: transform .2s;
             border: 2px solid #e5e7eb;
         }
-        .plant-thumb:hover { transform: scale(1.1); }
-        .plant-thumb-placeholder {
+        .batch-thumb:hover { transform: scale(1.1); }
+        .batch-thumb-placeholder {
             width: 60px;
             height: 60px;
             border-radius: 8px;
@@ -46,7 +46,7 @@ include_once __DIR__ . '/../common/links.php';
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
     <?php
-    $currentPage = 'plants';
+    $currentPage = 'batches';
     include_once __DIR__ . '/../partials/sidebar.php';
     ?>
 
@@ -60,7 +60,7 @@ include_once __DIR__ . '/../common/links.php';
                         <line x1="3" y1="18" x2="21" y2="18"></line>
                     </svg>
                 </button>
-                <h1 class="dashboard-page-title">Plants</h1>
+                <h1 class="dashboard-page-title">Batches</h1>
             </div>
             <div class="dashboard-header-right">
                 <div class="dashboard-search">
@@ -96,24 +96,28 @@ include_once __DIR__ . '/../common/links.php';
         <div class="dashboard-content">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
-                    <h1>Plant Catalog</h1>
-                    <p style="color: var(--text-secondary);">Individual plant registry in the nursery.</p>
+                    <h1>Batch Management</h1>
+                    <p style="color: var(--text-secondary);">Administration of plant batches in the nursery.</p>
                 </div>
-                <button class="btn btn-primary" id="btnAddPlant">
-                    <i class="fas fa-plus"></i> New Plant
+                <button class="btn btn-primary" id="btnAddBatch">
+                    <i class="fas fa-plus"></i> New Batch
                 </button>
             </div>
 
             <div class="card shadow-sm">
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table id="plantsTable" class="table table-striped table-hover w-100">
+                        <table id="batchesTable" class="table table-striped table-hover w-100">
                             <thead>
                                 <tr>
                                     <th>Image</th>
-                                    <th>Common Name</th>
-                                    <th>Technical Name</th>
+                                    <th>Plant</th>
                                     <th>Species</th>
+                                    <th>Planting Date</th>
+                                    <th>Initial Qty</th>
+                                    <th>Current Qty</th>
+                                    <th>Status</th>
+                                    <th>Location</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -125,40 +129,62 @@ include_once __DIR__ . '/../common/links.php';
         </div>
     </main>
 
-    <!-- Add Plant Modal -->
-    <div class="modal fade" id="addPlantModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+    <!-- Add Batch Modal -->
+    <div class="modal fade" id="addBatchModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog">
             <div class="modal-content">
-                <form id="addPlantForm">
+                <form id="addBatchForm">
                     <div class="modal-header">
-                        <h5 class="modal-title">Add Plant</h5>
+                        <h5 class="modal-title">Add Batch</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label class="form-label">Common Name</label>
-                            <input type="text" class="form-control" name="nombre_comun" required placeholder="E.g: Rose, Cactus, Succulent">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Technical Name (Scientific)</label>
-                            <input type="text" class="form-control" name="nombre_tecnico" placeholder="E.g: Rosa gallica, Echinocactus grusonii">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Species / Family Group</label>
-                            <select class="form-select" name="especie_id">
-                                <option value="">No species</option>
-                                <?php foreach ($species as $s): ?>
-                                <option value="<?= $s['id'] ?>"><?= htmlspecialchars($s['nombre_comun']) ?></option>
+                            <label class="form-label">Plant</label>
+                            <select class="form-select" name="id_planta" required>
+                                <option value="">Select a plant...</option>
+                                <?php foreach ($plants as $p): ?>
+                                <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['nombre_comun']) ?><?= $p['especie_nombre'] ? ' (' . htmlspecialchars($p['especie_nombre']) . ')' : '' ?></option>
                                 <?php endforeach; ?>
                             </select>
-                            <small class="text-muted">Optional. Select the species this plant belongs to.</small>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Image</label>
-                            <input type="file" class="form-control" name="imagen" accept="image/jpeg,image/png,image/gif,image/webp" id="addPlantImage">
+                            <label class="form-label">Planting Date</label>
+                            <input type="date" class="form-control" name="fecha_siembra" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <label class="form-label">Initial Quantity</label>
+                                <input type="number" class="form-control" name="cantidad_inicial" min="1" required>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label class="form-label">Current Quantity</label>
+                                <input type="number" class="form-control" name="cantidad_actual" min="0" required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <label class="form-label">Status</label>
+                                <select class="form-select" name="estado" required>
+                                    <option value="">Select...</option>
+                                    <option value="Alive">Alive</option>
+                                    <option value="Growing">Growing</option>
+                                    <option value="Flowering">Flowering</option>
+                                    <option value="Harvested">Harvested</option>
+                                    <option value="Dead">Dead</option>
+                                </select>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label class="form-label">Location</label>
+                                <input type="text" class="form-control" name="ubicacion" placeholder="E.g: Greenhouse A" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Batch Image</label>
+                            <input type="file" class="form-control" name="imagen" accept="image/jpeg,image/png,image/gif,image/webp" id="addBatchImage">
                             <small class="text-muted">Formats: jpg, png, gif, webp. Max 5MB.</small>
                             <div class="mt-2">
-                                <img id="addPlantPreview" class="img-preview">
+                                <img id="addBatchPreview" class="img-preview">
                             </div>
                         </div>
                     </div>
@@ -171,43 +197,66 @@ include_once __DIR__ . '/../common/links.php';
         </div>
     </div>
 
-    <!-- Edit Plant Modal -->
-    <div class="modal fade" id="editPlantModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+    <!-- Edit Batch Modal -->
+    <div class="modal fade" id="editBatchModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog">
             <div class="modal-content">
-                <form id="editPlantForm">
-                    <input type="hidden" name="id" id="editPlantId">
+                <form id="editBatchForm">
+                    <input type="hidden" name="id" id="editBatchId">
                     <div class="modal-header">
-                        <h5 class="modal-title">Edit Plant</h5>
+                        <h5 class="modal-title">Edit Batch</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label class="form-label">Common Name</label>
-                            <input type="text" class="form-control" name="nombre_comun" id="editPlantName" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Technical Name</label>
-                            <input type="text" class="form-control" name="nombre_tecnico" id="editPlantTecnico">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Species / Family Group</label>
-                            <select class="form-select" name="especie_id" id="editPlantSpecies">
-                                <option value="">No species</option>
-                                <?php foreach ($species as $s): ?>
-                                <option value="<?= $s['id'] ?>"><?= htmlspecialchars($s['nombre_comun']) ?></option>
+                            <label class="form-label">Plant</label>
+                            <select class="form-select" name="id_planta" id="editBatchPlant" required>
+                                <option value="">Select a plant...</option>
+                                <?php foreach ($plants as $p): ?>
+                                <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['nombre_comun']) ?><?= $p['especie_nombre'] ? ' (' . htmlspecialchars($p['especie_nombre']) . ')' : '' ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Image</label>
+                            <label class="form-label">Planting Date</label>
+                            <input type="date" class="form-control" name="fecha_siembra" id="editBatchDate" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <label class="form-label">Initial Quantity</label>
+                                <input type="number" class="form-control" name="cantidad_inicial" id="editBatchQtyInit" min="1" required>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label class="form-label">Current Quantity</label>
+                                <input type="number" class="form-control" name="cantidad_actual" id="editBatchQtyCurr" min="0" required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <label class="form-label">Status</label>
+                                <select class="form-select" name="estado" id="editBatchStatus" required>
+                                    <option value="">Select...</option>
+                                    <option value="Alive">Alive</option>
+                                    <option value="Growing">Growing</option>
+                                    <option value="Flowering">Flowering</option>
+                                    <option value="Harvested">Harvested</option>
+                                    <option value="Dead">Dead</option>
+                                </select>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label class="form-label">Location</label>
+                                <input type="text" class="form-control" name="ubicacion" id="editBatchLocation" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Batch Image</label>
                             <div id="editImageCurrent" class="mb-2" style="display:none;">
                                 <img src="" alt="Current image" style="width:100px;height:100px;object-fit:cover;border-radius:8px;border:2px solid var(--color-primary);">
                             </div>
-                            <input type="file" class="form-control" name="imagen" accept="image/jpeg,image/png,image/gif,image/webp" id="editPlantImage">
+                            <input type="file" class="form-control" name="imagen" accept="image/jpeg,image/png,image/gif,image/webp" id="editBatchImage">
                             <small class="text-muted">Leave empty to keep current image.</small>
                             <div class="mt-2">
-                                <img id="editPlantPreview" class="img-preview">
+                                <img id="editBatchPreview" class="img-preview">
                             </div>
                         </div>
                     </div>
@@ -226,13 +275,13 @@ include_once __DIR__ . '/../common/links.php';
             <div class="modal-content bg-transparent border-0">
                 <div class="modal-body text-center p-0">
                     <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" data-bs-dismiss="modal" style="z-index:10;"></button>
-                    <img id="lightboxImg" src="" alt="Plant image" class="img-fluid rounded shadow">
+                    <img id="lightboxImg" src="" alt="Batch image" class="img-fluid rounded shadow">
                 </div>
             </div>
         </div>
     </div>
 
     <?= $scripts_links ?>
-    <script type="module" src="<?= BASE_URL ?>public/assets/js/dashboard/plants.js"></script>
+    <script type="module" src="<?= BASE_URL ?>public/assets/js/dashboard/batches.js"></script>
 </body>
 </html>

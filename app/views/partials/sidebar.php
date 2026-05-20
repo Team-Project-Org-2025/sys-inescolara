@@ -61,6 +61,16 @@ function hasPermiso(string $codigo): bool
                 <li>
                     <a href="<?= BASE_URL ?>dashboard/plants" class="sidebar-link <?= ($currentPage ?? '') === 'plants' ? 'active' : '' ?>">
                         <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 22V11"></path>
+                            <path d="M12 14c2.5-2.5 6-3 7.5-1.5s1 5-1.5 7.5"></path>
+                            <path d="M12 11c-2.5-2.5-6-3-7.5-1.5s-1 5 1.5 7.5"></path>
+                        </svg>
+                        <span>Plantas</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="<?= BASE_URL ?>dashboard/batches" class="sidebar-link <?= ($currentPage ?? '') === 'batches' ? 'active' : '' ?>">
+                        <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M2 22h20"></path>
                             <path d="M12 22V11"></path>
                             <path d="M12 14c2.5-2.5 6-3 7.5-1.5s1 5-1.5 7.5"></path>

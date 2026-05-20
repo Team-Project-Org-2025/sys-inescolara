@@ -123,12 +123,37 @@ function usuarios(): void
 function plants(): void
 {
     dashboardCheckPermiso('PLANTAS_VIEW');
+
+    require_once ROOT_PATH . 'vendor/autoload.php';
+    $speciesModel = new \SysInescolara\models\Species();
+    $species = $speciesModel->getAll();
+
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'plants.php';
 
     if (!is_file($view)) {
         http_response_code(500);
         echo 'Vista de plantas no encontrada.';
+        return;
+    }
+
+    require $view;
+}
+
+function batches(): void
+{
+    dashboardCheckPermiso('PLANTAS_VIEW');
+
+    require_once ROOT_PATH . 'vendor/autoload.php';
+    $plantModel = new \SysInescolara\models\Plant();
+    $plants = $plantModel->getAll();
+
+    $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
+        . 'dashboard' . DIRECTORY_SEPARATOR . 'batches.php';
+
+    if (!is_file($view)) {
+        http_response_code(500);
+        echo 'Vista de lotes no encontrada.';
         return;
     }
 

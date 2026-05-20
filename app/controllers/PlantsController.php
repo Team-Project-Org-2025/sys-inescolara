@@ -1,267 +1,204 @@
 <?php
 
+declare(strict_types=1);
+
 require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
 
-use SysInescolara\models\Plants;
-use SysInescolara\helpers\Validation;
+use SysInescolara\models\Plant;
+use SysInescolara\models\Species;
 
-require_once __DIR__ . '/LoginController.php';
-
-checkAuth();
-
-$plantModel = new Plants();
-
-function index()
-{
-    global $dolarBCVRate;
-    require __DIR__ . '/../views/dashboard/plantas.php';
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
 }
 
-handleRequest($plantModel);
+function plantsCheckAuth(): void
+{
+    if (!isset($_SESSION['user_id'])) {
+        $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+        if ($isAjax) {
+            header('Content-Type: application/json; charset=utf-8');
+            http_response_code(401);
+            echo json_encode(['success' => false, 'message' => 'No autorizado', 'redirect' => BASE_URL . 'login']);
+            exit();
+        }
+        header('Location: ' . BASE_URL . 'login');
+        exit();
+    }
+}
 
-// ============================================
-// CORE REQUEST HANDLER
-// ============================================
+$GLOBALS['plantModel'] = new Plant();
+$GLOBALS['speciesModel'] = new Species();
 
-function handleRequest($plantModel)
+function index(): void
+{
+    $plantModel = $GLOBALS['plantModel'] ?? new Plant();
+    $speciesModel = $GLOBALS['speciesModel'] ?? new Species();
+    plantsCheckAuth();
+    handleRequest($plantModel);
+
+    $species = $speciesModel->getAll();
+    $view = ROOT_PATH . 'app/views/dashboard/plants.php';
+    if (!is_file($view)) {
+        http_response_code(500);
+        echo 'Vista de plantas no encontrada.';
+        return;
+    }
+
+    require $view;
+}
+
+function get_plants(): void
+{
+    $plantModel = $GLOBALS['plantModel'] ?? new Plant();
+    plantsCheckAuth();
+    getPlantsAjax($plantModel);
+}
+
+function add_ajax(): void
+{
+    $plantModel = $GLOBALS['plantModel'] ?? new Plant();
+    plantsCheckAuth();
+    handleAddEditAjax($plantModel, 'add');
+}
+
+function edit_ajax(): void
+{
+    $plantModel = $GLOBALS['plantModel'] ?? new Plant();
+    plantsCheckAuth();
+    handleAddEditAjax($plantModel, 'edit');
+}
+
+function delete_ajax(): void
+{
+    $plantModel = $GLOBALS['plantModel'] ?? new Plant();
+    plantsCheckAuth();
+    handleDeleteAjax($plantModel);
+}
+
+function handleRequest(Plant $plantModel): void
 {
     $action = $_GET['action'] ?? '';
-    $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&
-        strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+    $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
 
     try {
         if ($isAjax) {
             header('Content-Type: application/json; charset=utf-8');
 
             $routes = [
-                'POST_add_ajax'     => fn() => handleAddEditAjax($plantModel, 'add'),
-                'POST_edit_ajax'    => fn() => handleAddEditAjax($plantModel, 'edit'),
-                'POST_delete_ajax'  => fn() => handleDeleteAjax($plantModel),
-                'GET_get_plants'    => fn() => getPlantsAjax($plantModel),
-                'GET_search_ajax'   => fn() => handleSearchAjax($plantModel)
+                'GET_get_plants'     => fn() => getPlantsAjax($plantModel),
+                'POST_add_ajax'      => fn() => handleAddEditAjax($plantModel, 'add'),
+                'POST_edit_ajax'     => fn() => handleAddEditAjax($plantModel, 'edit'),
+                'POST_delete_ajax'   => fn() => handleDeleteAjax($plantModel),
             ];
 
-            $route = "{$_SERVER['REQUEST_METHOD']}_$action";
-
-            if (isset($routes[$route])) {
-                $routes[$route]();
-            } else {
-                jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400);
-            }
-        } else {
-            $routes = [
-                'POST_add'   => fn() => handleAddEdit($plantModel, 'add'),
-                'POST_edit'  => fn() => handleAddEdit($plantModel, 'edit'),
-                'GET_delete' => fn() => handleDelete($plantModel)
-            ];
-
-            $route = "{$_SERVER['REQUEST_METHOD']}_$action";
+            $route = $_SERVER['REQUEST_METHOD'] . '_' . $action;
 
             if (isset($routes[$route])) {
                 $routes[$route]();
             }
+
+            jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400);
         }
     } catch (Exception $e) {
         handleError($e, $isAjax);
     }
 }
 
-// ============================================
-// UTILITY FUNCTIONS
-// ============================================
-
-function jsonResponse($data, $statusCode = 200)
+function jsonResponse(array $data, int $statusCode = 200): void
 {
     http_response_code($statusCode);
-    echo json_encode($data);
+    echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     exit();
 }
 
-function handleError($e, $isAjax)
+function handleError(Exception $e, bool $isAjax): void
 {
     if ($isAjax) {
-        jsonResponse(['success' => false, 'message' => 'Error del servidor: ' . $e->getMessage()], 500);
+        jsonResponse(['success' => false, 'message' => $e->getMessage()], 500);
+    }
+    http_response_code(500);
+    echo 'Error: ' . htmlspecialchars($e->getMessage());
+    exit();
+}
+
+function handleAddEditAjax(Plant $plantModel, string $mode): void
+{
+    $nombreComun = trim((string)($_POST['nombre_comun'] ?? ''));
+    if ($nombreComun === '') {
+        throw new Exception('El nombre común es requerido.');
+    }
+
+    $nombreTecnico = trim((string)($_POST['nombre_tecnico'] ?? ''));
+    if ($nombreTecnico === '') {
+        $nombreTecnico = null;
+    }
+
+    $especieId = !empty($_POST['especie_id']) ? (int)$_POST['especie_id'] : null;
+
+    $imagen = null;
+
+    if (!empty($_FILES['imagen']) && $_FILES['imagen']['error'] === UPLOAD_ERR_OK) {
+        $uploader = new \SysInescolara\helpers\ImageUploader('assets/uploads/plants');
+        $result = $uploader->upload($_FILES['imagen'], 'plant');
+        if (!$result['success']) {
+            throw new Exception(implode(', ', $result['errors']));
+        }
+        $imagen = $result['data']['url'];
+    }
+
+    if ($mode === 'add') {
+        $plantModel->add($nombreComun, $nombreTecnico, $especieId, $imagen);
+        jsonResponse([
+            'success' => true,
+            'message' => 'Planta agregada correctamente',
+            'plant' => [
+                'id' => $plantModel->getLastInsertId() ?? 0,
+                'nombre_comun' => $nombreComun,
+                'imagen' => $imagen,
+            ],
+        ]);
+    }
+
+    $id = (int)($_POST['id'] ?? 0);
+    if ($id <= 0) throw new Exception('ID inválido');
+
+    if ($imagen === null) {
+        $existing = $plantModel->getById($id);
+        $imagen = $existing['imagen'] ?? null;
     } else {
-        die("Error: " . $e->getMessage());
+        $existing = $plantModel->getById($id);
+        if (!empty($existing['imagen'])) {
+            $uploader = new \SysInescolara\helpers\ImageUploader();
+            $uploader->delete($existing['imagen']);
+        }
     }
+
+    $plantModel->update($id, $nombreComun, $nombreTecnico, $especieId, $imagen);
+    jsonResponse([
+        'success' => true,
+        'message' => 'Planta actualizada correctamente',
+        'plant' => ['id' => $id, 'imagen' => $imagen],
+    ]);
 }
 
-// ============================================
-// VALIDATION
-// ============================================
-
-function validatePlantData($data, $mode)
+function handleDeleteAjax(Plant $plantModel): void
 {
-    $rules = [
-        'especie_id'       => ['type' => null, 'required' => true],
-        'fecha_siembra'    => ['type' => null, 'required' => true],
-        'cantidad_inicial' => ['type' => null, 'required' => true],
-        'cantidad_actual'  => ['type' => null, 'required' => true],
-        'estado'           => ['type' => null, 'required' => true],
-        'ubicacion'        => ['type' => null, 'required' => true],
-        'id'               => ['type' => null, 'required' => ($mode === 'edit')]
-    ];
+    $id = (int)($_POST['id'] ?? 0);
+    if ($id <= 0) throw new Exception('ID inválido');
+    if (!$plantModel->exists($id)) throw new Exception('No existe la planta');
 
-    $validation = Validation::validate($data, $rules);
-
-    if (!$validation['valid']) {
-        throw new Exception(implode(', ', $validation['errors']));
+    $existing = $plantModel->getById($id);
+    if (!empty($existing['imagen'])) {
+        $uploader = new \SysInescolara\helpers\ImageUploader();
+        $uploader->delete($existing['imagen']);
     }
+
+    $plantModel->delete($id);
+    jsonResponse(['success' => true, 'message' => 'Planta eliminada correctamente', 'plantId' => $id]);
 }
 
-// ============================================
-// NON-AJAX HANDLERS
-// ============================================
-
-function handleAddEdit($plantModel, $mode)
+function getPlantsAjax(Plant $plantModel): void
 {
-    try {
-        $fields = ['especie_id', 'fecha_siembra', 'cantidad_inicial', 'cantidad_actual', 'estado', 'ubicacion'];
-        if ($mode === 'edit') $fields[] = 'id';
-
-        foreach ($fields as $f) {
-            if (empty($_POST[$f]) && $_POST[$f] !== '0') {
-                throw new Exception("El campo '$f' es requerido");
-            }
-        }
-
-        $id = intval($_POST['id'] ?? 0);
-        $especie_id = intval($_POST['especie_id']);
-        $fecha_siembra = trim($_POST['fecha_siembra']);
-        $cantidad_inicial = intval($_POST['cantidad_inicial']);
-        $cantidad_actual = intval($_POST['cantidad_actual']);
-        $estado = trim($_POST['estado']);
-        $ubicacion = trim($_POST['ubicacion']);
-
-        if ($mode === 'add') {
-            $plantModel->add($especie_id, $fecha_siembra, $cantidad_inicial, $cantidad_actual, $estado, $ubicacion);
-            header("Location: plants-admin.php?success=add");
-            exit();
-        } else {
-            $plantModel->update($id, $especie_id, $fecha_siembra, $cantidad_inicial, $cantidad_actual, $estado, $ubicacion);
-            header("Location: plants-admin.php?success=edit");
-            exit();
-        }
-    } catch (Exception $e) {
-        die("Error: " . $e->getMessage());
-    }
-}
-
-function handleDelete($plantModel)
-{
-    try {
-        if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
-            throw new Exception("ID inválido");
-        }
-
-        $id = intval($_GET['id']);
-        $plantModel->delete($id);
-        header("Location: plants-admin.php?success=delete");
-        exit();
-    } catch (Exception $e) {
-        die("Error: " . $e->getMessage());
-    }
-}
-
-// ============================================
-// AJAX HANDLERS
-// ============================================
-
-function handleAddEditAjax($plantModel, $mode)
-{
-    try {
-        validatePlantData($_POST, $mode);
-
-        $id = intval($_POST['id'] ?? 0);
-        $especie_id = intval($_POST['especie_id']);
-        $fecha_siembra = trim($_POST['fecha_siembra']);
-        $cantidad_inicial = intval($_POST['cantidad_inicial']);
-        $cantidad_actual = intval($_POST['cantidad_actual']);
-        $estado = trim($_POST['estado']);
-        $ubicacion = trim($_POST['ubicacion']);
-
-        if ($mode === 'add') {
-            $plantModel->add($especie_id, $fecha_siembra, $cantidad_inicial, $cantidad_actual, $estado, $ubicacion);
-            
-            // Reutilizando el flujo para retornar la planta recién agregada
-            $msg = 'Lote de plantas agregado con éxito';
-            $plant = [
-                'especie_id' => $especie_id,
-                'fecha_siembra' => $fecha_siembra,
-                'cantidad_inicial' => $cantidad_inicial,
-                'cantidad_actual' => $cantidad_actual,
-                'estado' => $estado,
-                'ubicacion' => $ubicacion
-            ];
-        } else {
-            $plantModel->update($id, $especie_id, $fecha_siembra, $cantidad_inicial, $cantidad_actual, $estado, $ubicacion);
-            $plant = [
-                'id' => $id,
-                'especie_id' => $especie_id,
-                'fecha_siembra' => $fecha_siembra,
-                'cantidad_inicial' => $cantidad_inicial,
-                'cantidad_actual' => $cantidad_actual,
-                'estado' => $estado,
-                'ubicacion' => $ubicacion
-            ];
-            $msg = 'Lote de plantas actualizado con éxito';
-        }
-
-        jsonResponse(['success' => true, 'message' => $msg, 'plant' => $plant]);
-    } catch (Exception $e) {
-        jsonResponse(['success' => false, 'message' => $e->getMessage()], 400);
-    }
-}
-
-function handleDeleteAjax($plantModel)
-{
-    try {
-        $validation = Validation::validateField($_POST['id'] ?? '', 'id');
-        if (!$validation['valid']) {
-            throw new Exception($validation['message']);
-        }
-
-        $id = intval($_POST['id']);
-        if (!$plantModel->exists($id)) {
-            throw new Exception("No existe el lote de plantas solicitado");
-        }
-
-        $plantModel->delete($id);
-        jsonResponse(['success' => true, 'message' => 'Lote eliminado de forma exitosa', 'plantId' => $id]);
-    } catch (Exception $e) {
-        jsonResponse(['success' => false, 'message' => $e->getMessage()], 400);
-    }
-}
-
-function getPlantsAjax($plantModel)
-{
-    try {
-        if (isset($_GET['id'])) {
-            $plant = $plantModel->getById(intval($_GET['id']));
-            if (!$plant) {
-                throw new Exception("Lote de plantas no encontrado");
-            }
-            jsonResponse(['success' => true, 'plants' => [$plant]]);
-        }
-
-        $plants = $plantModel->getAll();
-        jsonResponse(['success' => true, 'plants' => $plants, 'count' => count($plants)]);
-    } catch (Exception $e) {
-        jsonResponse(['success' => false, 'message' => $e->getMessage()], 500);
-    }
-}
-
-function handleSearchAjax($plantModel)
-{
-    try {
-        $query = trim($_GET['query'] ?? '');
-        if ($query === '') {
-            jsonResponse(['success' => true, 'plants' => [], 'count' => 0]);
-        }
-
-        $results = $plantModel->searchByLocation($query);
-        jsonResponse(['success' => true, 'plants' => $results, 'count' => count($results)]);
-    } catch (Exception $e) {
-        jsonResponse(['success' => false, 'message' => $e->getMessage()], 500);
-    }
+    $plants = $plantModel->getAll();
+    jsonResponse(['success' => true, 'plants' => $plants, 'count' => count($plants)]);
 }
