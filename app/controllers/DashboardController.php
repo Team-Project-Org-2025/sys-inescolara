@@ -194,3 +194,18 @@ function clients(): void
 
     require $view;
 }
+
+function species(): void
+{
+    dashboardCheckPermiso('PLANTAS_VIEW');
+    $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
+        . 'dashboard' . DIRECTORY_SEPARATOR . 'species.php';
+
+    if (!is_file($view)) {
+        http_response_code(500);
+        echo 'Vista de especies no encontrada.';
+        return;
+    }
+
+    require $view;
+}

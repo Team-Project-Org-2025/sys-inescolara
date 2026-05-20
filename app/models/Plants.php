@@ -13,7 +13,7 @@ class Plants extends Database
     {
         try {
             $sql = "SELECT e.nombre_comun, e.nombre_tecnico, l.* FROM lotes l
-                    JOIN especies e ON l.especie_id = e.id 
+                    JOIN especies e ON l.especie_id = e.id_especie
                     ORDER BY l.id ASC";
             $stmt = $this->db->query($sql);
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
@@ -34,7 +34,7 @@ class Plants extends Database
         $stmt = $this->db->prepare("
             SELECT l.*, e.nombre_comun, e.nombre_tecnico 
             FROM lotes l
-            JOIN especies e ON l.especie_id = e.id
+            JOIN especies e ON l.especie_id = e.id_especie
             WHERE l.id = :id
         ");
         $stmt->execute([':id' => $id]);
@@ -94,7 +94,7 @@ class Plants extends Database
             $stmt = $this->db->prepare("
                 SELECT l.id, e.nombre_comun, l.estado, l.ubicacion
                 FROM lotes l
-                JOIN especies e ON l.especie_id = e.id
+                JOIN especies e ON l.especie_id = e.id_especie
                 WHERE (l.ubicacion ILIKE :query OR l.estado ILIKE :query)
                 ORDER BY l.id ASC
                 LIMIT 20
