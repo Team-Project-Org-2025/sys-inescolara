@@ -23,22 +23,6 @@ function hasPermiso(string $codigo): bool
         </button>
     </div>
 
-    <div class="sidebar-user">
-        <div class="sidebar-user-avatar">
-            <?php
-            $sessionAvatar = $_SESSION['user_avatar'] ?? null;
-            $sessionName = $_SESSION['user_nombre'] ?? 'U';
-            if ($sessionAvatar): ?>
-                <img src="<?= BASE_URL . htmlspecialchars($sessionAvatar) ?>" alt="Avatar">
-            <?php else: ?>
-                <span class="sidebar-user-initial"><?= strtoupper(substr($sessionName, 0, 1)) ?></span>
-            <?php endif; ?>
-        </div>
-        <div class="sidebar-user-info">
-            <span class="sidebar-user-name"><?= htmlspecialchars($sessionName) ?></span>
-        </div>
-    </div>
-
     <nav class="sidebar-nav">
         <div class="sidebar-section">
             <span class="sidebar-section-title">Principal</span>
