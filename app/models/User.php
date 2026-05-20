@@ -162,6 +162,22 @@ class User extends Database
         }
     }
 
+    public function verifyPassword(int $id, string $password): bool
+    {
+        try {
+            $stmt = $this->db->prepare("SELECT password_hash FROM usuarios WHERE id_usuario = :id");
+            $stmt->execute([':id' => $id]);
+            $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+            if (!$row) {
+                return false;
+            }
+            return password_verify($password, $row['password_hash']);
+        } catch (\Throwable $e) {
+            error_log("Error en verifyPassword: " . $e->getMessage());
+            return false;
+        }
+    }
+
     private function updatePasswordHash(int $userId, string $plainPassword): void
     {
         try {
@@ -227,7 +243,7 @@ class User extends Database
         }
     }
 
-    public function add(string $nombreUsuario, string $password, int $rolId, ?string $avatar = null)
+    public function add(string $nombreUsuario, string $password, int $rolId, ?string $correoElectronico = null, ?string $avatar = null)
     {
         if ($this->userExists(null, $nombreUsuario)) {
             throw new Exception("Ya existe un usuario con este nombre de usuario.");
@@ -240,30 +256,32 @@ class User extends Database
         }
 
         $stmt = $this->db->prepare("
-            INSERT INTO usuarios (nombre_usuario, password_hash, id_rol, avatar)
-            VALUES (:nombre_usuario, :password_hash, :id_rol, :avatar)
+            INSERT INTO usuarios (nombre_usuario, password_hash, id_rol, correo_electronico, avatar)
+            VALUES (:nombre_usuario, :password_hash, :id_rol, :correo_electronico, :avatar)
         ");
 
         return $stmt->execute([
             ':nombre_usuario' => $nombreUsuario,
             ':password_hash' => $passwordHash,
             ':id_rol' => $rolId,
+            ':correo_electronico' => $correoElectronico,
             ':avatar' => $avatar,
         ]);
     }
 
 
-    public function update(int $id, string $nombreUsuario, int $rolId, ?string $password = null, ?string $avatar = null)
+    public function update(int $id, string $nombreUsuario, int $rolId, ?string $correoElectronico = null, ?string $password = null, ?string $avatar = null)
     {
         if (!$this->userExists($id)) {
             throw new Exception("No existe el usuario con ID: $id");
         }
 
-        $sql = "UPDATE usuarios SET nombre_usuario = :nombre_usuario, id_rol = :id_rol";
+        $sql = "UPDATE usuarios SET nombre_usuario = :nombre_usuario, id_rol = :id_rol, correo_electronico = :correo_electronico";
         $params = [
             ':id' => $id,
             ':nombre_usuario' => $nombreUsuario,
             ':id_rol' => $rolId,
+            ':correo_electronico' => $correoElectronico,
         ];
 
         if ($password !== null && $password !== '') {

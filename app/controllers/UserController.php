@@ -131,11 +131,18 @@ function validateUserData(array $data, string $mode): void
         'nombre_usuario' => ['type' => null, 'required' => true],
         'password' => ['type' => 'password', 'required' => $mode === 'add'],
         'rol_id' => ['type' => null, 'required' => true],
+        'correo_electronico' => ['type' => null, 'required' => false],
     ];
 
     $validation = Validation::validate($data, $rules);
     if (!$validation['valid']) {
         throw new Exception(implode(', ', $validation['errors']));
+    }
+
+    // Validar formato de email si se proporciona
+    $email = trim((string)($data['correo_electronico'] ?? ''));
+    if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        throw new Exception('El formato del correo electrónico no es válido.');
     }
 }
 
@@ -147,10 +154,33 @@ function handleAddEditAjax(User $userModel, string $mode): void
     $nombreUsuario = trim((string)($_POST['nombre_usuario'] ?? ''));
     $password = trim((string)($_POST['password'] ?? ''));
     $rolId = (int)($_POST['rol_id'] ?? 1);
+    $correoElectronico = trim((string)($_POST['correo_electronico'] ?? ''));
+    // Si viene vacío, guardar null en DB
+    if ($correoElectronico === '') {
+        $correoElectronico = null;
+    }
 
     // El superusuario (ID 1) siempre es Administrador
     if ($id === 1) {
         $rolId = 1;
+    }
+
+    // Verificar contraseña actual si se cambia la contraseña:
+    // - El usuario editándose a sí mismo debe ingresar SU contraseña
+    // - Un administrador editando a cualquier usuario debe ingresar SU (admin) contraseña
+    $isChangingPassword = ($mode === 'edit' && $password !== '');
+    $isOwnAccount = isset($_SESSION['user_id']) && (int)$_SESSION['user_id'] === $id;
+    $isAdmin = isset($_SESSION['user_rol_id']) && (int)$_SESSION['user_rol_id'] === 1;
+    if ($isChangingPassword && ($isOwnAccount || $isAdmin)) {
+        $currentPassword = $_POST['current_password'] ?? '';
+        if ($currentPassword === '') {
+            throw new Exception('Debes ingresar tu contraseña actual para realizar este cambio.');
+        }
+        // Si es admin editando a otro, verificar la contraseña del admin, no la del usuario destino
+        $verifyUserId = $isOwnAccount ? $id : (int)$_SESSION['user_id'];
+        if (!$userModel->verifyPassword($verifyUserId, $currentPassword)) {
+            throw new Exception('La contraseña actual no es correcta.');
+        }
     }
 
     $avatar = null;
@@ -170,7 +200,7 @@ function handleAddEditAjax(User $userModel, string $mode): void
             throw new Exception('El nombre de usuario ya está registrado');
         }
 
-        $userModel->add($nombreUsuario, $password, $rolId, $avatar);
+        $userModel->add($nombreUsuario, $password, $rolId, $correoElectronico, $avatar);
 
         jsonResponse([
             'success' => true,
@@ -178,6 +208,7 @@ function handleAddEditAjax(User $userModel, string $mode): void
             'user' => [
                 'id' => $userModel->getLastInsertId() ?? 0,
                 'nombre_usuario' => $nombreUsuario,
+                'correo_electronico' => $correoElectronico,
                 'rol_id' => $rolId,
                 'avatar' => $avatar,
             ],
@@ -201,7 +232,7 @@ function handleAddEditAjax(User $userModel, string $mode): void
         }
     }
 
-    $userModel->update($id, $nombreUsuario, $rolId, $password !== '' ? $password : null, $avatar);
+    $userModel->update($id, $nombreUsuario, $rolId, $correoElectronico, $password !== '' ? $password : null, $avatar);
 
     // Si el usuario editado es el mismo de la sesión, actualizar sus datos en sesión
     if (isset($_SESSION['user_id']) && (int)$_SESSION['user_id'] === $id) {
@@ -215,6 +246,7 @@ function handleAddEditAjax(User $userModel, string $mode): void
         'user' => [
             'id' => $id,
             'nombre_usuario' => $nombreUsuario,
+            'correo_electronico' => $correoElectronico,
             'rol_id' => $rolId,
             'avatar' => $avatar,
         ],
@@ -235,6 +267,18 @@ function handleDeleteAjax(User $userModel): void
 
     if (!$userModel->userExists($id)) {
         throw new Exception('No existe el usuario');
+    }
+
+    // Verificar contraseña del usuario autenticado antes de eliminar
+    $currentPassword = $_POST['current_password'] ?? '';
+    if ($currentPassword === '') {
+        jsonResponse(['success' => false, 'message' => 'Debes ingresar tu contraseña para eliminar un usuario.'], 400);
+        return;
+    }
+    $userId = (int)($_SESSION['user_id'] ?? 0);
+    if ($userId <= 0 || !$userModel->verifyPassword($userId, $currentPassword)) {
+        jsonResponse(['success' => false, 'message' => 'Contraseña incorrecta. No se puede eliminar el usuario.'], 403);
+        return;
     }
 
     $userModel->delete($id);
