@@ -10,12 +10,29 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/PHP-8.2-%23777BB4?style=for-the-badge&logo=php&logoColor=white" alt="PHP 8.2">
+  <img src="https://img.shields.io/badge/JavaScript-ES6-%23F7DF1E?style=for-the-badge&logo=javascript&logoColor=black" alt="JavaScript ES6">
+  <img src="https://img.shields.io/badge/HTML5-%23E34F26?style=for-the-badge&logo=html5&logoColor=white" alt="HTML5">
+  <img src="https://img.shields.io/badge/CSS3-%231572B6?style=for-the-badge&logo=css3&logoColor=white" alt="CSS3">
+  <img src="https://img.shields.io/badge/SQL-%234479A1?style=for-the-badge&logo=mysql&logoColor=white" alt="SQL">
+</p>
+<p align="center">
   <img src="https://img.shields.io/badge/MySQL-8.0-%234479A1?style=for-the-badge&logo=mysql&logoColor=white" alt="MySQL 8.0">
+  <img src="https://img.shields.io/badge/Apache-%23D42029?style=for-the-badge&logo=apache&logoColor=white" alt="Apache">
   <img src="https://img.shields.io/badge/Bootstrap-5-%237952B3?style=for-the-badge&logo=bootstrap&logoColor=white" alt="Bootstrap 5">
   <img src="https://img.shields.io/badge/jQuery-3-%230769AD?style=for-the-badge&logo=jquery&logoColor=white" alt="jQuery 3">
   <img src="https://img.shields.io/badge/DataTables-1.13-%23000?style=for-the-badge" alt="DataTables">
-  <img src="https://img.shields.io/badge/Docker-ready-%232496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker Ready">
+</p>
+<p align="center">
+  <img src="https://img.shields.io/badge/SweetAlert2-%23FF69B4?style=for-the-badge" alt="SweetAlert2">
+  <img src="https://img.shields.io/badge/Font%20Awesome-6-%23528DD7?style=for-the-badge&logo=fontawesome&logoColor=white" alt="Font Awesome 6">
+  <img src="https://img.shields.io/badge/Dompdf-%23000?style=for-the-badge" alt="Dompdf">
+  <img src="https://img.shields.io/badge/Docker-ready-%232496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker">
+  <img src="https://img.shields.io/badge/Composer-%23885630?style=for-the-badge&logo=composer&logoColor=white" alt="Composer">
+</p>
+<p align="center">
   <img src="https://img.shields.io/badge/reCAPTCHA-v2-%23334eff?style=for-the-badge&logo=google&logoColor=white" alt="reCAPTCHA v2">
+  <img src="https://img.shields.io/badge/Prettier-%23F7B93E?style=for-the-badge&logo=prettier&logoColor=black" alt="Prettier">
+  <img src="https://img.shields.io/badge/PDO-%23FF6C37?style=for-the-badge&logo=php&logoColor=white" alt="PDO">
 </p>
 
 ---
