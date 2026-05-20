@@ -2,252 +2,202 @@
 
 declare(strict_types=1);
 
-namespace SysInescolara\controllers;
+require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
 
-use SysInescolara\models\Employees;
-use Exception;
+use SysInescolara\models\Employee;
 
-class EmployeesController 
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+function employeesCheckAuth(): void
 {
-    private Employees $employeeModel;
+    if (!isset($_SESSION['user_id'])) {
+        $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+        if ($isAjax) {
+            header('Content-Type: application/json; charset=utf-8');
+            http_response_code(401);
+            echo json_encode(['success' => false, 'message' => 'No autorizado', 'redirect' => BASE_URL . 'login']);
+            exit();
+        }
+        header('Location: ' . BASE_URL . 'login');
+        exit();
+    }
+}
 
-    public function __construct()
-    {
-        $this->employeeModel = new Employees();
+$GLOBALS['employeeModel'] = new Employee();
+
+function index(): void
+{
+    $employeeModel = $GLOBALS['employeeModel'] ?? new Employee();
+    employeesCheckAuth();
+    handleRequest($employeeModel);
+
+    $view = ROOT_PATH . 'app/views/dashboard/employees.php';
+    if (!is_file($view)) {
+        http_response_code(500);
+        echo 'Vista de empleados no encontrada.';
+        return;
     }
 
-    /**
-     * Retorna el listado completo de trabajadores en formato JSON
-     */
-    public function index(): void
-    {
-        header('Content-Type: application/json; charset=utf-8');
-        
-        $employees = $this->employeeModel->getAll();
-        echo json_encode([
-            'status' => 'success',
-            'data'   => $employees
-        ], JSON_UNESCAPED_UNICODE);
-    }
+    require $view;
+}
 
-    /**
-     * Obtiene un trabajador específico por su ID único
-     */
-    public function show(): void
-    {
-        header('Content-Type: application/json; charset=utf-8');
+function get_employees(): void
+{
+    $employeeModel = $GLOBALS['employeeModel'] ?? new Employee();
+    employeesCheckAuth();
+    getEmployeesAjax($employeeModel);
+}
 
-        $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+function add_ajax(): void
+{
+    $employeeModel = $GLOBALS['employeeModel'] ?? new Employee();
+    employeesCheckAuth();
+    handleAddEditAjax($employeeModel, 'add');
+}
 
-        if (!$id) {
-            http_response_code(400);
-            echo json_encode([
-                'status'  => 'error',
-                'message' => 'El ID del trabajador proporcionado es inválido.'
-            ], JSON_UNESCAPED_UNICODE);
-            return;
-        }
+function edit_ajax(): void
+{
+    $employeeModel = $GLOBALS['employeeModel'] ?? new Employee();
+    employeesCheckAuth();
+    handleAddEditAjax($employeeModel, 'edit');
+}
 
-        $employee = $this->employeeModel->getById($id);
+function delete_ajax(): void
+{
+    $employeeModel = $GLOBALS['employeeModel'] ?? new Employee();
+    employeesCheckAuth();
+    handleDeleteAjax($employeeModel);
+}
 
-        if (!$employee) {
-            http_response_code(404);
-            echo json_encode([
-                'status'  => 'error',
-                'message' => 'Trabajador no encontrado.'
-            ], JSON_UNESCAPED_UNICODE);
-            return;
-        }
+function handleRequest(Employee $employeeModel): void
+{
+    $action = $_GET['action'] ?? '';
+    $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
 
-        echo json_encode([
-            'status' => 'success',
-            'data'   => $employee
-        ], JSON_UNESCAPED_UNICODE);
-    }
+    try {
+        if ($isAjax) {
+            header('Content-Type: application/json; charset=utf-8');
 
-    /**
-     * Registra un nuevo trabajador validando duplicados
-     */
-    public function create(): void
-    {
-        header('Content-Type: application/json; charset=utf-8');
+            $routes = [
+                'GET_get_employees'   => fn() => getEmployeesAjax($employeeModel),
+                'POST_add_ajax'       => fn() => handleAddEditAjax($employeeModel, 'add'),
+                'POST_edit_ajax'      => fn() => handleAddEditAjax($employeeModel, 'edit'),
+                'POST_delete_ajax'    => fn() => handleDeleteAjax($employeeModel),
+            ];
 
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            echo json_encode([
-                'status'  => 'error',
-                'message' => 'Método de petición no permitido.'
-            ], JSON_UNESCAPED_UNICODE);
-            return;
-        }
+            $route = $_SERVER['REQUEST_METHOD'] . '_' . $action;
 
-        // Sanitización estricta de las entradas básicas
-        $nombre   = trim((string) filter_input(INPUT_POST, 'nombre', FILTER_UNSAFE_RAW));
-        $cedula   = trim((string) filter_input(INPUT_POST, 'cedula', FILTER_UNSAFE_RAW));
-        $telefono = trim((string) filter_input(INPUT_POST, 'telefono', FILTER_UNSAFE_RAW));
-
-        // Validación de campos requeridos vacíos
-        if ($nombre === '' || $cedula === '') {
-            http_response_code(400);
-            echo json_encode([
-                'status'  => 'error',
-                'message' => 'El nombre y la cédula son campos estrictamente obligatorios.'
-            ], JSON_UNESCAPED_UNICODE);
-            return;
-        }
-
-        // Validación de formato de Cédula (V-12345678, E-12345678 o solo dígitos numéricos mínimos)
-        if (!preg_match('/^[VEve]?[-]?[0-9]{6,9}$/', $cedula)) {
-            http_response_code(400);
-            echo json_encode([
-                'status'  => 'error',
-                'message' => 'El formato de la cédula de identidad no es válido.'
-            ], JSON_UNESCAPED_UNICODE);
-            return;
-        }
-
-        try {
-            $success = $this->employeeModel->add($nombre, $cedula, $telefono);
-
-            if ($success) {
-                http_response_code(21);
-                echo json_encode([
-                    'status'  => 'success',
-                    'message' => 'Trabajador registrado exitosamente.'
-                ], JSON_UNESCAPED_UNICODE);
-            } else {
-                throw new Exception("No se pudo insertar el registro en la base de datos.");
+            if (isset($routes[$route])) {
+                $routes[$route]();
             }
-        } catch (Exception $e) {
-            http_response_code(409); // Conflicto (Cédula duplicada u otra restricción)
-            echo json_encode([
-                'status'  => 'error',
-                'message' => $e->getMessage()
-            ], JSON_UNESCAPED_UNICODE);
+
+            jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400);
         }
+    } catch (Exception $e) {
+        handleError($e, $isAjax);
+    }
+}
+
+function jsonResponse(array $data, int $statusCode = 200): void
+{
+    http_response_code($statusCode);
+    echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    exit();
+}
+
+function handleError(Exception $e, bool $isAjax): void
+{
+    if ($isAjax) {
+        jsonResponse(['success' => false, 'message' => $e->getMessage()], 500);
+    }
+    http_response_code(500);
+    echo 'Error: ' . htmlspecialchars($e->getMessage());
+    exit();
+}
+
+function handleAddEditAjax(Employee $employeeModel, string $mode): void
+{
+    $nombreTrabajador = trim((string)($_POST['nombre_trabajador'] ?? ''));
+    if ($nombreTrabajador === '') {
+        throw new Exception('El nombre del trabajador es requerido.');
     }
 
-    /**
-     * Actualiza los datos de un trabajador existente
-     */
-    public function update(): void
-    {
-        header('Content-Type: application/json; charset=utf-8');
-
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            echo json_encode([
-                'status'  => 'error',
-                'message' => 'Método no permitido para actualización.'
-            ], JSON_UNESCAPED_UNICODE);
-            return;
-        }
-
-        $id       = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
-        $nombre   = trim((string) filter_input(INPUT_POST, 'nombre', FILTER_UNSAFE_RAW));
-        $cedula   = trim((string) filter_input(INPUT_POST, 'cedula', FILTER_UNSAFE_RAW));
-        $telefono = trim((string) filter_input(INPUT_POST, 'telefono', FILTER_UNSAFE_RAW));
-
-        if (!$id || $nombre === '' || $cedula === '') {
-            http_response_code(400);
-            echo json_encode([
-                'status'  => 'error',
-                'message' => 'Datos insuficientes o ID inválido para realizar la actualización.'
-            ], JSON_UNESCAPED_UNICODE);
-            return;
-        }
-
-        // Verificar existencia previa
-        $currentEmployee = $this->employeeModel->getById($id);
-        if (!$currentEmployee) {
-            http_response_code(404);
-            echo json_encode([
-                'status'  => 'error',
-                'message' => 'El trabajador que intenta actualizar no existe.'
-            ], JSON_UNESCAPED_UNICODE);
-            return;
-        }
-
-        // Si cambia la cédula, validar que la nueva no esté en uso por otro trabajador
-        if ($cedula !== $currentEmployee['cedula'] && $this->employeeModel->exists($cedula)) {
-            http_response_code(409);
-            echo json_encode([
-                'status'  => 'error',
-                'message' => 'La nueva cédula ingresada ya pertenece a otro trabajador.'
-            ], JSON_UNESCAPED_UNICODE);
-            return;
-        }
-
-        if ($this->employeeModel->update($id, $nombre, $cedula, $telefono)) {
-            echo json_encode([
-                'status'  => 'success',
-                'message' => 'Datos del trabajador actualizados correctamente.'
-            ], JSON_UNESCAPED_UNICODE);
-        } else {
-            http_response_code(500);
-            echo json_encode([
-                'status'  => 'error',
-                'message' => 'Ocurrió un error interno al intentar actualizar el registro.'
-            ], JSON_UNESCAPED_UNICODE);
-        }
+    $apellidoTrabajador = trim((string)($_POST['apellido_trabajador'] ?? ''));
+    if ($apellidoTrabajador === '') {
+        $apellidoTrabajador = null;
     }
 
-    /**
-     * Elimina un trabajador por su ID
-     */
-    public function delete(): void
-    {
-        header('Content-Type: application/json; charset=utf-8');
-
-        // Se asume POST/DELETE por compatibilidad básica de formularios
-        $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
-
-        if (!$id) {
-            http_response_code(400);
-            echo json_encode([
-                'status'  => 'error',
-                'message' => 'ID inválido para proceder con la eliminación.'
-            ], JSON_UNESCAPED_UNICODE);
-            return;
-        }
-
-        if ($this->employeeModel->delete($id)) {
-            echo json_encode([
-                'status'  => 'success',
-                'message' => 'Trabajador eliminado del sistema correctamente.'
-            ], JSON_UNESCAPED_UNICODE);
-        } else {
-            http_response_code(500);
-            echo json_encode([
-                'status'  => 'error',
-                'message' => 'No se pudo eliminar el trabajador de la base de datos.'
-            ], JSON_UNESCAPED_UNICODE);
-        }
+    $cedulaTrabajador = trim((string)($_POST['cedula_trabajador'] ?? ''));
+    if ($cedulaTrabajador === '') {
+        $cedulaTrabajador = null;
     }
 
-    /**
-     * Endpoint de búsqueda dinámica por nombre o cédula
-     */
-    public function search(): void
-    {
-        header('Content-Type: application/json; charset=utf-8');
-
-        $query = trim((string) filter_input(INPUT_GET, 'q', FILTER_UNSAFE_RAW));
-
-        if ($query === '') {
-            echo json_encode([
-                'status' => 'success',
-                'data'   => []
-            ], JSON_UNESCAPED_UNICODE);
-            return;
-        }
-
-        // Invoca la consulta preparada con cláusulas LIKE del modelo
-        $results = $this->employeeModel->searchByLocation($query);
-
-        echo json_encode([
-            'status' => 'success',
-            'data'   => $results
-        ], JSON_UNESCAPED_UNICODE);
+    $telefonoTrabajador = trim((string)($_POST['telefono_trabajador'] ?? ''));
+    if ($telefonoTrabajador === '') {
+        $telefonoTrabajador = null;
     }
+
+    if ($mode === 'add') {
+        $employeeModel->add($nombreTrabajador, $apellidoTrabajador, $cedulaTrabajador, $telefonoTrabajador);
+        jsonResponse([
+            'success' => true,
+            'message' => 'Trabajador agregado correctamente',
+            'employee' => [
+                'id' => $employeeModel->getLastInsertId() ?? 0,
+                'nombre_trabajador' => $nombreTrabajador,
+                'apellido_trabajador' => $apellidoTrabajador,
+                'cedula_trabajador' => $cedulaTrabajador,
+                'telefono_trabajador' => $telefonoTrabajador,
+            ],
+        ]);
+    }
+
+    $id = (int)($_POST['id'] ?? 0);
+    if ($id <= 0) {
+        throw new Exception('ID inválido');
+    }
+
+    $employeeModel->update($id, $nombreTrabajador, $apellidoTrabajador, $cedulaTrabajador, $telefonoTrabajador);
+    jsonResponse([
+        'success' => true,
+        'message' => 'Trabajador actualizado correctamente',
+        'employee' => [
+            'id' => $id,
+            'nombre_trabajador' => $nombreTrabajador,
+            'apellido_trabajador' => $apellidoTrabajador,
+            'cedula_trabajador' => $cedulaTrabajador,
+            'telefono_trabajador' => $telefonoTrabajador,
+        ],
+    ]);
+}
+
+function handleDeleteAjax(Employee $employeeModel): void
+{
+    $id = (int)($_POST['id'] ?? 0);
+    if ($id <= 0) {
+        throw new Exception('ID inválido');
+    }
+
+    if (!$employeeModel->exists($id)) {
+        throw new Exception('No existe el trabajador');
+    }
+
+    $employeeModel->delete($id);
+    jsonResponse([
+        'success' => true,
+        'message' => 'Trabajador eliminado correctamente',
+        'employeeId' => $id,
+    ]);
+}
+
+function getEmployeesAjax(Employee $employeeModel): void
+{
+    $employees = $employeeModel->getAll();
+    jsonResponse([
+        'success' => true,
+        'employees' => $employees,
+        'count' => count($employees),
+    ]);
 }

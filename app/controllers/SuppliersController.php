@@ -1,236 +1,203 @@
 <?php
 
+declare(strict_types=1);
+
 require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
 
-use SysInescolara\models\Suppliers;
-use SysInescolara\helpers\Validation;
+use SysInescolara\models\Supplier;
 
-require_once __DIR__ . '/LoginController.php';
-
-checkAuth();
-
-$supplierModel = new Suppliers();
-
-function index()
-{
-    global $dolarBCVRate;
-    require __DIR__ . '/../views/dashboard/suppliers.php';
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
 }
 
-handleRequest($supplierModel);
+function suppliersCheckAuth(): void
+{
+    if (!isset($_SESSION['user_id'])) {
+        $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+        if ($isAjax) {
+            header('Content-Type: application/json; charset=utf-8');
+            http_response_code(401);
+            echo json_encode(['success' => false, 'message' => 'No autorizado', 'redirect' => BASE_URL . 'login']);
+            exit();
+        }
+        header('Location: ' . BASE_URL . 'login');
+        exit();
+    }
+}
 
-// ============================================
-// CORE REQUEST HANDLER
-// ============================================
+$GLOBALS['supplierModel'] = new Supplier();
 
-function handleRequest($supplierModel)
+function index(): void
+{
+    $supplierModel = $GLOBALS['supplierModel'] ?? new Supplier();
+    suppliersCheckAuth();
+    handleRequest($supplierModel);
+
+    $view = ROOT_PATH . 'app/views/dashboard/suppliers.php';
+    if (!is_file($view)) {
+        http_response_code(500);
+        echo 'Vista de proveedores no encontrada.';
+        return;
+    }
+
+    require $view;
+}
+
+function get_suppliers(): void
+{
+    $supplierModel = $GLOBALS['supplierModel'] ?? new Supplier();
+    suppliersCheckAuth();
+    getSuppliersAjax($supplierModel);
+}
+
+function add_ajax(): void
+{
+    $supplierModel = $GLOBALS['supplierModel'] ?? new Supplier();
+    suppliersCheckAuth();
+    handleAddEditAjax($supplierModel, 'add');
+}
+
+function edit_ajax(): void
+{
+    $supplierModel = $GLOBALS['supplierModel'] ?? new Supplier();
+    suppliersCheckAuth();
+    handleAddEditAjax($supplierModel, 'edit');
+}
+
+function delete_ajax(): void
+{
+    $supplierModel = $GLOBALS['supplierModel'] ?? new Supplier();
+    suppliersCheckAuth();
+    handleDeleteAjax($supplierModel);
+}
+
+function handleRequest(Supplier $supplierModel): void
 {
     $action = $_GET['action'] ?? '';
-    $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&
-        strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+    $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
 
     try {
         if ($isAjax) {
             header('Content-Type: application/json; charset=utf-8');
 
             $routes = [
-                'POST_add_ajax'    => fn() => handleAddEditAjax($supplierModel, 'add'),
-                'POST_edit_ajax'   => fn() => handleAddEditAjax($supplierModel, 'edit'),
-                'POST_delete_ajax' => fn() => handleDeleteAjax($supplierModel),
-                'GET_get_suppliers'=> fn() => getSuppliersAjax($supplierModel)
+                'GET_get_suppliers'   => fn() => getSuppliersAjax($supplierModel),
+                'POST_add_ajax'       => fn() => handleAddEditAjax($supplierModel, 'add'),
+                'POST_edit_ajax'      => fn() => handleAddEditAjax($supplierModel, 'edit'),
+                'POST_delete_ajax'    => fn() => handleDeleteAjax($supplierModel),
             ];
 
-            $route = "{$_SERVER['REQUEST_METHOD']}_$action";
-
-            if (isset($routes[$route])) {
-                $routes[$route]();
-            } else {
-                jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400);
-            }
-        } else {
-            $routes = [
-                'POST_add'   => fn() => handleAddEdit($supplierModel, 'add'),
-                'POST_edit'  => fn() => handleAddEdit($supplierModel, 'edit'),
-                'GET_delete' => fn() => handleDelete($supplierModel)
-            ];
-
-            $route = "{$_SERVER['REQUEST_METHOD']}_$action";
+            $route = $_SERVER['REQUEST_METHOD'] . '_' . $action;
 
             if (isset($routes[$route])) {
                 $routes[$route]();
             }
+
+            jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400);
         }
     } catch (Exception $e) {
         handleError($e, $isAjax);
     }
 }
 
-// ============================================
-// UTILITY FUNCTIONS
-// ============================================
-
-function jsonResponse($data, $statusCode = 200)
+function jsonResponse(array $data, int $statusCode = 200): void
 {
     http_response_code($statusCode);
-    echo json_encode($data);
+    echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     exit();
 }
 
-function handleError($e, $isAjax)
+function handleError(Exception $e, bool $isAjax): void
 {
     if ($isAjax) {
-        jsonResponse(['success' => false, 'message' => 'Error del servidor: ' . $e->getMessage()], 500);
-    } else {
-        die("Error: " . $e->getMessage());
-    }
-}
-
-// ============================================
-// VALIDATION
-// ============================================
-
-function validateSupplierData($data, $mode)
-{
-    $rules = [
-        'nombre'               => ['type' => null, 'required' => true],
-        'tipo'                 => ['type' => null, 'required' => true],
-        'informacion_contacto' => ['type' => null, 'required' => true],
-        'id'                   => ['type' => null, 'required' => ($mode === 'edit')]
-    ];
-
-    $validation = Validation::validate($data, $rules);
-
-    if (!$validation['valid']) {
-        throw new Exception(implode(', ', $validation['errors']));
-    }
-}
-
-// ============================================
-// NON-AJAX HANDLERS
-// ============================================
-
-function handleAddEdit($supplierModel, $mode)
-{
-    try {
-        $fields = ['nombre', 'tipo', 'informacion_contacto'];
-        if ($mode === 'edit') $fields[] = 'id';
-
-        foreach ($fields as $f) {
-            if (empty($_POST[$f])) {
-                throw new Exception("El campo '$f' es requerido");
-            }
-        }
-
-        $id = intval($_POST['id'] ?? 0);
-        $nombre = trim($_POST['nombre']);
-        $tipo = trim($_POST['tipo']);
-        $informacion_contacto = trim($_POST['informacion_contacto']);
-
-        if ($mode === 'add') {
-            $supplierModel->add($nombre, $tipo, $informacion_contacto);
-            header("Location: suppliers-admin.php?success=add");
-            exit();
-        } else {
-            $supplierModel->update($id, $nombre, $tipo, $informacion_contacto);
-            header("Location: suppliers-admin.php?success=edit");
-            exit();
-        }
-    } catch (Exception $e) {
-        die("Error: " . $e->getMessage());
-    }
-}
-
-function handleDelete($supplierModel)
-{
-    try {
-        if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
-            throw new Exception("ID inválido");
-        }
-
-        $id = intval($_GET['id']);
-        $supplierModel->delete($id);
-        header("Location: suppliers-admin.php?success=delete");
-        exit();
-    } catch (Exception $e) {
-        die("Error: " . $e->getMessage());
-    }
-}
-
-// ============================================
-// AJAX HANDLERS
-// ============================================
-
-function handleAddEditAjax($supplierModel, $mode)
-{
-    try {
-        validateSupplierData($_POST, $mode);
-
-        $id = intval($_POST['id'] ?? 0);
-        $nombre = trim($_POST['nombre']);
-        $tipo = trim($_POST['tipo']);
-        $informacion_contacto = trim($_POST['informacion_contacto']);
-
-        if ($mode === 'add') {
-            $supplierModel->add($nombre, $tipo, $informacion_contacto);
-            
-            $msg = 'Proveedor agregado con éxito';
-            $supplier = [
-                'nombre' => $nombre,
-                'tipo' => $tipo,
-                'informacion_contacto' => $informacion_contacto
-            ];
-        } else {
-            $supplierModel->update($id, $nombre, $tipo, $informacion_contacto);
-            
-            $supplier = [
-                'id' => $id,
-                'nombre' => $nombre,
-                'tipo' => $tipo,
-                'informacion_contacto' => $informacion_contacto
-            ];
-            $msg = 'Proveedor actualizado con éxito';
-        }
-
-        jsonResponse(['success' => true, 'message' => $msg, 'supplier' => $supplier]);
-    } catch (Exception $e) {
-        jsonResponse(['success' => false, 'message' => $e->getMessage()], 400);
-    }
-}
-
-function handleDeleteAjax($supplierModel)
-{
-    try {
-        $validation = Validation::validateField($_POST['id'] ?? '', 'id');
-        if (!$validation['valid']) {
-            throw new Exception($validation['message']);
-        }
-
-        $id = intval($_POST['id']);
-        if (!$supplierModel->exists($id)) {
-            throw new Exception("No existe el proveedor solicitado");
-        }
-
-        $supplierModel->delete($id);
-        jsonResponse(['success' => true, 'message' => 'Proveedor eliminado de forma exitosa', 'supplierId' => $id]);
-    } catch (Exception $e) {
-        jsonResponse(['success' => false, 'message' => $e->getMessage()], 400);
-    }
-}
-
-function getSuppliersAjax($supplierModel)
-{
-    try {
-        if (isset($_GET['id'])) {
-            $supplier = $supplierModel->getById(intval($_GET['id']));
-            if (!$supplier) {
-                throw new Exception("Proveedor no encontrado");
-            }
-            jsonResponse(['success' => true, 'suppliers' => [$supplier]]);
-        }
-
-        $suppliers = $supplierModel->getAll();
-        jsonResponse(['success' => true, 'suppliers' => $suppliers, 'count' => count($suppliers)]);
-    } catch (Exception $e) {
         jsonResponse(['success' => false, 'message' => $e->getMessage()], 500);
     }
+    http_response_code(500);
+    echo 'Error: ' . htmlspecialchars($e->getMessage());
+    exit();
+}
+
+function handleAddEditAjax(Supplier $supplierModel, string $mode): void
+{
+    $nombreProveedor = trim((string)($_POST['nombre_proveedor'] ?? ''));
+    if ($nombreProveedor === '') {
+        throw new Exception('El nombre del proveedor es requerido.');
+    }
+
+    $rifProveedor = trim((string)($_POST['rif_proveedor'] ?? ''));
+    if ($rifProveedor === '') {
+        $rifProveedor = null;
+    }
+
+    $contactoVendedor = trim((string)($_POST['contacto_vendedor'] ?? ''));
+    if ($contactoVendedor === '') {
+        $contactoVendedor = null;
+    }
+
+    $telefonoProveedor = trim((string)($_POST['telefono_proveedor'] ?? ''));
+    if ($telefonoProveedor === '') {
+        $telefonoProveedor = null;
+    }
+
+    if ($mode === 'add') {
+        $supplierModel->add($nombreProveedor, $rifProveedor, $contactoVendedor, $telefonoProveedor);
+        jsonResponse([
+            'success' => true,
+            'message' => 'Proveedor agregado correctamente',
+            'supplier' => [
+                'id' => $supplierModel->getLastInsertId() ?? 0,
+                'nombre_proveedor' => $nombreProveedor,
+                'rif_proveedor' => $rifProveedor,
+                'contacto_vendedor' => $contactoVendedor,
+                'telefono_proveedor' => $telefonoProveedor,
+            ],
+        ]);
+    }
+
+    $id = (int)($_POST['id'] ?? 0);
+    if ($id <= 0) {
+        throw new Exception('ID inválido');
+    }
+
+    $supplierModel->update($id, $nombreProveedor, $rifProveedor, $contactoVendedor, $telefonoProveedor);
+    jsonResponse([
+        'success' => true,
+        'message' => 'Proveedor actualizado correctamente',
+        'supplier' => [
+            'id' => $id,
+            'nombre_proveedor' => $nombreProveedor,
+            'rif_proveedor' => $rifProveedor,
+            'contacto_vendedor' => $contactoVendedor,
+            'telefono_proveedor' => $telefonoProveedor,
+        ],
+    ]);
+}
+
+function handleDeleteAjax(Supplier $supplierModel): void
+{
+    $id = (int)($_POST['id'] ?? 0);
+    if ($id <= 0) {
+        throw new Exception('ID inválido');
+    }
+
+    if (!$supplierModel->exists($id)) {
+        throw new Exception('No existe el proveedor');
+    }
+
+    $supplierModel->delete($id);
+    jsonResponse([
+        'success' => true,
+        'message' => 'Proveedor eliminado correctamente',
+        'supplierId' => $id,
+    ]);
+}
+
+function getSuppliersAjax(Supplier $supplierModel): void
+{
+    $suppliers = $supplierModel->getAll();
+    jsonResponse([
+        'success' => true,
+        'suppliers' => $suppliers,
+        'count' => count($suppliers),
+    ]);
 }
