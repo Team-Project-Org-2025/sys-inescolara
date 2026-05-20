@@ -35,15 +35,27 @@ abstract class Database extends PDO
                 $dbname
             );
 
+            $options = [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                PDO::ATTR_EMULATE_PREPARES => false,
+            ];
+
+            $dbSsl = getenv('DB_SSL') === 'true';
+            if ($dbSsl) {
+                $caCert = getenv('DB_CA_CERT');
+                if ($caCert && file_exists($caCert)) {
+                    $options[PDO::MYSQL_ATTR_SSL_CA] = $caCert;
+                } else {
+                    $options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = false;
+                }
+            }
+
             $this->db = new PDO(
                 $dsn,
                 $username,
                 $password,
-                [
-                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                    PDO::ATTR_EMULATE_PREPARES => false,
-                ]
+                $options
             );
         } catch (PDOException $e) {
             // Log error si estamos en desarrollo

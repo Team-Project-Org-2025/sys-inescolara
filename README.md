@@ -150,50 +150,109 @@ http://localhost/sys-inescolara/
 
 ## Deploy en Render (Pruebas)
 
-### Opción 1 — Render + Docker (recomendada)
+Render no ofrece MySQL administrado, así que necesitas un MySQL externo. Usaremos **Aiven** (tier gratis, sin tarjeta de crédito).
 
-1. **Sube el repositorio a GitHub**
-2. **Crea una base de datos MySQL externa** (Render no ofrece MySQL administrado):
-   - [Aiven](https://console.aiven.io/) (free tier, soporta múltiples bases de datos en una instancia)
-   - [Railway](https://railway.app/) (crédito inicial gratuito)
-3. **Conéctate a tu MySQL** y ejecuta los scripts de inicialización:
-   ```bash
-   mysql -h <host> -u <user> -p < scripts/setup-dbs.sql
-   mysql -h <host> -u <user> -p sysinescolara < backups/SYSINESCOLARA.sql
-   mysql -h <host> -u <user> -p SysInescolara-Seguridad < backups/SysInescolara-Seguridad.sql
-   ```
-4. **En Render**, crea un Web Service:
-   - Conecta tu repositorio de GitHub
-   - Runtime: selecciona **Docker**
-   - Dockerfile Path: `./dockerfile`
-5. **Configura las variables de entorno** en Render Dashboard:
+### Paso 1 — Crear MySQL en Aiven
 
-   | Variable | Valor |
-   | :--- | :--- |
-   | `DB_HOST` | Host de tu MySQL |
-   | `DB_PORT` | `3306` |
-   | `DB_NAME` | `sysinescolara` |
-   | `DB_USER` | Usuario MySQL |
-   | `DB_PASSWORD` | Contraseña MySQL |
-   | `DB_SEC_NAME` | `SysInescolara-Seguridad` |
-   | `APP_URL` | `https://<tu-app>.onrender.com` |
-   | `APP_ENV` | `production` |
-   | `APP_DEBUG` | `false` |
-   | `RECAPTCHA_SITE_KEY` | Tu site key real |
-   | `RECAPTCHA_SECRET_KEY` | Tu secret key real |
+1. Ve a [console.aiven.io](https://console.aiven.io/) y regístrate (puedes usar Google o GitHub)
+2. Haz clic en **Create service**
+3. Selecciona **MySQL**
+4. En **Service plan** elige **Free** (1 CPU, 1 GB RAM, 1 GB disco)
+5. En **Cloud provider** elige el que aparezca por defecto (no hay opción en Free)
+6. En **Region** elige la más cercana a ti
+7. En **Service name** ponle `sys-inescolara-mysql`
+8. Haz clic en **Create service**
 
-6. **Espera el build y deploy**. Render construirá la imagen Docker y desplegará automáticamente.
+Espera 2-3 minutos hasta que el estado cambie de *Rebuilding* a **Running**.
 
-### Opción 2 — Render Blueprint
+### Paso 2 — Obtener datos de conexión
 
-Si prefieres infraestructura como código, puedes usar el archivo `render.yaml` incluido:
+1. En el dashboard del servicio, ve a **Overview**
+2. En la sección **Connection information**, anota:
+   - **Host** (ej: `mysql-sys-inescolara-mysql.f.aivencloud.com`)
+   - **Port** (ej: `12691` — **no es 3306**, es un puerto distinto)
+   - **User** (`avnadmin`)
+   - **Password** (haz clic en el ojo para revelarla)
+3. Ve a la pestaña **Databases** y crea dos bases de datos:
+   - `sysinescolara`
+   - `SysInescolara-Seguridad`
 
-1. En Render Dashboard: **New Blueprint**
-2. Conecta tu repositorio
-3. Render leerá `render.yaml` y creará el servicio automáticamente
-4. Ajusta las variables de entorno en el Dashboard después del deploy
+### Paso 3 — Importar los datos
 
-> **Nota**: Las llaves de reCAPTCHA v2 usadas en localhost **no funcionarán** en producción. Debes registrar un nuevo dominio en [Google reCAPTCHA Admin](https://www.google.com/recaptcha/admin) y usar las llaves correspondientes.
+Puedes usar MySQL Workbench, DBeaver, HeidiSQL o terminal. Conéctate con SSL obligatorio:
+
+```bash
+mysql -h <HOST> -P <PORT> -u avnadmin -p --ssl-mode=REQUIRED
+```
+
+Una vez conectado:
+
+```sql
+CREATE DATABASE IF NOT EXISTS sysinescolara;
+CREATE DATABASE IF NOT EXISTS SysInescolara-Seguridad;
+```
+
+Luego importa los backups (desde otra terminal, fuera del cliente MySQL):
+
+```bash
+mysql -h <HOST> -P <PORT> -u avnadmin -p --ssl-mode=REQUIRED sysinescolara < backups/SYSINESCOLARA.sql
+
+mysql -h <HOST> -P <PORT> -u avnadmin -p --ssl-mode=REQUIRED SysInescolara-Seguridad < backups/SysInescolara-Seguridad.sql
+```
+
+### Paso 4 — Subir el proyecto a GitHub
+
+```bash
+git add .
+git commit -m "Ready for Render deploy"
+git push
+```
+
+### Paso 5 — Crear Web Service en Render
+
+1. Entra a [dashboard.render.com](https://dashboard.render.com)
+2. Haz clic en **New +** → **Web Service**
+3. Conecta tu repositorio de GitHub
+4. Configura:
+   - **Name**: `sys-inescolara`
+   - **Runtime**: selecciona **Docker**
+   - **Dockerfile Path**: `./dockerfile`
+   - **Instance Type**: Free
+5. Haz clic en **Create Web Service**
+
+### Paso 6 — Configurar variables de entorno
+
+En el dashboard del servicio, ve a **Environment** y agrega:
+
+| Variable | Valor |
+| :--- | :--- |
+| `DB_HOST` | Host de Aiven (ej: `mysql-sys-inescolara-mysql.f.aivencloud.com`) |
+| `DB_PORT` | Puerto de Aiven (ej: `12691`) |
+| `DB_NAME` | `sysinescolara` |
+| `DB_USER` | `avnadmin` |
+| `DB_PASSWORD` | Password de Aiven |
+| `DB_SSL` | `true` |
+| `DB_SEC_NAME` | `SysInescolara-Seguridad` |
+| `APP_URL` | `https://<tu-app>.onrender.com` |
+| `APP_ENV` | `production` |
+| `APP_DEBUG` | `false` |
+| `RECAPTCHA_SITE_KEY` | (la que registres para el dominio de Render) |
+| `RECAPTCHA_SECRET_KEY` | (la que registres para el dominio de Render) |
+
+### Paso 7 — reCAPTCHA para producción
+
+Las llaves de prueba `6LfCAPQsAAAAAKlgdHnkBf2utrrPZ5MjXK1chf4k` **solo funcionan en localhost**. Para Render:
+
+1. Ve a [Google reCAPTCHA Admin](https://www.google.com/recaptcha/admin)
+2. Registra una nueva clave, selecciona **reCAPTCHA v2** → **"No soy un robot"**
+3. En **Dominios** agrega `https://<tu-app>.onrender.com`
+4. Copia las llaves nuevas y pégalas en las variables de entorno de Render
+
+### Resultado
+
+Render construye la imagen Docker automáticamente y en unos minutos la app está online en `https://<tu-app>.onrender.com`.
+
+> **Nota**: Aiven usa SSL obligatorio. La app lo soporta mediante `DB_SSL=true`. Si quieres verificar el certificado, descarga el CA cert desde Aiven (pestaña **Overview** → **CA Certificate**) y configúralo en `DB_CA_CERT=/ruta/ca.pem`.
 
 ---
 
