@@ -1,0 +1,73 @@
+services:
+  # Servidor web Apache + PHP
+  sys-inescolara-app:
+    build:
+      context: .
+      dockerfile: dockerfile
+    container_name: sys-inescolara-app
+    ports:
+      - "${APP_PORT:-9080}:80"
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      sys-inescolara-db:
+        condition: service_healthy
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - APP_ENV=${APP_ENV}
+      - APP_DEBUG=${APP_DEBUG}
+    networks:
+      - sys-inescolara-network
+    restart: unless-stopped
+
+  # MySQL
+  sys-inescolara-db:
+    image: mysql:8.0
+    container_name: sys-inescolara-mysql
+    ports:
+      - "${DB_PORT:-3306}:3306"
+    environment:
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - sys-inescolara-mysql-data:/var/lib/mysql
+    networks:
+      - sys-inescolara-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  # phpMyAdmin
+  sys-inescolara-admin:
+    image: phpmyadmin/phpmyadmin
+    container_name: sys-inescolara-phpmyadmin
+    ports:
+      - "${PMA_PORT:-9000}:80"
+    environment:
+      PMA_HOST: sys-inescolara-db
+      PMA_USER: ${DB_USER}
+      PMA_PASSWORD: ${DB_PASSWORD}
+      UPLOAD_LIMIT: 50M
+    depends_on:
+      sys-inescolara-db:
+        condition: service_healthy
+    networks:
+      - sys-inescolara-network
+    restart: unless-stopped
+
+
+networks:
+  sys-inescolara-network:
+    driver: bridge
+
+volumes:
+  sys-inescolara-mysql-data:
