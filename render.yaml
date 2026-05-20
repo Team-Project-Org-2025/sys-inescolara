@@ -1,0 +1,53 @@
+# ==========================================
+# Render Blueprint — SYS INESCOLARA
+# ==========================================
+# Pasos para desplegar:
+#   1. Crea una base de datos MySQL (Render Managed, Aiven, Railway, etc.)
+#   2. Conéctate y ejecuta scripts/setup-dbs.sql
+#   3. Importa los SQL de backups/ en cada base
+#   4. Sustituye RECAPTCHA_SITE_KEY y RECAPTCHA_SECRET_KEY con tus llaves reales
+#   5. Ajusta APP_URL a la URL que Render te asigne
+# ==========================================
+
+services:
+  - type: web
+    name: sys-inescolara
+    runtime: docker
+    repo: https://github.com/Team-Project-Org-2025/sys-inescolara
+    dockerfilePath: ./dockerfile
+    healthCheckPath: /
+    envVars:
+      # --- Database (principal) ---
+      - key: DB_HOST
+        value: localhost
+      - key: DB_PORT
+        value: "3306"
+      - key: DB_NAME
+        value: sysinescolara
+      - key: DB_USER
+        value: root
+      - key: DB_PASSWORD
+        value: ""
+      # --- Database (seguridad) ---
+      - key: DB_SEC_HOST
+        value: localhost
+      - key: DB_SEC_PORT
+        value: "3306"
+      - key: DB_SEC_NAME
+        value: SysInescolara-Seguridad
+      - key: DB_SEC_USER
+        value: root
+      - key: DB_SEC_PASSWORD
+        value: ""
+      # --- App ---
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: APP_URL
+        value: https://sys-inescolara.onrender.com
+      # --- reCAPTCHA (DEBES reemplazar con tus llaves reales) ---
+      - key: RECAPTCHA_SITE_KEY
+        value: ""
+      - key: RECAPTCHA_SECRET_KEY
+        value: ""
