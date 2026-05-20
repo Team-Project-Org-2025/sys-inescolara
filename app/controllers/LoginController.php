@@ -2,6 +2,7 @@
 
 
 use SysInescolara\models\User;
+use SysInescolara\models\AuditLog;
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -124,12 +125,17 @@ function login()
 
     if ($user) {
         session_regenerate_id(true);
-        $_SESSION['user_id'] = $user['id'] ?? null;
+        $userId = $user['id'] ?? null;
+        $_SESSION['user_id'] = $userId;
         $_SESSION['user_nombre'] = $user['nombre_usuario'] ?? null;
         $_SESSION['user_email'] = $user['correo_electronico'] ?? null;
         $_SESSION['user_avatar'] = $user['avatar'] ?? null;
         $_SESSION['user_rol_id'] = $user['rol_id'] ?? null;
         $_SESSION['user_permisos'] = $userModel->getRolePermissions((int)($user['rol_id'] ?? 0));
+
+        AuditLog::record('LOGIN', 'usuarios', $userId, null, [
+            'nombre_usuario' => $user['nombre_usuario'] ?? null,
+        ]);
 
         // Remember me: guardar cookie por 30 días si marcó la opción
         if (!empty($_POST['remember'])) {
@@ -159,6 +165,11 @@ function logout()
         session_start();
     }
 
+    $userId = (int)($_SESSION['user_id'] ?? 0);
+    if ($userId > 0) {
+        AuditLog::record('LOGOUT', 'usuarios', $userId, null, null);
+    }
+
     session_unset();
     session_destroy();
 
@@ -177,6 +188,11 @@ function logout_ajax()
 
     if (session_status() === PHP_SESSION_NONE) {
         session_start();
+    }
+
+    $userId = (int)($_SESSION['user_id'] ?? 0);
+    if ($userId > 0) {
+        AuditLog::record('LOGOUT', 'usuarios', $userId, null, null);
     }
 
     session_unset();

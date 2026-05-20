@@ -6,6 +6,7 @@ require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
 
 use SysInescolara\models\Batch;
 use SysInescolara\models\Plant;
+use SysInescolara\models\AuditLog;
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -150,11 +151,21 @@ function handleAddEditAjax(Batch $batchModel, string $mode): void
 
     if ($mode === 'add') {
         $batchModel->add($id_planta, $fecha_siembra, $cantidad_inicial, $cantidad_actual, $estado, $ubicacion, $imagen);
+        $newId = $batchModel->getLastInsertId() ?? 0;
+        AuditLog::record('CREATE', 'lote', $newId, null, [
+            'id_planta' => $id_planta,
+            'fecha_siembra' => $fecha_siembra,
+            'cantidad_inicial' => $cantidad_inicial,
+            'cantidad_actual' => $cantidad_actual,
+            'estado' => $estado,
+            'ubicacion' => $ubicacion,
+            'imagen' => $imagen,
+        ]);
         jsonResponse([
             'success' => true,
             'message' => 'Lote agregado correctamente',
             'batch' => [
-                'id' => $batchModel->getLastInsertId() ?? 0,
+                'id' => $newId,
                 'id_planta' => $id_planta,
                 'imagen' => $imagen,
             ],
@@ -165,17 +176,26 @@ function handleAddEditAjax(Batch $batchModel, string $mode): void
     if ($id <= 0) throw new Exception('ID inválido');
 
     if ($imagen === null) {
-        $existing = $batchModel->getById($id);
-        $imagen = $existing['imagen'] ?? null;
+        $oldData = $batchModel->getById($id);
+        $imagen = $oldData['imagen'] ?? null;
     } else {
-        $existing = $batchModel->getById($id);
-        if (!empty($existing['imagen'])) {
+        $oldData = $batchModel->getById($id);
+        if (!empty($oldData['imagen'])) {
             $uploader = new \SysInescolara\helpers\ImageUploader();
-            $uploader->delete($existing['imagen']);
+            $uploader->delete($oldData['imagen']);
         }
     }
 
     $batchModel->update($id, $id_planta, $fecha_siembra, $cantidad_inicial, $cantidad_actual, $estado, $ubicacion, $imagen);
+    AuditLog::record('UPDATE', 'lote', $id, $oldData, [
+        'id_planta' => $id_planta,
+        'fecha_siembra' => $fecha_siembra,
+        'cantidad_inicial' => $cantidad_inicial,
+        'cantidad_actual' => $cantidad_actual,
+        'estado' => $estado,
+        'ubicacion' => $ubicacion,
+        'imagen' => $imagen,
+    ]);
     jsonResponse([
         'success' => true,
         'message' => 'Lote actualizado correctamente',
@@ -189,13 +209,14 @@ function handleDeleteAjax(Batch $batchModel): void
     if ($id <= 0) throw new Exception('ID inválido');
     if (!$batchModel->exists($id)) throw new Exception('No existe el lote');
 
-    $existing = $batchModel->getById($id);
-    if (!empty($existing['imagen'])) {
+    $oldData = $batchModel->getById($id);
+    if (!empty($oldData['imagen'])) {
         $uploader = new \SysInescolara\helpers\ImageUploader();
-        $uploader->delete($existing['imagen']);
+        $uploader->delete($oldData['imagen']);
     }
 
     $batchModel->delete($id);
+    AuditLog::record('DELETE', 'lote', $id, $oldData, null);
     jsonResponse(['success' => true, 'message' => 'Lote eliminado correctamente', 'batchId' => $id]);
 }
 

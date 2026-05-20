@@ -2,6 +2,7 @@
 
 require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
 
+use SysInescolara\models\AuditLog;
 use SysInescolara\models\Supplies;
 use SysInescolara\helpers\Validation;
 
@@ -128,10 +129,22 @@ function handleAddEdit($suppliesModel, $mode)
 
         if ($mode === 'add') {
             $suppliesModel->add($nombre, $tipo, $unidad);
+            $newId = $suppliesModel->getLastInsertId() ?? 0;
+            AuditLog::record('CREATE', 'insumos', $newId, null, [
+                'nombre' => $nombre,
+                'tipo'   => $tipo,
+                'unidad' => $unidad,
+            ]);
             header("Location: supplies-admin.php?success=add");
             exit();
         } else {
+            $oldData = $suppliesModel->getById($id);
             $suppliesModel->update($id, $nombre, $tipo, $unidad);
+            AuditLog::record('UPDATE', 'insumos', $id, $oldData, [
+                'nombre' => $nombre,
+                'tipo'   => $tipo,
+                'unidad' => $unidad,
+            ]);
             header("Location: supplies-admin.php?success=edit");
             exit();
         }
@@ -148,7 +161,9 @@ function handleDelete($suppliesModel)
         }
 
         $id = intval($_GET['id']);
+        $oldData = $suppliesModel->getById($id);
         $suppliesModel->delete($id);
+        AuditLog::record('DELETE', 'insumos', $id, $oldData, null);
         header("Location: supplies-admin.php?success=delete");
         exit();
     } catch (Exception $e) {
@@ -172,6 +187,12 @@ function handleAddEditAjax($suppliesModel, $mode)
 
         if ($mode === 'add') {
             $suppliesModel->add($nombre, $tipo, $unidad);
+            $newId = $suppliesModel->getLastInsertId() ?? 0;
+            AuditLog::record('CREATE', 'insumos', $newId, null, [
+                'nombre' => $nombre,
+                'tipo'   => $tipo,
+                'unidad' => $unidad,
+            ]);
             
             $msg = 'Insumo agregado con éxito';
             $supply = [
@@ -180,7 +201,13 @@ function handleAddEditAjax($suppliesModel, $mode)
                 'unidad' => $unidad
             ];
         } else {
+            $oldData = $suppliesModel->getById($id);
             $suppliesModel->update($id, $nombre, $tipo, $unidad);
+            AuditLog::record('UPDATE', 'insumos', $id, $oldData, [
+                'nombre' => $nombre,
+                'tipo'   => $tipo,
+                'unidad' => $unidad,
+            ]);
             
             $supply = [
                 'id'     => $id,
@@ -210,7 +237,9 @@ function handleDeleteAjax($suppliesModel)
             throw new Exception("No existe el insumo solicitado");
         }
 
+        $oldData = $suppliesModel->getById($id);
         $suppliesModel->delete($id);
+        AuditLog::record('DELETE', 'insumos', $id, $oldData, null);
         jsonResponse(['success' => true, 'message' => 'Insumo eliminado de forma exitosa', 'supplyId' => $id]);
     } catch (Exception $e) {
         jsonResponse(['success' => false, 'message' => $e->getMessage()], 400);

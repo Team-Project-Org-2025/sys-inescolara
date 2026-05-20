@@ -6,6 +6,7 @@ require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
 
 use SysInescolara\helpers\Validation;
 use SysInescolara\models\User;
+use SysInescolara\models\AuditLog;
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -201,12 +202,19 @@ function handleAddEditAjax(User $userModel, string $mode): void
         }
 
         $userModel->add($nombreUsuario, $password, $rolId, $correoElectronico, $avatar);
+        $newId = $userModel->getLastInsertId() ?? 0;
+
+        AuditLog::record('CREATE', 'usuarios', $newId, null, [
+            'nombre_usuario' => $nombreUsuario,
+            'correo_electronico' => $correoElectronico,
+            'rol_id' => $rolId,
+        ]);
 
         jsonResponse([
             'success' => true,
             'message' => 'Usuario agregado',
             'user' => [
-                'id' => $userModel->getLastInsertId() ?? 0,
+                'id' => $newId,
                 'nombre_usuario' => $nombreUsuario,
                 'correo_electronico' => $correoElectronico,
                 'rol_id' => $rolId,
@@ -219,20 +227,26 @@ function handleAddEditAjax(User $userModel, string $mode): void
         throw new Exception('ID inválido');
     }
 
+    // Obtener datos viejos antes de modificar
+    $oldData = $userModel->getById($id);
+
     // Si no se subió nuevo avatar, mantener el existente
     if ($avatar === null) {
-        $existing = $userModel->getById($id);
-        $avatar = $existing['avatar'] ?? null;
+        $avatar = $oldData['avatar'] ?? null;
     } else {
-        // Eliminar avatar anterior
-        $existing = $userModel->getById($id);
-        if (!empty($existing['avatar'])) {
+        if (!empty($oldData['avatar'])) {
             $uploader = new \SysInescolara\helpers\ImageUploader();
-            $uploader->delete($existing['avatar']);
+            $uploader->delete($oldData['avatar']);
         }
     }
 
     $userModel->update($id, $nombreUsuario, $rolId, $correoElectronico, $password !== '' ? $password : null, $avatar);
+
+    AuditLog::record('UPDATE', 'usuarios', $id, $oldData, [
+        'nombre_usuario' => $nombreUsuario,
+        'correo_electronico' => $correoElectronico,
+        'rol_id' => $rolId,
+    ]);
 
     // Si el usuario editado es el mismo de la sesión, actualizar sus datos en sesión
     if (isset($_SESSION['user_id']) && (int)$_SESSION['user_id'] === $id) {
@@ -281,7 +295,9 @@ function handleDeleteAjax(User $userModel): void
         return;
     }
 
+    $oldData = $userModel->getById($id);
     $userModel->delete($id);
+    AuditLog::record('DELETE', 'usuarios', $id, $oldData, null);
 
     jsonResponse([
         'success' => true,

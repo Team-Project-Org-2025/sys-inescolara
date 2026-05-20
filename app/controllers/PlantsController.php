@@ -6,6 +6,7 @@ require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
 
 use SysInescolara\models\Plant;
 use SysInescolara\models\Species;
+use SysInescolara\models\AuditLog;
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -148,11 +149,18 @@ function handleAddEditAjax(Plant $plantModel, string $mode): void
 
     if ($mode === 'add') {
         $plantModel->add($nombreComun, $nombreTecnico, $especieId, $imagen);
+        $newId = $plantModel->getLastInsertId() ?? 0;
+        AuditLog::record('CREATE', 'plantas', $newId, null, [
+            'nombre_comun' => $nombreComun,
+            'nombre_tecnico' => $nombreTecnico,
+            'especie_id' => $especieId,
+            'imagen' => $imagen,
+        ]);
         jsonResponse([
             'success' => true,
             'message' => 'Planta agregada correctamente',
             'plant' => [
-                'id' => $plantModel->getLastInsertId() ?? 0,
+                'id' => $newId,
                 'nombre_comun' => $nombreComun,
                 'imagen' => $imagen,
             ],
@@ -163,17 +171,23 @@ function handleAddEditAjax(Plant $plantModel, string $mode): void
     if ($id <= 0) throw new Exception('ID inválido');
 
     if ($imagen === null) {
-        $existing = $plantModel->getById($id);
-        $imagen = $existing['imagen'] ?? null;
+        $oldData = $plantModel->getById($id);
+        $imagen = $oldData['imagen'] ?? null;
     } else {
-        $existing = $plantModel->getById($id);
-        if (!empty($existing['imagen'])) {
+        $oldData = $plantModel->getById($id);
+        if (!empty($oldData['imagen'])) {
             $uploader = new \SysInescolara\helpers\ImageUploader();
-            $uploader->delete($existing['imagen']);
+            $uploader->delete($oldData['imagen']);
         }
     }
 
     $plantModel->update($id, $nombreComun, $nombreTecnico, $especieId, $imagen);
+    AuditLog::record('UPDATE', 'plantas', $id, $oldData, [
+        'nombre_comun' => $nombreComun,
+        'nombre_tecnico' => $nombreTecnico,
+        'especie_id' => $especieId,
+        'imagen' => $imagen,
+    ]);
     jsonResponse([
         'success' => true,
         'message' => 'Planta actualizada correctamente',
@@ -187,13 +201,14 @@ function handleDeleteAjax(Plant $plantModel): void
     if ($id <= 0) throw new Exception('ID inválido');
     if (!$plantModel->exists($id)) throw new Exception('No existe la planta');
 
-    $existing = $plantModel->getById($id);
-    if (!empty($existing['imagen'])) {
+    $oldData = $plantModel->getById($id);
+    if (!empty($oldData['imagen'])) {
         $uploader = new \SysInescolara\helpers\ImageUploader();
-        $uploader->delete($existing['imagen']);
+        $uploader->delete($oldData['imagen']);
     }
 
     $plantModel->delete($id);
+    AuditLog::record('DELETE', 'plantas', $id, $oldData, null);
     jsonResponse(['success' => true, 'message' => 'Planta eliminada correctamente', 'plantId' => $id]);
 }
 
