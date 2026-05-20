@@ -42,7 +42,7 @@ $(document).ready(function () {
           render: (data) => {
             const url = data ? `${window.BASE_URL || '/'}${data}` : null;
             return url
-              ? `<img src="${url}" class="plant-thumb" data-img="${url}" data-bs-toggle="modal" data-bs-target="#imageLightbox" title="View image">`
+              ? `<img src="${url}" class="plant-thumb" data-img="${url}" data-bs-toggle="modal" data-bs-target="#imageLightbox" title="Ver imagen">`
               : `<div class="plant-thumb-placeholder"><i class="fas fa-leaf"></i></div>`;
           },
           orderable: false,
@@ -54,7 +54,7 @@ $(document).ready(function () {
         },
         {
           data: 'especie_nombre',
-          render: (data) => data || '<span class="text-muted">No species</span>',
+          render: (data) => data || '<span class="text-muted">Sin especie</span>',
         },
         {
           data: null,
@@ -68,12 +68,12 @@ $(document).ready(function () {
                         data-nombre_tecnico="${Helpers.escapeHtml(data.nombre_tecnico || '')}"
                         data-especie_id="${Helpers.escapeHtml(data.especie_id || '')}"
                         data-imagen="${Helpers.escapeHtml(data.imagen || '')}">
-                    <i class="fas fa-edit"></i> Edit
+                    <i class="fas fa-edit"></i> Editar
                 </button>
                 <button class="btn btn-sm btn-outline-danger btn-delete"
                         data-id="${Helpers.escapeHtml(data.id)}"
                         data-nombre="${Helpers.escapeHtml(data.nombre_comun || '')}">
-                    <i class="fas fa-trash"></i> Delete
+                    <i class="fas fa-trash"></i> Eliminar
                 </button>
               </div>
             `;
@@ -89,7 +89,7 @@ $(document).ready(function () {
       dom: '<"d-flex justify-content-between align-items-center mb-2"lfB>tip',
       buttons: [
         {
-          text: '<i class="fas fa-sync-alt"></i> Refresh',
+          text: '<i class="fas fa-sync-alt"></i> Actualizar',
           className: 'btn btn-outline-secondary btn-sm',
           action: () => {
             if (typeof SkeletonHelper !== 'undefined') {
@@ -138,7 +138,7 @@ $(document).ready(function () {
     })
       .done((response) => {
         if (response.success) {
-          Helpers.toast('success', 'Plant added successfully');
+          Helpers.toast('success', 'Planta agregada correctamente');
           $('#addPlantModal').modal('hide');
           plantsTable.ajax.reload(null, false);
         } else {
@@ -146,7 +146,7 @@ $(document).ready(function () {
         }
       })
       .fail((err) => {
-        Helpers.toast('error', err.responseJSON?.message || 'Error adding plant');
+        Helpers.toast('error', err.responseJSON?.message || 'Error al agregar planta');
       });
   });
 
@@ -190,7 +190,7 @@ $(document).ready(function () {
     })
       .done((response) => {
         if (response.success) {
-          Helpers.toast('success', 'Plant updated successfully');
+          Helpers.toast('success', 'Planta actualizada correctamente');
           $('#editPlantModal').modal('hide');
           plantsTable.ajax.reload(null, false);
         } else {
@@ -198,7 +198,7 @@ $(document).ready(function () {
         }
       })
       .fail((err) => {
-        Helpers.toast('error', err.responseJSON?.message || 'Error updating plant');
+        Helpers.toast('error', err.responseJSON?.message || 'Error al actualizar planta');
       });
   });
 
@@ -207,13 +207,13 @@ $(document).ready(function () {
     const nombre = $(this).data('nombre');
 
     Helpers.confirmDialog(
-      'Delete plant?',
-      `Are you sure you want to delete <strong>${Helpers.escapeHtml(nombre)}</strong>?`,
+      '¿Eliminar planta?',
+      `¿Deseas eliminar <strong>${Helpers.escapeHtml(nombre)}</strong>?`,
       () => {
         Ajax.post(`${baseUrl}?action=delete_ajax`, { id })
           .then((response) => {
             if (response.success) {
-              Helpers.toast('success', 'Plant deleted successfully');
+              Helpers.toast('success', 'Planta eliminada correctamente');
               plantsTable.ajax.reload(null, false);
             } else {
               Helpers.toast('error', response.message);
@@ -223,7 +223,7 @@ $(document).ready(function () {
             Helpers.toast('error', err);
           });
       },
-      'Yes, delete'
+      'Sí, eliminar'
     );
   });
 
