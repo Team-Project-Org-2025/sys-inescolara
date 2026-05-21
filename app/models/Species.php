@@ -3,9 +3,11 @@
 namespace SysInescolara\models;
 
 use SysInescolara\core\Database;
+use SysInescolara\interfaces\ReadableInterface;
+use SysInescolara\interfaces\DeletableInterface;
 use PDO;
 
-class Species extends Database
+class Species extends Database implements ReadableInterface, DeletableInterface
 {
     public function __construct()
     {
@@ -39,28 +41,36 @@ class Species extends Database
         }
     }
 
-    public function getAll()
+    public function getAll(): array
     {
         try {
-            $stmt = $this->db->query("SELECT id_especie AS id, nombre_comun, nombre_tecnico FROM especies ORDER BY nombre_comun ASC");
+            $sql = "SELECT id_especie AS id, nombre_comun, nombre_tecnico FROM especies ORDER BY nombre_comun ASC";
+            $stmt = $this->db->query($sql);
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
         } catch (\Throwable $e) {
+            error_log('Error obtener especies: ' . $e->getMessage());
             return [];
         }
     }
 
-    public function getById($id)
+    public function getById(int $id): ?array
     {
-        $stmt = $this->db->prepare("SELECT id_especie AS id, nombre_comun, nombre_tecnico FROM especies WHERE id_especie = :id");
+        $stmt = $this->db->prepare("SELECT * FROM especies WHERE id_especie = :id");
         $stmt->execute([':id' => $id]);
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 
-    public function exists($id)
+    public function exists(int $id): bool
     {
         $stmt = $this->db->prepare("SELECT COUNT(*) FROM especies WHERE id_especie = :id");
         $stmt->execute([':id' => $id]);
         return $stmt->fetchColumn() > 0;
+    }
+
+    public function delete(int $id): bool
+    {
+        $stmt = $this->db->prepare("DELETE FROM especies WHERE id_especie = :id");
+        return $stmt->execute([':id' => $id]);
     }
 
     public function getLastInsertId(): ?int
@@ -92,11 +102,5 @@ class Species extends Database
             ':nombre_comun' => $nombreComun,
             ':nombre_tecnico' => $nombreTecnico,
         ]);
-    }
-
-    public function delete(int $id)
-    {
-        $stmt = $this->db->prepare("DELETE FROM especies WHERE id_especie = :id");
-        return $stmt->execute([':id' => $id]);
     }
 }
