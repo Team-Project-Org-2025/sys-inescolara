@@ -41,7 +41,7 @@ function hasPermiso(string $codigo): bool
             </ul>
         </div>
 
-        <?php if (hasPermiso('INVENTARIO_VIEW') || hasPermiso('PLANTAS_VIEW') || hasPermiso('PROVEEDORES_VIEW') || hasPermiso('TRABAJADORES_VIEW') || hasPermiso('INSUMOS_VIEW') || hasPermiso('CLIENTES_VIEW')): ?>
+        <?php if (hasPermiso('INVENTARIO_VIEW') || hasPermiso('PLANTAS_VIEW') || hasPermiso('PROVEEDORES_VIEW') || hasPermiso('TRABAJADORES_VIEW') || hasPermiso('INSUMO_VIEW') || hasPermiso('CLIENTES_VIEW')): ?>
         <div class="sidebar-section">
             <span class="sidebar-section-title">Gestión</span>
             <ul class="sidebar-menu">
@@ -115,7 +115,7 @@ function hasPermiso(string $codigo): bool
                     </a>
                 </li>
                 <?php endif; ?>
-                <?php if (hasPermiso('INSUMOS_VIEW')): ?>
+                <?php if (hasPermiso('INSUMO_VIEW')): ?>
                 <li>
                     <a href="<?= BASE_URL ?>dashboard/supplies" class="sidebar-link <?= ($currentPage ?? '') === 'supplies' ? 'active' : '' ?>">
                         <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -123,7 +123,7 @@ function hasPermiso(string $codigo): bool
                             <rect x="1" y="3" width="22" height="5"></rect>
                             <line x1="10" y1="12" x2="14" y2="12"></line>
                         </svg>
-                        <span>Insumos</span>
+                        <span>Insumo</span>
                     </a>
                 </li>
                 <?php endif; ?>

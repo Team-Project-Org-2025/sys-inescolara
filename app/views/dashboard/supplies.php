@@ -6,7 +6,7 @@ include_once __DIR__ . '/../common/links.php';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Insumos - INECOLARA</title>
+    <title>Insumo - INECOLARA</title>
     <?= $css_links ?>
 </head>
 <body>
@@ -14,7 +14,7 @@ include_once __DIR__ . '/../common/links.php';
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
     
     <?php 
-    $currentPage = 'supplies';
+    $currentPage = 'supplies'; 
     include_once __DIR__ . '/../partials/sidebar.php'; 
     ?>
     
@@ -28,7 +28,7 @@ include_once __DIR__ . '/../common/links.php';
                         <line x1="3" y1="18" x2="21" y2="18"></line>
                     </svg>
                 </button>
-                <h1 class="dashboard-page-title">Insumos</h1>
+                <h1 class="dashboard-page-title">Insumo</h1>
             </div>
             
             <div class="dashboard-header-right">
@@ -37,7 +37,7 @@ include_once __DIR__ . '/../common/links.php';
                         <circle cx="11" cy="11" r="8"></circle>
                         <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                     </svg>
-                    <input type="text" placeholder="Buscar...">
+                    <input type="text" placeholder="Buscar insumo...">
                 </div>
                 
                 <button class="header-icon-btn" aria-label="Notificaciones">
@@ -65,11 +65,115 @@ include_once __DIR__ . '/../common/links.php';
         </header>
         
         <div class="dashboard-content">
-            <h1>Insumos</h1>
-            <p style="color: var(--text-secondary);">Gestión de insumos en el vivero.</p>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1>Gestión de Insumo</h1>
+                    <p style="color: var(--text-secondary);">Registro y control de inventario de materiales, tierras y agroquímicos.</p>
+                </div>
+                <button class="btn btn-primary" id="btnAddSupply">
+                    <i class="fas fa-plus"></i> Nuevo Insumo
+                </button>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table id="suppliesTable" class="table table-striped table-hover w-100">
+                            <thead>
+                                <tr>
+                                    <th>Nombre del Insumo</th>
+                                    <th>U. Medida</th>
+                                    <th>Stock Actual</th>
+                                    <th>Costo Unitario (Actual)</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
     </main>
-    
+
+    <!-- Add Supply Modal -->
+    <div class="modal fade" id="addSupplyModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="addSupplyForm">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Agregar Insumo</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Nombre del Insumo</label>
+                            <input type="text" class="form-control" name="nombre_insumo" required placeholder="Ej: Fertilizante NPK, Bolsa de polietileno">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Unidad de Medida</label>
+                            <input type="text" class="form-control" name="unidad_medida" required placeholder="Ej: Kg, Litros, Unidades, Sacos">
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Stock Inicial</label>
+                                <input type="number" step="0.01" class="form-control" name="stock_actual" required value="0.00">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Costo Unitario Actual</label>
+                                <input type="number" step="0.01" class="form-control" name="costo_unitario_actual" required placeholder="0.00">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Supply Modal -->
+    <div class="modal fade" id="editSupplyModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="editSupplyForm">
+                    <input type="hidden" name="id" id="editSupplyId">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Editar Insumo</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Nombre del Insumo</label>
+                            <input type="text" class="form-control" name="nombre_insumo" id="editSupplyName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Unidad de Medida</label>
+                            <input type="text" class="form-control" name="unidad_medida" id="editSupplyUnit" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Stock Actual</label>
+                                <input type="number" step="0.01" class="form-control" name="stock_actual" id="editSupplyStock" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Costo Unitario Actual</label>
+                                <input type="number" step="0.01" class="form-control" name="costo_unitario_actual" id="editSupplyCost" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Actualizar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <?= $scripts_links ?>
+    <script type="module" src="<?= BASE_URL ?>public/assets/js/dashboard/supplies.js"></script>
 </body>
 </html>
