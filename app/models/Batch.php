@@ -44,21 +44,21 @@ class Batch extends Database implements ReadableInterface, DeletableInterface
                         l.id_lote AS id, l.id_planta, l.fecha_siembra, l.cantidad_inicial, l.cantidad_actual, l.estado, l.ubicacion, l.imagen,
                         p.nombre_comun AS planta_nombre,
                         e.nombre_comun AS especie_nombre
-                    FROM lotes l
+                    FROM lote l
                     LEFT JOIN plantas p ON l.id_planta = p.id_planta
-                    LEFT JOIN especies e ON p.id_especie = e.id_especie
+                    LEFT JOIN especies e ON p.id_categoria = e.id_especie
                     ORDER BY l.fecha_siembra DESC";
             $stmt = $this->db->query($sql);
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
         } catch (\Throwable $e) {
-            error_log('Error al obtener lotes: ' . $e->getMessage());
+            error_log('Error al obtener lote: ' . $e->getMessage());
             return [];
         }
     }
 
     public function exists(int $id): bool
     {
-        $stmt = $this->db->prepare("SELECT COUNT(*) FROM lotes WHERE id_lote = :id");
+        $stmt = $this->db->prepare("SELECT COUNT(*) FROM lote WHERE id_lote = :id");
         $stmt->execute([':id' => $id]);
         return $stmt->fetchColumn() > 0;
     }
@@ -69,9 +69,9 @@ class Batch extends Database implements ReadableInterface, DeletableInterface
                                         l.*, 
                                         p.nombre_comun AS planta_nombre,
                                         e.nombre_comun AS especie_nombre
-                                    FROM lotes l
+                                    FROM lote l
                                     LEFT JOIN plantas p ON l.id_planta = p.id_planta
-                                    LEFT JOIN especies e ON p.id_especie = e.id_especie
+                                    LEFT JOIN especies e ON p.id_categoria = e.id_especie
                                     WHERE l.id_lote = :id");
         $stmt->execute([':id' => $id]);
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
@@ -79,7 +79,7 @@ class Batch extends Database implements ReadableInterface, DeletableInterface
 
     public function delete(int $id): bool
     {
-        $stmt = $this->db->prepare("DELETE FROM lotes WHERE id_lote = :id");
+        $stmt = $this->db->prepare("DELETE FROM lote WHERE id_lote = :id");
         return $stmt->execute([':id' => $id]);
     }
 
@@ -94,7 +94,7 @@ class Batch extends Database implements ReadableInterface, DeletableInterface
 
     public function add($id_planta, $fecha_siembra, $cantidad_inicial, $cantidad_actual, $estado, $ubicacion, $imagen = null)
     {
-        $stmt = $this->db->prepare("INSERT INTO lotes (id_planta, fecha_siembra, cantidad_inicial, cantidad_actual, estado, ubicacion, imagen) VALUES (:id_planta, :fecha_siembra, :cantidad_inicial, :cantidad_actual, :estado, :ubicacion, :imagen)");
+        $stmt = $this->db->prepare("INSERT INTO lote (id_planta, fecha_siembra, cantidad_inicial, cantidad_actual, estado, ubicacion, imagen) VALUES (:id_planta, :fecha_siembra, :cantidad_inicial, :cantidad_actual, :estado, :ubicacion, :imagen)");
         return $stmt->execute([
             ':id_planta' => $id_planta,
             ':fecha_siembra' => $fecha_siembra,
@@ -111,7 +111,7 @@ class Batch extends Database implements ReadableInterface, DeletableInterface
         if (!$this->exists($id)) {
             throw new \Exception("No existe el lote con ID: $id");
         }
-        $stmt = $this->db->prepare("UPDATE lotes SET id_planta = :id_planta, fecha_siembra = :fecha_siembra, cantidad_inicial = :cantidad_inicial, cantidad_actual = :cantidad_actual, estado = :estado, ubicacion = :ubicacion, imagen = :imagen WHERE id_lote = :id");
+        $stmt = $this->db->prepare("UPDATE lote SET id_planta = :id_planta, fecha_siembra = :fecha_siembra, cantidad_inicial = :cantidad_inicial, cantidad_actual = :cantidad_actual, estado = :estado, ubicacion = :ubicacion, imagen = :imagen WHERE id_lote = :id");
         return $stmt->execute([
             ':id' => $id,
             ':id_planta' => $id_planta,
