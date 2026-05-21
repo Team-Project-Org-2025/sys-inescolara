@@ -14,6 +14,7 @@
     <title><?= htmlspecialchars($title ?? 'Vivero Inecolara') ?> - INECOLARA</title>
     <link rel="icon" type="image/x-icon" href="<?= BASE_URL ?>public/assets/images/favicon.ico">
     <link rel="stylesheet" href="<?= BASE_URL ?>public/assets/css/styles.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>public/assets/css/header.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">

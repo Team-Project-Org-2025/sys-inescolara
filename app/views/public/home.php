@@ -19,15 +19,15 @@
         </div>
         <div class="home-hero-card">
             <div class="home-stat">
-                <strong>120+</strong>
+                <strong>0+</strong>
                 <span>Especies disponibles</span>
             </div>
             <div class="home-stat">
-                <strong>50K+</strong>
+                <strong>0+</strong>
                 <span>Plantas al año</span>
             </div>
             <div class="home-stat">
-                <strong>200+</strong>
+                <strong>0+</strong>
                 <span>Instituciones atendidas</span>
             </div>
         </div>
