@@ -11,13 +11,13 @@ export const REGEX = {
   precio: /^(100(\.00?)?|[1-9]?\d(\.\d{1,2})?)$/,
   precioRango: /^(100(\.00?)?|[1-9]?\d(\.\d{1,2})?)$/,
   direccion: /^.{5,150}$/,
+  ubicacion: /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]{2,100}$/,
   cargo: /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]{2,50}$/,
   referencia: /^\d{8,10}$/,
   referenciaVenta: /^[A-Za-z0-9\-]{1,15}$/,
   banco: /^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9\s\-\.]{3,30}$/,
   password: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&._-])[A-Za-z\d@$!%*?&._-]{8,30}$/,
-  passwordEdit:
-    /^(?:.{0}|(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&._-])[A-Za-z\d@$!%*?&._-]{8,30})$/,
+  passwordEdit: /^(?:.{0}|(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&._-])[A-Za-z\d@$!%*?&._-]{8,30})$/,
 };
 
 // Mensajes de error personalizados
@@ -32,6 +32,7 @@ export const MESSAGES = {
   telefono: 'Teléfono inválido (11 dígitos)',
   precio: 'Precio inválido (formato: 0.00)',
   direccion: 'Dirección muy corta (mínimo 5 caracteres)',
+  ubicacion: 'Ubicación inválida (solo letras, números y espacios)',
   cargo: 'Cargo inválido (2-50 caracteres)',
   referencia: 'Referencia bancaria inválida (8-10 dígitos)',
   referenciaVenta: 'Referencia inválida (máx 15 caracteres, solo letras, números y guión)',
