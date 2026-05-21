@@ -5,7 +5,7 @@ export const REGEX = {
   factura: /^\d{8}$/,
   nombre: /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]{2,100}$/,
   nombreProducto: /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]{1,40}$/,
-  nombrePrenda: /^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9\s\-\.]{3,150}$/,
+  nombrePlanta: /^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9\s\-\.]{3,150}$/,
   email: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
   telefono: /^\d{11}$/,
   precio: /^(100(\.00?)?|[1-9]?\d(\.\d{1,2})?)$/,
