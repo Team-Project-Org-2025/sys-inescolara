@@ -133,7 +133,7 @@ export const setupRealTimeValidation = ($form, rules, isEdit = false) => {
     // ========================================================================
     // BLOQUEO 2: BLOQUEAR NÚMEROS (Para Nombres de personas, Cargos)
     // ========================================================================
-    if (['nombre', 'cargo', 'nombrePlanta'].includes(tipo)) {
+    if (['nombre', 'cargo', 'nombrePlanta', 'nombreProducto'].includes(tipo)) {
       
       // 1. Evitar que se escriban números del 0 al 9 (ASCII 48 al 57)
       $input.on('keypress', function (e) {
