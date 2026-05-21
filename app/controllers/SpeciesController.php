@@ -5,6 +5,7 @@ declare(strict_types=1);
 require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
 
 use SysInescolara\models\Species;
+use SysInescolara\models\AuditLog;
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -131,11 +132,16 @@ function handleAddEditAjax(Species $speciesModel, string $mode): void
 
     if ($mode === 'add') {
         $speciesModel->add($nombreComun, $nombreTecnico);
+        $newId = $speciesModel->getLastInsertId() ?? 0;
+        AuditLog::record('CREATE', 'especies', $newId, null, [
+            'nombre_comun' => $nombreComun,
+            'nombre_tecnico' => $nombreTecnico,
+        ]);
         jsonResponse([
             'success' => true,
             'message' => 'Especie agregada correctamente',
             'species' => [
-                'id' => $speciesModel->getLastInsertId() ?? 0,
+                'id' => $newId,
                 'nombre_comun' => $nombreComun,
                 'nombre_tecnico' => $nombreTecnico,
             ],
@@ -147,7 +153,12 @@ function handleAddEditAjax(Species $speciesModel, string $mode): void
         throw new Exception('ID inválido');
     }
 
+    $oldData = $speciesModel->getById($id);
     $speciesModel->update($id, $nombreComun, $nombreTecnico);
+    AuditLog::record('UPDATE', 'especies', $id, $oldData, [
+        'nombre_comun' => $nombreComun,
+        'nombre_tecnico' => $nombreTecnico,
+    ]);
     jsonResponse([
         'success' => true,
         'message' => 'Especie actualizada correctamente',
@@ -170,7 +181,9 @@ function handleDeleteAjax(Species $speciesModel): void
         throw new Exception('No existe la especie');
     }
 
+    $oldData = $speciesModel->getById($id);
     $speciesModel->delete($id);
+    AuditLog::record('DELETE', 'especies', $id, $oldData, null);
     jsonResponse([
         'success' => true,
         'message' => 'Especie eliminada correctamente',

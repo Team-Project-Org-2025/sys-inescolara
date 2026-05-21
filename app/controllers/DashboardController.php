@@ -234,3 +234,33 @@ function species(): void
 
     require $view;
 }
+
+function auditlog(): void
+{
+    dashboardCheckPermiso('USUARIOS_MANAGE');
+    $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
+        . 'dashboard' . DIRECTORY_SEPARATOR . 'auditlog.php';
+
+    if (!is_file($view)) {
+        http_response_code(500);
+        echo 'Vista de bitácora no encontrada.';
+        return;
+    }
+
+    require $view;
+}
+
+function backups(): void
+{
+    dashboardCheckPermiso('USUARIOS_MANAGE');
+    $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
+        . 'dashboard' . DIRECTORY_SEPARATOR . 'backups.php';
+
+    if (!is_file($view)) {
+        http_response_code(500);
+        echo 'Vista de respaldos no encontrada.';
+        return;
+    }
+
+    require $view;
+}
