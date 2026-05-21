@@ -64,4 +64,10 @@ class Supplies extends Database {
         $stmt = $this->db->prepare("DELETE FROM insumos WHERE id = :id");
         return $stmt->execute([':id' => $id]);
     }
+
+    public function getLastInsertId(): ?int
+    {
+        $id = $this->db->lastInsertId();
+        return $id !== false ? (int) $id : null;
+    }
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
 
 use SysInescolara\models\Employee;
+use SysInescolara\models\AuditLog;
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -141,11 +142,18 @@ function handleAddEditAjax(Employee $employeeModel, string $mode): void
 
     if ($mode === 'add') {
         $employeeModel->add($nombreTrabajador, $apellidoTrabajador, $cedulaTrabajador, $telefonoTrabajador);
+        $newId = $employeeModel->getLastInsertId() ?? 0;
+        AuditLog::record('CREATE', 'trabajadores', $newId, null, [
+            'nombre_trabajador' => $nombreTrabajador,
+            'apellido_trabajador' => $apellidoTrabajador,
+            'cedula_trabajador' => $cedulaTrabajador,
+            'telefono_trabajador' => $telefonoTrabajador,
+        ]);
         jsonResponse([
             'success' => true,
             'message' => 'Trabajador agregado correctamente',
             'employee' => [
-                'id' => $employeeModel->getLastInsertId() ?? 0,
+                'id' => $newId,
                 'nombre_trabajador' => $nombreTrabajador,
                 'apellido_trabajador' => $apellidoTrabajador,
                 'cedula_trabajador' => $cedulaTrabajador,
@@ -159,7 +167,14 @@ function handleAddEditAjax(Employee $employeeModel, string $mode): void
         throw new Exception('ID inválido');
     }
 
+    $oldData = $employeeModel->getById($id);
     $employeeModel->update($id, $nombreTrabajador, $apellidoTrabajador, $cedulaTrabajador, $telefonoTrabajador);
+    AuditLog::record('UPDATE', 'trabajadores', $id, $oldData, [
+        'nombre_trabajador' => $nombreTrabajador,
+        'apellido_trabajador' => $apellidoTrabajador,
+        'cedula_trabajador' => $cedulaTrabajador,
+        'telefono_trabajador' => $telefonoTrabajador,
+    ]);
     jsonResponse([
         'success' => true,
         'message' => 'Trabajador actualizado correctamente',
@@ -184,7 +199,9 @@ function handleDeleteAjax(Employee $employeeModel): void
         throw new Exception('No existe el trabajador');
     }
 
+    $oldData = $employeeModel->getById($id);
     $employeeModel->delete($id);
+    AuditLog::record('DELETE', 'trabajadores', $id, $oldData, null);
     jsonResponse([
         'success' => true,
         'message' => 'Trabajador eliminado correctamente',
