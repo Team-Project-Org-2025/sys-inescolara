@@ -5,7 +5,7 @@ export const REGEX = {
   factura: /^\d{8}$/,
   nombre: /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]{2,100}$/,
   nombreProducto: /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]{1,40}$/,
-  nombrePlanta: /^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9\s\-\.]{3,150}$/,
+  nombrePlanta: /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,150}$/,
   email: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
   telefono: /^\d{11}$/,
   precio: /^(100(\.00?)?|[1-9]?\d(\.\d{1,2})?)$/,
@@ -27,6 +27,7 @@ export const MESSAGES = {
   factura: 'Factura inválida (8 dígitos)',
   nombre: 'Nombre inválido (2-100 caracteres, solo letras)',
   nombreProducto: 'Nombre inválido (1-40 caracteres)',
+  nombrePlanta: 'Nombre de planta inválido (mínimo 3 caracteres, sin números)',
   email: 'Email inválido',
   telefono: 'Teléfono inválido (11 dígitos)',
   precio: 'Precio inválido (formato: 0.00)',
@@ -39,41 +40,63 @@ export const MESSAGES = {
   required: 'Este campo es requerido',
   select: 'Seleccione una opción',
   tracking: 'Tracking inválida (8 dígitos)',
+  default: 'Campo inválido',
 };
 
 //Valida un campo individual
 export const validateField = ($input, regex = null, errorMsg = '') => {
   const valor = $input.val().trim();
+  const isRequired = $input.prop('required'); // <--- Detecta si es obligatorio en el HTML
 
   // Remover mensajes de error previos
   $input.siblings('.invalid-feedback').remove();
 
-  // Campo vacío
+  // Si el campo está vacío
   if (valor === '') {
-    $input.addClass('is-invalid').removeClass('is-valid');
-    if (errorMsg) $input.after(`<div class="invalid-feedback">${errorMsg}</div>`);
-    return false;
+    if (isRequired) {
+      // Si es requerido y está vacío -> Error
+      $input.addClass('is-invalid').removeClass('is-valid');
+      $input.after(`<div class="invalid-feedback">Este campo es requerido.</div>`);
+      return false;
+    } else {
+      // Si NO es requerido y está vacío -> Es totalmente válido (Ej: Nombre técnico vacío)
+      $input.removeClass('is-invalid is-valid');
+      return true;
+    }
   }
 
-  // Validar con regex
+  // Validar con regex (solo si existe la regex)
   if (regex && !regex.test(valor)) {
     $input.addClass('is-invalid').removeClass('is-valid');
     if (errorMsg) $input.after(`<div class="invalid-feedback">${errorMsg}</div>`);
     return false;
   }
 
-  // Válido
+  // Válido si supera la regex
   $input.removeClass('is-invalid').addClass('is-valid');
   return true;
 };
 
 //Valida un select
+// Valida un select respetando si es requerido u opcional
 export const validateSelect = ($select) => {
   const valor = $select.val();
+  const isRequired = $select.prop('required'); // <--- Detecta si el HTML exige que se elija una opción
+
+  // Si no se ha seleccionado nada o es la opción por defecto (valor vacío)
   if (!valor || valor === '') {
-    $select.addClass('is-invalid').removeClass('is-valid');
-    return false;
+    if (isRequired) {
+      // Si es obligatorio y está vacío -> Error
+      $select.addClass('is-invalid').removeClass('is-valid');
+      return false;
+    } else {
+      // Si NO es obligatorio y está en la opción vacía -> Es totalmente válido
+      $select.removeClass('is-invalid is-valid');
+      return true;
+    }
   }
+
+  // Si tiene un valor seleccionado diferente de vacío -> Siempre es válido
   $select.removeClass('is-invalid').addClass('is-valid');
   return true;
 };
