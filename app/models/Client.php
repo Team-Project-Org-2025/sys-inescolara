@@ -3,9 +3,11 @@
 namespace SysInescolara\models;
 
 use SysInescolara\core\Database;
+use SysInescolara\interfaces\ReadableInterface;
+use SysInescolara\interfaces\DeletableInterface;
 use PDO;
 
-class Client extends Database
+class Client extends Database implements ReadableInterface, DeletableInterface
 {
     public function __construct()
     {
@@ -40,28 +42,36 @@ class Client extends Database
         }
     }
 
-    public function getAll()
+    public function getAll(): array
     {
         try {
-            $stmt = $this->db->query("SELECT id_cliente AS id, nombre_cliente, contacto_cliente FROM cliente ORDER BY nombre_cliente ASC");
+            $sql = "SELECT id_cliente AS id, nombre_cliente, contacto_cliente FROM cliente ORDER BY nombre_cliente ASC";
+            $stmt = $this->db->query($sql);
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
         } catch (\Throwable $e) {
+            error_log('Error al obtener clientes: ' . $e->getMessage());
             return [];
         }
     }
 
-    public function getById($id)
+    public function getById(int $id): ?array
     {
-        $stmt = $this->db->prepare("SELECT id_cliente AS id, nombre_cliente, contacto_cliente FROM cliente WHERE id_cliente = :id");
+        $stmt = $this->db->prepare("SELECT * FROM cliente WHERE id_cliente = :id");
         $stmt->execute([':id' => $id]);
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 
-    public function exists($id)
+    public function exists(int $id): bool
     {
         $stmt = $this->db->prepare("SELECT COUNT(*) FROM cliente WHERE id_cliente = :id");
         $stmt->execute([':id' => $id]);
         return $stmt->fetchColumn() > 0;
+    }
+
+    public function delete(int $id): bool
+    {
+        $stmt = $this->db->prepare("DELETE FROM cliente WHERE id_cliente = :id");
+        return $stmt->execute([':id' => $id]);
     }
 
     public function getLastInsertId(): ?int
@@ -93,11 +103,5 @@ class Client extends Database
             ':nombre_cliente' => $nombreCliente,
             ':contacto_cliente' => $contactoCliente,
         ]);
-    }
-
-    public function delete(int $id)
-    {
-        $stmt = $this->db->prepare("DELETE FROM cliente WHERE id_cliente = :id");
-        return $stmt->execute([':id' => $id]);
     }
 }

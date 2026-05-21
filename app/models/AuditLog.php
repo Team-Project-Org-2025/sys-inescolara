@@ -3,9 +3,10 @@
 namespace SysInescolara\models;
 
 use SysInescolara\core\Database;
+use SysInescolara\interfaces\ReadableInterface;
 use PDO;
 
-class AuditLog extends Database
+class AuditLog extends Database implements ReadableInterface
 {
     public function __construct()
     {
