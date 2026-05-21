@@ -4,7 +4,7 @@ export const REGEX = {
   codigo: /^\d{9}$/,
   factura: /^\d{8}$/,
   nombre: /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]{2,100}$/,
-  nombreProducto: /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]{1,40}$/,
+  nombreProducto: /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]{3,40}$/,
   nombrePlanta: /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,150}$/,
   email: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
   telefono: /^\d{11}$/,
@@ -26,7 +26,7 @@ export const MESSAGES = {
   codigo: 'Código inválido (9 dígitos)',
   factura: 'Factura inválida (8 dígitos)',
   nombre: 'Nombre inválido (2-100 caracteres, solo letras)',
-  nombreProducto: 'Nombre inválido (1-40 caracteres)',
+  nombreProducto: 'Nombre inválido (3-40 caracteres)',
   nombrePlanta: 'Nombre de planta inválido (mínimo 3 caracteres, sin números)',
   email: 'Email inválido',
   telefono: 'Teléfono inválido (11 dígitos)',
@@ -107,6 +107,48 @@ export const setupRealTimeValidation = ($form, rules, isEdit = false) => {
   Object.entries(rules).forEach(([campo, tipo]) => {
     const $input = $form.find(`[name="${campo}"]`);
     if (!$input.length) return;
+
+    // ========================================================================
+    // BLOQUEO 1: BLOQUEAR LETRAS (Para Teléfonos, Cédulas, Códigos)
+    // ========================================================================
+    if (['telefono', 'cedula', 'codigo', 'factura', 'referencia'].includes(tipo)) {
+      
+      // 1. Evitar que se escriban letras (Evento de pulsación de tecla)
+      $input.on('keypress', function (e) {
+        const charCode = (e.which) ? e.which : e.keyCode;
+        // Permite solo caracteres correspondientes a los números del 0 al 9 (ASCII 48-57)
+        if (charCode > 31 && (charCode < 48 || charCode > 57)) {
+          e.preventDefault();
+        }
+      });
+
+      
+
+      // 2. Limpiar caracteres inválidos inmediatamente si el usuario arrastra o pega texto
+      $input.on('input', function () {
+        this.value = this.value.replace(/\D/g, '');
+      });
+    }
+
+    // ========================================================================
+    // BLOQUEO 2: BLOQUEAR NÚMEROS (Para Nombres de personas, Cargos)
+    // ========================================================================
+    if (['nombre', 'cargo', 'nombrePlanta'].includes(tipo)) {
+      
+      // 1. Evitar que se escriban números del 0 al 9 (ASCII 48 al 57)
+      $input.on('keypress', function (e) {
+        const charCode = (e.which) ? e.which : e.keyCode;
+        if (charCode >= 48 && charCode <= 57) {
+          e.preventDefault(); // Cancela la pulsación si es un número
+        }
+      });
+
+      // 2. Limpiar el campo si el usuario intenta pegar números con el mouse
+      $input.on('input', function () {
+        this.value = this.value.replace(/[0-9]/g, ''); // Remueve cualquier dígito
+      });
+    }
+    // ========================================================================
 
     // Determinar regex y mensaje
     let regex = REGEX[tipo];
