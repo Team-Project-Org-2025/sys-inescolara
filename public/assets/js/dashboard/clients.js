@@ -1,9 +1,15 @@
 import * as Helpers from '../utils/helpers.js';
 import * as Ajax from '../utils/ajax-handler.js';
+import { setupRealTimeValidation, validateForm } from '../utils/validation.js';
 
 $(document).ready(function () {
   const baseUrl = `${window.BASE_URL || '/'}clients`;
   let clientsTable = null;
+
+  const clientRules = {
+    nombre_cliente: 'nombre',
+    contacto_cliente: 'telefono'
+  };
 
   const initDataTable = () => {
     if (typeof SkeletonHelper !== 'undefined') {
@@ -79,6 +85,11 @@ $(document).ready(function () {
   $('#addClientForm').on('submit', function (e) {
     e.preventDefault();
 
+    if (!validateForm($(this), clientRules)) {
+      Helpers.toast('error', 'Por favor, verifique los campos marcados en rojo.');
+      return;
+    }
+
     const formData = new FormData(this);
 
     $.ajax({
@@ -122,6 +133,11 @@ $(document).ready(function () {
 
   $('#editClientForm').on('submit', function (e) {
     e.preventDefault();
+
+    if (!validateForm($(this), clientRules, true)) {
+      Helpers.toast('error', 'Por favor, verifique los campos marcados en rojo.');
+      return;
+    }
 
     const formData = new FormData(this);
 
@@ -180,5 +196,17 @@ $(document).ready(function () {
     Helpers.resetForm($form);
   });
 
+  // Limpiar modales
+  $('#addClientModal, #editClientModal').on('hidden.bs.modal', function () {
+    const $form = $(this).find('form');
+    Helpers.resetForm($form);
+    // NUEVO: LIMPIAR FEEDBACK VISUAL ANTIGUO AL CERRAR
+    $form.find('.is-valid, .is-invalid').removeClass('is-valid is-invalid');
+    $form.find('.invalid-feedback').remove();
+  });
+
   initDataTable();
+  
+  setupRealTimeValidation($('#addClientForm'), clientRules);
+  setupRealTimeValidation($('#editClientForm'), clientRules, true);
 });

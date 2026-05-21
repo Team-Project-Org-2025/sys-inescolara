@@ -1,9 +1,17 @@
 import * as Helpers from '../utils/helpers.js';
 import * as Ajax from '../utils/ajax-handler.js';
+import { setupRealTimeValidation, validateForm } from '../utils/validation.js';
 
 $(document).ready(function () {
   const baseUrl = `${window.BASE_URL || '/'}employees`;
   let employeesTable = null;
+
+  const employeeRules = {
+    nombre_trabajador: 'nombre',
+    apellido_trabajador: 'nombre',
+    cedula_trabajador: 'cedula',
+    telefono_trabajador: 'telefono'
+  };
 
   const initDataTable = () => {
     if (typeof SkeletonHelper !== 'undefined') {
@@ -88,6 +96,11 @@ $(document).ready(function () {
 
   $('#addEmployeeForm').on('submit', function (e) {
     e.preventDefault();
+
+    if (!validateForm($(this), employeeRules)) {
+      Helpers.toast('error', 'Por favor, verifique los campos marcados en rojo.');
+      return;
+    }
 
     const formData = new FormData(this);
 
@@ -192,5 +205,16 @@ $(document).ready(function () {
     Helpers.resetForm($form);
   });
 
+  // Limpiar modales
+  $('#addEmployeeModal, #editEmployeeModal').on('hidden.bs.modal', function () {
+    const $form = $(this).find('form');
+    Helpers.resetForm($form);
+    // NUEVO: Limpia los feedbacks visuales que hayan quedado rojos al cerrar
+    $form.find('.is-valid, .is-invalid').removeClass('is-valid is-invalid');
+    $form.find('.invalid-feedback').remove();
+  });
+
   initDataTable();
+  setupRealTimeValidation($('#addEmployeeForm'), employeeRules);
+  setupRealTimeValidation($('#editEmployeeForm'), employeeRules, true);
 });

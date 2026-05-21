@@ -117,12 +117,12 @@ include_once __DIR__ . '/../common/links.php';
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Cédula</label>
-                            <input type="text" class="form-control" name="cedula_trabajador" placeholder="Ej: V-12345678">
+                            <input type="text" class="form-control" name="cedula_trabajador" placeholder="Ej: V-12345678" maxlength="10" minlength="6">
                             <small class="text-muted">Opcional</small>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Teléfono</label>
-                            <input type="text" class="form-control" name="telefono_trabajador" placeholder="Ej: 0412-9876543">
+                            <input type="text" class="form-control" name="telefono_trabajador" placeholder="Ej: 0412-9876543" maxlength="11">
                             <small class="text-muted">Opcional</small>
                         </div>
                     </div>
@@ -156,11 +156,11 @@ include_once __DIR__ . '/../common/links.php';
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Cédula</label>
-                            <input type="text" class="form-control" name="cedula_trabajador" id="editEmployeeCedula" placeholder="Opcional">
+                            <input type="text" class="form-control" name="cedula_trabajador" id="editEmployeeCedula" placeholder="Opcional" maxlength="10">
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Teléfono</label>
-                            <input type="text" class="form-control" name="telefono_trabajador" id="editEmployeeTelefono" placeholder="Opcional">
+                            <input type="text" class="form-control" name="telefono_trabajador" id="editEmployeeTelefono" placeholder="Opcional" maxlength="11">
                         </div>
                     </div>
                     <div class="modal-footer">
