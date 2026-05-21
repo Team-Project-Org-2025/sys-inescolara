@@ -1,9 +1,15 @@
 import * as Helpers from '../utils/helpers.js';
 import * as Ajax from '../utils/ajax-handler.js';
+import { setupRealTimeValidation, validateForm, clearValidation } from '../utils/validation.js';
 
 $(document).ready(function () {
   const baseUrl = `${window.BASE_URL || '/'}species`;
   let speciesTable = null;
+
+  const speciesRules = {
+    nombre_comun: 'nombreProducto',
+    nombre_tecnico: 'nombreProducto'
+  };
 
   const initDataTable = () => {
     if (typeof SkeletonHelper !== 'undefined') {
@@ -79,6 +85,11 @@ $(document).ready(function () {
   $('#addSpeciesForm').on('submit', function (e) {
     e.preventDefault();
 
+    if (!validateForm($(this), speciesRules)) {
+      Helpers.toast('error', 'Por favor, verifique los campos marcados en rojo.');
+      return;
+    }
+
     const formData = new FormData(this);
 
     $.ajax({
@@ -122,6 +133,11 @@ $(document).ready(function () {
 
   $('#editSpeciesForm').on('submit', function (e) {
     e.preventDefault();
+
+    if (!validateForm($(this), speciesRules, true)) {
+      Helpers.toast('error', 'Por favor, verifique los campos marcados en rojo.');
+      return;
+    }
 
     const formData = new FormData(this);
 
@@ -181,4 +197,7 @@ $(document).ready(function () {
   });
 
   initDataTable();
+
+  setupRealTimeValidation($('#addSpeciesForm'), speciesRules);
+  setupRealTimeValidation($('#editSpeciesForm'), speciesRules, true);
 });
