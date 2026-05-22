@@ -5,6 +5,7 @@ declare(strict_types=1);
 require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
 
 use SysInescolara\models\Supplier;
+use SysInescolara\models\AuditLog;
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -141,11 +142,18 @@ function handleAddEditAjax(Supplier $supplierModel, string $mode): void
 
     if ($mode === 'add') {
         $supplierModel->add($nombreProveedor, $rifProveedor, $contactoVendedor, $telefonoProveedor);
+        $newId = $supplierModel->getLastInsertId() ?? 0;
+        AuditLog::record('CREATE', 'proveedores', $newId, null, [
+            'nombre_proveedor' => $nombreProveedor,
+            'rif_proveedor' => $rifProveedor,
+            'contacto_vendedor' => $contactoVendedor,
+            'telefono_proveedor' => $telefonoProveedor,
+        ]);
         jsonResponse([
             'success' => true,
             'message' => 'Proveedor agregado correctamente',
             'supplier' => [
-                'id' => $supplierModel->getLastInsertId() ?? 0,
+                'id' => $newId,
                 'nombre_proveedor' => $nombreProveedor,
                 'rif_proveedor' => $rifProveedor,
                 'contacto_vendedor' => $contactoVendedor,
@@ -159,7 +167,14 @@ function handleAddEditAjax(Supplier $supplierModel, string $mode): void
         throw new Exception('ID inválido');
     }
 
+    $oldData = $supplierModel->getById($id);
     $supplierModel->update($id, $nombreProveedor, $rifProveedor, $contactoVendedor, $telefonoProveedor);
+    AuditLog::record('UPDATE', 'proveedores', $id, $oldData, [
+        'nombre_proveedor' => $nombreProveedor,
+        'rif_proveedor' => $rifProveedor,
+        'contacto_vendedor' => $contactoVendedor,
+        'telefono_proveedor' => $telefonoProveedor,
+    ]);
     jsonResponse([
         'success' => true,
         'message' => 'Proveedor actualizado correctamente',
@@ -184,7 +199,9 @@ function handleDeleteAjax(Supplier $supplierModel): void
         throw new Exception('No existe el proveedor');
     }
 
+    $oldData = $supplierModel->getById($id);
     $supplierModel->delete($id);
+    AuditLog::record('DELETE', 'proveedores', $id, $oldData, null);
     jsonResponse([
         'success' => true,
         'message' => 'Proveedor eliminado correctamente',

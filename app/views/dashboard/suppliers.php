@@ -121,19 +121,19 @@ include_once __DIR__ . '/../common/links.php';
                                     <option value="E">E</option>
                                     <option value="P">P</option>
                                 </select>
-                                <input type="text" class="form-control" name="rif_numero" id="addRifNumero" placeholder="12345678-9" style="font-family: monospace;">
+                                <input type="text" class="form-control" name="rif_numero" id="addRifNumero" placeholder="12345678-9" style="font-family: monospace;" maxlength="9">
                                 <input type="hidden" name="rif_proveedor" id="addRifProveedor">
                             </div>
                             <small class="text-muted">Opcional</small>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Contacto (Vendedor)</label>
+                            <label class="form-label">Nombre del Contacto (Vendedor)</label>
                             <input type="text" class="form-control" name="contacto_vendedor" placeholder="Ej: María García">
                             <small class="text-muted">Opcional</small>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Teléfono</label>
-                            <input type="text" class="form-control" name="telefono_proveedor" placeholder="Ej: 0412-7654321">
+                            <input type="text" class="form-control" name="telefono_proveedor" placeholder="Ej: 0412-7654321" maxlength="11">
                             <small class="text-muted">Opcional</small>
                         </div>
                     </div>

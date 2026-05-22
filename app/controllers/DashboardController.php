@@ -43,6 +43,16 @@ function dashboardCheckPermiso(string $codigo): void
 function index(): void
 {
     dashboardCheckPermiso('DASHBOARD_VIEW');
+
+    require_once ROOT_PATH . 'vendor/autoload.php';
+
+    $dashboardData = new \SysInescolara\models\DashboardData();
+
+    $stats = $dashboardData->getStats();
+    $recentActivity = $dashboardData->getRecentActivity(10);
+    $lowStockLots = $dashboardData->getLowStockLots(20);
+    $lowStockSupplies = $dashboardData->getLowStockSupplies(10);
+
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'index.php';
 
@@ -229,6 +239,51 @@ function species(): void
     if (!is_file($view)) {
         http_response_code(500);
         echo 'Vista de especies no encontrada.';
+        return;
+    }
+
+    require $view;
+}
+
+function auditlog(): void
+{
+    dashboardCheckPermiso('USUARIOS_MANAGE');
+    $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
+        . 'dashboard' . DIRECTORY_SEPARATOR . 'auditlog.php';
+
+    if (!is_file($view)) {
+        http_response_code(500);
+        echo 'Vista de bitácora no encontrada.';
+        return;
+    }
+
+    require $view;
+}
+
+function reports(): void
+{
+    dashboardCheckPermiso('DASHBOARD_VIEW');
+    $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
+        . 'dashboard' . DIRECTORY_SEPARATOR . 'reports.php';
+
+    if (!is_file($view)) {
+        http_response_code(500);
+        echo 'Vista de reportes no encontrada.';
+        return;
+    }
+
+    require $view;
+}
+
+function backups(): void
+{
+    dashboardCheckPermiso('USUARIOS_MANAGE');
+    $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
+        . 'dashboard' . DIRECTORY_SEPARATOR . 'backups.php';
+
+    if (!is_file($view)) {
+        http_response_code(500);
+        echo 'Vista de respaldos no encontrada.';
         return;
     }
 

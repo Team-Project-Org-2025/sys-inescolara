@@ -4,20 +4,20 @@ export const REGEX = {
   codigo: /^\d{9}$/,
   factura: /^\d{8}$/,
   nombre: /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]{2,100}$/,
-  nombreProducto: /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]{1,40}$/,
-  nombrePlanta: /^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9\s\-\.]{3,150}$/,
+  nombreProducto: /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]{3,40}$/,
+  nombrePlanta: /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,150}$/,
   email: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
   telefono: /^\d{11}$/,
   precio: /^(100(\.00?)?|[1-9]?\d(\.\d{1,2})?)$/,
   precioRango: /^(100(\.00?)?|[1-9]?\d(\.\d{1,2})?)$/,
   direccion: /^.{5,150}$/,
+  ubicacion: /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]{2,100}$/,
   cargo: /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]{2,50}$/,
   referencia: /^\d{8,10}$/,
   referenciaVenta: /^[A-Za-z0-9\-]{1,15}$/,
   banco: /^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9\s\-\.]{3,30}$/,
   password: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&._-])[A-Za-z\d@$!%*?&._-]{8,30}$/,
-  passwordEdit:
-    /^(?:.{0}|(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&._-])[A-Za-z\d@$!%*?&._-]{8,30})$/,
+  passwordEdit: /^(?:.{0}|(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&._-])[A-Za-z\d@$!%*?&._-]{8,30})$/,
   //hoy: new Date().toISOString().split("T")[0],
   fechaFormato: /^\d{4}-\d{2}-\d{2}$/, 
   cantidad: /^[1-9]\d*$/,
@@ -32,11 +32,13 @@ export const MESSAGES = {
   codigo: 'Código inválido (9 dígitos)',
   factura: 'Factura inválida (8 dígitos)',
   nombre: 'Nombre inválido (2-100 caracteres, solo letras)',
-  nombreProducto: 'Nombre inválido (1-40 caracteres)',
+  nombreProducto: 'Nombre inválido (3-40 caracteres)',
+  nombrePlanta: 'Nombre de planta inválido (mínimo 3 caracteres, sin números)',
   email: 'Email inválido',
   telefono: 'Teléfono inválido (11 dígitos)',
   precio: 'Precio inválido (formato: 0.00)',
   direccion: 'Dirección muy corta (mínimo 5 caracteres)',
+  ubicacion: 'Ubicación inválida (solo letras, números y espacios)',
   cargo: 'Cargo inválido (2-50 caracteres)',
   referencia: 'Referencia bancaria inválida (8-10 dígitos)',
   referenciaVenta: 'Referencia inválida (máx 15 caracteres, solo letras, números y guión)',
@@ -50,42 +52,64 @@ export const MESSAGES = {
   cantidad: 'Cantidad inválida (solo números, sin ceros a la izquierda)',
   ubicacion: 'Ubicación inválida (3-100 caracteres)',
 
+  default: 'Campo inválido',
 };
 
 
 //Valida un campo individual
 export const validateField = ($input, regex = null, errorMsg = '') => {
   const valor = $input.val().trim();
+  const isRequired = $input.prop('required'); // <--- Detecta si es obligatorio en el HTML
 
   // Remover mensajes de error previos
   $input.siblings('.invalid-feedback').remove();
 
-  // Campo vacío
+  // Si el campo está vacío
   if (valor === '') {
-    $input.addClass('is-invalid').removeClass('is-valid');
-    if (errorMsg) $input.after(`<div class="invalid-feedback">${errorMsg}</div>`);
-    return false;
+    if (isRequired) {
+      // Si es requerido y está vacío -> Error
+      $input.addClass('is-invalid').removeClass('is-valid');
+      $input.after(`<div class="invalid-feedback">Este campo es requerido.</div>`);
+      return false;
+    } else {
+      // Si NO es requerido y está vacío -> Es totalmente válido (Ej: Nombre técnico vacío)
+      $input.removeClass('is-invalid is-valid');
+      return true;
+    }
   }
 
-  // Validar con regex
+  // Validar con regex (solo si existe la regex)
   if (regex && !regex.test(valor)) {
     $input.addClass('is-invalid').removeClass('is-valid');
     if (errorMsg) $input.after(`<div class="invalid-feedback">${errorMsg}</div>`);
     return false;
   }
 
-  // Válido
+  // Válido si supera la regex
   $input.removeClass('is-invalid').addClass('is-valid');
   return true;
 };
 
 //Valida un select
+// Valida un select respetando si es requerido u opcional
 export const validateSelect = ($select) => {
   const valor = $select.val();
+  const isRequired = $select.prop('required'); // <--- Detecta si el HTML exige que se elija una opción
+
+  // Si no se ha seleccionado nada o es la opción por defecto (valor vacío)
   if (!valor || valor === '') {
-    $select.addClass('is-invalid').removeClass('is-valid');
-    return false;
+    if (isRequired) {
+      // Si es obligatorio y está vacío -> Error
+      $select.addClass('is-invalid').removeClass('is-valid');
+      return false;
+    } else {
+      // Si NO es obligatorio y está en la opción vacía -> Es totalmente válido
+      $select.removeClass('is-invalid is-valid');
+      return true;
+    }
   }
+
+  // Si tiene un valor seleccionado diferente de vacío -> Siempre es válido
   $select.removeClass('is-invalid').addClass('is-valid');
   return true;
 };
@@ -100,6 +124,48 @@ export const setupRealTimeValidation = ($form, rules, isEdit = false) => {
       $input.on('input change blur', () => validateNoFutureDate($input));
       return;
     }
+
+    // ========================================================================
+    // BLOQUEO 1: BLOQUEAR LETRAS (Para Teléfonos, Cédulas, Códigos)
+    // ========================================================================
+    if (['telefono', 'cedula', 'codigo', 'factura', 'referencia'].includes(tipo)) {
+      
+      // 1. Evitar que se escriban letras (Evento de pulsación de tecla)
+      $input.on('keypress', function (e) {
+        const charCode = (e.which) ? e.which : e.keyCode;
+        // Permite solo caracteres correspondientes a los números del 0 al 9 (ASCII 48-57)
+        if (charCode > 31 && (charCode < 48 || charCode > 57)) {
+          e.preventDefault();
+        }
+      });
+
+      
+
+      // 2. Limpiar caracteres inválidos inmediatamente si el usuario arrastra o pega texto
+      $input.on('input', function () {
+        this.value = this.value.replace(/\D/g, '');
+      });
+    }
+
+    // ========================================================================
+    // BLOQUEO 2: BLOQUEAR NÚMEROS (Para Nombres de personas, Cargos)
+    // ========================================================================
+    if (['nombre', 'cargo', 'nombrePlanta', 'nombreProducto'].includes(tipo)) {
+      
+      // 1. Evitar que se escriban números del 0 al 9 (ASCII 48 al 57)
+      $input.on('keypress', function (e) {
+        const charCode = (e.which) ? e.which : e.keyCode;
+        if (charCode >= 48 && charCode <= 57) {
+          e.preventDefault(); // Cancela la pulsación si es un número
+        }
+      });
+
+      // 2. Limpiar el campo si el usuario intenta pegar números con el mouse
+      $input.on('input', function () {
+        this.value = this.value.replace(/[0-9]/g, ''); // Remueve cualquier dígito
+      });
+    }
+    // ========================================================================
 
     // Determinar regex y mensaje
     let regex = REGEX[tipo];
@@ -169,21 +235,4 @@ export const validateForm = ($form, rules, isEdit = false) => {
 export const clearValidation = ($form) => {
   $form.find('.is-valid, .is-invalid').removeClass('is-valid is-invalid');
   $form.find('.invalid-feedback').remove();
-};
-
-// Valida que la fecha no sea posterior a la constante hoy 
-export const validateNoFutureDate = ($input) => {
-  const valor = $input.val().trim();
-  
-  if (!REGEX.fechaFormato.test(valor)) {
-    return validateField($input, REGEX.fechaFormato, MESSAGES.fechaFormato);
-  }
-  
-  if (valor > hoy) {
-    return validateField($input, /^(?!.*)$/, MESSAGES.fechaFutura);
-  }
-  // Válido - limpiar validación
-  $input.removeClass('is-invalid').addClass('is-valid');
-  $input.siblings('.invalid-feedback').remove();
-  return true;
 };

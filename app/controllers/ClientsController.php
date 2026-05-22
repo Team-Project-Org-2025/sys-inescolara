@@ -5,6 +5,7 @@ declare(strict_types=1);
 require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
 
 use SysInescolara\models\Client;
+use SysInescolara\models\AuditLog;
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -131,11 +132,16 @@ function handleAddEditAjax(Client $clientModel, string $mode): void
 
     if ($mode === 'add') {
         $clientModel->add($nombreCliente, $contactoCliente);
+        $newId = $clientModel->getLastInsertId() ?? 0;
+        AuditLog::record('CREATE', 'cliente', $newId, null, [
+            'nombre_cliente' => $nombreCliente,
+            'contacto_cliente' => $contactoCliente,
+        ]);
         jsonResponse([
             'success' => true,
             'message' => 'Cliente agregado correctamente',
             'client' => [
-                'id' => $clientModel->getLastInsertId() ?? 0,
+                'id' => $newId,
                 'nombre_cliente' => $nombreCliente,
                 'contacto_cliente' => $contactoCliente,
             ],
@@ -147,7 +153,12 @@ function handleAddEditAjax(Client $clientModel, string $mode): void
         throw new Exception('ID inválido');
     }
 
+    $oldData = $clientModel->getById($id);
     $clientModel->update($id, $nombreCliente, $contactoCliente);
+    AuditLog::record('UPDATE', 'cliente', $id, $oldData, [
+        'nombre_cliente' => $nombreCliente,
+        'contacto_cliente' => $contactoCliente,
+    ]);
     jsonResponse([
         'success' => true,
         'message' => 'Cliente actualizado correctamente',
@@ -170,7 +181,9 @@ function handleDeleteAjax(Client $clientModel): void
         throw new Exception('No existe el cliente');
     }
 
+    $oldData = $clientModel->getById($id);
     $clientModel->delete($id);
+    AuditLog::record('DELETE', 'cliente', $id, $oldData, null);
     jsonResponse([
         'success' => true,
         'message' => 'Cliente eliminado correctamente',

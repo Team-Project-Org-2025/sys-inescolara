@@ -6,7 +6,7 @@ include_once __DIR__ . '/../common/links.php';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clientes - INECOLARA</title>
+    <title>Bitácora - INECOLARA</title>
     <?= $css_links ?>
 </head>
 <body>
@@ -14,7 +14,7 @@ include_once __DIR__ . '/../common/links.php';
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
     
     <?php 
-    $currentPage = 'clients';
+    $currentPage = 'auditlog';
     include_once __DIR__ . '/../partials/sidebar.php'; 
     ?>
     
@@ -28,7 +28,7 @@ include_once __DIR__ . '/../common/links.php';
                         <line x1="3" y1="18" x2="21" y2="18"></line>
                     </svg>
                 </button>
-                <h1 class="dashboard-page-title">Clientes</h1>
+                <h1 class="dashboard-page-title">Bitácora del Sistema</h1>
             </div>
             
             <div class="dashboard-header-right">
@@ -67,23 +67,23 @@ include_once __DIR__ . '/../common/links.php';
         <div class="dashboard-content">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
-                    <h1>Gestión de Clientes</h1>
-                    <p style="color: var(--text-secondary);">Registro y control de clientes del vivero.</p>
+                    <h1>Bitácora del Sistema</h1>
+                    <p style="color: var(--text-secondary);">Registro de todas las acciones realizadas por los usuarios.</p>
                 </div>
-                <button class="btn btn-primary" id="btnAddClient">
-                    <i class="fas fa-plus"></i> Nuevo Cliente
-                </button>
             </div>
 
             <div class="card shadow-sm">
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table id="clientsTable" class="table table-striped table-hover w-100">
+                        <table id="auditlogTable" class="table table-striped table-hover w-100">
                             <thead>
                                 <tr>
-                                    <th>Nombre</th>
-                                    <th>Contacto</th>
-                                    <th>Acciones</th>
+                                    <th>Fecha</th>
+                                    <th>Usuario</th>
+                                    <th>Acción</th>
+                                    <th>Tabla</th>
+                                    <th>ID Registro</th>
+                                    <th>Detalle</th>
                                 </tr>
                             </thead>
                             <tbody></tbody>
@@ -94,65 +94,24 @@ include_once __DIR__ . '/../common/links.php';
         </div>
     </main>
 
-    <!-- Add Client Modal -->
-    <div class="modal fade" id="addClientModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog">
+    <!-- Detail Modal -->
+    <div class="modal fade" id="detailModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content">
-                <form id="addClientForm">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Agregar Cliente</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label">Nombre del Cliente</label>
-                            <input type="text" class="form-control" name="nombre_cliente" required placeholder="Ej: Juan Pérez">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Contacto</label>
-                            <input type="text" class="form-control" name="contacto_cliente" placeholder="Ej: 0412-1234567" maxlength="11">
-                            <small class="text-muted">Opcional</small>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Guardar</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Edit Client Modal -->
-    <div class="modal fade" id="editClientModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form id="editClientForm">
-                    <input type="hidden" name="id" id="editClientId">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Editar Cliente</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label">Nombre del Cliente</label>
-                            <input type="text" class="form-control" name="nombre_cliente" id="editClientName" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Contacto</label>
-                            <input type="text" class="form-control" name="contacto_cliente" id="editClientContacto" placeholder="Opcional" maxlength="11">
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Actualizar</button>
-                    </div>
-                </form>
+                <div class="modal-header">
+                    <h5 class="modal-title">Detalle del Cambio</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="detailModalBody">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
             </div>
         </div>
     </div>
 
     <?= $scripts_links ?>
-    <script type="module" src="<?= BASE_URL ?>public/assets/js/dashboard/clients.js"></script>
+    <script type="module" src="<?= BASE_URL ?>public/assets/js/dashboard/auditlog.js"></script>
 </body>
 </html>

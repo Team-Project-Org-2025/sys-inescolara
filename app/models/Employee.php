@@ -3,9 +3,11 @@
 namespace SysInescolara\models;
 
 use SysInescolara\core\Database;
+use SysInescolara\interfaces\ReadableInterface;
+use SysInescolara\interfaces\DeletableInterface;
 use PDO;
 
-class Employee extends Database
+class Employee extends Database implements ReadableInterface, DeletableInterface
 {
     public function __construct()
     {
@@ -58,28 +60,36 @@ class Employee extends Database
         }
     }
 
-    public function getAll()
+    public function getAll(): array
     {
         try {
-            $stmt = $this->db->query("SELECT id_trabajadores AS id, nombre_trabajador, apellido_trabajador, cedula_trabajador, telefono_trabajador FROM trabajadores ORDER BY nombre_trabajador ASC");
+            $sql = "SELECT id_trabajadores AS id, nombre_trabajador, apellido_trabajador, cedula_trabajador, telefono_trabajador FROM trabajadores ORDER BY nombre_trabajador ASC";
+            $stmt = $this->db->query($sql);
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
         } catch (\Throwable $e) {
+            error_log('Error al obtener trabajadores: ' . $e->getMessage());
             return [];
         }
     }
 
-    public function getById($id)
+    public function getById(int $id): ?array
     {
-        $stmt = $this->db->prepare("SELECT id_trabajadores AS id, nombre_trabajador, apellido_trabajador, cedula_trabajador, telefono_trabajador FROM trabajadores WHERE id_trabajadores = :id");
+        $stmt = $this->db->prepare("SELECT * FROM trabajadores WHERE id_trabajadores = :id");
         $stmt->execute([':id' => $id]);
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 
-    public function exists($id)
+    public function exists(int $id): bool
     {
         $stmt = $this->db->prepare("SELECT COUNT(*) FROM trabajadores WHERE id_trabajadores = :id");
         $stmt->execute([':id' => $id]);
         return $stmt->fetchColumn() > 0;
+    }
+
+    public function delete(int $id): bool
+    {
+        $stmt = $this->db->prepare("DELETE FROM trabajadores WHERE id_trabajadores = :id");
+        return $stmt->execute([':id' => $id]);
     }
 
     public function getLastInsertId(): ?int
@@ -115,11 +125,5 @@ class Employee extends Database
             ':cedula_trabajador' => $cedulaTrabajador,
             ':telefono_trabajador' => $telefonoTrabajador,
         ]);
-    }
-
-    public function delete(int $id)
-    {
-        $stmt = $this->db->prepare("DELETE FROM trabajadores WHERE id_trabajadores = :id");
-        return $stmt->execute([':id' => $id]);
     }
 }
