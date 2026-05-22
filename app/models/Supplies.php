@@ -3,10 +3,17 @@
 namespace SysInescolara\models;
 
 use SysInescolara\core\Database;
+use SysInescolara\interfaces\ReadableInterface;
+use SysInescolara\interfaces\DeletableInterface;
 use PDO;
 use Exception;
 
-class Supplies extends Database {
+class Supplies extends Database implements ReadableInterface, DeletableInterface
+{
+    public function __construct()
+    {
+        parent::__construct();
+    }
 
     
     public function getAll() {

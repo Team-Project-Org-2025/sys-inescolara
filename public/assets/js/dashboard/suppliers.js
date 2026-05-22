@@ -1,9 +1,18 @@
 import * as Helpers from '../utils/helpers.js';
 import * as Ajax from '../utils/ajax-handler.js';
+import { setupRealTimeValidation, validateForm, clearValidation } from '../utils/validation.js';
 
 $(document).ready(function () {
   const baseUrl = `${window.BASE_URL || '/'}suppliers`;
   let suppliersTable = null;
+
+  const supplierRules = {
+    nombre_proveedor: 'nombre',      
+    contacto_vendedor: 'nombre',     
+    telefono_proveedor: 'telefono',
+    rif_numero: 'codigo',
+    rif_tipo: 'select'
+  };
 
   const initDataTable = () => {
     if (typeof SkeletonHelper !== 'undefined') {
@@ -95,6 +104,11 @@ $(document).ready(function () {
 
   $('#addSupplierForm').on('submit', function (e) {
     e.preventDefault();
+
+    if (!validateForm($(this), supplierRules)) {
+      Helpers.toast('error', 'Por favor, verifique los campos marcados en rojo.');
+      return; 
+    }
     combineRif(this, 'addRifTipo', 'addRifNumero', 'addRifProveedor');
     const formData = new FormData(this);
 
@@ -200,7 +214,11 @@ $(document).ready(function () {
   $('#addSupplierModal, #editSupplierModal').on('hidden.bs.modal', function () {
     const $form = $(this).find('form');
     Helpers.resetForm($form);
+
   });
 
   initDataTable();
+
+  setupRealTimeValidation($('#addSupplierForm'), supplierRules);
+  setupRealTimeValidation($('#editSupplierForm'), supplierRules, true);
 });
