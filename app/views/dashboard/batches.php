@@ -51,47 +51,8 @@ include_once __DIR__ . '/../common/links.php';
     ?>
 
     <main class="main-content">
-        <header class="dashboard-header">
-            <div class="dashboard-header-left">
-                <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Abrir menú">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24">
-                        <line x1="3" y1="6" x2="21" y2="6"></line>
-                        <line x1="3" y1="12" x2="21" y2="12"></line>
-                        <line x1="3" y1="18" x2="21" y2="18"></line>
-                    </svg>
-                </button>
-                <h1 class="dashboard-page-title">Lotes</h1>
-            </div>
-            <div class="dashboard-header-right">
-                <div class="dashboard-search">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="11" cy="11" r="8"></circle>
-                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                    </svg>
-                    <input type="text" placeholder="Buscar...">
-                </div>
-                <button class="header-icon-btn" aria-label="Notificaciones">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                    </svg>
-                    <span class="notification-badge"></span>
-                </button>
-                <div class="sidebar-user" style="padding: 0.5rem; border-radius: 8px; display: flex; align-items: center; gap: 0.75rem;">
-                    <div class="sidebar-user-avatar" style="width: 36px; height: 36px; background-color: #e5a835; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; color: #1a1f2e; overflow: hidden; flex-shrink: 0;">
-                        <?php
-                        $headerAvatar = $_SESSION['user_avatar'] ?? null;
-                        $headerName = $_SESSION['user_nombre'] ?? 'U';
-                        if ($headerAvatar): ?>
-                            <img src="<?= BASE_URL . htmlspecialchars($headerAvatar) ?>" alt="Avatar" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">
-                        <?php else: ?>
-                            <?= strtoupper(substr($headerName, 0, 1)) ?>
-                        <?php endif; ?>
-                    </div>
-                    <span style="font-size:0.875rem;font-weight:500;color:#374151;white-space:nowrap;"><?= htmlspecialchars($headerName) ?></span>
-                </div>
-            </div>
-        </header>
+        <?php $title = 'Lotes'; ?>
+        <?php include_once __DIR__ . '/../partials/dashboard-header.php'; ?>
 
         <div class="dashboard-content">
             <div class="d-flex justify-content-between align-items-center mb-4">
@@ -281,6 +242,7 @@ include_once __DIR__ . '/../common/links.php';
         </div>
     </div>
 
+    <script src="<?= BASE_URL ?>public/assets/js/dashboard/notifications.js"></script>
     <?= $scripts_links ?>
     <script type="module" src="<?= BASE_URL ?>public/assets/js/dashboard/batches.js"></script>
 </body>

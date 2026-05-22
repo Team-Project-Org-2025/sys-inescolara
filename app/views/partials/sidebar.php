@@ -68,6 +68,7 @@ function hasPermiso(string $codigo): bool
                         <span>Plantas</span>
                     </a>
                 </li>
+                
                 <li>
                     <a href="<?= BASE_URL ?>dashboard/batches" class="sidebar-link <?= ($currentPage ?? '') === 'batches' ? 'active' : '' ?>">
                         <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -180,6 +181,15 @@ function hasPermiso(string $codigo): bool
                 </li>
                 <?php endif; ?>
                 <?php if (hasPermiso('DASHBOARD_VIEW')): ?>
+                <li>
+                    <a href="<?= BASE_URL ?>notifications" class="sidebar-link <?= ($currentPage ?? '') === 'notifications' ? 'active' : '' ?>">
+                        <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                        </svg>
+                        <span>Notificaciones</span>
+                    </a>
+                </li>
                 <li>
                     <a href="<?= BASE_URL ?>dashboard/reports" class="sidebar-link <?= ($currentPage ?? '') === 'reports' ? 'active' : '' ?>">
                         <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

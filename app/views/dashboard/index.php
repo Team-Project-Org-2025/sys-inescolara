@@ -134,41 +134,8 @@ $userAvatar = $_SESSION['user_avatar'] ?? null;
     ?>
     
     <main class="main-content">
-        <header class="dashboard-header">
-            <div class="dashboard-header-left">
-                <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Abrir menú">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24">
-                        <line x1="3" y1="6" x2="21" y2="6"></line>
-                        <line x1="3" y1="12" x2="21" y2="12"></line>
-                        <line x1="3" y1="18" x2="21" y2="18"></line>
-                    </svg>
-                </button>
-                <h1 class="dashboard-page-title">Dashboard</h1>
-            </div>
-            
-            <div class="dashboard-header-right">
-                <button class="header-icon-btn" aria-label="Notificaciones">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                    </svg>
-                    <?php if ($totalAlerts > 0): ?>
-                    <span class="notification-badge"><?= $totalAlerts ?></span>
-                    <?php endif; ?>
-                </button>
-                
-                <div class="sidebar-user" style="padding: 0.5rem; border-radius: 8px; display: flex; align-items: center; gap: 0.75rem;">
-                    <div class="sidebar-user-avatar" style="width: 36px; height: 36px; background-color: #e5a835; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; color: #1a1f2e; overflow: hidden; flex-shrink: 0;">
-                        <?php if ($userAvatar): ?>
-                            <img src="<?= BASE_URL . htmlspecialchars($userAvatar) ?>" alt="Avatar" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">
-                        <?php else: ?>
-                            <?= $userInitial ?>
-                        <?php endif; ?>
-                    </div>
-                    <span style="font-size:0.875rem;font-weight:500;color:#374151;white-space:nowrap;"><?= htmlspecialchars($userName) ?></span>
-                </div>
-            </div>
-        </header>
+        <?php $title = 'Dashboard'; ?>
+        <?php include_once __DIR__ . '/../partials/dashboard-header.php'; ?>
         
         <div class="dashboard-content">
             <!-- Welcome Banner -->
@@ -446,6 +413,7 @@ $userAvatar = $_SESSION['user_avatar'] ?? null;
         </div>
     </main>
     
+    <script src="<?= BASE_URL ?>public/assets/js/dashboard/notifications.js"></script>
     <?= $scripts_links ?>
 </body>
 </html>
