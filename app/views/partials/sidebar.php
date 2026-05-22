@@ -68,6 +68,7 @@ function hasPermiso(string $codigo): bool
                         <span>Plantas</span>
                     </a>
                 </li>
+                
                 <li>
                     <a href="<?= BASE_URL ?>dashboard/batches" class="sidebar-link <?= ($currentPage ?? '') === 'batches' ? 'active' : '' ?>">
                         <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
