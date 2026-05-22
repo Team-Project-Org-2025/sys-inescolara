@@ -14,8 +14,7 @@ $suppliesModel = new Supplies();
 
 function index()
 {
-    global $dolarBCVRate;
-    require __DIR__ . '/../views/dashboard/insumos.php';
+    require __DIR__ . '/../views/dashboard/supplies.php';
 }
 
 handleRequest($suppliesModel);
@@ -87,63 +86,42 @@ function handleError($e, $isAjax)
 }
 
 // ============================================
-// VALIDATION
-// ============================================
-
-function validateSupplyData($data, $mode)
-{
-    $rules = [
-        'nombre' => ['type' => null, 'required' => true],
-        'tipo'   => ['type' => null, 'required' => true],
-        'unidad' => ['type' => null, 'required' => true],
-        'id'     => ['type' => null, 'required' => ($mode === 'edit')]
-    ];
-
-    $validation = Validation::validate($data, $rules);
-
-    if (!$validation['valid']) {
-        throw new Exception(implode(', ', $validation['errors']));
-    }
-}
-
-// ============================================
 // NON-AJAX HANDLERS
 // ============================================
 
 function handleAddEdit($suppliesModel, $mode)
 {
     try {
-        $fields = ['nombre', 'tipo', 'unidad'];
-        if ($mode === 'edit') $fields[] = 'id';
+        $nombre = trim($_POST['nombre'] ?? '');
+        $unidad = trim($_POST['unidad'] ?? '');
 
-        foreach ($fields as $f) {
-            if (empty($_POST[$f])) {
-                throw new Exception("El campo '$f' es requerido");
-            }
-        }
+        if (empty($nombre)) throw new Exception("El campo 'nombre' es requerido");
+        if (empty($unidad)) throw new Exception("El campo 'unidad' es requerido");
 
-        $id = intval($_POST['id'] ?? 0);
-        $nombre = trim($_POST['nombre']);
-        $tipo = trim($_POST['tipo']);
-        $unidad = trim($_POST['unidad']);
+        $stock = floatval($_POST['stock_actual'] ?? 0);
+        $costo = floatval($_POST['costo_unitario_actual'] ?? 0);
 
         if ($mode === 'add') {
-            $suppliesModel->add($nombre, $tipo, $unidad);
+            $suppliesModel->add($nombre, $unidad, $stock, $costo);
             $newId = $suppliesModel->getLastInsertId() ?? 0;
-            AuditLog::record('CREATE', 'insumos', $newId, null, [
+            AuditLog::record('CREATE', 'insumo', $newId, null, [
                 'nombre' => $nombre,
-                'tipo'   => $tipo,
                 'unidad' => $unidad,
+                'stock'  => $stock,
+                'costo'  => $costo,
             ]);
             header("Location: supplies-admin.php?success=add");
             exit();
         } else {
+            $id = intval($_POST['id'] ?? 0);
+            if (!$id) throw new Exception("ID inválido");
             $oldData = $suppliesModel->getById($id);
-            $suppliesModel->update($id, $nombre, $tipo, $unidad);
-            AuditLog::record('UPDATE', 'insumos', $id, $oldData, [
+            $suppliesModel->update($id, $nombre, $unidad, $stock, $costo);
+            AuditLog::record('UPDATE', 'insumo', $id, $oldData, [
                 'nombre' => $nombre,
-                'tipo'   => $tipo,
                 'unidad' => $unidad,
+                'stock'  => $stock,
+                'costo'  => $costo,
             ]);
             header("Location: supplies-admin.php?success=edit");
             exit();
@@ -163,7 +141,7 @@ function handleDelete($suppliesModel)
         $id = intval($_GET['id']);
         $oldData = $suppliesModel->getById($id);
         $suppliesModel->delete($id);
-        AuditLog::record('DELETE', 'insumos', $id, $oldData, null);
+        AuditLog::record('DELETE', 'insumo', $id, $oldData, null);
         header("Location: supplies-admin.php?success=delete");
         exit();
     } catch (Exception $e) {
@@ -178,42 +156,51 @@ function handleDelete($suppliesModel)
 function handleAddEditAjax($suppliesModel, $mode)
 {
     try {
-        validateSupplyData($_POST, $mode);
+        $nombre = trim($_POST['nombre'] ?? '');
+        $unidad = trim($_POST['unidad'] ?? '');
 
-        $id = intval($_POST['id'] ?? 0);
-        $nombre = trim($_POST['nombre']);
-        $tipo = trim($_POST['tipo']);
-        $unidad = trim($_POST['unidad']);
+        if (empty($nombre)) throw new Exception("El campo 'nombre' es requerido");
+        if (empty($unidad)) throw new Exception("El campo 'unidad' es requerido");
+
+        $stock = floatval($_POST['stock_actual'] ?? 0);
+        $costo = floatval($_POST['costo_unitario_actual'] ?? 0);
 
         if ($mode === 'add') {
-            $suppliesModel->add($nombre, $tipo, $unidad);
+            $suppliesModel->add($nombre, $unidad, $stock, $costo);
             $newId = $suppliesModel->getLastInsertId() ?? 0;
-            AuditLog::record('CREATE', 'insumos', $newId, null, [
+            AuditLog::record('CREATE', 'insumo', $newId, null, [
                 'nombre' => $nombre,
-                'tipo'   => $tipo,
                 'unidad' => $unidad,
+                'stock'  => $stock,
+                'costo'  => $costo,
             ]);
-            
+
             $msg = 'Insumo agregado con éxito';
             $supply = [
-                'nombre' => $nombre,
-                'tipo'   => $tipo,
-                'unidad' => $unidad
+                'nombre'               => $nombre,
+                'unidad'               => $unidad,
+                'stock_actual'         => $stock,
+                'costo_unitario_actual' => $costo,
             ];
         } else {
+            $id = intval($_POST['id'] ?? 0);
+            if (!$id) throw new Exception("ID inválido");
+
             $oldData = $suppliesModel->getById($id);
-            $suppliesModel->update($id, $nombre, $tipo, $unidad);
-            AuditLog::record('UPDATE', 'insumos', $id, $oldData, [
+            $suppliesModel->update($id, $nombre, $unidad, $stock, $costo);
+            AuditLog::record('UPDATE', 'insumo', $id, $oldData, [
                 'nombre' => $nombre,
-                'tipo'   => $tipo,
                 'unidad' => $unidad,
+                'stock'  => $stock,
+                'costo'  => $costo,
             ]);
-            
+
             $supply = [
-                'id'     => $id,
-                'nombre' => $nombre,
-                'tipo'   => $tipo,
-                'unidad' => $unidad
+                'id'                   => $id,
+                'nombre'               => $nombre,
+                'unidad'               => $unidad,
+                'stock_actual'         => $stock,
+                'costo_unitario_actual' => $costo,
             ];
             $msg = 'Insumo actualizado con éxito';
         }
@@ -239,7 +226,7 @@ function handleDeleteAjax($suppliesModel)
 
         $oldData = $suppliesModel->getById($id);
         $suppliesModel->delete($id);
-        AuditLog::record('DELETE', 'insumos', $id, $oldData, null);
+        AuditLog::record('DELETE', 'insumo', $id, $oldData, null);
         jsonResponse(['success' => true, 'message' => 'Insumo eliminado de forma exitosa', 'supplyId' => $id]);
     } catch (Exception $e) {
         jsonResponse(['success' => false, 'message' => $e->getMessage()], 400);

@@ -1,9 +1,16 @@
 import * as Helpers from '../utils/helpers.js';
 import * as Ajax from '../utils/ajax-handler.js';
+import { setupRealTimeValidation, validateForm } from '../utils/validation.js';
 
 $(document).ready(function () {
   const baseUrl = `${window.BASE_URL || '/'}plants`;
   let plantsTable = null;
+
+  const plantValidationRules = {
+    nombre_comun: 'nombrePlanta',
+    nombre_tecnico: 'nombrePlanta',
+    especie_id: 'select',
+  };
 
   const showImagePreview = (inputId, previewId) => {
     const input = document.getElementById(inputId);
@@ -125,6 +132,11 @@ $(document).ready(function () {
   $('#addPlantForm').on('submit', function (e) {
     e.preventDefault();
 
+    if (!validateForm($(this), plantValidationRules)) {
+      Helpers.toast('error', 'Por favor, verifique los campos marcados en rojo.');
+      return;
+    }
+
     const formData = new FormData(this);
 
     $.ajax({
@@ -176,6 +188,11 @@ $(document).ready(function () {
 
   $('#editPlantForm').on('submit', function (e) {
     e.preventDefault();
+
+    if (!validateForm($(this), plantValidationRules, true)) {
+      Helpers.toast('error', 'Por favor, verifique los campos marcados en rojo.');
+      return;
+    }
 
     const formData = new FormData(this);
 
@@ -235,4 +252,7 @@ $(document).ready(function () {
   });
 
   initDataTable();
+
+  setupRealTimeValidation($('#addPlantForm'), plantValidationRules);
+  setupRealTimeValidation($('#editPlantForm'), plantValidationRules, true);
 });

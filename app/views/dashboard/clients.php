@@ -110,7 +110,7 @@ include_once __DIR__ . '/../common/links.php';
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Contacto</label>
-                            <input type="text" class="form-control" name="contacto_cliente" placeholder="Ej: 0412-1234567">
+                            <input type="text" class="form-control" name="contacto_cliente" placeholder="Ej: 0412-1234567" maxlength="11">
                             <small class="text-muted">Opcional</small>
                         </div>
                     </div>
@@ -140,7 +140,7 @@ include_once __DIR__ . '/../common/links.php';
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Contacto</label>
-                            <input type="text" class="form-control" name="contacto_cliente" id="editClientContacto" placeholder="Opcional">
+                            <input type="text" class="form-control" name="contacto_cliente" id="editClientContacto" placeholder="Opcional" maxlength="11">
                         </div>
                     </div>
                     <div class="modal-footer">
