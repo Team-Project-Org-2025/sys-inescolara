@@ -1,38 +1,6 @@
 <?php
 
-require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
-
 use SysInescolara\models\Notification;
-
-require_once __DIR__ . '/LoginController.php';
-checkAuth();
-
-function index()
-{
-    require_once __DIR__ . '/DashboardController.php';
-    dashboardCheckPermiso('DASHBOARD_VIEW');
-
-    $notifModel = new Notification();
-    $userId = (int)($_SESSION['user_id'] ?? 0);
-    $page = max(1, (int)($_GET['page'] ?? 1));
-    $result = $notifModel->getAll($userId, $page);
-
-    $notifications = $result['data'];
-    $total = $result['total'];
-    $perPage = $result['perPage'];
-    $totalPages = max(1, (int)ceil($total / $perPage));
-
-    $view = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
-        . 'dashboard' . DIRECTORY_SEPARATOR . 'notifications.php';
-
-    if (!is_file($view)) {
-        http_response_code(500);
-        echo 'Vista de notificaciones no encontrada.';
-        return;
-    }
-
-    require $view;
-}
 
 function get_unread()
 {

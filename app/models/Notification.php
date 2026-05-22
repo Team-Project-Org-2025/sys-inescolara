@@ -30,7 +30,7 @@ class Notification extends Database
             $stmt = $this->db->prepare("
                 SELECT id_notificacion, titulo, mensaje, tipo, leida, link, fecha_creacion
                 FROM notificaciones
-                WHERE id_usuario = :id
+                WHERE id_usuario = :id AND leida = 0
                 ORDER BY fecha_creacion DESC
                 LIMIT :lim
             ");

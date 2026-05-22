@@ -16,6 +16,10 @@
                     }
                 }
                 const dropdown = document.getElementById('notifDropdown');
+                const clearBtn = document.getElementById('clearNotifBtn');
+                if (clearBtn) {
+                    clearBtn.style.display = data.count > 0 ? 'inline-block' : 'none';
+                }
                 if (dropdown && data.notifications) {
                     const list = dropdown.querySelector('.notif-dropdown-list');
                     const empty = dropdown.querySelector('.notif-dropdown-empty');
@@ -81,7 +85,7 @@
 
     document.addEventListener('DOMContentLoaded', function () {
         actualizarBadge();
-        setInterval(actualizarBadge, 10000);
+        setInterval(actualizarBadge, 5000);
 
         const btn = document.getElementById('notificationsBtn');
         const dropdown = document.getElementById('notifDropdown');
@@ -100,79 +104,23 @@
     });
 })();
 
-function marcarLeida(id) {
-    fetch(BASE_URL + 'notifications/mark_read', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: 'id=' + id
-    })
-        .then(r => r.json())
-        .then(data => {
-            if (data.success) {
-                const item = document.querySelector(`.notif-item[data-id="${id}"]`);
-                if (item) {
-                    item.classList.remove('unread');
-                    item.classList.add('read');
-                    const btn = item.querySelector('.notif-mark-btn');
-                    if (btn) btn.remove();
-                }
-                actualizarBadge();
-            }
-        })
-        .catch(() => {});
-}
-
-function marcarTodasLeidas() {
+function limpiarNotificaciones() {
     fetch(BASE_URL + 'notifications/mark_all_read', { method: 'POST' })
-        .then(r => r.json())
-        .then(data => {
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
             if (data.success) {
-                document.querySelectorAll('.notif-item.unread').forEach(el => {
-                    el.classList.remove('unread');
-                    el.classList.add('read');
-                    const btn = el.querySelector('.notif-mark-btn');
-                    if (btn) btn.remove();
-                });
-                const badge = document.getElementById('notifBadge');
+                var badge = document.getElementById('notifBadge');
                 if (badge) badge.style.display = 'none';
-            }
-        })
-        .catch(() => {});
-}
-
-function eliminarNotif(id) {
-    if (!confirm('¿Eliminar esta notificación?')) return;
-    fetch(BASE_URL + 'notifications/delete', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: 'id=' + id
-    })
-        .then(r => r.json())
-        .then(data => {
-            if (data.success) {
-                const item = document.querySelector(`.notif-item[data-id="${id}"]`);
-                if (item) item.remove();
-                actualizarBadge();
-            }
-        })
-        .catch(() => {});
-}
-
-function actualizarBadge() {
-    if (typeof BASE_URL === 'undefined') return;
-    fetch(BASE_URL + 'notifications/get_unread')
-        .then(r => r.json())
-        .then(data => {
-            if (!data.success) return;
-            const badge = document.getElementById('notifBadge');
-            if (badge) {
-                if (data.count > 0) {
-                    badge.textContent = data.count > 99 ? '99+' : data.count;
-                    badge.style.display = 'flex';
-                } else {
-                    badge.style.display = 'none';
+                var dropdown = document.getElementById('notifDropdown');
+                if (dropdown) {
+                    var list = dropdown.querySelector('.notif-dropdown-list');
+                    if (list) list.innerHTML = '';
+                    var empty = dropdown.querySelector('.notif-dropdown-empty');
+                    if (empty) empty.style.display = 'block';
                 }
+                var btn = document.getElementById('clearNotifBtn');
+                if (btn) btn.style.display = 'none';
             }
         })
-        .catch(() => {});
+        .catch(function () {});
 }

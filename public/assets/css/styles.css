@@ -2649,6 +2649,24 @@ div.dataTables_wrapper .dt-buttons .btn {
   font-weight: 500;
 }
 
+.notif-clear-btn {
+  font-size: 0.75rem;
+  color: var(--color-error);
+  background: none;
+  border: 1px solid var(--color-error);
+  border-radius: var(--radius-sm);
+  padding: 2px 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all var(--transition-fast);
+}
+
+.notif-clear-btn:hover {
+  background: var(--color-error);
+  color: #fff;
+}
+}
+
 .notif-dropdown-viewall:hover {
   text-decoration: underline;
 }
