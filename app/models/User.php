@@ -316,6 +316,41 @@ class User extends Database
         }
     }
 
+    public function updateProfile(int $id, string $nombreUsuario, ?string $correoElectronico = null, ?string $password = null, ?string $avatar = null): bool
+    {
+        try {
+            if (!$this->userExists($id)) {
+                throw new Exception("No existe el usuario con ID: $id");
+            }
+
+            $sql = "UPDATE usuarios SET nombre_usuario = :nombre_usuario, correo_electronico = :correo_electronico";
+            $params = [
+                ':id' => $id,
+                ':nombre_usuario' => $nombreUsuario,
+                ':correo_electronico' => $correoElectronico,
+            ];
+
+            if ($password !== null && $password !== '') {
+                $passwordHash = password_hash($password, PASSWORD_DEFAULT);
+                if ($passwordHash === false) {
+                    throw new Exception("Error al hashear la contraseña");
+                }
+                $sql .= ", password_hash = :password_hash";
+                $params[':password_hash'] = $passwordHash;
+            }
+
+            $sql .= ", avatar = :avatar";
+            $params[':avatar'] = $avatar;
+
+            $sql .= " WHERE id_usuario = :id";
+            $stmt = $this->db->prepare($sql);
+            return $stmt->execute($params);
+        } catch (\Throwable $e) {
+            error_log("Error en updateProfile: " . $e->getMessage());
+            return false;
+        }
+    }
+
     public function getRoles(): array
     {
         try {

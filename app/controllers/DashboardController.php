@@ -275,6 +275,84 @@ function reports(): void
     require $view;
 }
 
+function perfil(): void
+{
+    dashboardCheckAuth();
+    require_once ROOT_PATH . 'vendor/autoload.php';
+    $userModel = new \SysInescolara\models\User();
+    $userId = (int)($_SESSION['user_id'] ?? 0);
+    $user = $userModel->getById($userId);
+
+    if (!$user) {
+        http_response_code(404);
+        echo 'Usuario no encontrado.';
+        return;
+    }
+
+    $success = null;
+    $error = null;
+
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $nombre = trim($_POST['nombre'] ?? '');
+        $email = trim($_POST['email'] ?? '');
+        $currentPassword = $_POST['current_password'] ?? '';
+        $password = $_POST['password'] ?? '';
+        $password2 = $_POST['password2'] ?? '';
+
+        if ($nombre === '') {
+            $error = 'El nombre de usuario es obligatorio.';
+        } elseif ($currentPassword === '') {
+            $error = 'Debes ingresar tu contraseña actual.';
+        } elseif (!$userModel->verifyPassword($userId, $currentPassword)) {
+            $error = 'La contraseña actual no es correcta.';
+        } elseif ($password !== '' && $password !== $password2) {
+            $error = 'Las contraseñas no coinciden.';
+        } elseif ($password !== '' && !$userModel->isPasswordStrong($password)) {
+            $error = 'La contraseña debe tener al menos 8 caracteres, mayúsculas, minúsculas, números y un carácter especial.';
+        } else {
+            $avatar = $user['avatar'] ?? null;
+            if (!empty($_FILES['avatar']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK) {
+                require_once ROOT_PATH . 'vendor/autoload.php';
+                $uploader = new \SysInescolara\helpers\ImageUploader('assets/uploads/avatars');
+                $result = $uploader->upload($_FILES['avatar'], 'avatar');
+                if (!$result['success']) {
+                    $error = implode(', ', $result['errors']);
+                } else {
+                    if (!empty($user['avatar'])) {
+                        $uploader->delete($user['avatar']);
+                    }
+                    $avatar = $result['data']['url'];
+                }
+            }
+            if (!$error) {
+                $ok = $userModel->updateProfile($userId, $nombre, $email ?: null, $password ?: null, $avatar);
+                if ($ok) {
+                    $_SESSION['user_nombre'] = $nombre;
+                    $_SESSION['user_email'] = $email;
+                    $_SESSION['user_avatar'] = $avatar;
+                    $user['nombre_usuario'] = $nombre;
+                    $user['correo_electronico'] = $email;
+                    $user['avatar'] = $avatar;
+                    $success = 'Perfil actualizado correctamente.';
+                } else {
+                    $error = 'Error al actualizar el perfil.';
+                }
+            }
+        }
+    }
+
+    $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
+        . 'dashboard' . DIRECTORY_SEPARATOR . 'perfil.php';
+
+    if (!is_file($view)) {
+        http_response_code(500);
+        echo 'Vista de perfil no encontrada.';
+        return;
+    }
+
+    require $view;
+}
+
 function backups(): void
 {
     dashboardCheckPermiso('USUARIOS_MANAGE');
