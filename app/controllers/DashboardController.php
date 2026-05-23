@@ -21,7 +21,7 @@ function dashboardCheckAuth(): void
     if (empty($_SESSION['user_permisos'])) {
         require_once ROOT_PATH . 'vendor/autoload.php';
         $userModel = new \SysInescolara\models\User();
-        $_SESSION['user_permisos'] = $userModel->getRolePermissions((int)($_SESSION['user_rol_id'] ?? 0));
+        $_SESSION['user_permisos'] = $userModel->getRolePermissions((int)($_SESSION['user_rol_id'] ?? 0), (int)($_SESSION['user_id'] ?? 0));
     }
 }
 
@@ -117,6 +117,7 @@ function usuarios(): void
     require_once ROOT_PATH . 'vendor/autoload.php';
     $userModel = new \SysInescolara\models\User();
     $roles = $userModel->getRoles();
+    $allPermisos = $userModel->getAllPermissions();
 
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'usuarios.php';

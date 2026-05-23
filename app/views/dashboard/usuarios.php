@@ -53,6 +53,52 @@ include_once __DIR__ . '/../common/links.php';
         </div>
     </main>
 
+<?php
+$modulos = [
+    'Dashboard' => ['DASHBOARD_VIEW' => 'Ver'],
+    'Inventario' => ['INVENTARIO_VIEW' => 'Ver'],
+    'Ventas' => ['VENTAS_ACCESS' => 'Acceder'],
+    'Plantas' => ['PLANTAS_VIEW' => 'Ver', 'PLANTAS_CREATE' => 'Crear', 'PLANTAS_EDIT' => 'Editar', 'PLANTAS_DELETE' => 'Eliminar'],
+    'Proveedores' => ['PROVEEDORES_VIEW' => 'Ver', 'PROVEEDORES_CREATE' => 'Crear', 'PROVEEDORES_EDIT' => 'Editar', 'PROVEEDORES_DELETE' => 'Eliminar'],
+    'Insumos' => ['INSUMOS_VIEW' => 'Ver', 'INSUMOS_CREATE' => 'Crear', 'INSUMOS_EDIT' => 'Editar', 'INSUMOS_DELETE' => 'Eliminar'],
+    'Trabajadores' => ['TRABAJADORES_VIEW' => 'Ver', 'TRABAJADORES_CREATE' => 'Crear', 'TRABAJADORES_EDIT' => 'Editar', 'TRABAJADORES_DELETE' => 'Eliminar'],
+    'Clientes' => ['CLIENTES_VIEW' => 'Ver', 'CLIENTES_CREATE' => 'Crear', 'CLIENTES_EDIT' => 'Editar', 'CLIENTES_DELETE' => 'Eliminar'],
+    'Asistente IA' => ['ASISTENTE_ACCESS' => 'Acceder'],
+    'Sistema' => ['USUARIOS_MANAGE' => 'Gestionar (usuarios, bitácora, respaldos)'],
+];
+
+$codigoToId = [];
+foreach ($allPermisos as $p) {
+    $codigoToId[$p['codigo_permiso']] = $p['id_permiso'];
+}
+
+function renderPermisosChecklist(array $modulos, array $codigoToId): void
+{
+    foreach ($modulos as $nombreModulo => $acciones):
+        $showActions = [];
+        foreach ($acciones as $codigo => $etiqueta) {
+            if (isset($codigoToId[$codigo])) {
+                $showActions[] = ['codigo' => $codigo, 'etiqueta' => $etiqueta, 'id' => $codigoToId[$codigo]];
+            }
+        }
+        if (empty($showActions)) continue;
+    ?>
+    <div style="margin-bottom:10px;">
+        <div style="font-size:0.8rem;font-weight:600;color:var(--text-primary);margin-bottom:4px;"><?= htmlspecialchars($nombreModulo) ?></div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px 12px;">
+            <?php foreach ($showActions as $a): ?>
+            <label style="display:flex;align-items:center;gap:4px;font-size:0.8rem;cursor:pointer;">
+                <input type="checkbox" name="permisos[]" value="<?= $a['id'] ?>">
+                <?= htmlspecialchars($a['etiqueta']) ?>
+            </label>
+            <?php endforeach; ?>
+        </div>
+    </div>
+    <?php
+    endforeach;
+}
+?>
+
     <!-- Modals fuera de main-content para evitar conflictos con Bootstrap 5.3 -->
     
     <!-- Add User Modal -->
@@ -80,11 +126,18 @@ include_once __DIR__ . '/../common/links.php';
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Rol</label>
-                            <select class="form-select" name="rol_id">
+                            <select class="form-select" name="rol_id" id="addUserRole">
                                 <?php foreach ($roles as $rol): ?>
                                 <option value="<?= $rol['id_rol'] ?>"><?= htmlspecialchars($rol['nombre_rol']) ?></option>
                                 <?php endforeach; ?>
                             </select>
+                        </div>
+                        <div class="mb-3 permisos-checklist" id="addPermisosChecklist" style="display:none;">
+                            <label class="form-label">Módulos y acciones permitidas</label>
+                            <div style="padding:8px 12px;border:1px solid var(--color-gray-200);border-radius:var(--radius-md);background:var(--bg-secondary);max-height:300px;overflow-y:auto;">
+                                <?php renderPermisosChecklist($modulos, $codigoToId); ?>
+                            </div>
+                            <small class="text-muted">Selecciona los módulos y acciones a los que este usuario tendrá acceso.</small>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Foto de perfil</label>
@@ -138,6 +191,13 @@ include_once __DIR__ . '/../common/links.php';
                                 <?php endforeach; ?>
                             </select>
                             <small class="text-muted" id="editUserRoleNote" style="display:none;">El rol del superusuario no se puede modificar.</small>
+                        </div>
+                        <div class="mb-3 permisos-checklist" id="editPermisosChecklist" style="display:none;">
+                            <label class="form-label">Módulos y acciones permitidas</label>
+                            <div style="padding:8px 12px;border:1px solid var(--color-gray-200);border-radius:var(--radius-md);background:var(--bg-secondary);max-height:300px;overflow-y:auto;">
+                                <?php renderPermisosChecklist($modulos, $codigoToId); ?>
+                            </div>
+                            <small class="text-muted">Selecciona los módulos y acciones a los que este usuario tendrá acceso.</small>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Foto de perfil</label>

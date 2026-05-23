@@ -27,6 +27,16 @@ function plantsCheckAuth(): void
     }
 }
 
+function checkPermisoOrFail(string $codigo): void
+{
+    $permisos = $_SESSION['user_permisos'] ?? [];
+    if (!in_array($codigo, $permisos, true)) {
+        http_response_code(403);
+        echo json_encode(['success' => false, 'message' => 'No tienes permiso para realizar esta acción.']);
+        exit();
+    }
+}
+
 $GLOBALS['plantModel'] = new Plant();
 $GLOBALS['speciesModel'] = new Species();
 
@@ -59,6 +69,7 @@ function add_ajax(): void
 {
     $plantModel = $GLOBALS['plantModel'] ?? new Plant();
     plantsCheckAuth();
+    checkPermisoOrFail('PLANTAS_CREATE');
     handleAddEditAjax($plantModel, 'add');
 }
 
@@ -66,6 +77,7 @@ function edit_ajax(): void
 {
     $plantModel = $GLOBALS['plantModel'] ?? new Plant();
     plantsCheckAuth();
+    checkPermisoOrFail('PLANTAS_EDIT');
     handleAddEditAjax($plantModel, 'edit');
 }
 
@@ -73,6 +85,7 @@ function delete_ajax(): void
 {
     $plantModel = $GLOBALS['plantModel'] ?? new Plant();
     plantsCheckAuth();
+    checkPermisoOrFail('PLANTAS_DELETE');
     handleDeleteAjax($plantModel);
 }
 

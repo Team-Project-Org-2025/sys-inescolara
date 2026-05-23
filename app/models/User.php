@@ -28,6 +28,19 @@ class User extends Database
                 error_log('Error al migrar columna avatar: ' . $e->getMessage());
             }
 
+            // Migración: tabla usuario_permisos para permisos individuales por usuario
+            try {
+                $this->db->exec("CREATE TABLE IF NOT EXISTS usuario_permisos (
+                    id_usuario INT NOT NULL,
+                    id_permiso INT NOT NULL,
+                    PRIMARY KEY (id_usuario, id_permiso),
+                    FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario) ON DELETE CASCADE,
+                    FOREIGN KEY (id_permiso) REFERENCES permisos(id_permiso) ON DELETE CASCADE
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+            } catch (\Throwable $e) {
+                error_log('Error al migrar tabla usuario_permisos: ' . $e->getMessage());
+            }
+
             // Asegurar roles
             $adminExists = (int)$this->db->query("SELECT COUNT(*) FROM roles WHERE id_rol = 1")->fetchColumn();
             if (!$adminExists) {
@@ -46,15 +59,25 @@ class User extends Database
                 ['codigo' => 'VENTAS_ACCESS', 'desc' => 'Acceder a ventas/POS'],
                 ['codigo' => 'USUARIOS_MANAGE', 'desc' => 'Gestionar usuarios'],
                 ['codigo' => 'PLANTAS_VIEW', 'desc' => 'Ver plantas'],
-                ['codigo' => 'PLANTAS_MANAGE', 'desc' => 'Gestionar plantas'],
+                ['codigo' => 'PLANTAS_CREATE', 'desc' => 'Crear plantas'],
+                ['codigo' => 'PLANTAS_EDIT', 'desc' => 'Editar plantas'],
+                ['codigo' => 'PLANTAS_DELETE', 'desc' => 'Eliminar plantas'],
                 ['codigo' => 'PROVEEDORES_VIEW', 'desc' => 'Ver proveedores'],
-                ['codigo' => 'PROVEEDORES_MANAGE', 'desc' => 'Gestionar proveedores'],
-                ['codigo' => 'INSUMO_VIEW', 'desc' => 'Ver insumo'],
-                ['codigo' => 'INSUMO_MANAGE', 'desc' => 'Gestionar insumo'],
+                ['codigo' => 'PROVEEDORES_CREATE', 'desc' => 'Crear proveedores'],
+                ['codigo' => 'PROVEEDORES_EDIT', 'desc' => 'Editar proveedores'],
+                ['codigo' => 'PROVEEDORES_DELETE', 'desc' => 'Eliminar proveedores'],
+                ['codigo' => 'INSUMOS_VIEW', 'desc' => 'Ver insumos'],
+                ['codigo' => 'INSUMOS_CREATE', 'desc' => 'Crear insumos'],
+                ['codigo' => 'INSUMOS_EDIT', 'desc' => 'Editar insumos'],
+                ['codigo' => 'INSUMOS_DELETE', 'desc' => 'Eliminar insumos'],
                 ['codigo' => 'TRABAJADORES_VIEW', 'desc' => 'Ver trabajadores'],
-                ['codigo' => 'TRABAJADORES_MANAGE', 'desc' => 'Gestionar trabajadores'],
+                ['codigo' => 'TRABAJADORES_CREATE', 'desc' => 'Crear trabajadores'],
+                ['codigo' => 'TRABAJADORES_EDIT', 'desc' => 'Editar trabajadores'],
+                ['codigo' => 'TRABAJADORES_DELETE', 'desc' => 'Eliminar trabajadores'],
                 ['codigo' => 'CLIENTES_VIEW', 'desc' => 'Ver clientes'],
-                ['codigo' => 'CLIENTES_MANAGE', 'desc' => 'Gestionar clientes'],
+                ['codigo' => 'CLIENTES_CREATE', 'desc' => 'Crear clientes'],
+                ['codigo' => 'CLIENTES_EDIT', 'desc' => 'Editar clientes'],
+                ['codigo' => 'CLIENTES_DELETE', 'desc' => 'Eliminar clientes'],
                 ['codigo' => 'ASISTENTE_ACCESS', 'desc' => 'Acceder al asistente IA'],
             ];
 
@@ -85,7 +108,7 @@ class User extends Database
             }
 
             // Asegurar rol_permisos para Trabajador (rol 2) — limitados
-            $trabajadorPermisos = ['DASHBOARD_VIEW', 'INVENTARIO_VIEW', 'VENTAS_ACCESS', 'PLANTAS_VIEW', 'PLANTAS_MANAGE', 'CLIENTES_VIEW', 'CLIENTES_MANAGE', 'ASISTENTE_ACCESS'];
+            $trabajadorPermisos = ['DASHBOARD_VIEW', 'INVENTARIO_VIEW', 'VENTAS_ACCESS', 'PLANTAS_VIEW', 'PLANTAS_CREATE', 'PLANTAS_EDIT', 'CLIENTES_VIEW', 'CLIENTES_CREATE', 'CLIENTES_EDIT', 'ASISTENTE_ACCESS'];
             foreach ($trabajadorPermisos as $cod) {
                 if (isset($permMap[$cod])) {
                     $stmtCheckRP->execute([':rol' => 2, ':perm' => $permMap[$cod]]);
@@ -362,7 +385,49 @@ class User extends Database
         }
     }
 
-    public function getRolePermissions(int $rolId): array
+    public function getAllPermissions(): array
+    {
+        try {
+            $stmt = $this->db->query("SELECT id_permiso, codigo_permiso, descripcion_permiso FROM permisos ORDER BY codigo_permiso ASC");
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (\Throwable $e) {
+            error_log("Error al obtener todos los permisos: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    public function getUserPermissions(int $userId): array
+    {
+        try {
+            $stmt = $this->db->prepare("SELECT id_permiso FROM usuario_permisos WHERE id_usuario = :uid");
+            $stmt->execute([':uid' => $userId]);
+            return array_column($stmt->fetchAll(PDO::FETCH_ASSOC), 'id_permiso');
+        } catch (\Throwable $e) {
+            error_log("Error al obtener permisos de usuario: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    public function setUserPermissions(int $userId, array $permisoIds): void
+    {
+        try {
+            $this->db->beginTransaction();
+            $stmtDel = $this->db->prepare("DELETE FROM usuario_permisos WHERE id_usuario = :uid");
+            $stmtDel->execute([':uid' => $userId]);
+            if (!empty($permisoIds)) {
+                $stmtIns = $this->db->prepare("INSERT INTO usuario_permisos (id_usuario, id_permiso) VALUES (:uid, :pid)");
+                foreach ($permisoIds as $pid) {
+                    $stmtIns->execute([':uid' => $userId, ':pid' => (int)$pid]);
+                }
+            }
+            $this->db->commit();
+        } catch (\Throwable $e) {
+            $this->db->rollBack();
+            error_log("Error al guardar permisos de usuario: " . $e->getMessage());
+        }
+    }
+
+    public function getRolePermissions(int $rolId, ?int $userId = null): array
     {
         try {
             $stmt = $this->db->prepare("
@@ -372,9 +437,23 @@ class User extends Database
                 WHERE rp.id_rol = :rol_id
             ");
             $stmt->execute([':rol_id' => $rolId]);
-            return array_column($stmt->fetchAll(PDO::FETCH_ASSOC), 'codigo_permiso');
+            $permisos = array_column($stmt->fetchAll(PDO::FETCH_ASSOC), 'codigo_permiso');
+
+            // Para no-administradores, fusionar con permisos individuales del usuario
+            if ($rolId !== 1 && $userId !== null) {
+                $userPermIds = $this->getUserPermissions($userId);
+                if (!empty($userPermIds)) {
+                    $placeholders = implode(',', array_fill(0, count($userPermIds), '?'));
+                    $stmt2 = $this->db->prepare("SELECT codigo_permiso FROM permisos WHERE id_permiso IN ($placeholders)");
+                    $stmt2->execute(array_map('intval', $userPermIds));
+                    $userPermisos = array_column($stmt2->fetchAll(PDO::FETCH_ASSOC), 'codigo_permiso');
+                    $permisos = array_unique(array_merge($permisos, $userPermisos));
+                }
+            }
+
+            return $permisos;
         } catch (\Throwable $e) {
-            error_log("Error al obtener permisos del rol: " . $e->getMessage());
+            error_log("Error al obtener permisos: " . $e->getMessage());
             return [];
         }
     }
