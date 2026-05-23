@@ -201,6 +201,18 @@ function supplies(): void
     require $view;
 }
 
+function tasks(): void
+{
+    dashboardCheckPermiso('TAREAS_VIEW');
+    $view = ROOT_PATH . 'app/views/dashboard/task.php';
+    if (!is_file($view)) {
+        http_response_code(500);
+        echo 'Vista de tareas no encontrada.';
+        return;
+    }
+    require $view;
+}
+
 function employees(): void
 {
     dashboardCheckPermiso('TRABAJADORES_VIEW');
