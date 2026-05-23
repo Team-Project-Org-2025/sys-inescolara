@@ -28,6 +28,16 @@
             }
         }
 
+        function checkPermisoOrFail(string $codigo): void
+        {
+            $permisos = $_SESSION['user_permisos'] ?? [];
+            if (!in_array($codigo, $permisos, true)) {
+                http_response_code(403);
+                echo json_encode(['success' => false, 'message' => 'No tienes permiso para realizar esta acción.']);
+                exit();
+            }
+        }
+
         $GLOBALS['suppliesModel'] = new Supplies();
 
         // Vista principal
@@ -59,6 +69,7 @@
         {
             $suppliesModel = $GLOBALS['suppliesModel'] ?? new Supplies();
             suppliesCheckAuth();
+            checkPermisoOrFail('INSUMOS_CREATE');
             handleAddEditAjax($suppliesModel, 'add');
         }
 
@@ -67,6 +78,7 @@
         {
             $suppliesModel = $GLOBALS['suppliesModel'] ?? new Supplies();
             suppliesCheckAuth();
+            checkPermisoOrFail('INSUMOS_EDIT');
             handleAddEditAjax($suppliesModel, 'edit');
         }
 
@@ -75,6 +87,7 @@
         {
             $suppliesModel = $GLOBALS['suppliesModel'] ?? new Supplies();
             suppliesCheckAuth();
+            checkPermisoOrFail('INSUMOS_DELETE');
             handleDeleteAjax($suppliesModel);
         }
 

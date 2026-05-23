@@ -59,15 +59,25 @@ class User extends Database
                 ['codigo' => 'VENTAS_ACCESS', 'desc' => 'Acceder a ventas/POS'],
                 ['codigo' => 'USUARIOS_MANAGE', 'desc' => 'Gestionar usuarios'],
                 ['codigo' => 'PLANTAS_VIEW', 'desc' => 'Ver plantas'],
-                ['codigo' => 'PLANTAS_MANAGE', 'desc' => 'Gestionar plantas'],
+                ['codigo' => 'PLANTAS_CREATE', 'desc' => 'Crear plantas'],
+                ['codigo' => 'PLANTAS_EDIT', 'desc' => 'Editar plantas'],
+                ['codigo' => 'PLANTAS_DELETE', 'desc' => 'Eliminar plantas'],
                 ['codigo' => 'PROVEEDORES_VIEW', 'desc' => 'Ver proveedores'],
-                ['codigo' => 'PROVEEDORES_MANAGE', 'desc' => 'Gestionar proveedores'],
-                ['codigo' => 'INSUMO_VIEW', 'desc' => 'Ver insumo'],
-                ['codigo' => 'INSUMO_MANAGE', 'desc' => 'Gestionar insumo'],
+                ['codigo' => 'PROVEEDORES_CREATE', 'desc' => 'Crear proveedores'],
+                ['codigo' => 'PROVEEDORES_EDIT', 'desc' => 'Editar proveedores'],
+                ['codigo' => 'PROVEEDORES_DELETE', 'desc' => 'Eliminar proveedores'],
+                ['codigo' => 'INSUMOS_VIEW', 'desc' => 'Ver insumos'],
+                ['codigo' => 'INSUMOS_CREATE', 'desc' => 'Crear insumos'],
+                ['codigo' => 'INSUMOS_EDIT', 'desc' => 'Editar insumos'],
+                ['codigo' => 'INSUMOS_DELETE', 'desc' => 'Eliminar insumos'],
                 ['codigo' => 'TRABAJADORES_VIEW', 'desc' => 'Ver trabajadores'],
-                ['codigo' => 'TRABAJADORES_MANAGE', 'desc' => 'Gestionar trabajadores'],
+                ['codigo' => 'TRABAJADORES_CREATE', 'desc' => 'Crear trabajadores'],
+                ['codigo' => 'TRABAJADORES_EDIT', 'desc' => 'Editar trabajadores'],
+                ['codigo' => 'TRABAJADORES_DELETE', 'desc' => 'Eliminar trabajadores'],
                 ['codigo' => 'CLIENTES_VIEW', 'desc' => 'Ver clientes'],
-                ['codigo' => 'CLIENTES_MANAGE', 'desc' => 'Gestionar clientes'],
+                ['codigo' => 'CLIENTES_CREATE', 'desc' => 'Crear clientes'],
+                ['codigo' => 'CLIENTES_EDIT', 'desc' => 'Editar clientes'],
+                ['codigo' => 'CLIENTES_DELETE', 'desc' => 'Eliminar clientes'],
                 ['codigo' => 'ASISTENTE_ACCESS', 'desc' => 'Acceder al asistente IA'],
             ];
 
@@ -98,7 +108,7 @@ class User extends Database
             }
 
             // Asegurar rol_permisos para Trabajador (rol 2) — limitados
-            $trabajadorPermisos = ['DASHBOARD_VIEW', 'INVENTARIO_VIEW', 'VENTAS_ACCESS', 'PLANTAS_VIEW', 'PLANTAS_MANAGE', 'CLIENTES_VIEW', 'CLIENTES_MANAGE', 'ASISTENTE_ACCESS'];
+            $trabajadorPermisos = ['DASHBOARD_VIEW', 'INVENTARIO_VIEW', 'VENTAS_ACCESS', 'PLANTAS_VIEW', 'PLANTAS_CREATE', 'PLANTAS_EDIT', 'CLIENTES_VIEW', 'CLIENTES_CREATE', 'CLIENTES_EDIT', 'ASISTENTE_ACCESS'];
             foreach ($trabajadorPermisos as $cod) {
                 if (isset($permMap[$cod])) {
                     $stmtCheckRP->execute([':rol' => 2, ':perm' => $permMap[$cod]]);

@@ -29,6 +29,16 @@ function userCheckAuth(): void
     }
 }
 
+function checkPermisoOrFail(string $codigo): void
+{
+    $permisos = $_SESSION['user_permisos'] ?? [];
+    if (!in_array($codigo, $permisos, true)) {
+        http_response_code(403);
+        echo json_encode(['success' => false, 'message' => 'No tienes permiso para realizar esta acción.']);
+        exit();
+    }
+}
+
 $GLOBALS['userModel'] = new User();
 
 function index(): void
@@ -63,6 +73,7 @@ function add_ajax(): void
 {
     $userModel = $GLOBALS['userModel'] ?? new User();
     userCheckAuth();
+    checkPermisoOrFail('USUARIOS_MANAGE');
     handleAddEditAjax($userModel, 'add');
 }
 
@@ -70,6 +81,7 @@ function edit_ajax(): void
 {
     $userModel = $GLOBALS['userModel'] ?? new User();
     userCheckAuth();
+    checkPermisoOrFail('USUARIOS_MANAGE');
     handleAddEditAjax($userModel, 'edit');
 }
 
@@ -77,6 +89,7 @@ function delete_ajax(): void
 {
     $userModel = $GLOBALS['userModel'] ?? new User();
     userCheckAuth();
+    checkPermisoOrFail('USUARIOS_MANAGE');
     handleDeleteAjax($userModel);
 }
 
