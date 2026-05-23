@@ -16,7 +16,7 @@ class Supplies extends Database implements ReadableInterface, DeletableInterface
     }
 
     
-    public function getAll() {
+    public function getAll(): array {
         try {
                 $sql = "SELECT id_insumo, nombre_insumo, unidad_medida, stock_actual, costo_unitario_actual 
                     FROM insumo 
@@ -29,14 +29,14 @@ class Supplies extends Database implements ReadableInterface, DeletableInterface
     }
 
     
-    public function exists($id) {
+    public function exists(int $id): bool {
         $stmt = $this->db->prepare("SELECT COUNT(*) FROM insumo WHERE id_insumo = :id");
         $stmt->execute([':id' => $id]);
         return $stmt->fetchColumn() > 0;
     }
 
     
-    public function getById($id) {
+    public function getById(int $id): ?array {
         $stmt = $this->db->prepare("SELECT id_insumo, nombre_insumo, unidad_medida, stock_actual, costo_unitario_actual 
                         FROM insumo 
                         WHERE id_insumo = :id");
@@ -82,7 +82,7 @@ class Supplies extends Database implements ReadableInterface, DeletableInterface
     }
 
     
-    public function delete($id) {
+    public function delete(int $id): bool {
         $stmt = $this->db->prepare("DELETE FROM insumo WHERE id_insumo = :id");
         return $stmt->execute([':id' => $id]);
     }

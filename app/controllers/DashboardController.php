@@ -17,12 +17,10 @@ function dashboardCheckAuth(): void
         exit();
     }
 
-    // Si el usuario está autenticado pero no tiene permisos en sesión (o están vacíos), recargarlos
-    if (empty($_SESSION['user_permisos'])) {
-        require_once ROOT_PATH . 'vendor/autoload.php';
-        $userModel = new \SysInescolara\models\User();
-        $_SESSION['user_permisos'] = $userModel->getRolePermissions((int)($_SESSION['user_rol_id'] ?? 0), (int)($_SESSION['user_id'] ?? 0));
-    }
+    // Recargar permisos del usuario desde la BD (para reflejar cambios en tiempo real)
+    require_once ROOT_PATH . 'vendor/autoload.php';
+    $userModel = new \SysInescolara\models\User();
+    $_SESSION['user_permisos'] = $userModel->getRolePermissions((int)($_SESSION['user_rol_id'] ?? 0), (int)($_SESSION['user_id'] ?? 0));
 }
 
 function dashboardCheckPermiso(string $codigo): void
