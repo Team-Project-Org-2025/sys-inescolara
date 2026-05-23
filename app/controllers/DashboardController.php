@@ -2,9 +2,7 @@
 
 declare(strict_types=1);
 
-/**
- * Controlador del Dashboard
- */
+
 
 function dashboardCheckAuth(): void
 {
@@ -17,7 +15,6 @@ function dashboardCheckAuth(): void
         exit();
     }
 
-    // Si el usuario está autenticado pero no tiene permisos en sesión (o están vacíos), recargarlos
     if (empty($_SESSION['user_permisos'])) {
         require_once ROOT_PATH . 'vendor/autoload.php';
         $userModel = new \SysInescolara\models\User();
@@ -284,6 +281,21 @@ function backups(): void
     if (!is_file($view)) {
         http_response_code(500);
         echo 'Vista de respaldos no encontrada.';
+        return;
+    }
+
+    require $view;
+}
+function locations(): void
+{
+    dashboardCheckPermiso('UBICACIONES_VIEW');
+
+    $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
+        . 'dashboard' . DIRECTORY_SEPARATOR . 'locations.php';
+
+    if (!is_file($view)) {
+        http_response_code(500);
+        echo 'Vista de ubicaciones no encontrada.';
         return;
     }
 

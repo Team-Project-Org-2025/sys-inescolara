@@ -12,16 +12,15 @@ checkAuth();
 
 $suppliesModel = new Supplies();
 
-function index()
-{
-    require __DIR__ . '/../views/dashboard/supplies.php';
+if (!function_exists('index')) {
+    function index()
+    {
+        require __DIR__ . '/../views/dashboard/supplies.php';
+    }
 }
 
 handleRequest($suppliesModel);
 
-// ============================================
-// CORE REQUEST HANDLER
-// ============================================
 
 function handleRequest($suppliesModel)
 {
@@ -65,9 +64,7 @@ function handleRequest($suppliesModel)
     }
 }
 
-// ============================================
-// UTILITY FUNCTIONS
-// ============================================
+
 
 function jsonResponse($data, $statusCode = 200)
 {
@@ -85,9 +82,7 @@ function handleError($e, $isAjax)
     }
 }
 
-// ============================================
-// NON-AJAX HANDLERS
-// ============================================
+
 
 function handleAddEdit($suppliesModel, $mode)
 {
@@ -149,9 +144,6 @@ function handleDelete($suppliesModel)
     }
 }
 
-// ============================================
-// AJAX HANDLERS
-// ============================================
 
 function handleAddEditAjax($suppliesModel, $mode)
 {
