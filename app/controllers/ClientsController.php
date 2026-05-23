@@ -26,6 +26,16 @@ function clientsCheckAuth(): void
     }
 }
 
+function checkPermisoOrFail(string $codigo): void
+{
+    $permisos = $_SESSION['user_permisos'] ?? [];
+    if (!in_array($codigo, $permisos, true)) {
+        http_response_code(403);
+        echo json_encode(['success' => false, 'message' => 'No tienes permiso para realizar esta acción.']);
+        exit();
+    }
+}
+
 $GLOBALS['clientModel'] = new Client();
 
 function index(): void
@@ -55,6 +65,7 @@ function add_ajax(): void
 {
     $clientModel = $GLOBALS['clientModel'] ?? new Client();
     clientsCheckAuth();
+    checkPermisoOrFail('CLIENTES_CREATE');
     handleAddEditAjax($clientModel, 'add');
 }
 
@@ -62,6 +73,7 @@ function edit_ajax(): void
 {
     $clientModel = $GLOBALS['clientModel'] ?? new Client();
     clientsCheckAuth();
+    checkPermisoOrFail('CLIENTES_EDIT');
     handleAddEditAjax($clientModel, 'edit');
 }
 
@@ -69,6 +81,7 @@ function delete_ajax(): void
 {
     $clientModel = $GLOBALS['clientModel'] ?? new Client();
     clientsCheckAuth();
+    checkPermisoOrFail('CLIENTES_DELETE');
     handleDeleteAjax($clientModel);
 }
 

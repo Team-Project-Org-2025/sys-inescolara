@@ -45,6 +45,7 @@ $(document).ready(function () {
           orderable: false,
           render: (data) => {
             const isSuper = data.id == 1;
+            const permisos = data.permisos ? data.permisos.join(',') : '';
             return `
               <div class="d-flex gap-1">
                 <button class="btn btn-sm btn-outline-primary btn-edit" 
@@ -52,7 +53,8 @@ $(document).ready(function () {
                         data-nombre_usuario="${Helpers.escapeHtml(data.nombre_usuario)}"
                         data-correo_electronico="${Helpers.escapeHtml(data.correo_electronico || '')}"
                         data-rol_id="${Helpers.escapeHtml(data.rol_id)}"
-                        data-avatar="${Helpers.escapeHtml(data.avatar || '')}">
+                        data-avatar="${Helpers.escapeHtml(data.avatar || '')}"
+                        data-permisos="${Helpers.escapeHtml(permisos)}">
                     <i class="fas fa-edit"></i> Editar
                 </button>
                 ${isSuper ? '' : `
@@ -86,6 +88,15 @@ $(document).ready(function () {
     });
   };
 
+  function togglePermisosChecklist(roleId, container) {
+    const $container = container || $('#permisosChecklist');
+    if (roleId == 1) {
+      $container.hide();
+    } else {
+      $container.show();
+    }
+  }
+
   //Agregar usuario
   $('#btnAddUser').on('click', function () {
     const $editModal = $('#editUserModal');
@@ -93,6 +104,12 @@ $(document).ready(function () {
       $editModal.modal('hide');
     }
     $('#addUserModal').modal({ focus: false }).modal('show');
+    // Reset checklist: mostrar si rol no es admin
+    togglePermisosChecklist(parseInt($('#addUserRole').val()), $('#addPermisosChecklist'));
+  });
+
+  $(document).on('change', '#addUserRole', function () {
+    togglePermisosChecklist(parseInt($(this).val()), $('#addPermisosChecklist'));
   });
 
   $('#addUserForm').on('submit', function (e) {
@@ -158,6 +175,13 @@ $(document).ready(function () {
     $('#editCurrentPassword').val('');
     $('#editUserRoleNote').toggle(isSuper);
 
+    // Mostrar checklist de permisos según el rol
+    var roleId = parseInt($btn.data('rol_id'));
+    togglePermisosChecklist(isSuper ? 1 : roleId, $('#editPermisosChecklist'));
+    $('#editUserRole').off('change.permisos').on('change.permisos', function () {
+      togglePermisosChecklist(parseInt($(this).val()), $('#editPermisosChecklist'));
+    });
+
     // Mostrar campo de contraseña actual si edita su propia cuenta O es administrador
     const $currentPwGroup = $('#currentPasswordGroup');
     const $currentPwHelp = $('#currentPasswordHelp');
@@ -182,6 +206,13 @@ $(document).ready(function () {
     } else {
       $preview.hide();
     }
+
+    // Marcar permisos del usuario
+    const permisosStr = $btn.data('permisos') || '';
+    const userPermisos = permisosStr ? permisosStr.split(',').map(Number) : [];
+    $('#permisosChecklist input[type="checkbox"]').each(function () {
+      $(this).prop('checked', userPermisos.indexOf(parseInt($(this).val())) !== -1);
+    });
 
     Validations.clearValidation($('#editUserForm'));
     $('#editUserModal').modal({ focus: false }).modal('show');
@@ -312,6 +343,8 @@ $(document).ready(function () {
   $('#addUserModal, #editUserModal').on('hidden.bs.modal', function () {
     const $form = $(this).find('form');
     Helpers.resetForm($form);
+    // Desmarcar todos los permisos
+    $(this).find('.permisos-checklist input[type="checkbox"]').prop('checked', false);
   });
 
   initDataTable();

@@ -26,6 +26,16 @@ function employeesCheckAuth(): void
     }
 }
 
+function checkPermisoOrFail(string $codigo): void
+{
+    $permisos = $_SESSION['user_permisos'] ?? [];
+    if (!in_array($codigo, $permisos, true)) {
+        http_response_code(403);
+        echo json_encode(['success' => false, 'message' => 'No tienes permiso para realizar esta acción.']);
+        exit();
+    }
+}
+
 $GLOBALS['employeeModel'] = new Employee();
 
 function index(): void
@@ -55,6 +65,7 @@ function add_ajax(): void
 {
     $employeeModel = $GLOBALS['employeeModel'] ?? new Employee();
     employeesCheckAuth();
+    checkPermisoOrFail('TRABAJADORES_CREATE');
     handleAddEditAjax($employeeModel, 'add');
 }
 
@@ -62,6 +73,7 @@ function edit_ajax(): void
 {
     $employeeModel = $GLOBALS['employeeModel'] ?? new Employee();
     employeesCheckAuth();
+    checkPermisoOrFail('TRABAJADORES_EDIT');
     handleAddEditAjax($employeeModel, 'edit');
 }
 
@@ -69,6 +81,7 @@ function delete_ajax(): void
 {
     $employeeModel = $GLOBALS['employeeModel'] ?? new Employee();
     employeesCheckAuth();
+    checkPermisoOrFail('TRABAJADORES_DELETE');
     handleDeleteAjax($employeeModel);
 }
 

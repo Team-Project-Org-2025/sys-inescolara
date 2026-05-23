@@ -68,6 +68,7 @@ function hasPermiso(string $codigo): bool
                         <span>Plantas</span>
                     </a>
                 </li>
+                
                 <li>
                     <a href="<?= BASE_URL ?>dashboard/batches" class="sidebar-link <?= ($currentPage ?? '') === 'batches' ? 'active' : '' ?>">
                         <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -115,7 +116,7 @@ function hasPermiso(string $codigo): bool
                     </a>
                 </li>
                 <?php endif; ?>
-                <?php if (hasPermiso('INSUMOS_VIEW')): ?>
+                <?php if (hasPermiso('INSUMO_VIEW')): ?>
                 <li>
                     <a href="<?= BASE_URL ?>dashboard/supplies" class="sidebar-link <?= ($currentPage ?? '') === 'supplies' ? 'active' : '' ?>">
                         <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -123,7 +124,7 @@ function hasPermiso(string $codigo): bool
                             <rect x="1" y="3" width="22" height="5"></rect>
                             <line x1="10" y1="12" x2="14" y2="12"></line>
                         </svg>
-                        <span>Insumos</span>
+                        <span>Insumo</span>
                     </a>
                 </li>
                 <?php endif; ?>
