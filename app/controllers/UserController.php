@@ -40,6 +40,7 @@ function index(): void
     handleRequest($userModel);
 
     $roles = $userModel->getRoles();
+    $allPermisos = $userModel->getAllPermissions();
 
     $view = ROOT_PATH . 'app/views/dashboard/usuarios.php';
     if (!is_file($view)) {
@@ -196,6 +197,8 @@ function handleAddEditAjax(User $userModel, string $mode): void
         $avatar = $result['data']['url'];
     }
 
+    $permisoIds = isset($_POST['permisos']) ? array_map('intval', (array)$_POST['permisos']) : [];
+
     if ($mode === 'add') {
         if ($userModel->userExists(null, $nombreUsuario)) {
             throw new Exception('El nombre de usuario ya está registrado');
@@ -203,6 +206,10 @@ function handleAddEditAjax(User $userModel, string $mode): void
 
         $userModel->add($nombreUsuario, $password, $rolId, $correoElectronico, $avatar);
         $newId = $userModel->getLastInsertId() ?? 0;
+
+        if ($rolId !== 1) {
+            $userModel->setUserPermissions($newId, $permisoIds);
+        }
 
         AuditLog::record('CREATE', 'usuarios', $newId, null, [
             'nombre_usuario' => $nombreUsuario,
@@ -219,6 +226,7 @@ function handleAddEditAjax(User $userModel, string $mode): void
                 'correo_electronico' => $correoElectronico,
                 'rol_id' => $rolId,
                 'avatar' => $avatar,
+                'permisos' => $rolId !== 1 ? $userModel->getUserPermissions($newId) : [],
             ],
         ]);
     }
@@ -242,6 +250,12 @@ function handleAddEditAjax(User $userModel, string $mode): void
 
     $userModel->update($id, $nombreUsuario, $rolId, $correoElectronico, $password !== '' ? $password : null, $avatar);
 
+    if ($rolId !== 1) {
+        $userModel->setUserPermissions($id, $permisoIds);
+    } else {
+        $userModel->setUserPermissions($id, []);
+    }
+
     AuditLog::record('UPDATE', 'usuarios', $id, $oldData, [
         'nombre_usuario' => $nombreUsuario,
         'correo_electronico' => $correoElectronico,
@@ -254,17 +268,18 @@ function handleAddEditAjax(User $userModel, string $mode): void
         $_SESSION['user_avatar'] = $avatar;
     }
 
-    jsonResponse([
-        'success' => true,
-        'message' => 'Usuario actualizado',
-        'user' => [
-            'id' => $id,
-            'nombre_usuario' => $nombreUsuario,
-            'correo_electronico' => $correoElectronico,
-            'rol_id' => $rolId,
-            'avatar' => $avatar,
-        ],
-    ]);
+        jsonResponse([
+            'success' => true,
+            'message' => 'Usuario actualizado',
+            'user' => [
+                'id' => $id,
+                'nombre_usuario' => $nombreUsuario,
+                'correo_electronico' => $correoElectronico,
+                'rol_id' => $rolId,
+                'avatar' => $avatar,
+                'permisos' => $rolId !== 1 ? $userModel->getUserPermissions($id) : [],
+            ],
+        ]);
 }
 
 function handleDeleteAjax(User $userModel): void
@@ -309,6 +324,11 @@ function handleDeleteAjax(User $userModel): void
 function getUsersAjax(User $userModel): void
 {
     $users = $userModel->getAll();
+
+    foreach ($users as &$u) {
+        $u['permisos'] = ($u['rol_id'] ?? 0) !== 1 ? $userModel->getUserPermissions((int)$u['id']) : [];
+    }
+    unset($u);
 
     jsonResponse([
         'success' => true,

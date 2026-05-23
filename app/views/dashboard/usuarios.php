@@ -80,11 +80,23 @@ include_once __DIR__ . '/../common/links.php';
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Rol</label>
-                            <select class="form-select" name="rol_id">
+                            <select class="form-select" name="rol_id" id="addUserRole">
                                 <?php foreach ($roles as $rol): ?>
                                 <option value="<?= $rol['id_rol'] ?>"><?= htmlspecialchars($rol['nombre_rol']) ?></option>
                                 <?php endforeach; ?>
                             </select>
+                        </div>
+                        <div class="mb-3 permisos-checklist" id="addPermisosChecklist" style="display:none;">
+                            <label class="form-label">Módulos permitidos</label>
+                            <div style="display:flex;flex-direction:column;gap:6px;padding:8px 12px;border:1px solid var(--color-gray-200);border-radius:var(--radius-md);background:var(--bg-secondary);max-height:240px;overflow-y:auto;">
+                                <?php foreach ($allPermisos as $perm): ?>
+                                <label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;cursor:pointer;">
+                                    <input type="checkbox" name="permisos[]" value="<?= $perm['id_permiso'] ?>">
+                                    <?= htmlspecialchars($perm['descripcion_permiso']) ?>
+                                </label>
+                                <?php endforeach; ?>
+                            </div>
+                            <small class="text-muted">Selecciona los módulos a los que este usuario tendrá acceso.</small>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Foto de perfil</label>
@@ -138,6 +150,18 @@ include_once __DIR__ . '/../common/links.php';
                                 <?php endforeach; ?>
                             </select>
                             <small class="text-muted" id="editUserRoleNote" style="display:none;">El rol del superusuario no se puede modificar.</small>
+                        </div>
+                        <div class="mb-3 permisos-checklist" id="editPermisosChecklist" style="display:none;">
+                            <label class="form-label">Módulos permitidos</label>
+                            <div style="display:flex;flex-direction:column;gap:6px;padding:8px 12px;border:1px solid var(--color-gray-200);border-radius:var(--radius-md);background:var(--bg-secondary);max-height:240px;overflow-y:auto;">
+                                <?php foreach ($allPermisos as $perm): ?>
+                                <label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;cursor:pointer;">
+                                    <input type="checkbox" name="permisos[]" value="<?= $perm['id_permiso'] ?>">
+                                    <?= htmlspecialchars($perm['descripcion_permiso']) ?>
+                                </label>
+                                <?php endforeach; ?>
+                            </div>
+                            <small class="text-muted">Selecciona los módulos a los que este usuario tendrá acceso.</small>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Foto de perfil</label>

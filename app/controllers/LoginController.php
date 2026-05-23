@@ -131,7 +131,7 @@ function login()
         $_SESSION['user_email'] = $user['correo_electronico'] ?? null;
         $_SESSION['user_avatar'] = $user['avatar'] ?? null;
         $_SESSION['user_rol_id'] = $user['rol_id'] ?? null;
-        $_SESSION['user_permisos'] = $userModel->getRolePermissions((int)($user['rol_id'] ?? 0));
+        $_SESSION['user_permisos'] = $userModel->getRolePermissions((int)($user['rol_id'] ?? 0), (int)($user['id'] ?? 0));
 
         AuditLog::record('LOGIN', 'usuarios', $userId, null, [
             'nombre_usuario' => $user['nombre_usuario'] ?? null,
