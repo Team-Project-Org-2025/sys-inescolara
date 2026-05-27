@@ -353,20 +353,20 @@
    ============================================ */
 
 .sidebar-overlay {
-  display: none;
   position: fixed;
   inset: 0;
   background-color: rgba(0, 0, 0, 0.3);
   z-index: 39;
   opacity: 0;
-  transition: opacity 0.3s ease;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+  pointer-events: none;
 }
 
-@media (max-width: 1023px) {
-  .sidebar-overlay.active {
-    display: block;
-    opacity: 1;
-  }
+.sidebar-overlay.active {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
 }
 
 /* ============================================
