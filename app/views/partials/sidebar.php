@@ -116,7 +116,7 @@ function hasPermiso(string $codigo): bool
                     </a>
                 </li>
                 <?php endif; ?>
-                <?php if (hasPermiso('INSUMO_VIEW')): ?>
+                <?php if (hasPermiso('INSUMOS_VIEW')): ?>
                 <li>
                     <a href="<?= BASE_URL ?>dashboard/supplies" class="sidebar-link <?= ($currentPage ?? '') === 'supplies' ? 'active' : '' ?>">
                         <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -142,7 +142,7 @@ function hasPermiso(string $codigo): bool
                 
                 <?php if (hasPermiso('TAREAS_VIEW')): ?>
                 <li>
-                    <a href="<?= BASE_URL ?>dashboard/tasks" class="sidebar-link <?= ($currentPage ?? '') === 'task' ? 'active' : '' ?>">
+                    <a href="<?= BASE_URL ?>dashboard/tasks" class="sidebar-link <?= ($currentPage ?? '') === 'tasks' ? 'active' : '' ?>">
                         <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5"></path>
                             <path d="M8.5 8.5v.01"></path>

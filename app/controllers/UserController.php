@@ -1,351 +1,197 @@
 <?php
 
-declare(strict_types=1);
-
-require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
+namespace SysInescolara\controllers;
 
 use SysInescolara\helpers\Validation;
 use SysInescolara\models\User;
 use SysInescolara\models\AuditLog;
+use SysInescolara\traits\ResponseTrait;
+use SysInescolara\traits\PermissionTrait;
 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
-function userCheckAuth(): void
+class UserController
 {
-    if (!isset($_SESSION['user_id'])) {
-        $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+    use ResponseTrait, PermissionTrait;
 
-        if ($isAjax) {
-            header('Content-Type: application/json; charset=utf-8');
-            http_response_code(401);
-            echo json_encode(['success' => false, 'message' => 'No autorizado', 'redirect' => BASE_URL . 'login']);
-            exit();
+    private User $model;
+
+    public function __construct()
+    {
+        if (session_status() === PHP_SESSION_NONE) session_start();
+        $this->model = new User();
+    }
+
+    public function index(): void
+    {
+        $this->checkModuleAuth();
+        $this->handleAjaxRequest();
+
+        $roles = $this->model->getRoles();
+        $allPermisos = $this->model->getAllPermissions();
+
+        $view = ROOT_PATH . 'app/views/dashboard/usuarios.php';
+        if (!is_file($view)) {
+            http_response_code(500);
+            echo 'Vista de usuarios no encontrada.';
+            return;
         }
-
-        header('Location: ' . BASE_URL . 'login');
-        exit();
-    }
-}
-
-function checkPermisoOrFail(string $codigo): void
-{
-    $permisos = $_SESSION['user_permisos'] ?? [];
-    if (!in_array($codigo, $permisos, true)) {
-        http_response_code(403);
-        echo json_encode(['success' => false, 'message' => 'No tienes permiso para realizar esta acción.']);
-        exit();
-    }
-}
-
-$GLOBALS['userModel'] = new User();
-
-function index(): void
-{
-    $userModel = $GLOBALS['userModel'] ?? new User();
-
-    userCheckAuth();
-
-    handleRequest($userModel);
-
-    $roles = $userModel->getRoles();
-    $allPermisos = $userModel->getAllPermissions();
-
-    $view = ROOT_PATH . 'app/views/dashboard/usuarios.php';
-    if (!is_file($view)) {
-        http_response_code(500);
-        echo 'Vista de usuarios no encontrada.';
-        return;
+        require $view;
     }
 
-    require $view;
-}
+    public function get_users(): void { $this->checkModuleAuth(); $this->getUsersAjax(); }
+    public function add_ajax(): void { $this->checkModuleAuth(); $this->checkPermisoOrFail('USUARIOS_MANAGE'); $this->handleAddEdit('add'); }
+    public function edit_ajax(): void { $this->checkModuleAuth(); $this->checkPermisoOrFail('USUARIOS_MANAGE'); $this->handleAddEdit('edit'); }
+    public function delete_ajax(): void { $this->checkModuleAuth(); $this->checkPermisoOrFail('USUARIOS_MANAGE'); $this->handleDelete(); }
 
-function get_users(): void
-{
-    $userModel = $GLOBALS['userModel'] ?? new User();
-    userCheckAuth();
-    getUsersAjax($userModel);
-}
+    private function handleAjaxRequest(): void
+    {
+        $action = $_GET['action'] ?? '';
+        if (!$this->isAjaxRequest() || $action === '') return;
 
-function add_ajax(): void
-{
-    $userModel = $GLOBALS['userModel'] ?? new User();
-    userCheckAuth();
-    checkPermisoOrFail('USUARIOS_MANAGE');
-    handleAddEditAjax($userModel, 'add');
-}
+        header('Content-Type: application/json; charset=utf-8');
+        try {
+            match ($_SERVER['REQUEST_METHOD'] . '_' . $action) {
+                'GET_get_users'   => $this->getUsersAjax(),
+                'POST_add_ajax'   => $this->handleAddEdit('add'),
+                'POST_edit_ajax'  => $this->handleAddEdit('edit'),
+                'POST_delete_ajax' => $this->handleDelete(),
+                default           => $this->jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
+            };
+        } catch (\Exception $e) {
+            $this->handleError($e, true);
+        }
+    }
 
-function edit_ajax(): void
-{
-    $userModel = $GLOBALS['userModel'] ?? new User();
-    userCheckAuth();
-    checkPermisoOrFail('USUARIOS_MANAGE');
-    handleAddEditAjax($userModel, 'edit');
-}
+    private function validateUserData(array $data, string $mode): void
+    {
+        $rules = [
+            'nombre_usuario' => ['type' => null, 'required' => true],
+            'password'       => ['type' => 'password', 'required' => $mode === 'add'],
+            'rol_id'         => ['type' => null, 'required' => true],
+            'correo_electronico' => ['type' => null, 'required' => false],
+        ];
+        $validation = Validation::validate($data, $rules);
+        if (!$validation['valid']) {
+            throw new \Exception(implode(', ', $validation['errors']));
+        }
+        $email = trim((string)($data['correo_electronico'] ?? ''));
+        if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            throw new \Exception('El formato del correo electrónico no es válido.');
+        }
+    }
 
-function delete_ajax(): void
-{
-    $userModel = $GLOBALS['userModel'] ?? new User();
-    userCheckAuth();
-    checkPermisoOrFail('USUARIOS_MANAGE');
-    handleDeleteAjax($userModel);
-}
+    private function handleAddEdit(string $mode): void
+    {
+        $this->validateUserData($_POST, $mode);
 
-function handleRequest(User $userModel): void
-{
-    $action = $_GET['action'] ?? '';
-    $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+        $id = (int)($_POST['id'] ?? 0);
+        $nombreUsuario = trim((string)($_POST['nombre_usuario'] ?? ''));
+        $password = trim((string)($_POST['password'] ?? ''));
+        $rolId = (int)($_POST['rol_id'] ?? 1);
+        $correoElectronico = trim((string)($_POST['correo_electronico'] ?? ''));
+        if ($correoElectronico === '') $correoElectronico = null;
+        if ($id === 1) $rolId = 1;
 
-    try {
-        if ($isAjax) {
-            header('Content-Type: application/json; charset=utf-8');
-
-            $routes = [
-                'GET_get_users' => fn() => getUsersAjax($userModel),
-                'POST_add_ajax' => fn() => handleAddEditAjax($userModel, 'add'),
-                'POST_edit_ajax' => fn() => handleAddEditAjax($userModel, 'edit'),
-                'POST_delete_ajax' => fn() => handleDeleteAjax($userModel),
-            ];
-
-            $route = $_SERVER['REQUEST_METHOD'] . '_' . $action;
-
-            if (isset($routes[$route])) {
-                $routes[$route]();
+        $isChangingPassword = ($mode === 'edit' && $password !== '');
+        $isOwnAccount = isset($_SESSION['user_id']) && (int)$_SESSION['user_id'] === $id;
+        $isAdmin = isset($_SESSION['user_rol_id']) && (int)$_SESSION['user_rol_id'] === 1;
+        if ($isChangingPassword && ($isOwnAccount || $isAdmin)) {
+            $currentPassword = $_POST['current_password'] ?? '';
+            if ($currentPassword === '') {
+                throw new \Exception('Debes ingresar tu contraseña actual para realizar este cambio.');
             }
-
-            jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400);
+            $verifyUserId = $isOwnAccount ? $id : (int)$_SESSION['user_id'];
+            if (!$this->model->verifyPassword($verifyUserId, $currentPassword)) {
+                throw new \Exception('La contraseña actual no es correcta.');
+            }
         }
-    } catch (Exception $e) {
-        handleError($e, $isAjax);
-    }
-}
 
-function jsonResponse(array $data, int $statusCode = 200): void
-{
-    http_response_code($statusCode);
-    echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
-    exit();
-}
+        $avatar = null;
+        if (!empty($_FILES['avatar']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK) {
+            $uploader = new \SysInescolara\helpers\ImageUploader('assets/uploads/avatars');
+            $result = $uploader->upload($_FILES['avatar'], 'avatar');
+            if (!$result['success']) throw new \Exception(implode(', ', $result['errors']));
+            $avatar = $result['data']['url'];
+        }
 
-function handleError(Exception $e, bool $isAjax): void
-{
-    if ($isAjax) {
-        jsonResponse(['success' => false, 'message' => $e->getMessage()], 500);
-    }
+        $permisoIds = isset($_POST['permisos']) ? array_map('intval', (array)$_POST['permisos']) : [];
 
-    http_response_code(500);
-    echo 'Error: ' . htmlspecialchars($e->getMessage());
-    exit();
-}
+        if ($mode === 'add') {
+            if ($this->model->userExists(null, $nombreUsuario)) {
+                throw new \Exception('El nombre de usuario ya está registrado');
+            }
+            $this->model->add($nombreUsuario, $password, $rolId, $correoElectronico, $avatar);
+            $newId = $this->model->getLastInsertId() ?? 0;
+            if ($rolId !== 1) $this->model->setUserPermissions($newId, $permisoIds);
+            AuditLog::record('CREATE', 'usuarios', $newId, null, compact('nombreUsuario', 'correoElectronico', 'rolId'));
+            $this->jsonResponse([
+                'success' => true, 'message' => 'Usuario agregado',
+                'user' => ['id' => $newId, 'nombre_usuario' => $nombreUsuario, 'correo_electronico' => $correoElectronico, 'rol_id' => $rolId, 'avatar' => $avatar, 'permisos' => $rolId !== 1 ? $this->model->getUserPermissions($newId) : []],
+            ]);
+        }
 
-function validateUserData(array $data, string $mode): void
-{
-    $rules = [
-        'nombre_usuario' => ['type' => null, 'required' => true],
-        'password' => ['type' => 'password', 'required' => $mode === 'add'],
-        'rol_id' => ['type' => null, 'required' => true],
-        'correo_electronico' => ['type' => null, 'required' => false],
-    ];
+        if ($id <= 0) throw new \Exception('ID inválido');
 
-    $validation = Validation::validate($data, $rules);
-    if (!$validation['valid']) {
-        throw new Exception(implode(', ', $validation['errors']));
-    }
+        $oldData = $this->model->getById($id);
+        if ($avatar === null) {
+            $avatar = $oldData['avatar'] ?? null;
+        } elseif (!empty($oldData['avatar'])) {
+            (new \SysInescolara\helpers\ImageUploader())->delete($oldData['avatar']);
+        }
 
-    // Validar formato de email si se proporciona
-    $email = trim((string)($data['correo_electronico'] ?? ''));
-    if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        throw new Exception('El formato del correo electrónico no es válido.');
-    }
-}
+        $this->model->update($id, $nombreUsuario, $rolId, $correoElectronico, $password !== '' ? $password : null, $avatar);
+        if ($rolId !== 1) {
+            $this->model->setUserPermissions($id, $permisoIds);
+        } else {
+            $this->model->setUserPermissions($id, []);
+        }
 
-function handleAddEditAjax(User $userModel, string $mode): void
-{
-    validateUserData($_POST, $mode);
+        AuditLog::record('UPDATE', 'usuarios', $id, $oldData, compact('nombreUsuario', 'correoElectronico', 'rolId'));
 
-    $id = (int)($_POST['id'] ?? 0);
-    $nombreUsuario = trim((string)($_POST['nombre_usuario'] ?? ''));
-    $password = trim((string)($_POST['password'] ?? ''));
-    $rolId = (int)($_POST['rol_id'] ?? 1);
-    $correoElectronico = trim((string)($_POST['correo_electronico'] ?? ''));
-    // Si viene vacío, guardar null en DB
-    if ($correoElectronico === '') {
-        $correoElectronico = null;
+        if (isset($_SESSION['user_id']) && (int)$_SESSION['user_id'] === $id) {
+            $_SESSION['user_nombre'] = $nombreUsuario;
+            $_SESSION['user_avatar'] = $avatar;
+        }
+
+        $this->jsonResponse([
+            'success' => true, 'message' => 'Usuario actualizado',
+            'user' => ['id' => $id, 'nombre_usuario' => $nombreUsuario, 'correo_electronico' => $correoElectronico, 'rol_id' => $rolId, 'avatar' => $avatar, 'permisos' => $rolId !== 1 ? $this->model->getUserPermissions($id) : []],
+        ]);
     }
 
-    // El superusuario (ID 1) siempre es Administrador
-    if ($id === 1) {
-        $rolId = 1;
-    }
+    private function handleDelete(): void
+    {
+        $id = (int)($_POST['id'] ?? 0);
+        if ($id <= 0) throw new \Exception('ID inválido');
+        if ($id === 1) {
+            $this->jsonResponse(['success' => false, 'message' => 'No se puede eliminar el superusuario principal'], 400);
+            return;
+        }
+        if (!$this->model->userExists($id)) throw new \Exception('No existe el usuario');
 
-    // Verificar contraseña actual si se cambia la contraseña:
-    // - El usuario editándose a sí mismo debe ingresar SU contraseña
-    // - Un administrador editando a cualquier usuario debe ingresar SU (admin) contraseña
-    $isChangingPassword = ($mode === 'edit' && $password !== '');
-    $isOwnAccount = isset($_SESSION['user_id']) && (int)$_SESSION['user_id'] === $id;
-    $isAdmin = isset($_SESSION['user_rol_id']) && (int)$_SESSION['user_rol_id'] === 1;
-    if ($isChangingPassword && ($isOwnAccount || $isAdmin)) {
         $currentPassword = $_POST['current_password'] ?? '';
         if ($currentPassword === '') {
-            throw new Exception('Debes ingresar tu contraseña actual para realizar este cambio.');
+            $this->jsonResponse(['success' => false, 'message' => 'Debes ingresar tu contraseña para eliminar un usuario.'], 400);
+            return;
         }
-        // Si es admin editando a otro, verificar la contraseña del admin, no la del usuario destino
-        $verifyUserId = $isOwnAccount ? $id : (int)$_SESSION['user_id'];
-        if (!$userModel->verifyPassword($verifyUserId, $currentPassword)) {
-            throw new Exception('La contraseña actual no es correcta.');
-        }
-    }
-
-    $avatar = null;
-
-    // Subir avatar si viene un archivo
-    if (!empty($_FILES['avatar']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK) {
-        $uploader = new \SysInescolara\helpers\ImageUploader('assets/uploads/avatars');
-        $result = $uploader->upload($_FILES['avatar'], 'avatar');
-        if (!$result['success']) {
-            throw new Exception(implode(', ', $result['errors']));
-        }
-        $avatar = $result['data']['url'];
-    }
-
-    $permisoIds = isset($_POST['permisos']) ? array_map('intval', (array)$_POST['permisos']) : [];
-
-    if ($mode === 'add') {
-        if ($userModel->userExists(null, $nombreUsuario)) {
-            throw new Exception('El nombre de usuario ya está registrado');
+        $userId = (int)($_SESSION['user_id'] ?? 0);
+        if ($userId <= 0 || !$this->model->verifyPassword($userId, $currentPassword)) {
+            $this->jsonResponse(['success' => false, 'message' => 'Contraseña incorrecta. No se puede eliminar el usuario.'], 403);
+            return;
         }
 
-        $userModel->add($nombreUsuario, $password, $rolId, $correoElectronico, $avatar);
-        $newId = $userModel->getLastInsertId() ?? 0;
+        $oldData = $this->model->getById($id);
+        $this->model->delete($id);
+        AuditLog::record('DELETE', 'usuarios', $id, $oldData, null);
+        $this->jsonResponse(['success' => true, 'message' => 'Usuario eliminado', 'userId' => $id]);
+    }
 
-        if ($rolId !== 1) {
-            $userModel->setUserPermissions($newId, $permisoIds);
+    private function getUsersAjax(): void
+    {
+        $users = $this->model->getAll();
+        foreach ($users as &$u) {
+            $u['permisos'] = ($u['rol_id'] ?? 0) !== 1 ? $this->model->getUserPermissions((int)$u['id']) : [];
         }
-
-        AuditLog::record('CREATE', 'usuarios', $newId, null, [
-            'nombre_usuario' => $nombreUsuario,
-            'correo_electronico' => $correoElectronico,
-            'rol_id' => $rolId,
-        ]);
-
-        jsonResponse([
-            'success' => true,
-            'message' => 'Usuario agregado',
-            'user' => [
-                'id' => $newId,
-                'nombre_usuario' => $nombreUsuario,
-                'correo_electronico' => $correoElectronico,
-                'rol_id' => $rolId,
-                'avatar' => $avatar,
-                'permisos' => $rolId !== 1 ? $userModel->getUserPermissions($newId) : [],
-            ],
-        ]);
+        unset($u);
+        $this->jsonResponse(['success' => true, 'users' => $users, 'count' => count($users)]);
     }
-
-    if ($id <= 0) {
-        throw new Exception('ID inválido');
-    }
-
-    // Obtener datos viejos antes de modificar
-    $oldData = $userModel->getById($id);
-
-    // Si no se subió nuevo avatar, mantener el existente
-    if ($avatar === null) {
-        $avatar = $oldData['avatar'] ?? null;
-    } else {
-        if (!empty($oldData['avatar'])) {
-            $uploader = new \SysInescolara\helpers\ImageUploader();
-            $uploader->delete($oldData['avatar']);
-        }
-    }
-
-    $userModel->update($id, $nombreUsuario, $rolId, $correoElectronico, $password !== '' ? $password : null, $avatar);
-
-    if ($rolId !== 1) {
-        $userModel->setUserPermissions($id, $permisoIds);
-    } else {
-        $userModel->setUserPermissions($id, []);
-    }
-
-    AuditLog::record('UPDATE', 'usuarios', $id, $oldData, [
-        'nombre_usuario' => $nombreUsuario,
-        'correo_electronico' => $correoElectronico,
-        'rol_id' => $rolId,
-    ]);
-
-    // Si el usuario editado es el mismo de la sesión, actualizar sus datos en sesión
-    if (isset($_SESSION['user_id']) && (int)$_SESSION['user_id'] === $id) {
-        $_SESSION['user_nombre'] = $nombreUsuario;
-        $_SESSION['user_avatar'] = $avatar;
-    }
-
-        jsonResponse([
-            'success' => true,
-            'message' => 'Usuario actualizado',
-            'user' => [
-                'id' => $id,
-                'nombre_usuario' => $nombreUsuario,
-                'correo_electronico' => $correoElectronico,
-                'rol_id' => $rolId,
-                'avatar' => $avatar,
-                'permisos' => $rolId !== 1 ? $userModel->getUserPermissions($id) : [],
-            ],
-        ]);
-}
-
-function handleDeleteAjax(User $userModel): void
-{
-    $id = (int)($_POST['id'] ?? 0);
-    if ($id <= 0) {
-        throw new Exception('ID inválido');
-    }
-
-    if ($id === 1) {
-        jsonResponse(['success' => false, 'message' => 'No se puede eliminar el superusuario principal'], 400);
-        return;
-    }
-
-    if (!$userModel->userExists($id)) {
-        throw new Exception('No existe el usuario');
-    }
-
-    // Verificar contraseña del usuario autenticado antes de eliminar
-    $currentPassword = $_POST['current_password'] ?? '';
-    if ($currentPassword === '') {
-        jsonResponse(['success' => false, 'message' => 'Debes ingresar tu contraseña para eliminar un usuario.'], 400);
-        return;
-    }
-    $userId = (int)($_SESSION['user_id'] ?? 0);
-    if ($userId <= 0 || !$userModel->verifyPassword($userId, $currentPassword)) {
-        jsonResponse(['success' => false, 'message' => 'Contraseña incorrecta. No se puede eliminar el usuario.'], 403);
-        return;
-    }
-
-    $oldData = $userModel->getById($id);
-    $userModel->delete($id);
-    AuditLog::record('DELETE', 'usuarios', $id, $oldData, null);
-
-    jsonResponse([
-        'success' => true,
-        'message' => 'Usuario eliminado',
-        'userId' => $id,
-    ]);
-}
-
-function getUsersAjax(User $userModel): void
-{
-    $users = $userModel->getAll();
-
-    foreach ($users as &$u) {
-        $u['permisos'] = ($u['rol_id'] ?? 0) !== 1 ? $userModel->getUserPermissions((int)$u['id']) : [];
-    }
-    unset($u);
-
-    jsonResponse([
-        'success' => true,
-        'users' => $users,
-        'count' => count($users),
-    ]);
 }

@@ -78,6 +78,7 @@ class User extends Database
                 ['codigo' => 'CLIENTES_CREATE', 'desc' => 'Crear clientes'],
                 ['codigo' => 'CLIENTES_EDIT', 'desc' => 'Editar clientes'],
                 ['codigo' => 'CLIENTES_DELETE', 'desc' => 'Eliminar clientes'],
+                ['codigo' => 'TAREAS_VIEW', 'desc' => 'Ver tareas'],
                 ['codigo' => 'ASISTENTE_ACCESS', 'desc' => 'Acceder al asistente IA'],
             ];
 
@@ -108,7 +109,7 @@ class User extends Database
             }
 
             // Asegurar rol_permisos para Trabajador (rol 2) — limitados
-            $trabajadorPermisos = ['DASHBOARD_VIEW', 'INVENTARIO_VIEW', 'VENTAS_ACCESS', 'PLANTAS_VIEW', 'PLANTAS_CREATE', 'PLANTAS_EDIT', 'CLIENTES_VIEW', 'CLIENTES_CREATE', 'CLIENTES_EDIT', 'ASISTENTE_ACCESS'];
+            $trabajadorPermisos = ['DASHBOARD_VIEW', 'INVENTARIO_VIEW', 'VENTAS_ACCESS', 'PLANTAS_VIEW', 'PLANTAS_CREATE', 'PLANTAS_EDIT', 'CLIENTES_VIEW', 'CLIENTES_CREATE', 'CLIENTES_EDIT', 'TAREAS_VIEW', 'ASISTENTE_ACCESS'];
             foreach ($trabajadorPermisos as $cod) {
                 if (isset($permMap[$cod])) {
                     $stmtCheckRP->execute([':rol' => 2, ':perm' => $permMap[$cod]]);

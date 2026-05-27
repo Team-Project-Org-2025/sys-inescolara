@@ -1,232 +1,124 @@
 <?php
 
-declare(strict_types=1);
-
-require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
+namespace SysInescolara\controllers;
 
 use SysInescolara\models\Plant;
 use SysInescolara\models\Species;
 use SysInescolara\models\AuditLog;
+use SysInescolara\traits\ResponseTrait;
+use SysInescolara\traits\PermissionTrait;
 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
-function plantsCheckAuth(): void
+class PlantsController
 {
-    if (!isset($_SESSION['user_id'])) {
-        $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
-        if ($isAjax) {
-            header('Content-Type: application/json; charset=utf-8');
-            http_response_code(401);
-            echo json_encode(['success' => false, 'message' => 'No autorizado', 'redirect' => BASE_URL . 'login']);
-            exit();
+    use ResponseTrait, PermissionTrait;
+
+    private Plant $model;
+
+    public function __construct()
+    {
+        if (session_status() === PHP_SESSION_NONE) session_start();
+        $this->model = new Plant();
+    }
+
+    public function index(): void
+    {
+        $this->checkModuleAuth();
+        $this->handleAjaxRequest();
+
+        $speciesModel = new Species();
+        $species = $speciesModel->getAll();
+
+        $view = ROOT_PATH . 'app/views/dashboard/plants.php';
+        if (!is_file($view)) {
+            http_response_code(500);
+            echo 'Vista de plantas no encontrada.';
+            return;
         }
-        header('Location: ' . BASE_URL . 'login');
-        exit();
-    }
-}
-
-function checkPermisoOrFail(string $codigo): void
-{
-    $permisos = $_SESSION['user_permisos'] ?? [];
-    if (!in_array($codigo, $permisos, true)) {
-        http_response_code(403);
-        echo json_encode(['success' => false, 'message' => 'No tienes permiso para realizar esta acción.']);
-        exit();
-    }
-}
-
-$GLOBALS['plantModel'] = new Plant();
-$GLOBALS['speciesModel'] = new Species();
-
-function index(): void
-{
-    $plantModel = $GLOBALS['plantModel'] ?? new Plant();
-    $speciesModel = $GLOBALS['speciesModel'] ?? new Species();
-    plantsCheckAuth();
-    handleRequest($plantModel);
-
-    $species = $speciesModel->getAll();
-    $view = ROOT_PATH . 'app/views/dashboard/plants.php';
-    if (!is_file($view)) {
-        http_response_code(500);
-        echo 'Vista de plantas no encontrada.';
-        return;
+        require $view;
     }
 
-    require $view;
-}
+    public function get_plants(): void { $this->checkModuleAuth(); $this->getPlantsAjax(); }
+    public function add_ajax(): void { $this->checkModuleAuth(); $this->checkPermisoOrFail('PLANTAS_CREATE'); $this->handleAddEdit('add'); }
+    public function edit_ajax(): void { $this->checkModuleAuth(); $this->checkPermisoOrFail('PLANTAS_EDIT'); $this->handleAddEdit('edit'); }
+    public function delete_ajax(): void { $this->checkModuleAuth(); $this->checkPermisoOrFail('PLANTAS_DELETE'); $this->handleDelete(); }
 
-function get_plants(): void
-{
-    $plantModel = $GLOBALS['plantModel'] ?? new Plant();
-    plantsCheckAuth();
-    getPlantsAjax($plantModel);
-}
+    private function handleAjaxRequest(): void
+    {
+        $action = $_GET['action'] ?? '';
+        if (!$this->isAjaxRequest() || $action === '') return;
 
-function add_ajax(): void
-{
-    $plantModel = $GLOBALS['plantModel'] ?? new Plant();
-    plantsCheckAuth();
-    checkPermisoOrFail('PLANTAS_CREATE');
-    handleAddEditAjax($plantModel, 'add');
-}
+        header('Content-Type: application/json; charset=utf-8');
+        try {
+            match ($_SERVER['REQUEST_METHOD'] . '_' . $action) {
+                'GET_get_plants'   => $this->getPlantsAjax(),
+                'POST_add_ajax'    => $this->handleAddEdit('add'),
+                'POST_edit_ajax'   => $this->handleAddEdit('edit'),
+                'POST_delete_ajax' => $this->handleDelete(),
+                default            => $this->jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
+            };
+        } catch (\Exception $e) {
+            $this->handleError($e, true);
+        }
+    }
 
-function edit_ajax(): void
-{
-    $plantModel = $GLOBALS['plantModel'] ?? new Plant();
-    plantsCheckAuth();
-    checkPermisoOrFail('PLANTAS_EDIT');
-    handleAddEditAjax($plantModel, 'edit');
-}
+    private function handleAddEdit(string $mode): void
+    {
+        $nombreComun = trim((string)($_POST['nombre_comun'] ?? ''));
+        if ($nombreComun === '') throw new \Exception('El nombre común es requerido.');
+        $nombreTecnico = trim((string)($_POST['nombre_tecnico'] ?? ''));
+        if ($nombreTecnico === '') $nombreTecnico = null;
+        $especieId = !empty($_POST['especie_id']) ? (int)$_POST['especie_id'] : null;
 
-function delete_ajax(): void
-{
-    $plantModel = $GLOBALS['plantModel'] ?? new Plant();
-    plantsCheckAuth();
-    checkPermisoOrFail('PLANTAS_DELETE');
-    handleDeleteAjax($plantModel);
-}
+        $imagen = null;
+        if (!empty($_FILES['imagen']) && $_FILES['imagen']['error'] === UPLOAD_ERR_OK) {
+            $uploader = new \SysInescolara\helpers\ImageUploader('assets/uploads/plants');
+            $result = $uploader->upload($_FILES['imagen'], 'plant');
+            if (!$result['success']) throw new \Exception(implode(', ', $result['errors']));
+            $imagen = $result['data']['url'];
+        }
 
-function handleRequest(Plant $plantModel): void
-{
-    $action = $_GET['action'] ?? '';
-    $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+        if ($mode === 'add') {
+            $this->model->add($nombreComun, $nombreTecnico, $especieId, $imagen);
+            $newId = $this->model->getLastInsertId() ?? 0;
+            AuditLog::record('CREATE', 'plantas', $newId, null, compact('nombreComun', 'nombreTecnico', 'especieId', 'imagen'));
+            $this->jsonResponse(['success' => true, 'message' => 'Planta agregada correctamente', 'plant' => ['id' => $newId, 'nombre_comun' => $nombreComun, 'imagen' => $imagen]]);
+        }
 
-    try {
-        if ($isAjax) {
-            header('Content-Type: application/json; charset=utf-8');
+        $id = (int)($_POST['id'] ?? 0);
+        if ($id <= 0) throw new \Exception('ID inválido');
 
-            $routes = [
-                'GET_get_plants'     => fn() => getPlantsAjax($plantModel),
-                'POST_add_ajax'      => fn() => handleAddEditAjax($plantModel, 'add'),
-                'POST_edit_ajax'     => fn() => handleAddEditAjax($plantModel, 'edit'),
-                'POST_delete_ajax'   => fn() => handleDeleteAjax($plantModel),
-            ];
-
-            $route = $_SERVER['REQUEST_METHOD'] . '_' . $action;
-
-            if (isset($routes[$route])) {
-                $routes[$route]();
+        if ($imagen === null) {
+            $oldData = $this->model->getById($id);
+            $imagen = $oldData['imagen'] ?? null;
+        } else {
+            $oldData = $this->model->getById($id);
+            if (!empty($oldData['imagen'])) {
+                (new \SysInescolara\helpers\ImageUploader())->delete($oldData['imagen']);
             }
-
-            jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400);
         }
-    } catch (Exception $e) {
-        handleError($e, $isAjax);
-    }
-}
 
-function jsonResponse(array $data, int $statusCode = 200): void
-{
-    http_response_code($statusCode);
-    echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-    exit();
-}
-
-function handleError(Exception $e, bool $isAjax): void
-{
-    if ($isAjax) {
-        jsonResponse(['success' => false, 'message' => $e->getMessage()], 500);
-    }
-    http_response_code(500);
-    echo 'Error: ' . htmlspecialchars($e->getMessage());
-    exit();
-}
-
-function handleAddEditAjax(Plant $plantModel, string $mode): void
-{
-    $nombreComun = trim((string)($_POST['nombre_comun'] ?? ''));
-    if ($nombreComun === '') {
-        throw new Exception('El nombre común es requerido.');
+        $this->model->update($id, $nombreComun, $nombreTecnico, $especieId, $imagen);
+        AuditLog::record('UPDATE', 'plantas', $id, $oldData, compact('nombreComun', 'nombreTecnico', 'especieId', 'imagen'));
+        $this->jsonResponse(['success' => true, 'message' => 'Planta actualizada correctamente', 'plant' => ['id' => $id, 'imagen' => $imagen]]);
     }
 
-    $nombreTecnico = trim((string)($_POST['nombre_tecnico'] ?? ''));
-    if ($nombreTecnico === '') {
-        $nombreTecnico = null;
-    }
+    private function handleDelete(): void
+    {
+        $id = (int)($_POST['id'] ?? 0);
+        if ($id <= 0) throw new \Exception('ID inválido');
+        if (!$this->model->exists($id)) throw new \Exception('No existe la planta');
 
-    $especieId = !empty($_POST['especie_id']) ? (int)$_POST['especie_id'] : null;
-
-    $imagen = null;
-
-    if (!empty($_FILES['imagen']) && $_FILES['imagen']['error'] === UPLOAD_ERR_OK) {
-        $uploader = new \SysInescolara\helpers\ImageUploader('assets/uploads/plants');
-        $result = $uploader->upload($_FILES['imagen'], 'plant');
-        if (!$result['success']) {
-            throw new Exception(implode(', ', $result['errors']));
-        }
-        $imagen = $result['data']['url'];
-    }
-
-    if ($mode === 'add') {
-        $plantModel->add($nombreComun, $nombreTecnico, $especieId, $imagen);
-        $newId = $plantModel->getLastInsertId() ?? 0;
-        AuditLog::record('CREATE', 'plantas', $newId, null, [
-            'nombre_comun' => $nombreComun,
-            'nombre_tecnico' => $nombreTecnico,
-            'especie_id' => $especieId,
-            'imagen' => $imagen,
-        ]);
-        jsonResponse([
-            'success' => true,
-            'message' => 'Planta agregada correctamente',
-            'plant' => [
-                'id' => $newId,
-                'nombre_comun' => $nombreComun,
-                'imagen' => $imagen,
-            ],
-        ]);
-    }
-
-    $id = (int)($_POST['id'] ?? 0);
-    if ($id <= 0) throw new Exception('ID inválido');
-
-    if ($imagen === null) {
-        $oldData = $plantModel->getById($id);
-        $imagen = $oldData['imagen'] ?? null;
-    } else {
-        $oldData = $plantModel->getById($id);
+        $oldData = $this->model->getById($id);
         if (!empty($oldData['imagen'])) {
-            $uploader = new \SysInescolara\helpers\ImageUploader();
-            $uploader->delete($oldData['imagen']);
+            (new \SysInescolara\helpers\ImageUploader())->delete($oldData['imagen']);
         }
+        $this->model->delete($id);
+        AuditLog::record('DELETE', 'plantas', $id, $oldData, null);
+        $this->jsonResponse(['success' => true, 'message' => 'Planta eliminada correctamente', 'plantId' => $id]);
     }
 
-    $plantModel->update($id, $nombreComun, $nombreTecnico, $especieId, $imagen);
-    AuditLog::record('UPDATE', 'plantas', $id, $oldData, [
-        'nombre_comun' => $nombreComun,
-        'nombre_tecnico' => $nombreTecnico,
-        'especie_id' => $especieId,
-        'imagen' => $imagen,
-    ]);
-    jsonResponse([
-        'success' => true,
-        'message' => 'Planta actualizada correctamente',
-        'plant' => ['id' => $id, 'imagen' => $imagen],
-    ]);
-}
-
-function handleDeleteAjax(Plant $plantModel): void
-{
-    $id = (int)($_POST['id'] ?? 0);
-    if ($id <= 0) throw new Exception('ID inválido');
-    if (!$plantModel->exists($id)) throw new Exception('No existe la planta');
-
-    $oldData = $plantModel->getById($id);
-    if (!empty($oldData['imagen'])) {
-        $uploader = new \SysInescolara\helpers\ImageUploader();
-        $uploader->delete($oldData['imagen']);
+    private function getPlantsAjax(): void
+    {
+        $this->jsonResponse(['success' => true, 'plants' => $this->model->getAll(), 'count' => 0]);
     }
-
-    $plantModel->delete($id);
-    AuditLog::record('DELETE', 'plantas', $id, $oldData, null);
-    jsonResponse(['success' => true, 'message' => 'Planta eliminada correctamente', 'plantId' => $id]);
-}
-
-function getPlantsAjax(Plant $plantModel): void
-{
-    $plants = $plantModel->getAll();
-    jsonResponse(['success' => true, 'plants' => $plants, 'count' => count($plants)]);
 }

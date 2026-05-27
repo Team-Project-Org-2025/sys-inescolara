@@ -4,31 +4,6 @@
  */
 
 // ============================================
-// MOBILE MENU
-// ============================================
-
-function toggleMobileMenu() {
-  const mobileMenu = document.getElementById('mobileMenu');
-  if (mobileMenu) {
-    mobileMenu.classList.toggle('active');
-    document.body.style.overflow = mobileMenu.classList.contains('active') ? 'hidden' : '';
-  }
-}
-
-// Close mobile menu when clicking outside
-document.addEventListener('click', function (e) {
-  const mobileMenu = document.getElementById('mobileMenu');
-  const mobileMenuContent = document.querySelector('.mobile-menu-content');
-  const menuBtn = document.querySelector('.mobile-menu-btn');
-
-  if (mobileMenu && mobileMenu.classList.contains('active')) {
-    if (!mobileMenuContent.contains(e.target) && !menuBtn.contains(e.target)) {
-      toggleMobileMenu();
-    }
-  }
-});
-
-// ============================================
 // FEATURED PLANTS (Landing Page)
 // ============================================
 
@@ -278,7 +253,6 @@ document.addEventListener('click', function (e) {
 document.addEventListener('keydown', function (e) {
   if (e.key === 'Escape') {
     closePlantModal();
-    toggleMobileMenu();
   }
 });
 

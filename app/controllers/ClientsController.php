@@ -1,215 +1,100 @@
 <?php
 
-declare(strict_types=1);
-
-require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
+namespace SysInescolara\controllers;
 
 use SysInescolara\models\Client;
 use SysInescolara\models\AuditLog;
+use SysInescolara\traits\ResponseTrait;
+use SysInescolara\traits\PermissionTrait;
 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
-function clientsCheckAuth(): void
+class ClientsController
 {
-    if (!isset($_SESSION['user_id'])) {
-        $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
-        if ($isAjax) {
-            header('Content-Type: application/json; charset=utf-8');
-            http_response_code(401);
-            echo json_encode(['success' => false, 'message' => 'No autorizado', 'redirect' => BASE_URL . 'login']);
-            exit();
+    use ResponseTrait, PermissionTrait;
+
+    private Client $model;
+
+    public function __construct()
+    {
+        if (session_status() === PHP_SESSION_NONE) session_start();
+        $this->model = new Client();
+    }
+
+    public function index(): void
+    {
+        $this->checkModuleAuth();
+        $this->handleAjaxRequest();
+
+        $view = ROOT_PATH . 'app/views/dashboard/clients.php';
+        if (!is_file($view)) {
+            http_response_code(500);
+            echo 'Vista de clientes no encontrada.';
+            return;
         }
-        header('Location: ' . BASE_URL . 'login');
-        exit();
-    }
-}
-
-function checkPermisoOrFail(string $codigo): void
-{
-    $permisos = $_SESSION['user_permisos'] ?? [];
-    if (!in_array($codigo, $permisos, true)) {
-        http_response_code(403);
-        echo json_encode(['success' => false, 'message' => 'No tienes permiso para realizar esta acción.']);
-        exit();
-    }
-}
-
-$GLOBALS['clientModel'] = new Client();
-
-function index(): void
-{
-    $clientModel = $GLOBALS['clientModel'] ?? new Client();
-    clientsCheckAuth();
-    handleRequest($clientModel);
-
-    $view = ROOT_PATH . 'app/views/dashboard/clients.php';
-    if (!is_file($view)) {
-        http_response_code(500);
-        echo 'Vista de clientes no encontrada.';
-        return;
+        require $view;
     }
 
-    require $view;
-}
+    public function get_clients(): void { $this->checkModuleAuth(); $this->getClientsAjax(); }
+    public function add_ajax(): void { $this->checkModuleAuth(); $this->checkPermisoOrFail('CLIENTES_CREATE'); $this->handleAddEdit('add'); }
+    public function edit_ajax(): void { $this->checkModuleAuth(); $this->checkPermisoOrFail('CLIENTES_EDIT'); $this->handleAddEdit('edit'); }
+    public function delete_ajax(): void { $this->checkModuleAuth(); $this->checkPermisoOrFail('CLIENTES_DELETE'); $this->handleDelete(); }
 
-function get_clients(): void
-{
-    $clientModel = $GLOBALS['clientModel'] ?? new Client();
-    clientsCheckAuth();
-    getClientsAjax($clientModel);
-}
+    private function handleAjaxRequest(): void
+    {
+        $action = $_GET['action'] ?? '';
+        if (!$this->isAjaxRequest() || $action === '') return;
 
-function add_ajax(): void
-{
-    $clientModel = $GLOBALS['clientModel'] ?? new Client();
-    clientsCheckAuth();
-    checkPermisoOrFail('CLIENTES_CREATE');
-    handleAddEditAjax($clientModel, 'add');
-}
-
-function edit_ajax(): void
-{
-    $clientModel = $GLOBALS['clientModel'] ?? new Client();
-    clientsCheckAuth();
-    checkPermisoOrFail('CLIENTES_EDIT');
-    handleAddEditAjax($clientModel, 'edit');
-}
-
-function delete_ajax(): void
-{
-    $clientModel = $GLOBALS['clientModel'] ?? new Client();
-    clientsCheckAuth();
-    checkPermisoOrFail('CLIENTES_DELETE');
-    handleDeleteAjax($clientModel);
-}
-
-function handleRequest(Client $clientModel): void
-{
-    $action = $_GET['action'] ?? '';
-    $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
-
-    try {
-        if ($isAjax) {
-            header('Content-Type: application/json; charset=utf-8');
-
-            $routes = [
-                'GET_get_clients'   => fn() => getClientsAjax($clientModel),
-                'POST_add_ajax'     => fn() => handleAddEditAjax($clientModel, 'add'),
-                'POST_edit_ajax'    => fn() => handleAddEditAjax($clientModel, 'edit'),
-                'POST_delete_ajax'  => fn() => handleDeleteAjax($clientModel),
-            ];
-
-            $route = $_SERVER['REQUEST_METHOD'] . '_' . $action;
-
-            if (isset($routes[$route])) {
-                $routes[$route]();
-            }
-
-            jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400);
+        header('Content-Type: application/json; charset=utf-8');
+        try {
+            match ($_SERVER['REQUEST_METHOD'] . '_' . $action) {
+                'GET_get_clients'  => $this->getClientsAjax(),
+                'POST_add_ajax'    => $this->handleAddEdit('add'),
+                'POST_edit_ajax'   => $this->handleAddEdit('edit'),
+                'POST_delete_ajax' => $this->handleDelete(),
+                default            => $this->jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
+            };
+        } catch (\Exception $e) {
+            $this->handleError($e, true);
         }
-    } catch (Exception $e) {
-        handleError($e, $isAjax);
-    }
-}
-
-function jsonResponse(array $data, int $statusCode = 200): void
-{
-    http_response_code($statusCode);
-    echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-    exit();
-}
-
-function handleError(Exception $e, bool $isAjax): void
-{
-    if ($isAjax) {
-        jsonResponse(['success' => false, 'message' => $e->getMessage()], 500);
-    }
-    http_response_code(500);
-    echo 'Error: ' . htmlspecialchars($e->getMessage());
-    exit();
-}
-
-function handleAddEditAjax(Client $clientModel, string $mode): void
-{
-    $nombreCliente = trim((string)($_POST['nombre_cliente'] ?? ''));
-    if ($nombreCliente === '') {
-        throw new Exception('El nombre del cliente es requerido.');
     }
 
-    $contactoCliente = trim((string)($_POST['contacto_cliente'] ?? ''));
-    if ($contactoCliente === '') {
-        $contactoCliente = null;
+    private function handleAddEdit(string $mode): void
+    {
+        $nombreCliente = trim((string)($_POST['nombre_cliente'] ?? ''));
+        if ($nombreCliente === '') throw new \Exception('El nombre del cliente es requerido.');
+
+        $contactoCliente = trim((string)($_POST['contacto_cliente'] ?? ''));
+        if ($contactoCliente === '') $contactoCliente = null;
+
+        if ($mode === 'add') {
+            $this->model->add($nombreCliente, $contactoCliente);
+            $newId = $this->model->getLastInsertId() ?? 0;
+            AuditLog::record('CREATE', 'cliente', $newId, null, ['nombre_cliente' => $nombreCliente, 'contacto_cliente' => $contactoCliente]);
+            $this->jsonResponse(['success' => true, 'message' => 'Cliente agregado correctamente', 'client' => ['id' => $newId, 'nombre_cliente' => $nombreCliente, 'contacto_cliente' => $contactoCliente]]);
+        }
+
+        $id = (int)($_POST['id'] ?? 0);
+        if ($id <= 0) throw new \Exception('ID inválido');
+
+        $oldData = $this->model->getById($id);
+        $this->model->update($id, $nombreCliente, $contactoCliente);
+        AuditLog::record('UPDATE', 'cliente', $id, $oldData, ['nombre_cliente' => $nombreCliente, 'contacto_cliente' => $contactoCliente]);
+        $this->jsonResponse(['success' => true, 'message' => 'Cliente actualizado correctamente', 'client' => ['id' => $id, 'nombre_cliente' => $nombreCliente, 'contacto_cliente' => $contactoCliente]]);
     }
 
-    if ($mode === 'add') {
-        $clientModel->add($nombreCliente, $contactoCliente);
-        $newId = $clientModel->getLastInsertId() ?? 0;
-        AuditLog::record('CREATE', 'cliente', $newId, null, [
-            'nombre_cliente' => $nombreCliente,
-            'contacto_cliente' => $contactoCliente,
-        ]);
-        jsonResponse([
-            'success' => true,
-            'message' => 'Cliente agregado correctamente',
-            'client' => [
-                'id' => $newId,
-                'nombre_cliente' => $nombreCliente,
-                'contacto_cliente' => $contactoCliente,
-            ],
-        ]);
+    private function handleDelete(): void
+    {
+        $id = (int)($_POST['id'] ?? 0);
+        if ($id <= 0) throw new \Exception('ID inválido');
+        if (!$this->model->exists($id)) throw new \Exception('No existe el cliente');
+
+        $oldData = $this->model->getById($id);
+        $this->model->delete($id);
+        AuditLog::record('DELETE', 'cliente', $id, $oldData, null);
+        $this->jsonResponse(['success' => true, 'message' => 'Cliente eliminado correctamente', 'clientId' => $id]);
     }
 
-    $id = (int)($_POST['id'] ?? 0);
-    if ($id <= 0) {
-        throw new Exception('ID inválido');
+    private function getClientsAjax(): void
+    {
+        $this->jsonResponse(['success' => true, 'clients' => $this->model->getAll(), 'count' => 0]);
     }
-
-    $oldData = $clientModel->getById($id);
-    $clientModel->update($id, $nombreCliente, $contactoCliente);
-    AuditLog::record('UPDATE', 'cliente', $id, $oldData, [
-        'nombre_cliente' => $nombreCliente,
-        'contacto_cliente' => $contactoCliente,
-    ]);
-    jsonResponse([
-        'success' => true,
-        'message' => 'Cliente actualizado correctamente',
-        'client' => [
-            'id' => $id,
-            'nombre_cliente' => $nombreCliente,
-            'contacto_cliente' => $contactoCliente,
-        ],
-    ]);
-}
-
-function handleDeleteAjax(Client $clientModel): void
-{
-    $id = (int)($_POST['id'] ?? 0);
-    if ($id <= 0) {
-        throw new Exception('ID inválido');
-    }
-
-    if (!$clientModel->exists($id)) {
-        throw new Exception('No existe el cliente');
-    }
-
-    $oldData = $clientModel->getById($id);
-    $clientModel->delete($id);
-    AuditLog::record('DELETE', 'cliente', $id, $oldData, null);
-    jsonResponse([
-        'success' => true,
-        'message' => 'Cliente eliminado correctamente',
-        'clientId' => $id,
-    ]);
-}
-
-function getClientsAjax(Client $clientModel): void
-{
-    $clients = $clientModel->getAll();
-    jsonResponse([
-        'success' => true,
-        'clients' => $clients,
-        'count' => count($clients),
-    ]);
 }

@@ -92,50 +92,47 @@ class FrontController
 
     private function loadController(): void
     {
-
-        // Un solo directorio de controladores: cada controlador = un módulo (vista / lógica asociada).
-
         $controllerFile = ROOT_PATH . "app/controllers/"
-
             . ucfirst($this->controllerName) . "Controller.php";
 
-
-
         if (!file_exists($controllerFile)) {
-
             $this->renderNotFound(
-
                 "El controlador '{$this->controllerName}' no existe."
-
             );
-
             return;
         }
-
-
 
         require_once $controllerFile;
 
-
-
-        if (!function_exists($this->action)) {
-
-            $this->renderNotFound(
-
-                "La función '{$this->action}()' no existe en el controlador '{$this->controllerName}'"
-
-            );
-
+        // Intentar como clase con namespace
+        $className = "SysInescolara\\controllers\\" . ucfirst($this->controllerName) . "Controller";
+        if (class_exists($className, false)) {
+            $controller = new $className();
+            if (!method_exists($controller, $this->action)) {
+                $this->renderNotFound(
+                    "El método '{$this->action}()' no existe en el controlador '{$this->controllerName}'"
+                );
+                return;
+            }
+            try {
+                call_user_func_array([$controller, $this->action], $this->params);
+            } catch (Exception $e) {
+                $this->renderNotFound("Error interno: " . $e->getMessage());
+            }
             return;
         }
 
-
+        // Fallback: función global (controladores legacy)
+        if (!function_exists($this->action)) {
+            $this->renderNotFound(
+                "La función '{$this->action}()' no existe en el controlador '{$this->controllerName}'"
+            );
+            return;
+        }
 
         try {
-
             call_user_func_array($this->action, $this->params);
         } catch (Exception $e) {
-
             $this->renderNotFound("Error interno: " . $e->getMessage());
         }
     }
