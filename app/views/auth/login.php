@@ -57,6 +57,7 @@
     <div class="auth-panel-right">
         <div class="auth-form-container">
             <div class="auth-form-header">
+                <img src="<?= BASE_URL ?>public/assets/images/logo_de_inecolara-sin-fondo.png" alt="INECOLARA" class="auth-logo-mobile">
                 <a href="<?= BASE_URL ?>" class="auth-back-link">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <line x1="19" y1="12" x2="5" y2="12"></line>
