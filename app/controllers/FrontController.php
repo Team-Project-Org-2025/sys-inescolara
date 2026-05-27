@@ -106,7 +106,7 @@ class FrontController
 
         // Intentar como clase con namespace
         $className = "SysInescolara\\controllers\\" . ucfirst($this->controllerName) . "Controller";
-        if (class_exists($className)) {
+        if (class_exists($className, false)) {
             $controller = new $className();
             if (!method_exists($controller, $this->action)) {
                 $this->renderNotFound(
