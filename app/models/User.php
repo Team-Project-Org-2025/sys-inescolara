@@ -202,6 +202,34 @@ class User extends Database
         }
     }
 
+    public function getUserByEmail(string $email): ?array
+    {
+        try {
+            $stmt = $this->db->prepare("SELECT id_usuario, nombre_usuario, correo_electronico, avatar, id_rol, estatus FROM usuarios WHERE correo_electronico = :email LIMIT 1");
+            $stmt->execute([':email' => $email]);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $user ? $this->normalizeUserRow($user) : null;
+        } catch (\Throwable $e) {
+            error_log("Error en getUserByEmail: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    public function updatePassword(int $userId, string $newPassword): bool
+    {
+        try {
+            $hash = password_hash($newPassword, PASSWORD_DEFAULT);
+            if ($hash === false) {
+                throw new Exception("Error al hashear la contraseña");
+            }
+            $stmt = $this->db->prepare("UPDATE usuarios SET password_hash = :hash WHERE id_usuario = :id");
+            return $stmt->execute([':hash' => $hash, ':id' => $userId]);
+        } catch (\Throwable $e) {
+            error_log("Error en updatePassword: " . $e->getMessage());
+            return false;
+        }
+    }
+
     private function updatePasswordHash(int $userId, string $plainPassword): void
     {
         try {
