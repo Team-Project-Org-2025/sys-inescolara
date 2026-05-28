@@ -64,6 +64,7 @@ $modulos = [
     'Trabajadores' => ['TRABAJADORES_VIEW' => 'Ver', 'TRABAJADORES_CREATE' => 'Crear', 'TRABAJADORES_EDIT' => 'Editar', 'TRABAJADORES_DELETE' => 'Eliminar'],
     'Clientes' => ['CLIENTES_VIEW' => 'Ver', 'CLIENTES_CREATE' => 'Crear', 'CLIENTES_EDIT' => 'Editar', 'CLIENTES_DELETE' => 'Eliminar'],
     'Tareas' => ['TAREAS_VIEW' => 'Ver'],
+    'Ubicaciones' => ['UBICACIONES_VIEW' => 'Ver', 'UBICACIONES_CREATE' => 'Crear', 'UBICACIONES_EDIT' => 'Editar', 'UBICACIONES_DELETE' => 'Eliminar'],
     'Asistente IA' => ['ASISTENTE_ACCESS' => 'Acceder'],
     'Sistema' => ['USUARIOS_MANAGE' => 'Gestionar (usuarios, bitácora, respaldos)'],
 ];
