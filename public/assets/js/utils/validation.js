@@ -18,7 +18,13 @@ export const REGEX = {
   banco: /^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9\s\-\.]{3,30}$/,
   password: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&._-])[A-Za-z\d@$!%*?&._-]{8,30}$/,
   passwordEdit: /^(?:.{0}|(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&._-])[A-Za-z\d@$!%*?&._-]{8,30})$/,
+  //hoy: new Date().toISOString().split("T")[0],
+  fechaFormato: /^\d{4}-\d{2}-\d{2}$/, 
+  cantidad: /^[1-9]\d*$/,
+  ubicacion: /^[A-Za-z0-9\s\-\.#]{3,100}$/,
 };
+
+export const hoy = new Date().toISOString().split("T")[0];
 
 // Mensajes de error personalizados
 export const MESSAGES = {
@@ -41,8 +47,14 @@ export const MESSAGES = {
   required: 'Este campo es requerido',
   select: 'Seleccione una opción',
   tracking: 'Tracking inválida (8 dígitos)',
+  fecha: 'Fecha inválidda',
+  fechaFutura: 'La fecha no puede ser posterior al día de hoy',
+  cantidad: 'Cantidad inválida (solo números, sin ceros a la izquierda)',
+  ubicacion: 'Ubicación inválida (3-100 caracteres)',
+
   default: 'Campo inválido',
 };
+
 
 //Valida un campo individual
 export const validateField = ($input, regex = null, errorMsg = '') => {
@@ -107,6 +119,11 @@ export const setupRealTimeValidation = ($form, rules, isEdit = false) => {
   Object.entries(rules).forEach(([campo, tipo]) => {
     const $input = $form.find(`[name="${campo}"]`);
     if (!$input.length) return;
+
+    if (tipo === 'fechaFuturaCheck') {
+      $input.on('input change blur', () => validateNoFutureDate($input));
+      return;
+    }
 
     // ========================================================================
     // BLOQUEO 1: BLOQUEAR LETRAS (Para Teléfonos, Cédulas, Códigos)
@@ -174,6 +191,7 @@ export const setupRealTimeValidation = ($form, rules, isEdit = false) => {
       }
       validateField($input, regex, message);
     });
+
   });
 };
 
@@ -184,6 +202,11 @@ export const validateForm = ($form, rules, isEdit = false) => {
   Object.entries(rules).forEach(([campo, tipo]) => {
     const $input = $form.find(`[name="${campo}"]`);
     if (!$input.length) return;
+
+    if (tipo === 'fechaFuturaCheck') {
+      if (!validateNoFutureDate($input)) isValid = false;
+      return;
+    }
 
     // Password opcional en edición
     if (campo === 'password' && isEdit && $input.val() === '') {
@@ -202,6 +225,7 @@ export const validateForm = ($form, rules, isEdit = false) => {
     } else {
       if (!validateField($input, regex, message)) isValid = false;
     }
+
   });
 
   return isValid;
