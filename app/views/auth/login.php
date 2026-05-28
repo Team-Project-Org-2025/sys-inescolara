@@ -57,6 +57,7 @@
     <div class="auth-panel-right">
         <div class="auth-form-container">
             <div class="auth-form-header">
+                <img src="<?= BASE_URL ?>public/assets/images/logo_de_inecolara-sin-fondo.png" alt="INECOLARA" class="auth-logo-mobile">
                 <a href="<?= BASE_URL ?>" class="auth-back-link">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <line x1="19" y1="12" x2="5" y2="12"></line>
@@ -68,6 +69,15 @@
                 <p class="auth-form-subtitle">Ingresa tus credenciales para acceder al sistema</p>
             </div>
             
+            <?php if (!empty($success)): ?>
+            <div class="alert alert-success" id="loginSuccess">
+                <svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                <span><?= htmlspecialchars($success) ?></span>
+            </div>
+            <?php endif; ?>
+
             <?php if (!empty($error)): ?>
             <div class="alert alert-error" id="loginError">
                 <svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

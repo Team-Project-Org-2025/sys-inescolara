@@ -3,31 +3,32 @@ import * as Ajax from '../utils/ajax-handler.js';
 import { setupRealTimeValidation, validateForm } from '../utils/validation.js';
 
 $(document).ready(function () {
-  const baseUrl = `${window.BASE_URL || '/'}clients`;
-  let clientsTable = null;
+  const baseUrl = `${window.BASE_URL || '/'}tasks`;
+  let tasksTable = null;
 
-  const clientRules = {
-    nombre_cliente: 'nombre',
-    contacto_cliente: 'telefono'
+  const taskValidationRules = {
+    nombre_tarea: 'required',
+    descripcion: 'text', // opcional
   };
 
   const initDataTable = () => {
     if (typeof SkeletonHelper !== 'undefined') {
-      SkeletonHelper.showTableSkeleton('clientsTable', 5, 3);
+      SkeletonHelper.showTableSkeleton('tasksTable', 5, 4);
     }
-    clientsTable = $('#clientsTable').DataTable({
+    tasksTable = $('#tasksTable').DataTable({
       ajax: {
-        url: `${baseUrl}?action=get_clients`,
+        url: `${baseUrl}?action=get_tasks`,
         method: 'GET',
         dataType: 'json',
         headers: { 'X-Requested-With': 'XMLHttpRequest' },
-        dataSrc: 'clients',
+        dataSrc: 'tasks',
       },
       columns: [
-        { data: 'nombre_cliente' },
+        { data: 'id' },
+        { data: 'nombre_tarea' },
         {
-          data: 'contacto_cliente',
-          render: (data) => data || '<span class="text-muted">—</span>',
+          data: 'descripcion',
+          render: (data) => data || '<span class="text-muted">—</span>'
         },
         {
           data: null,
@@ -37,13 +38,13 @@ $(document).ready(function () {
               <div class="d-flex gap-1">
                 <button class="btn btn-sm btn-outline-primary btn-edit"
                         data-id="${Helpers.escapeHtml(data.id)}"
-                        data-nombre_cliente="${Helpers.escapeHtml(data.nombre_cliente)}"
-                        data-contacto_cliente="${Helpers.escapeHtml(data.contacto_cliente || '')}">
+                        data-nombre_tarea="${Helpers.escapeHtml(data.nombre_tarea)}"
+                        data-descripcion="${Helpers.escapeHtml(data.descripcion || '')}">
                     <i class="fas fa-edit"></i> Editar
                 </button>
                 <button class="btn btn-sm btn-outline-danger btn-delete"
                         data-id="${Helpers.escapeHtml(data.id)}"
-                        data-nombre_cliente="${Helpers.escapeHtml(data.nombre_cliente)}">
+                        data-nombre="${Helpers.escapeHtml(data.nombre_tarea)}">
                     <i class="fas fa-trash"></i> Eliminar
                 </button>
               </div>
@@ -64,29 +65,30 @@ $(document).ready(function () {
           className: 'btn btn-outline-secondary btn-sm',
           action: () => {
             if (typeof SkeletonHelper !== 'undefined') {
-              SkeletonHelper.showTableSkeleton('clientsTable', 5, 3);
+              SkeletonHelper.showTableSkeleton('tasksTable', 5, 4);
             }
-            clientsTable.ajax.reload(null, false);
+            tasksTable.ajax.reload(null, false);
           },
         },
       ],
     });
   };
 
-  // Agregar cliente
-  $('#btnAddClient').on('click', function () {
-    const $editModal = $('#editClientModal');
+  // Abrir modal para agregar
+  $('#btnAddTask').on('click', function () {
+    const $editModal = $('#editTaskModal');
     if ($editModal.hasClass('show')) {
       $editModal.modal('hide');
     }
-    $('#addClientModal').modal({ focus: false }).modal('show');
+    $('#addTaskModal').modal({ focus: false }).modal('show');
   });
 
-  $('#addClientForm').on('submit', function (e) {
+  // Submit agregar
+  $('#addTaskForm').on('submit', function (e) {
     e.preventDefault();
 
-    if (!validateForm($(this), clientRules)) {
-      Helpers.toast('error', 'Por favor, verifique los campos marcados en rojo.');
+    if (!validateForm($(this), taskValidationRules)) {
+      Helpers.toast('error', 'Por favor, complete el campo obligatorio.');
       return;
     }
 
@@ -103,39 +105,40 @@ $(document).ready(function () {
     })
       .done((response) => {
         if (response.success) {
-          Helpers.toast('success', 'Cliente agregado correctamente');
-          $('#addClientModal').modal('hide');
-          clientsTable.ajax.reload(null, false);
+          Helpers.toast('success', 'Tarea agregada correctamente');
+          $('#addTaskModal').modal('hide');
+          tasksTable.ajax.reload(null, false);
         } else {
           Helpers.toast('error', response.message);
         }
       })
       .fail((err) => {
-        Helpers.toast('error', err.responseJSON?.message || 'Error al agregar cliente');
+        Helpers.toast('error', err.responseJSON?.message || 'Error al agregar tarea');
       });
   });
 
-  // Editar cliente
+  // Editar: llenar modal
   $(document).on('click', '.btn-edit', function () {
     const $btn = $(this);
 
-    const $addModal = $('#addClientModal');
+    const $addModal = $('#addTaskModal');
     if ($addModal.hasClass('show')) {
       $addModal.modal('hide');
     }
 
-    $('#editClientId').val($btn.data('id'));
-    $('#editClientName').val($btn.data('nombre_cliente'));
-    $('#editClientContacto').val($btn.data('contacto_cliente'));
+    $('#editTaskId').val($btn.data('id'));
+    $('#editTaskName').val($btn.data('nombre_tarea'));
+    $('#editTaskDesc').val($btn.data('descripcion'));
 
-    $('#editClientModal').modal({ focus: false }).modal('show');
+    $('#editTaskModal').modal({ focus: false }).modal('show');
   });
 
-  $('#editClientForm').on('submit', function (e) {
+  // Submit editar
+  $('#editTaskForm').on('submit', function (e) {
     e.preventDefault();
 
-    if (!validateForm($(this), clientRules, true)) {
-      Helpers.toast('error', 'Por favor, verifique los campos marcados en rojo.');
+    if (!validateForm($(this), taskValidationRules, true)) {
+      Helpers.toast('error', 'Por favor, complete el campo obligatorio.');
       return;
     }
 
@@ -152,32 +155,32 @@ $(document).ready(function () {
     })
       .done((response) => {
         if (response.success) {
-          Helpers.toast('success', 'Cliente actualizado correctamente');
-          $('#editClientModal').modal('hide');
-          clientsTable.ajax.reload(null, false);
+          Helpers.toast('success', 'Tarea actualizada correctamente');
+          $('#editTaskModal').modal('hide');
+          tasksTable.ajax.reload(null, false);
         } else {
           Helpers.toast('error', response.message);
         }
       })
       .fail((err) => {
-        Helpers.toast('error', err.responseJSON?.message || 'Error al actualizar cliente');
+        Helpers.toast('error', err.responseJSON?.message || 'Error al actualizar tarea');
       });
   });
 
-  // Eliminar cliente
+  // Eliminar
   $(document).on('click', '.btn-delete', function () {
     const id = $(this).data('id');
-    const nombre = $(this).data('nombre_cliente');
+    const nombre = $(this).data('nombre');
 
     Helpers.confirmDialog(
-      '¿Eliminar cliente?',
+      '¿Eliminar tarea?',
       `¿Deseas eliminar <strong>${Helpers.escapeHtml(nombre)}</strong>?`,
       () => {
         Ajax.post(`${baseUrl}?action=delete_ajax`, { id })
           .then((response) => {
             if (response.success) {
-              Helpers.toast('success', 'Cliente eliminado correctamente');
-              clientsTable.ajax.reload(null, false);
+              Helpers.toast('success', 'Tarea eliminada correctamente');
+              tasksTable.ajax.reload(null, false);
             } else {
               Helpers.toast('error', response.message);
             }
@@ -190,23 +193,13 @@ $(document).ready(function () {
     );
   });
 
-  // Limpiar modales
-  $('#addClientModal, #editClientModal').on('hidden.bs.modal', function () {
+  // Limpiar modales al cerrar
+  $('#addTaskModal, #editTaskModal').on('hidden.bs.modal', function () {
     const $form = $(this).find('form');
     Helpers.resetForm($form);
-  });
-
-  // Limpiar modales
-  $('#addClientModal, #editClientModal').on('hidden.bs.modal', function () {
-    const $form = $(this).find('form');
-    Helpers.resetForm($form);
-    // NUEVO: LIMPIAR FEEDBACK VISUAL ANTIGUO AL CERRAR
-    $form.find('.is-valid, .is-invalid').removeClass('is-valid is-invalid');
-    $form.find('.invalid-feedback').remove();
   });
 
   initDataTable();
-  
-  setupRealTimeValidation($('#addClientForm'), clientRules);
-  setupRealTimeValidation($('#editClientForm'), clientRules, true);
+  setupRealTimeValidation($('#addTaskForm'), taskValidationRules);
+  setupRealTimeValidation($('#editTaskForm'), taskValidationRules, true);
 });

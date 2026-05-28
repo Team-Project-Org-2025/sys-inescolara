@@ -10,7 +10,6 @@ $(document).ready(function () {
     nombre_comun: 'nombrePlanta',
     nombre_tecnico: 'nombrePlanta',
     especie_id: 'select',
-    imagen: 'default'
   };
 
   const showImagePreview = (inputId, previewId) => {

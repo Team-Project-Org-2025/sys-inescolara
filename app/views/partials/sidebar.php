@@ -41,7 +41,7 @@ function hasPermiso(string $codigo): bool
             </ul>
         </div>
 
-        <?php if (hasPermiso('INVENTARIO_VIEW') || hasPermiso('PLANTAS_VIEW') || hasPermiso('PROVEEDORES_VIEW') || hasPermiso('TRABAJADORES_VIEW') || hasPermiso('INSUMOS_VIEW') || hasPermiso('CLIENTES_VIEW') || hasPermiso('UBICACIONES_VIEW')): ?>
+        <?php if (hasPermiso('INVENTARIO_VIEW') || hasPermiso('PLANTAS_VIEW') || hasPermiso('PROVEEDORES_VIEW') || hasPermiso('TRABAJADORES_VIEW') || hasPermiso('INSUMOS_VIEW') || hasPermiso('CLIENTES_VIEW') || hasPermiso('TAREAS_VIEW')): ?>
         <div class="sidebar-section">
             <span class="sidebar-section-title">Gestión</span>
             <ul class="sidebar-menu">
@@ -68,6 +68,7 @@ function hasPermiso(string $codigo): bool
                         <span>Plantas</span>
                     </a>
                 </li>
+                
                 <li>
                     <a href="<?= BASE_URL ?>dashboard/batches" class="sidebar-link <?= ($currentPage ?? '') === 'batches' ? 'active' : '' ?>">
                         <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -134,7 +135,7 @@ function hasPermiso(string $codigo): bool
                             <rect x="1" y="3" width="22" height="5"></rect>
                             <line x1="10" y1="12" x2="14" y2="12"></line>
                         </svg>
-                        <span>Insumos</span>
+                        <span>Insumo</span>
                     </a>
                 </li>
                 <?php endif; ?>
@@ -146,6 +147,22 @@ function hasPermiso(string $codigo): bool
                             <circle cx="12" cy="7" r="4"></circle>
                         </svg>
                         <span>Clientes</span>
+                    </a>
+                </li>
+                <?php endif; ?>
+                
+                <?php if (hasPermiso('TAREAS_VIEW')): ?>
+                <li>
+                    <a href="<?= BASE_URL ?>dashboard/tasks" class="sidebar-link <?= ($currentPage ?? '') === 'tasks' ? 'active' : '' ?>">
+                        <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5"></path>
+                            <path d="M8.5 8.5v.01"></path>
+                            <path d="M16 15.5v.01"></path>
+                            <path d="M12 12v.01"></path>
+                            <path d="M11 17v.01"></path>
+                            <path d="M7 14v.01"></path>
+                        </svg>
+                        <span>Tareas</span>
                     </a>
                 </li>
                 <?php endif; ?>

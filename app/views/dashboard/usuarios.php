@@ -19,50 +19,8 @@ include_once __DIR__ . '/../common/links.php';
     ?>
     
     <main class="main-content">
-        <header class="dashboard-header">
-            <div class="dashboard-header-left">
-                <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Abrir menú">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24">
-                        <line x1="3" y1="6" x2="21" y2="6"></line>
-                        <line x1="3" y1="12" x2="21" y2="12"></line>
-                        <line x1="3" y1="18" x2="21" y2="18"></line>
-                    </svg>
-                </button>
-                <h1 class="dashboard-page-title">Usuarios</h1>
-            </div>
-            
-            <div class="dashboard-header-right">
-                <div class="dashboard-search">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="11" cy="11" r="8"></circle>
-                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                    </svg>
-                    <input type="text" placeholder="Buscar...">
-                </div>
-                
-                <button class="header-icon-btn" aria-label="Notificaciones">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                    </svg>
-                    <span class="notification-badge"></span>
-                </button>
-                
-                <div class="sidebar-user" style="padding: 0.5rem; border-radius: 8px; display: flex; align-items: center; gap: 0.75rem;">
-                    <div class="sidebar-user-avatar" style="width: 36px; height: 36px; background-color: #e5a835; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; color: #1a1f2e; overflow: hidden; flex-shrink: 0;">
-                        <?php
-                        $headerAvatar = $_SESSION['user_avatar'] ?? null;
-                        $headerName = $_SESSION['user_nombre'] ?? 'U';
-                        if ($headerAvatar): ?>
-                            <img src="<?= BASE_URL . htmlspecialchars($headerAvatar) ?>" alt="Avatar" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">
-                        <?php else: ?>
-                            <?= strtoupper(substr($headerName, 0, 1)) ?>
-                        <?php endif; ?>
-                    </div>
-                    <span style="font-size:0.875rem;font-weight:500;color:#374151;white-space:nowrap;"><?= htmlspecialchars($headerName) ?></span>
-                </div>
-            </div>
-        </header>
+        <?php $title = 'Usuarios'; ?>
+        <?php include_once __DIR__ . '/../partials/dashboard-header.php'; ?>
         
         <div class="dashboard-content">
             <div class="d-flex justify-content-between align-items-center mb-4">
@@ -95,6 +53,53 @@ include_once __DIR__ . '/../common/links.php';
         </div>
     </main>
 
+<?php
+$modulos = [
+    'Dashboard' => ['DASHBOARD_VIEW' => 'Ver'],
+    'Inventario' => ['INVENTARIO_VIEW' => 'Ver'],
+    'Ventas' => ['VENTAS_ACCESS' => 'Acceder'],
+    'Plantas' => ['PLANTAS_VIEW' => 'Ver', 'PLANTAS_CREATE' => 'Crear', 'PLANTAS_EDIT' => 'Editar', 'PLANTAS_DELETE' => 'Eliminar'],
+    'Proveedores' => ['PROVEEDORES_VIEW' => 'Ver', 'PROVEEDORES_CREATE' => 'Crear', 'PROVEEDORES_EDIT' => 'Editar', 'PROVEEDORES_DELETE' => 'Eliminar'],
+    'Insumos' => ['INSUMOS_VIEW' => 'Ver', 'INSUMOS_CREATE' => 'Crear', 'INSUMOS_EDIT' => 'Editar', 'INSUMOS_DELETE' => 'Eliminar'],
+    'Trabajadores' => ['TRABAJADORES_VIEW' => 'Ver', 'TRABAJADORES_CREATE' => 'Crear', 'TRABAJADORES_EDIT' => 'Editar', 'TRABAJADORES_DELETE' => 'Eliminar'],
+    'Clientes' => ['CLIENTES_VIEW' => 'Ver', 'CLIENTES_CREATE' => 'Crear', 'CLIENTES_EDIT' => 'Editar', 'CLIENTES_DELETE' => 'Eliminar'],
+    'Tareas' => ['TAREAS_VIEW' => 'Ver'],
+    'Asistente IA' => ['ASISTENTE_ACCESS' => 'Acceder'],
+    'Sistema' => ['USUARIOS_MANAGE' => 'Gestionar (usuarios, bitácora, respaldos)'],
+];
+
+$codigoToId = [];
+foreach ($allPermisos as $p) {
+    $codigoToId[$p['codigo_permiso']] = $p['id_permiso'];
+}
+
+function renderPermisosChecklist(array $modulos, array $codigoToId): void
+{
+    foreach ($modulos as $nombreModulo => $acciones):
+        $showActions = [];
+        foreach ($acciones as $codigo => $etiqueta) {
+            if (isset($codigoToId[$codigo])) {
+                $showActions[] = ['codigo' => $codigo, 'etiqueta' => $etiqueta, 'id' => $codigoToId[$codigo]];
+            }
+        }
+        if (empty($showActions)) continue;
+    ?>
+    <div style="margin-bottom:10px;">
+        <div style="font-size:0.8rem;font-weight:600;color:var(--text-primary);margin-bottom:4px;"><?= htmlspecialchars($nombreModulo) ?></div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px 12px;">
+            <?php foreach ($showActions as $a): ?>
+            <label style="display:flex;align-items:center;gap:4px;font-size:0.8rem;cursor:pointer;">
+                <input type="checkbox" name="permisos[]" value="<?= $a['id'] ?>">
+                <?= htmlspecialchars($a['etiqueta']) ?>
+            </label>
+            <?php endforeach; ?>
+        </div>
+    </div>
+    <?php
+    endforeach;
+}
+?>
+
     <!-- Modals fuera de main-content para evitar conflictos con Bootstrap 5.3 -->
     
     <!-- Add User Modal -->
@@ -122,11 +127,18 @@ include_once __DIR__ . '/../common/links.php';
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Rol</label>
-                            <select class="form-select" name="rol_id">
+                            <select class="form-select" name="rol_id" id="addUserRole">
                                 <?php foreach ($roles as $rol): ?>
                                 <option value="<?= $rol['id_rol'] ?>"><?= htmlspecialchars($rol['nombre_rol']) ?></option>
                                 <?php endforeach; ?>
                             </select>
+                        </div>
+                        <div class="mb-3 permisos-checklist" id="addPermisosChecklist" style="display:none;">
+                            <label class="form-label">Módulos y acciones permitidas</label>
+                            <div style="padding:8px 12px;border:1px solid var(--color-gray-200);border-radius:var(--radius-md);background:var(--bg-secondary);max-height:300px;overflow-y:auto;">
+                                <?php renderPermisosChecklist($modulos, $codigoToId); ?>
+                            </div>
+                            <small class="text-muted">Selecciona los módulos y acciones a los que este usuario tendrá acceso.</small>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Foto de perfil</label>
@@ -181,6 +193,13 @@ include_once __DIR__ . '/../common/links.php';
                             </select>
                             <small class="text-muted" id="editUserRoleNote" style="display:none;">El rol del superusuario no se puede modificar.</small>
                         </div>
+                        <div class="mb-3 permisos-checklist" id="editPermisosChecklist" style="display:none;">
+                            <label class="form-label">Módulos y acciones permitidas</label>
+                            <div style="padding:8px 12px;border:1px solid var(--color-gray-200);border-radius:var(--radius-md);background:var(--bg-secondary);max-height:300px;overflow-y:auto;">
+                                <?php renderPermisosChecklist($modulos, $codigoToId); ?>
+                            </div>
+                            <small class="text-muted">Selecciona los módulos y acciones a los que este usuario tendrá acceso.</small>
+                        </div>
                         <div class="mb-3">
                             <label class="form-label">Foto de perfil</label>
                             <div id="editAvatarPreview" class="mb-2" style="display:none;">
@@ -199,6 +218,7 @@ include_once __DIR__ . '/../common/links.php';
         </div>
     </div>
 
+    <script src="<?= BASE_URL ?>public/assets/js/dashboard/notifications.js"></script>
     <?= $scripts_links ?>
     <input type="hidden" id="currentUserId" value="<?= (int)($_SESSION['user_id'] ?? 0) ?>">
     <input type="hidden" id="currentUserRole" value="<?= (int)($_SESSION['user_rol_id'] ?? 0) ?>">
