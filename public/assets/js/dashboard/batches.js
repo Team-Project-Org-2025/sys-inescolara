@@ -1,9 +1,19 @@
 import * as Helpers from '../utils/helpers.js';
 import * as Ajax from '../utils/ajax-handler.js';
+import { setupRealTimeValidation, validateForm } from '../utils/validation.js';
 
 $(document).ready(function () {
   const baseUrl = `${window.BASE_URL || '/'}batches`;
   let batchesTable = null;
+
+  const batchValidationRules = {
+    id_planta: 'select',
+    fecha_siembra: 'fechaFuturaCheck',
+    cantidad_inicial: 'cantidad',
+    cantidad_actual: 'cantidad',
+    estado: 'select',
+    ubicacion: 'ubicacion',
+  };
 
   const showImagePreview = (inputId, previewId) => {
     const input = document.getElementById(inputId);
@@ -135,6 +145,11 @@ $(document).ready(function () {
   $('#addBatchForm').on('submit', function (e) {
     e.preventDefault();
 
+    if (!validateForm($(this), batchValidationRules)) {
+      Helpers.toast('error', 'Por favor, verifique los campos marcados en rojo.');
+      return;
+    }
+
     const formData = new FormData(this);
 
     $.ajax({
@@ -189,6 +204,11 @@ $(document).ready(function () {
 
   $('#editBatchForm').on('submit', function (e) {
     e.preventDefault();
+
+    if (!validateForm($(this), batchValidationRules, true)) {
+      Helpers.toast('error', 'Por favor, verifique los campos marcados en rojo.');
+      return;
+    }
 
     const formData = new FormData(this);
 
@@ -248,4 +268,7 @@ $(document).ready(function () {
   });
 
   initDataTable();
+
+  setupRealTimeValidation($('#addBatchForm'), batchValidationRules);
+  setupRealTimeValidation($('#editBatchForm'), batchValidationRules, true);
 });
