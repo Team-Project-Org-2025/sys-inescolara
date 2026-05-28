@@ -14,19 +14,15 @@ if (!defined('ROOT_PATH')) {
 
 $GLOBALS['userModel'] = new User();
 
-function renderLoginView(?string $error = null, array $old = []): void
+function renderLoginView(?string $error = null, array $old = [], ?string $success = null): void
 {
-    // Obtener la Site Key de reCAPTCHA desde el .env (cargado por Database)
     $recaptchaSiteKey = getenv('RECAPTCHA_SITE_KEY') ?: '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI';
-
-    $title = 'Iniciar Sesión';
+    $title = 'Iniciar Sesion';
     $layout = ROOT_PATH . 'app/views/layouts/auth.php';
     $view = ROOT_PATH . 'app/views/auth/login.php';
-
     ob_start();
     require $view;
     $content = ob_get_clean();
-
     require $layout;
 }
 
@@ -67,13 +63,15 @@ function show()
         header('Location: ' . BASE_URL . 'dashboard');
         exit();
     }
-
     $old = [];
     if (!empty($_COOKIE['remember_email'])) {
         $old['email'] = $_COOKIE['remember_email'];
     }
-
-    renderLoginView(null, $old);
+    $success = null;
+    if (isset($_GET['reset']) && $_GET['reset'] === 'ok') {
+        $success = 'Contraseña actualizada correctamente. Inicia sesión con tu nueva contraseña.';
+    }
+    renderLoginView(null, $old, $success);
 }
 
 function login()
