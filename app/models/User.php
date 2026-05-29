@@ -79,6 +79,13 @@ class User extends Database
                 ['codigo' => 'CLIENTES_EDIT', 'desc' => 'Editar clientes'],
                 ['codigo' => 'CLIENTES_DELETE', 'desc' => 'Eliminar clientes'],
                 ['codigo' => 'TAREAS_VIEW', 'desc' => 'Ver tareas'],
+                ['codigo' => 'TAREAS_CREATE', 'desc' => 'Crear tareas'],
+                ['codigo' => 'TAREAS_EDIT', 'desc' => 'Editar tareas'],
+                ['codigo' => 'TAREAS_DELETE', 'desc' => 'Eliminar tareas'],
+                ['codigo' => 'UBICACIONES_VIEW', 'desc' => 'Ver ubicaciones'],
+                ['codigo' => 'UBICACIONES_CREATE', 'desc' => 'Crear ubicaciones'],
+                ['codigo' => 'UBICACIONES_EDIT', 'desc' => 'Editar ubicaciones'],
+                ['codigo' => 'UBICACIONES_DELETE', 'desc' => 'Eliminar ubicaciones'],
                 ['codigo' => 'ASISTENTE_ACCESS', 'desc' => 'Acceder al asistente IA'],
             ];
 
@@ -198,6 +205,34 @@ class User extends Database
             return password_verify($password, $row['password_hash']);
         } catch (\Throwable $e) {
             error_log("Error en verifyPassword: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function getUserByEmail(string $email): ?array
+    {
+        try {
+            $stmt = $this->db->prepare("SELECT id_usuario, nombre_usuario, correo_electronico, avatar, id_rol, estatus FROM usuarios WHERE correo_electronico = :email LIMIT 1");
+            $stmt->execute([':email' => $email]);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $user ? $this->normalizeUserRow($user) : null;
+        } catch (\Throwable $e) {
+            error_log("Error en getUserByEmail: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    public function updatePassword(int $userId, string $newPassword): bool
+    {
+        try {
+            $hash = password_hash($newPassword, PASSWORD_DEFAULT);
+            if ($hash === false) {
+                throw new Exception("Error al hashear la contraseña");
+            }
+            $stmt = $this->db->prepare("UPDATE usuarios SET password_hash = :hash WHERE id_usuario = :id");
+            return $stmt->execute([':hash' => $hash, ':id' => $userId]);
+        } catch (\Throwable $e) {
+            error_log("Error en updatePassword: " . $e->getMessage());
             return false;
         }
     }

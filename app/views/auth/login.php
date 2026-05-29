@@ -69,6 +69,15 @@
                 <p class="auth-form-subtitle">Ingresa tus credenciales para acceder al sistema</p>
             </div>
             
+            <?php if (!empty($success)): ?>
+            <div class="alert alert-success" id="loginSuccess">
+                <svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                <span><?= htmlspecialchars($success) ?></span>
+            </div>
+            <?php endif; ?>
+
             <?php if (!empty($error)): ?>
             <div class="alert alert-error" id="loginError">
                 <svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

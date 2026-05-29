@@ -11,13 +11,49 @@ export const REGEX = {
   precio: /^(100(\.00?)?|[1-9]?\d(\.\d{1,2})?)$/,
   precioRango: /^(100(\.00?)?|[1-9]?\d(\.\d{1,2})?)$/,
   direccion: /^.{5,150}$/,
-  ubicacion: /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]{2,100}$/,
+  ubicacion: /^[A-Za-z0-9áéíóúÁÉÍÓÚñÑ\s\-\.#]{3,100}$/,
   cargo: /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]{2,50}$/,
   referencia: /^\d{8,10}$/,
   referenciaVenta: /^[A-Za-z0-9\-]{1,15}$/,
   banco: /^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9\s\-\.]{3,30}$/,
   password: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&._-])[A-Za-z\d@$!%*?&._-]{8,30}$/,
   passwordEdit: /^(?:.{0}|(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&._-])[A-Za-z\d@$!%*?&._-]{8,30})$/,
+  fechaFormato: /^\d{4}-\d{2}-\d{2}$/, 
+  cantidad: /^[1-9]\d*$/,
+};
+
+export const hoy = new Date().toISOString().split("T")[0];
+
+export const validateNoFutureDate = ($input) => {
+  const valor = $input.val().trim();
+  const isRequired = $input.prop('required');
+
+  $input.siblings('.invalid-feedback').remove();
+
+  if (valor === '') {
+    if (isRequired) {
+      $input.addClass('is-invalid').removeClass('is-valid');
+      $input.after(`<div class="invalid-feedback">Este campo es requerido.</div>`);
+      return false;
+    }
+    $input.removeClass('is-invalid is-valid');
+    return true;
+  }
+
+  if (!REGEX.fechaFormato.test(valor)) {
+    $input.addClass('is-invalid').removeClass('is-valid');
+    $input.after(`<div class="invalid-feedback">${MESSAGES.fecha}</div>`);
+    return false;
+  }
+
+  if (valor > hoy) {
+    $input.addClass('is-invalid').removeClass('is-valid');
+    $input.after(`<div class="invalid-feedback">${MESSAGES.fechaFutura}</div>`);
+    return false;
+  }
+
+  $input.removeClass('is-invalid').addClass('is-valid');
+  return true;
 };
 
 // Mensajes de error personalizados
@@ -32,7 +68,7 @@ export const MESSAGES = {
   telefono: 'Teléfono inválido (11 dígitos)',
   precio: 'Precio inválido (formato: 0.00)',
   direccion: 'Dirección muy corta (mínimo 5 caracteres)',
-  ubicacion: 'Ubicación inválida (solo letras, números y espacios)',
+  ubicacion: 'Ubicación inválida (3-100 caracteres, letras, números, espacios, guiones y puntos)',
   cargo: 'Cargo inválido (2-50 caracteres)',
   referencia: 'Referencia bancaria inválida (8-10 dígitos)',
   referenciaVenta: 'Referencia inválida (máx 15 caracteres, solo letras, números y guión)',
@@ -41,8 +77,13 @@ export const MESSAGES = {
   required: 'Este campo es requerido',
   select: 'Seleccione una opción',
   tracking: 'Tracking inválida (8 dígitos)',
+  fecha: 'Fecha inválida',
+  fechaFutura: 'La fecha no puede ser posterior al día de hoy',
+  cantidad: 'Cantidad inválida (solo números, sin ceros a la izquierda)',
+
   default: 'Campo inválido',
 };
+
 
 //Valida un campo individual
 export const validateField = ($input, regex = null, errorMsg = '') => {
@@ -107,6 +148,11 @@ export const setupRealTimeValidation = ($form, rules, isEdit = false) => {
   Object.entries(rules).forEach(([campo, tipo]) => {
     const $input = $form.find(`[name="${campo}"]`);
     if (!$input.length) return;
+
+    if (tipo === 'fechaFuturaCheck') {
+      $input.on('input change blur', () => validateNoFutureDate($input));
+      return;
+    }
 
     // ========================================================================
     // BLOQUEO 1: BLOQUEAR LETRAS (Para Teléfonos, Cédulas, Códigos)
@@ -174,6 +220,7 @@ export const setupRealTimeValidation = ($form, rules, isEdit = false) => {
       }
       validateField($input, regex, message);
     });
+
   });
 };
 
@@ -184,6 +231,11 @@ export const validateForm = ($form, rules, isEdit = false) => {
   Object.entries(rules).forEach(([campo, tipo]) => {
     const $input = $form.find(`[name="${campo}"]`);
     if (!$input.length) return;
+
+    if (tipo === 'fechaFuturaCheck') {
+      if (!validateNoFutureDate($input)) isValid = false;
+      return;
+    }
 
     // Password opcional en edición
     if (campo === 'password' && isEdit && $input.val() === '') {
@@ -202,6 +254,7 @@ export const validateForm = ($form, rules, isEdit = false) => {
     } else {
       if (!validateField($input, regex, message)) isValid = false;
     }
+
   });
 
   return isValid;

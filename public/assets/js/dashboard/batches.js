@@ -8,8 +8,11 @@ $(document).ready(function () {
 
   const batchValidationRules = {
     id_planta: 'select',
+    fecha_siembra: 'fechaFuturaCheck',
+    cantidad_inicial: 'cantidad',
+    cantidad_actual: 'cantidad',
     estado: 'select',
-    ubicacion: 'ubicacion'
+    ubicacion: 'ubicacion',
   };
 
   const showImagePreview = (inputId, previewId) => {
@@ -265,6 +268,7 @@ $(document).ready(function () {
   });
 
   initDataTable();
+
   setupRealTimeValidation($('#addBatchForm'), batchValidationRules);
   setupRealTimeValidation($('#editBatchForm'), batchValidationRules, true);
 });

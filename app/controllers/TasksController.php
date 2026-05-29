@@ -44,18 +44,21 @@ class TasksController
     public function add_ajax(): void
     {
         $this->checkModuleAuth();
+        $this->checkPermisoOrFail('TAREAS_CREATE');
         $this->handleAddEdit('add');
     }
 
     public function edit_ajax(): void
     {
         $this->checkModuleAuth();
+        $this->checkPermisoOrFail('TAREAS_EDIT');
         $this->handleAddEdit('edit');
     }
 
     public function delete_ajax(): void
     {
         $this->checkModuleAuth();
+        $this->checkPermisoOrFail('TAREAS_DELETE');
         $this->handleDelete();
     }
 
