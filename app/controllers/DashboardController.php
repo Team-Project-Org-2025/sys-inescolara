@@ -376,6 +376,25 @@ function backups(): void
 
     require $view;
 }
+function roles(): void
+{
+    dashboardCheckPermiso('USUARIOS_MANAGE');
+
+    require_once ROOT_PATH . 'vendor/autoload.php';
+    $roleModel = new \SysInescolara\models\Role();
+    $allPermisos = $roleModel->getAllPermissions();
+
+    $view = ROOT_PATH . 'app/views/dashboard/roles.php';
+
+    if (!is_file($view)) {
+        http_response_code(500);
+        echo 'Vista de roles no encontrada.';
+        return;
+    }
+
+    require $view;
+}
+
 function locations(): void
 {
     dashboardCheckPermiso('UBICACIONES_VIEW');

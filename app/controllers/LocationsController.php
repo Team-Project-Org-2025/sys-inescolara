@@ -95,19 +95,23 @@ class LocationsController
         if ($nombreUbicacion === '') {
             throw new \Exception('El nombre de la ubicación es requerido.');
         }
+        $descripcion = trim((string)($_POST['descripcion'] ?? ''));
+        if ($descripcion === '') $descripcion = null;
+        $zona = trim((string)($_POST['zona'] ?? ''));
+        if ($zona === '') $zona = null;
 
         if ($mode === 'add') {
-            $this->model->add($nombreUbicacion);
+            $this->model->add($nombreUbicacion, $descripcion, $zona);
             $newId = $this->model->getLastInsertId() ?? 0;
-            AuditLog::record('CREATE', 'ubicaciones', $newId, null, [
-                'nombre_ubicacion' => $nombreUbicacion,
+            AuditLog::record('CREATE', 'ubicacion', $newId, null, [
+                'nombre_ubicacion' => $nombreUbicacion, 'descripcion' => $descripcion, 'zona' => $zona,
             ]);
             $this->jsonResponse([
                 'success' => true,
                 'message' => 'Ubicación agregada correctamente',
                 'location' => [
-                    'id' => $newId,
-                    'nombre_ubicacion' => $nombreUbicacion,
+                    'id' => $newId, 'nombre_ubicacion' => $nombreUbicacion,
+                    'descripcion' => $descripcion, 'zona' => $zona,
                 ],
             ]);
             return;
@@ -117,14 +121,14 @@ class LocationsController
         if ($id <= 0) throw new \Exception('ID inválido');
         $oldData = $this->model->getById($id);
         if (!$oldData) throw new \Exception('La ubicación que intenta editar no existe.');
-        $this->model->update($id, $nombreUbicacion);
-        AuditLog::record('UPDATE', 'ubicaciones', $id, $oldData, [
-            'nombre_ubicacion' => $nombreUbicacion,
+        $this->model->update($id, $nombreUbicacion, $descripcion, $zona);
+        AuditLog::record('UPDATE', 'ubicacion', $id, $oldData, [
+            'nombre_ubicacion' => $nombreUbicacion, 'descripcion' => $descripcion, 'zona' => $zona,
         ]);
         $this->jsonResponse([
             'success' => true,
             'message' => 'Ubicación actualizada correctamente',
-            'location' => ['id' => $id, 'nombre_ubicacion' => $nombreUbicacion],
+            'location' => ['id' => $id, 'nombre_ubicacion' => $nombreUbicacion, 'descripcion' => $descripcion, 'zona' => $zona],
         ]);
     }
 
@@ -135,7 +139,7 @@ class LocationsController
         $oldData = $this->model->getById($id);
         if (!$oldData) throw new \Exception('No existe la ubicación solicitada.');
         $this->model->delete($id);
-        AuditLog::record('DELETE', 'ubicaciones', $id, $oldData, null);
+        AuditLog::record('DELETE', 'ubicacion', $id, $oldData, null);
         $this->jsonResponse([
             'success' => true,
             'message' => 'Ubicación eliminada correctamente',

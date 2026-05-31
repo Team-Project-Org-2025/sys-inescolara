@@ -15,7 +15,7 @@ $(document).ready(function () {
 
   const initDataTable = () => {
     if (typeof SkeletonHelper !== 'undefined') {
-      SkeletonHelper.showTableSkeleton('employeesTable', 5, 5);
+      SkeletonHelper.showTableSkeleton('employeesTable', 5, 7);
     }
     employeesTable = $('#employeesTable').DataTable({
       ajax: {
@@ -40,6 +40,14 @@ $(document).ready(function () {
           render: (data) => data || '<span class="text-muted">—</span>',
         },
         {
+          data: 'cargo',
+          render: (data) => data || '<span class="text-muted">—</span>',
+        },
+        {
+          data: 'activo',
+          render: (data) => data ? '<span class="badge bg-success">Sí</span>' : '<span class="badge bg-secondary">No</span>',
+        },
+        {
           data: null,
           orderable: false,
           render: (data) => {
@@ -50,7 +58,9 @@ $(document).ready(function () {
                         data-nombre_trabajador="${Helpers.escapeHtml(data.nombre_trabajador)}"
                         data-apellido_trabajador="${Helpers.escapeHtml(data.apellido_trabajador || '')}"
                         data-cedula_trabajador="${Helpers.escapeHtml(data.cedula_trabajador || '')}"
-                        data-telefono_trabajador="${Helpers.escapeHtml(data.telefono_trabajador || '')}">
+                        data-telefono_trabajador="${Helpers.escapeHtml(data.telefono_trabajador || '')}"
+                        data-cargo="${Helpers.escapeHtml(data.cargo || '')}"
+                        data-activo="${data.activo ? '1' : '0'}">
                     <i class="fas fa-edit"></i> Editar
                 </button>
                 <button class="btn btn-sm btn-outline-danger btn-delete"
@@ -141,6 +151,8 @@ $(document).ready(function () {
     $('#editEmployeeApellido').val($btn.data('apellido_trabajador'));
     $('#editEmployeeCedula').val($btn.data('cedula_trabajador'));
     $('#editEmployeeTelefono').val($btn.data('telefono_trabajador'));
+    $('#editEmployeeCargo').val($btn.data('cargo'));
+    $('#editEmployeeActivo').prop('checked', $btn.data('activo') == '1');
 
     $('#editEmployeeModal').modal({ focus: false }).modal('show');
   });

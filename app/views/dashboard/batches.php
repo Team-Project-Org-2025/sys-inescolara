@@ -78,7 +78,8 @@ include_once __DIR__ . '/../common/links.php';
                                     <th>Cant. Inicial</th>
                                     <th>Cant. Actual</th>
                                     <th>Estado</th>
-                                    <th>Ubicación</th>
+                                    <th>Origen</th>
+                                    <th>Observación</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
@@ -136,9 +137,19 @@ include_once __DIR__ . '/../common/links.php';
                                 </select>
                             </div>
                             <div class="col-6 mb-3">
-                                <label class="form-label">Ubicación</label>
-                                <input type="text" class="form-control" name="ubicacion" placeholder="Ej: Invernadero A" required>
+                                <label class="form-label">Origen</label>
+                                <select class="form-select" name="origen" required>
+                                    <option value="">Seleccione...</option>
+                                    <option value="Siembra">Siembra</option>
+                                    <option value="Ampliación">Ampliación</option>
+                                    <option value="Donación">Donación</option>
+                                    <option value="Compra">Compra</option>
+                                </select>
                             </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Observación</label>
+                            <textarea class="form-control" name="observacion" rows="2" placeholder="Opcional"></textarea>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Imagen del Lote</label>
@@ -205,9 +216,19 @@ include_once __DIR__ . '/../common/links.php';
                                 </select>
                             </div>
                             <div class="col-6 mb-3">
-                                <label class="form-label">Ubicación</label>
-                                <input type="text" class="form-control" name="ubicacion" id="editBatchLocation" required>
+                                <label class="form-label">Origen</label>
+                                <select class="form-select" name="origen" id="editBatchOrigen" required>
+                                    <option value="">Seleccione...</option>
+                                    <option value="Siembra">Siembra</option>
+                                    <option value="Ampliación">Ampliación</option>
+                                    <option value="Donación">Donación</option>
+                                    <option value="Compra">Compra</option>
+                                </select>
                             </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Observación</label>
+                            <textarea class="form-control" name="observacion" id="editBatchObs" rows="2" placeholder="Opcional"></textarea>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Imagen del Lote</label>

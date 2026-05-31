@@ -59,25 +59,25 @@ class SpeciesController
 
     private function handleAddEdit(string $mode): void
     {
-        $nombreComun = trim((string)($_POST['nombre_comun'] ?? ''));
-        if ($nombreComun === '') throw new \Exception('El nombre común es requerido.');
-        $nombreTecnico = trim((string)($_POST['nombre_tecnico'] ?? ''));
-        if ($nombreTecnico === '') $nombreTecnico = null;
+        $nombreEspecie = trim((string)($_POST['nombre_especie'] ?? ''));
+        if ($nombreEspecie === '') throw new \Exception('El nombre de la especie es requerido.');
+        $descripcion = trim((string)($_POST['descripcion'] ?? ''));
+        if ($descripcion === '') $descripcion = null;
 
         if ($mode === 'add') {
-            $this->model->add($nombreComun, $nombreTecnico);
+            $this->model->add($nombreEspecie, $descripcion);
             $newId = $this->model->getLastInsertId() ?? 0;
-            AuditLog::record('CREATE', 'especies', $newId, null, compact('nombreComun', 'nombreTecnico'));
-            $this->jsonResponse(['success' => true, 'message' => 'Especie agregada correctamente', 'species' => ['id' => $newId, 'nombre_comun' => $nombreComun, 'nombre_tecnico' => $nombreTecnico]]);
+            AuditLog::record('CREATE', 'especie', $newId, null, compact('nombreEspecie', 'descripcion'));
+            $this->jsonResponse(['success' => true, 'message' => 'Especie agregada correctamente', 'species' => ['id' => $newId, 'nombre_especie' => $nombreEspecie, 'descripcion' => $descripcion]]);
         }
 
         $id = (int)($_POST['id'] ?? 0);
         if ($id <= 0) throw new \Exception('ID inválido');
 
         $oldData = $this->model->getById($id);
-        $this->model->update($id, $nombreComun, $nombreTecnico);
-        AuditLog::record('UPDATE', 'especies', $id, $oldData, compact('nombreComun', 'nombreTecnico'));
-        $this->jsonResponse(['success' => true, 'message' => 'Especie actualizada correctamente', 'species' => ['id' => $id, 'nombre_comun' => $nombreComun, 'nombre_tecnico' => $nombreTecnico]]);
+        $this->model->update($id, $nombreEspecie, $descripcion);
+        AuditLog::record('UPDATE', 'especie', $id, $oldData, compact('nombreEspecie', 'descripcion'));
+        $this->jsonResponse(['success' => true, 'message' => 'Especie actualizada correctamente', 'species' => ['id' => $id, 'nombre_especie' => $nombreEspecie, 'descripcion' => $descripcion]]);
     }
 
     private function handleDelete(): void
@@ -88,7 +88,7 @@ class SpeciesController
 
         $oldData = $this->model->getById($id);
         $this->model->delete($id);
-        AuditLog::record('DELETE', 'especies', $id, $oldData, null);
+        AuditLog::record('DELETE', 'especie', $id, $oldData, null);
         $this->jsonResponse(['success' => true, 'message' => 'Especie eliminada correctamente', 'speciesId' => $id]);
     }
 

@@ -40,6 +40,7 @@ include_once __DIR__ . '/../common/links.php';
                             <thead>
                                 <tr>
                                     <th>Nombre del Insumo</th>
+                                    <th>Categoría</th>
                                     <th>U. Medida</th>
                                     <th>Stock Actual</th>
                                     <th>Costo Unitario (Actual)</th>
@@ -70,7 +71,16 @@ include_once __DIR__ . '/../common/links.php';
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Unidad de Medida</label>
-                            <input type="text" class="form-control" name="unidad_medida" required placeholder="Ej: Kg, Litros, Unidades, Sacos">
+                            <select class="form-select" name="id_unidad_medida" required>
+                                <option value="">Seleccione...</option>
+                                <?php if (isset($unidades)): foreach ($unidades as $u): ?>
+                                <option value="<?= $u['id'] ?>"><?= htmlspecialchars($u['nombre_unidad_medida']) ?> (<?= htmlspecialchars($u['simbolo']) ?>)</option>
+                                <?php endforeach; endif; ?>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Categoría</label>
+                            <input type="text" class="form-control" name="categoria" placeholder="Ej: Fertilizantes, Herramientas, Empaques">
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
@@ -109,7 +119,16 @@ include_once __DIR__ . '/../common/links.php';
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Unidad de Medida</label>
-                            <input type="text" class="form-control" name="unidad_medida" id="editSupplyUnit" required>
+                            <select class="form-select" name="id_unidad_medida" id="editSupplyUnit" required>
+                                <option value="">Seleccione...</option>
+                                <?php if (isset($unidades)): foreach ($unidades as $u): ?>
+                                <option value="<?= $u['id'] ?>"><?= htmlspecialchars($u['nombre_unidad_medida']) ?> (<?= htmlspecialchars($u['simbolo']) ?>)</option>
+                                <?php endforeach; endif; ?>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Categoría</label>
+                            <input type="text" class="form-control" name="categoria" id="editSupplyCat" placeholder="Ej: Fertilizantes, Herramientas, Empaques">
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">

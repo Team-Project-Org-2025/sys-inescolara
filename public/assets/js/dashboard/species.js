@@ -7,8 +7,7 @@ $(document).ready(function () {
   let speciesTable = null;
 
   const speciesRules = {
-    nombre_comun: 'nombreProducto',
-    nombre_tecnico: 'nombreProducto'
+    nombre_especie: 'nombreProducto',
   };
 
   const initDataTable = () => {
@@ -23,10 +22,11 @@ $(document).ready(function () {
         headers: { 'X-Requested-With': 'XMLHttpRequest' },
         dataSrc: 'species',
       },
+      order: [[0, 'asc']],
       columns: [
-        { data: 'nombre_comun' },
+        { data: 'nombre_especie' },
         {
-          data: 'nombre_tecnico',
+          data: 'descripcion',
           render: (data) => data || '<span class="text-muted">—</span>',
         },
         {
@@ -37,13 +37,13 @@ $(document).ready(function () {
               <div class="d-flex gap-1">
                 <button class="btn btn-sm btn-outline-primary btn-edit"
                         data-id="${Helpers.escapeHtml(data.id)}"
-                        data-nombre_comun="${Helpers.escapeHtml(data.nombre_comun)}"
-                        data-nombre_tecnico="${Helpers.escapeHtml(data.nombre_tecnico || '')}">
+                        data-nombre_especie="${Helpers.escapeHtml(data.nombre_especie)}"
+                        data-descripcion="${Helpers.escapeHtml(data.descripcion || '')}">
                     <i class="fas fa-edit"></i> Editar
                 </button>
                 <button class="btn btn-sm btn-outline-danger btn-delete"
                         data-id="${Helpers.escapeHtml(data.id)}"
-                        data-nombre_comun="${Helpers.escapeHtml(data.nombre_comun)}">
+                        data-nombre_especie="${Helpers.escapeHtml(data.nombre_especie)}">
                     <i class="fas fa-trash"></i> Eliminar
                 </button>
               </div>
@@ -125,8 +125,8 @@ $(document).ready(function () {
     }
 
     $('#editSpeciesId').val($btn.data('id'));
-    $('#editSpeciesName').val($btn.data('nombre_comun'));
-    $('#editSpeciesTecnico').val($btn.data('nombre_tecnico'));
+    $('#editSpeciesName').val($btn.data('nombre_especie'));
+    $('#editSpeciesDescripcion').val($btn.data('descripcion'));
 
     $('#editSpeciesModal').modal({ focus: false }).modal('show');
   });
@@ -167,7 +167,7 @@ $(document).ready(function () {
   // Eliminar especie
   $(document).on('click', '.btn-delete', function () {
     const id = $(this).data('id');
-    const nombre = $(this).data('nombre_comun');
+    const nombre = $(this).data('nombre_especie');
 
     Helpers.confirmDialog(
       '¿Eliminar especie?',

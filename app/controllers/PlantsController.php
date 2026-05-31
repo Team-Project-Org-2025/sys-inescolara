@@ -109,10 +109,19 @@ class PlantsController
         if (!$this->model->exists($id)) throw new \Exception('No existe la planta');
 
         $oldData = $this->model->getById($id);
+        try {
+            $this->model->delete($id);
+        } catch (\PDOException $e) {
+            if ((int)$e->getCode() === 23000 && str_contains($e->getMessage(), '1451')) {
+                $msg = 'No se puede eliminar esta planta porque tiene lotes asociados.';
+                $this->jsonResponse(['success' => false, 'message' => $msg, 'type' => 'foreign_key']);
+                return;
+            }
+            throw $e;
+        }
         if (!empty($oldData['imagen'])) {
             (new \SysInescolara\helpers\ImageUploader())->delete($oldData['imagen']);
         }
-        $this->model->delete($id);
         AuditLog::record('DELETE', 'plantas', $id, $oldData, null);
         $this->jsonResponse(['success' => true, 'message' => 'Planta eliminada correctamente', 'plantId' => $id]);
     }

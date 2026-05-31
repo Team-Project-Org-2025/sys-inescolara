@@ -12,29 +12,15 @@ class Plant extends Database implements ReadableInterface, DeletableInterface
     public function __construct()
     {
         parent::__construct();
-        $this->bootstrapDefaults();
-    }
-
-    private function bootstrapDefaults(): void
-    {
-        try {
-            $columns = $this->db->query("SHOW COLUMNS FROM plantas")->fetchAll(PDO::FETCH_COLUMN);
-
-            if (!in_array('imagen', $columns)) {
-                $colPos = in_array('id_categoria', $columns) ? 'id_categoria' : 'nombre_tecnico';
-                $this->db->exec("ALTER TABLE plantas ADD COLUMN imagen VARCHAR(255) DEFAULT NULL AFTER `$colPos`");
-            }
-        } catch (\Throwable $e) {
-            error_log('Error al migrar plantas: ' . $e->getMessage());
-        }
     }
 
     public function getAll(): array
     {
         try {
-            $sql = "SELECT p.id_planta AS id, p.nombre_comun, p.nombre_tecnico, p.id_categoria AS especie_id, p.imagen, e.nombre_comun AS especie_nombre 
+            $sql = "SELECT p.id_planta AS id, p.nombre_comun, p.nombre_tecnico, p.id_especie AS especie_id, p.imagen, p.cantidad_total,
+                           e.nombre_especie AS especie_nombre
                     FROM plantas p
-                    LEFT JOIN especies e ON p.id_categoria = e.id_especie
+                    LEFT JOIN especie e ON p.id_especie = e.id_especie
                     ORDER BY p.nombre_comun ASC";
             $stmt = $this->db->query($sql);
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
@@ -46,9 +32,9 @@ class Plant extends Database implements ReadableInterface, DeletableInterface
 
     public function getById(int $id): ?array
     {
-        $stmt = $this->db->prepare("SELECT p.*, e.nombre_comun AS especie_nombre 
+        $stmt = $this->db->prepare("SELECT p.*, e.nombre_especie AS especie_nombre
                                    FROM plantas p
-                                   LEFT JOIN especies e ON p.id_categoria = e.id_especie
+                                   LEFT JOIN especie e ON p.id_especie = e.id_especie
                                    WHERE p.id_planta = :id");
         $stmt->execute([':id' => $id]);
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
@@ -78,11 +64,11 @@ class Plant extends Database implements ReadableInterface, DeletableInterface
 
     public function add(string $nombreComun, ?string $nombreTecnico = null, ?int $especieId = null, ?string $imagen = null)
     {
-        $stmt = $this->db->prepare("INSERT INTO plantas (nombre_comun, nombre_tecnico, id_categoria, imagen) VALUES (:nombre_comun, :nombre_tecnico, :id_categoria, :imagen)");
+        $stmt = $this->db->prepare("INSERT INTO plantas (nombre_comun, nombre_tecnico, id_especie, imagen) VALUES (:nombre_comun, :nombre_tecnico, :id_especie, :imagen)");
         return $stmt->execute([
             ':nombre_comun' => $nombreComun,
             ':nombre_tecnico' => $nombreTecnico,
-            ':id_categoria' => $especieId,
+            ':id_especie' => $especieId,
             ':imagen' => $imagen,
         ]);
     }
@@ -92,12 +78,12 @@ class Plant extends Database implements ReadableInterface, DeletableInterface
         if (!$this->exists($id)) {
             throw new \Exception("No existe la planta con ID: $id");
         }
-        $stmt = $this->db->prepare("UPDATE plantas SET nombre_comun = :nombre_comun, nombre_tecnico = :nombre_tecnico, id_categoria = :id_categoria, imagen = :imagen WHERE id_planta = :id");
+        $stmt = $this->db->prepare("UPDATE plantas SET nombre_comun = :nombre_comun, nombre_tecnico = :nombre_tecnico, id_especie = :id_especie, imagen = :imagen WHERE id_planta = :id");
         return $stmt->execute([
             ':id' => $id,
             ':nombre_comun' => $nombreComun,
             ':nombre_tecnico' => $nombreTecnico,
-            ':id_categoria' => $especieId,
+            ':id_especie' => $especieId,
             ':imagen' => $imagen,
         ]);
     }

@@ -3,6 +3,7 @@
 namespace SysInescolara\controllers;
 
 use SysInescolara\models\Supplies;
+use SysInescolara\models\UnidadMedida;
 use SysInescolara\models\AuditLog;
 use SysInescolara\traits\ResponseTrait;
 use SysInescolara\traits\PermissionTrait;
@@ -25,6 +26,9 @@ class SuppliesController
     {
         $this->checkModuleAuth();
         $this->handleAjaxRequest();
+
+        $unidadMedidaModel = new UnidadMedida();
+        $unidades = $unidadMedidaModel->getAll();
 
         $view = ROOT_PATH . 'app/views/dashboard/supplies.php';
         if (!is_file($view)) {
@@ -89,10 +93,12 @@ class SuppliesController
         if ($nombre === '') {
             throw new \Exception('El nombre del insumo es requerido.');
         }
-        $unidad = trim((string)($_POST['unidad_medida'] ?? ''));
-        if ($unidad === '') {
+        $id_unidad_medida = (int)($_POST['id_unidad_medida'] ?? 0);
+        if ($id_unidad_medida <= 0) {
             throw new \Exception('La unidad de medida es requerida.');
         }
+        $categoria = trim((string)($_POST['categoria'] ?? ''));
+        if ($categoria === '') $categoria = null;
         $stock = isset($_POST['stock_actual']) ? floatval($_POST['stock_actual']) : null;
         if ($stock === null) {
             throw new \Exception('El stock actual es requerido.');
@@ -103,15 +109,15 @@ class SuppliesController
         }
 
         if ($mode === 'add') {
-            $this->model->add($nombre, $unidad, $stock, $costo);
+            $this->model->add($nombre, $id_unidad_medida, $categoria, $stock, $costo);
             $newId = $this->model->getLastInsertId() ?? 0;
             AuditLog::record('CREATE', 'insumo', $newId, null, [
-                'nombre_insumo' => $nombre, 'unidad_medida' => $unidad,
-                'stock_actual' => $stock, 'costo_unitario_actual' => $costo,
+                'nombre_insumo' => $nombre, 'id_unidad_medida' => $id_unidad_medida,
+                'categoria' => $categoria, 'stock_actual' => $stock, 'costo_unitario_actual' => $costo,
             ]);
             $this->jsonResponse([
                 'success' => true, 'message' => 'Insumo agregado correctamente',
-                'supply' => ['id' => $newId, 'nombre_insumo' => $nombre, 'unidad_medida' => $unidad, 'stock_actual' => $stock, 'costo_unitario_actual' => $costo],
+                'supply' => ['id' => $newId, 'nombre_insumo' => $nombre, 'id_unidad_medida' => $id_unidad_medida, 'stock_actual' => $stock, 'costo_unitario_actual' => $costo],
             ]);
         }
 
@@ -119,14 +125,14 @@ class SuppliesController
         if ($id <= 0) throw new \Exception('ID inválido');
 
         $oldData = $this->model->getById($id);
-        $this->model->update($id, $nombre, $unidad, $stock, $costo);
+        $this->model->update($id, $nombre, $id_unidad_medida, $categoria, $stock, $costo);
         AuditLog::record('UPDATE', 'insumo', $id, $oldData, [
-            'nombre_insumo' => $nombre, 'unidad_medida' => $unidad,
-            'stock_actual' => $stock, 'costo_unitario_actual' => $costo,
+            'nombre_insumo' => $nombre, 'id_unidad_medida' => $id_unidad_medida,
+            'categoria' => $categoria, 'stock_actual' => $stock, 'costo_unitario_actual' => $costo,
         ]);
         $this->jsonResponse([
             'success' => true, 'message' => 'Insumo actualizado correctamente',
-            'supply' => ['id' => $id, 'nombre_insumo' => $nombre, 'unidad_medida' => $unidad, 'stock_actual' => $stock, 'costo_unitario_actual' => $costo],
+            'supply' => ['id' => $id, 'nombre_insumo' => $nombre, 'id_unidad_medida' => $id_unidad_medida, 'stock_actual' => $stock, 'costo_unitario_actual' => $costo],
         ]);
     }
 
