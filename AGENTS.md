@@ -19,12 +19,13 @@ Control de inventario, ventas, producción, lotes, insumos, trabajadores, tareas
 - Namespace: `SysInescolara\controllers`
 - Analiza URL → carga controlador + acción
 - Rutas predefinidas: `catalogo`, `servicios`, `nosotros`, `contacto`
-- Soporte dual: clase con namespace (prioridad) o función global legacy
-- `class_exists($className, false)` para evitar autoload duplicado
+- Soporte único: funciones globales (sin clases)
+- `class_exists($className, false)` para detectar si hay clase (ya no usado, legacy)
 
 ### Controladores
-- **Clase (namespace `SysInescolara\controllers`):** SuppliesController, TasksController, BatchesController, ClientsController, EmployeesController, PlantsController, SpeciesController, SuppliersController, UserController, AuditLogController, BackupsController, ReportsController, NotificationsController
-- **Función global (legacy):** LoginController, DashboardController, RecuperarpasswordController, PublicController
+- **Función global:** Todos los controladores usan funciones globales (sin clases ni namespace)
+- **Lista:** SuppliesController, TasksController, BatchesController, ClientsController, EmployeesController, PlantsController, SpeciesController, LocationsController, SuppliersController, UserController, RolesController, AuditLogController, BackupsController, ReportsController, NotificationsController, LoginController, DashboardController, RecuperarpasswordController, PublicController, InicioController, AuthController
+- **Helpers compartidos:** `app/controllers/controller_helpers.php` (jsonResponse, checkModuleAuth, checkPermisoOrFail, isAjaxRequest, handleError)
 - **Ubicación:** `app/controllers/`
 
 ### Modelos
@@ -33,9 +34,9 @@ Control de inventario, ventas, producción, lotes, insumos, trabajadores, tareas
 - Conexiones: `'default'` → `sysinescolara`, `'security'` → `SysInescolara-Seguridad`
 - Ubicación: `app/models/`
 
-### Traits
-- `app/traits/ResponseTrait.php` — `jsonResponse()`, `handleError()`, `isAjaxRequest()`
-- `app/traits/PermissionTrait.php` — `checkModuleAuth()`, `checkPermisoOrFail()`
+### Traits (solo disponibles como referencia, ya no usados en controladores)
+- `app/traits/ResponseTrait.php` — `jsonResponse()`, `handleError()`, `isAjaxRequest()` → migrado a `controller_helpers.php`
+- `app/traits/PermissionTrait.php` — `checkModuleAuth()`, `checkPermisoOrFail()` → migrado a `controller_helpers.php`
 
 ### Vistas
 - Dashboard: `app/views/dashboard/*.php`
@@ -68,7 +69,7 @@ Tablas: usuarios, roles, permisos, rol_permisos, usuario_permisos, sesiones_acti
 - Tablas BD: singular (cliente, lote, insumo, especie)
 - Primary keys: `id_<tabla>` (id_usuario, id_planta, etc.)
 - `getAll()` usa `PK AS id` para DataTables
-- Controladores clase: método público por cada acción
+- Controladores: funciones globales (una función pública por cada acción)
 - Permisos: constantes `MODULO_ACCION` (PLANTAS_VIEW, PLANTAS_CREATE, etc.)
 
 ## Estado Actual
@@ -83,7 +84,7 @@ Tablas: usuarios, roles, permisos, rol_permisos, usuario_permisos, sesiones_acti
 - Frontend responsive público
 - Login responsive (mobile)
 - Recuperación de contraseña (backend listo, SMTP pendiente)
-- Controladores refactorizados a clases con traits
+- Controladores refactorizados a funciones globales (sin clases ni traits)
 
 ### Pendiente
 - Catálogo público desde BD
