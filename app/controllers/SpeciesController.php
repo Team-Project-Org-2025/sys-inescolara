@@ -1,99 +1,83 @@
 <?php
 
-namespace SysInescolara\controllers;
+require_once __DIR__ . '/controller_helpers.php';
 
 use SysInescolara\models\Species;
 use SysInescolara\models\AuditLog;
-use SysInescolara\traits\ResponseTrait;
-use SysInescolara\traits\PermissionTrait;
 
-class SpeciesController
+function index(): void
 {
-    use ResponseTrait, PermissionTrait;
-
-    private Species $model;
-
-    public function __construct()
-    {
-        if (session_status() === PHP_SESSION_NONE) session_start();
-        $this->model = new Species();
-    }
-
-    public function index(): void
-    {
-        $this->checkModuleAuth();
-        $this->handleAjaxRequest();
-
-        $view = ROOT_PATH . 'app/views/dashboard/species.php';
-        if (!is_file($view)) {
-            http_response_code(500);
-            echo 'Vista de especies no encontrada.';
-            return;
-        }
-        require $view;
-    }
-
-    public function get_species(): void { $this->checkModuleAuth(); $this->getSpeciesAjax(); }
-    public function add_ajax(): void { $this->checkModuleAuth(); $this->checkPermisoOrFail('PLANTAS_CREATE'); $this->handleAddEdit('add'); }
-    public function edit_ajax(): void { $this->checkModuleAuth(); $this->checkPermisoOrFail('PLANTAS_EDIT'); $this->handleAddEdit('edit'); }
-    public function delete_ajax(): void { $this->checkModuleAuth(); $this->checkPermisoOrFail('PLANTAS_DELETE'); $this->handleDelete(); }
-
-    private function handleAjaxRequest(): void
-    {
-        $action = $_GET['action'] ?? '';
-        if (!$this->isAjaxRequest() || $action === '') return;
-
+    checkModuleAuth();
+    $action = $_GET['action'] ?? '';
+    if (isAjaxRequest() && $action !== '') {
         header('Content-Type: application/json; charset=utf-8');
         try {
             match ($_SERVER['REQUEST_METHOD'] . '_' . $action) {
-                'GET_get_species'  => $this->getSpeciesAjax(),
-                'POST_add_ajax'    => $this->handleAddEdit('add'),
-                'POST_edit_ajax'   => $this->handleAddEdit('edit'),
-                'POST_delete_ajax' => $this->handleDelete(),
-                default            => $this->jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
+                'GET_get_species'  => species_getSpeciesAjax(),
+                'POST_add_ajax'    => species_handleAddEdit('add'),
+                'POST_edit_ajax'   => species_handleAddEdit('edit'),
+                'POST_delete_ajax' => species_handleDelete(),
+                default            => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
             };
         } catch (\Exception $e) {
-            $this->handleError($e, true);
+            handleError($e, true);
         }
+        return;
     }
 
-    private function handleAddEdit(string $mode): void
-    {
-        $nombreEspecie = trim((string)($_POST['nombre_especie'] ?? ''));
-        if ($nombreEspecie === '') throw new \Exception('El nombre de la especie es requerido.');
-        $descripcion = trim((string)($_POST['descripcion'] ?? ''));
-        if ($descripcion === '') $descripcion = null;
+    $view = ROOT_PATH . 'app/views/dashboard/species.php';
+    if (!is_file($view)) {
+        http_response_code(500);
+        echo 'Vista de especies no encontrada.';
+        return;
+    }
+    require $view;
+}
 
-        if ($mode === 'add') {
-            $this->model->add($nombreEspecie, $descripcion);
-            $newId = $this->model->getLastInsertId() ?? 0;
-            AuditLog::record('CREATE', 'especie', $newId, null, compact('nombreEspecie', 'descripcion'));
-            $this->jsonResponse(['success' => true, 'message' => 'Especie agregada correctamente', 'species' => ['id' => $newId, 'nombre_especie' => $nombreEspecie, 'descripcion' => $descripcion]]);
-        }
+function get_species(): void { checkModuleAuth(); species_getSpeciesAjax(); }
+function add_ajax(): void { checkModuleAuth(); checkPermisoOrFail('PLANTAS_CREATE'); species_handleAddEdit('add'); }
+function edit_ajax(): void { checkModuleAuth(); checkPermisoOrFail('PLANTAS_EDIT'); species_handleAddEdit('edit'); }
+function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('PLANTAS_DELETE'); species_handleDelete(); }
 
-        $id = (int)($_POST['id'] ?? 0);
-        if ($id <= 0) throw new \Exception('ID inválido');
+function species_handleAddEdit(string $mode): void
+{
+    $model = new Species();
+    $nombreEspecie = trim((string)($_POST['nombre_especie'] ?? ''));
+    if ($nombreEspecie === '') throw new \Exception('El nombre de la especie es requerido.');
+    $descripcion = trim((string)($_POST['descripcion'] ?? ''));
+    if ($descripcion === '') $descripcion = null;
 
-        $oldData = $this->model->getById($id);
-        $this->model->update($id, $nombreEspecie, $descripcion);
-        AuditLog::record('UPDATE', 'especie', $id, $oldData, compact('nombreEspecie', 'descripcion'));
-        $this->jsonResponse(['success' => true, 'message' => 'Especie actualizada correctamente', 'species' => ['id' => $id, 'nombre_especie' => $nombreEspecie, 'descripcion' => $descripcion]]);
+    if ($mode === 'add') {
+        $model->add($nombreEspecie, $descripcion);
+        $newId = $model->getLastInsertId() ?? 0;
+        AuditLog::record('CREATE', 'especie', $newId, null, compact('nombreEspecie', 'descripcion'));
+        jsonResponse(['success' => true, 'message' => 'Especie agregada correctamente', 'species' => ['id' => $newId, 'nombre_especie' => $nombreEspecie, 'descripcion' => $descripcion]]);
     }
 
-    private function handleDelete(): void
-    {
-        $id = (int)($_POST['id'] ?? 0);
-        if ($id <= 0) throw new \Exception('ID inválido');
-        if (!$this->model->exists($id)) throw new \Exception('No existe la especie');
+    $id = (int)($_POST['id'] ?? 0);
+    if ($id <= 0) throw new \Exception('ID inválido');
 
-        $oldData = $this->model->getById($id);
-        $this->model->delete($id);
-        AuditLog::record('DELETE', 'especie', $id, $oldData, null);
-        $this->jsonResponse(['success' => true, 'message' => 'Especie eliminada correctamente', 'speciesId' => $id]);
-    }
+    $oldData = $model->getById($id);
+    $model->update($id, $nombreEspecie, $descripcion);
+    AuditLog::record('UPDATE', 'especie', $id, $oldData, compact('nombreEspecie', 'descripcion'));
+    jsonResponse(['success' => true, 'message' => 'Especie actualizada correctamente', 'species' => ['id' => $id, 'nombre_especie' => $nombreEspecie, 'descripcion' => $descripcion]]);
+}
 
-    private function getSpeciesAjax(): void
-    {
-        $this->jsonResponse(['success' => true, 'species' => $this->model->getAll(), 'count' => 0]);
-    }
+function species_handleDelete(): void
+{
+    $model = new Species();
+    $id = (int)($_POST['id'] ?? 0);
+    if ($id <= 0) throw new \Exception('ID inválido');
+    if (!$model->exists($id)) throw new \Exception('No existe la especie');
+
+    $oldData = $model->getById($id);
+    $model->delete($id);
+    AuditLog::record('DELETE', 'especie', $id, $oldData, null);
+    jsonResponse(['success' => true, 'message' => 'Especie eliminada correctamente', 'speciesId' => $id]);
+}
+
+function species_getSpeciesAjax(): void
+{
+    $model = new Species();
+    jsonResponse(['success' => true, 'species' => $model->getAll(), 'count' => 0]);
 }
