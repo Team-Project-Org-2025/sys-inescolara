@@ -12,7 +12,7 @@ $(document).ready(function () {
     cantidad_inicial: 'cantidad',
     cantidad_actual: 'cantidad',
     estado: 'select',
-    ubicacion: 'ubicacion',
+    origen: 'select',
   };
 
   const showImagePreview = (inputId, previewId) => {
@@ -72,7 +72,11 @@ $(document).ready(function () {
           data: 'estado',
           render: (data) => Helpers.getBadge(data),
         },
-        { data: 'ubicacion' },
+        { data: 'origen' },
+        {
+          data: 'observacion',
+          render: (data) => data || '<span class="text-muted">—</span>',
+        },
         {
           data: null,
           orderable: false,
@@ -86,7 +90,8 @@ $(document).ready(function () {
                         data-cantidad_inicial="${Helpers.escapeHtml(data.cantidad_inicial)}"
                         data-cantidad_actual="${Helpers.escapeHtml(data.cantidad_actual)}"
                         data-estado="${Helpers.escapeHtml(data.estado || '')}"
-                        data-ubicacion="${Helpers.escapeHtml(data.ubicacion || '')}"
+                        data-origen="${Helpers.escapeHtml(data.origen || '')}"
+                        data-observacion="${Helpers.escapeHtml(data.observacion || '')}"
                         data-imagen="${Helpers.escapeHtml(data.imagen || '')}">
                     <i class="fas fa-edit"></i>
                 </button>
@@ -189,7 +194,8 @@ $(document).ready(function () {
     $('#editBatchQtyInit').val($btn.data('cantidad_inicial'));
     $('#editBatchQtyCurr').val($btn.data('cantidad_actual'));
     $('#editBatchStatus').val($btn.data('estado'));
-    $('#editBatchLocation').val($btn.data('ubicacion'));
+    $('#editBatchOrigen').val($btn.data('origen'));
+    $('#editBatchObs').val($btn.data('observacion'));
 
     const imagen = $btn.data('imagen');
     const $currentImg = $('#editImageCurrent');

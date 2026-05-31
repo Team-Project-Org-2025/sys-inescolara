@@ -94,14 +94,15 @@ class BatchesController
         $cantidad_inicial = (int)($_POST['cantidad_inicial'] ?? 0);
         $cantidad_actual = (int)($_POST['cantidad_actual'] ?? 0);
         $estado = trim((string)($_POST['estado'] ?? ''));
-        $ubicacion = trim((string)($_POST['ubicacion'] ?? ''));
+        $origen = trim((string)($_POST['origen'] ?? ''));
+        $observacion = trim((string)($_POST['observacion'] ?? ''));
+        if ($observacion === '') $observacion = null;
 
         if ($id_planta <= 0) throw new \Exception('Selecciona una planta.');
         if ($fecha_siembra === '') throw new \Exception('La fecha de siembra es requerida.');
         if ($cantidad_inicial <= 0) throw new \Exception('La cantidad inicial debe ser mayor a 0.');
         if ($cantidad_actual < 0) throw new \Exception('La cantidad actual no puede ser negativa.');
-        if ($estado === '') throw new \Exception('El estado es requerido.');
-        if ($ubicacion === '') throw new \Exception('La ubicación es requerida.');
+        if ($estado === '') $estado = 'Activo';
 
         $imagen = null;
         if (!empty($_FILES['imagen']) && $_FILES['imagen']['error'] === UPLOAD_ERR_OK) {
@@ -114,12 +115,12 @@ class BatchesController
         }
 
         if ($mode === 'add') {
-            $this->model->add($id_planta, $fecha_siembra, $cantidad_inicial, $cantidad_actual, $estado, $ubicacion, $imagen);
+            $this->model->add($id_planta, $fecha_siembra, $cantidad_inicial, $cantidad_actual, $estado, $origen, $observacion, $imagen);
             $newId = $this->model->getLastInsertId() ?? 0;
             AuditLog::record('CREATE', 'lote', $newId, null, [
                 'id_planta' => $id_planta, 'fecha_siembra' => $fecha_siembra,
                 'cantidad_inicial' => $cantidad_inicial, 'cantidad_actual' => $cantidad_actual,
-                'estado' => $estado, 'ubicacion' => $ubicacion, 'imagen' => $imagen,
+                'estado' => $estado, 'origen' => $origen, 'observacion' => $observacion, 'imagen' => $imagen,
             ]);
             $this->jsonResponse([
                 'success' => true, 'message' => 'Lote agregado correctamente',
@@ -141,11 +142,11 @@ class BatchesController
             }
         }
 
-        $this->model->update($id, $id_planta, $fecha_siembra, $cantidad_inicial, $cantidad_actual, $estado, $ubicacion, $imagen);
+        $this->model->update($id, $id_planta, $fecha_siembra, $cantidad_inicial, $cantidad_actual, $estado, $origen, $observacion, $imagen);
         AuditLog::record('UPDATE', 'lote', $id, $oldData, [
             'id_planta' => $id_planta, 'fecha_siembra' => $fecha_siembra,
             'cantidad_inicial' => $cantidad_inicial, 'cantidad_actual' => $cantidad_actual,
-            'estado' => $estado, 'ubicacion' => $ubicacion, 'imagen' => $imagen,
+            'estado' => $estado, 'origen' => $origen, 'observacion' => $observacion, 'imagen' => $imagen,
         ]);
         $this->jsonResponse([
             'success' => true, 'message' => 'Lote actualizado correctamente',

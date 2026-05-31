@@ -43,6 +43,8 @@ include_once __DIR__ . '/../common/links.php';
                                     <th>Apellido</th>
                                     <th>Cédula</th>
                                     <th>Teléfono</th>
+                                    <th>Cargo</th>
+                                    <th>Activo</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
@@ -81,7 +83,14 @@ include_once __DIR__ . '/../common/links.php';
                         <div class="mb-3">
                             <label class="form-label">Teléfono</label>
                             <input type="text" class="form-control" name="telefono_trabajador" placeholder="Ej: 0412-9876543" maxlength="11">
-                            <small class="text-muted">Opcional</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Cargo</label>
+                            <input type="text" class="form-control" name="cargo" placeholder="Ej: Viverista, Supervisor, Administrador">
+                        </div>
+                        <div class="mb-3 form-check form-switch">
+                            <input type="checkbox" class="form-check-input" name="activo" id="addEmployeeActivo" value="1" checked>
+                            <label class="form-check-label" for="addEmployeeActivo">Activo</label>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -119,6 +128,14 @@ include_once __DIR__ . '/../common/links.php';
                         <div class="mb-3">
                             <label class="form-label">Teléfono</label>
                             <input type="text" class="form-control" name="telefono_trabajador" id="editEmployeeTelefono" placeholder="Opcional" maxlength="11">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Cargo</label>
+                            <input type="text" class="form-control" name="cargo" id="editEmployeeCargo" placeholder="Ej: Viverista, Supervisor, Administrador">
+                        </div>
+                        <div class="mb-3 form-check form-switch">
+                            <input type="checkbox" class="form-check-input" name="activo" id="editEmployeeActivo" value="1">
+                            <label class="form-check-label" for="editEmployeeActivo">Activo</label>
                         </div>
                     </div>
                     <div class="modal-footer">

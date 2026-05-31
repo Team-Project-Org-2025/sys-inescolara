@@ -39,9 +39,11 @@ include_once __DIR__ . '/../common/links.php';
                         <table id="locationsTable" class="table table-striped table-hover w-100">
                             <thead>
                                 <tr>
-                                    <th style="width: 15%;">ID</th>
-                                    <th style="width: 65%;">Nombre de la Ubicación / Área</th>
-                                    <th style="width: 20%;">Acciones</th>
+                                    <th>ID</th>
+                                    <th>Nombre</th>
+                                    <th>Descripción</th>
+                                    <th>Zona</th>
+                                    <th>Acciones</th>
                                 </tr>
                             </thead>
                             <tbody></tbody>
@@ -65,7 +67,14 @@ include_once __DIR__ . '/../common/links.php';
                         <div class="mb-3">
                             <label class="form-label">Nombre de la Ubicación</label>
                             <input type="text" class="form-control" name="nombre_ubicacion" required placeholder="Ej: Invernadero Principal A, Sector de Sombreado 2...">
-                            <small class="text-muted">Asigna un nombre descriptivo para la correcta trazabilidad de tus plantas.</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Descripción</label>
+                            <textarea class="form-control" name="descripcion" rows="2" placeholder="Opcional"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Zona</label>
+                            <input type="text" class="form-control" name="zona" placeholder="Ej: Producción, Cuarentena, Venta">
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -91,6 +100,14 @@ include_once __DIR__ . '/../common/links.php';
                         <div class="mb-3">
                             <label class="form-label">Nombre de la Ubicación</label>
                             <input type="text" class="form-control" name="nombre_ubicacion" id="editLocationName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Descripción</label>
+                            <textarea class="form-control" name="descripcion" id="editLocationDesc" rows="2" placeholder="Opcional"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Zona</label>
+                            <input type="text" class="form-control" name="zona" id="editLocationZona" placeholder="Ej: Producción, Cuarentena, Venta">
                         </div>
                     </div>
                     <div class="modal-footer">

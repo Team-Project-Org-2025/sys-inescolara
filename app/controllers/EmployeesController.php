@@ -68,21 +68,24 @@ class EmployeesController
         if ($cedula === '') $cedula = null;
         $telefono = trim((string)($_POST['telefono_trabajador'] ?? ''));
         if ($telefono === '') $telefono = null;
+        $cargo = trim((string)($_POST['cargo'] ?? ''));
+        if ($cargo === '') $cargo = null;
+        $activo = isset($_POST['activo']) ? (bool)$_POST['activo'] : true;
 
         if ($mode === 'add') {
-            $this->model->add($nombre, $apellido, $cedula, $telefono);
+            $this->model->add($nombre, $apellido, $cedula, $telefono, $cargo, $activo);
             $newId = $this->model->getLastInsertId() ?? 0;
-            AuditLog::record('CREATE', 'trabajadores', $newId, null, compact('nombre', 'apellido', 'cedula', 'telefono'));
-            $this->jsonResponse(['success' => true, 'message' => 'Trabajador agregado correctamente', 'employee' => ['id' => $newId, 'nombre_trabajador' => $nombre, 'apellido_trabajador' => $apellido, 'cedula_trabajador' => $cedula, 'telefono_trabajador' => $telefono]]);
+            AuditLog::record('CREATE', 'trabajadores', $newId, null, compact('nombre', 'apellido', 'cedula', 'telefono', 'cargo', 'activo'));
+            $this->jsonResponse(['success' => true, 'message' => 'Trabajador agregado correctamente', 'employee' => ['id' => $newId, 'nombre_trabajador' => $nombre, 'apellido_trabajador' => $apellido, 'cedula_trabajador' => $cedula, 'telefono_trabajador' => $telefono, 'cargo' => $cargo, 'activo' => $activo]]);
         }
 
         $id = (int)($_POST['id'] ?? 0);
         if ($id <= 0) throw new \Exception('ID inválido');
 
         $oldData = $this->model->getById($id);
-        $this->model->update($id, $nombre, $apellido, $cedula, $telefono);
-        AuditLog::record('UPDATE', 'trabajadores', $id, $oldData, compact('nombre', 'apellido', 'cedula', 'telefono'));
-        $this->jsonResponse(['success' => true, 'message' => 'Trabajador actualizado correctamente', 'employee' => ['id' => $id, 'nombre_trabajador' => $nombre, 'apellido_trabajador' => $apellido, 'cedula_trabajador' => $cedula, 'telefono_trabajador' => $telefono]]);
+        $this->model->update($id, $nombre, $apellido, $cedula, $telefono, $cargo, $activo);
+        AuditLog::record('UPDATE', 'trabajadores', $id, $oldData, compact('nombre', 'apellido', 'cedula', 'telefono', 'cargo', 'activo'));
+        $this->jsonResponse(['success' => true, 'message' => 'Trabajador actualizado correctamente', 'employee' => ['id' => $id, 'nombre_trabajador' => $nombre, 'apellido_trabajador' => $apellido, 'cedula_trabajador' => $cedula, 'telefono_trabajador' => $telefono, 'cargo' => $cargo, 'activo' => $activo]]);
     }
 
     private function handleDelete(): void
