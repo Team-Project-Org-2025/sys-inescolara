@@ -33,7 +33,7 @@ $(document).ready(function () {
 
   const initDataTable = () => {
     if (typeof SkeletonHelper !== 'undefined') {
-      SkeletonHelper.showTableSkeleton('plantsTable', 5, 5);
+      SkeletonHelper.showTableSkeleton('plantsTable', 5, 7);
     }
     plantsTable = $('#plantsTable').DataTable({
       ajax: {
@@ -62,6 +62,12 @@ $(document).ready(function () {
         {
           data: 'especie_nombre',
           render: (data) => data || '<span class="text-muted">Sin especie</span>',
+        },
+        { data: 'stock_lotes', render: (data) => data ?? '0', className: 'text-end' },
+        {
+          data: 'precio_vigente',
+          render: (data) => data ? Helpers.formatCurrencyBs(data) : '<span class="text-muted">—</span>',
+          className: 'text-end',
         },
         {
           data: null,
@@ -100,7 +106,7 @@ $(document).ready(function () {
           className: 'btn btn-outline-secondary btn-sm',
           action: () => {
             if (typeof SkeletonHelper !== 'undefined') {
-              SkeletonHelper.showTableSkeleton('plantsTable', 5, 5);
+              SkeletonHelper.showTableSkeleton('plantsTable', 5, 7);
             }
             plantsTable.ajax.reload(null, false);
           },

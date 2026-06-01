@@ -8,6 +8,7 @@ $(document).ready(function () {
 
   const batchValidationRules = {
     id_planta: 'select',
+    id_ubicacion: 'select',
     fecha_siembra: 'fechaFuturaCheck',
     cantidad_inicial: 'cantidad',
     cantidad_actual: 'cantidad',
@@ -36,7 +37,7 @@ $(document).ready(function () {
 
   const initDataTable = () => {
     if (typeof SkeletonHelper !== 'undefined') {
-      SkeletonHelper.showTableSkeleton('batchesTable', 5, 9);
+      SkeletonHelper.showTableSkeleton('batchesTable', 5, 12);
     }
     batchesTable = $('#batchesTable').DataTable({
       ajax: {
@@ -63,11 +64,19 @@ $(document).ready(function () {
           render: (data) => data || '<span class="text-muted">—</span>',
         },
         {
+          data: 'ubicacion_nombre',
+          render: (data) => data || '<span class="text-muted">—</span>',
+        },
+        {
           data: 'fecha_siembra',
           render: (data) => data ? Helpers.formatDate(data) : '—',
         },
         { data: 'cantidad_inicial' },
         { data: 'cantidad_actual' },
+        {
+          data: 'precio_unitario',
+          render: (data) => data ? Helpers.formatCurrencyBs(data) : '<span class="text-muted">—</span>',
+        },
         {
           data: 'estado',
           render: (data) => Helpers.getBadge(data),
@@ -86,6 +95,7 @@ $(document).ready(function () {
                 <button class="btn btn-sm btn-outline-primary btn-edit"
                         data-id="${Helpers.escapeHtml(data.id)}"
                         data-id_planta="${Helpers.escapeHtml(data.id_planta)}"
+                        data-id_ubicacion="${Helpers.escapeHtml(data.id_ubicacion)}"
                         data-fecha_siembra="${Helpers.escapeHtml(data.fecha_siembra || '')}"
                         data-cantidad_inicial="${Helpers.escapeHtml(data.cantidad_inicial)}"
                         data-cantidad_actual="${Helpers.escapeHtml(data.cantidad_actual)}"
@@ -118,7 +128,7 @@ $(document).ready(function () {
           className: 'btn btn-outline-secondary btn-sm',
           action: () => {
             if (typeof SkeletonHelper !== 'undefined') {
-              SkeletonHelper.showTableSkeleton('batchesTable', 5, 9);
+              SkeletonHelper.showTableSkeleton('batchesTable', 5, 12);
             }
             batchesTable.ajax.reload(null, false);
           },
@@ -190,6 +200,7 @@ $(document).ready(function () {
 
     $('#editBatchId').val($btn.data('id'));
     $('#editBatchPlant').val($btn.data('id_planta'));
+    $('#editBatchLocation').val($btn.data('id_ubicacion'));
     $('#editBatchDate').val($btn.data('fecha_siembra'));
     $('#editBatchQtyInit').val($btn.data('cantidad_inicial'));
     $('#editBatchQtyCurr').val($btn.data('cantidad_actual'));

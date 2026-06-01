@@ -75,6 +75,8 @@ include_once __DIR__ . '/../common/links.php';
                                     <th>Nombre Común</th>
                                     <th>Nombre Técnico</th>
                                     <th>Especie</th>
+                                    <th>Stock en Lotes</th>
+                                    <th>Precio Vigente</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>

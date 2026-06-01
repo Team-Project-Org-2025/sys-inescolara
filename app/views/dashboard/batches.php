@@ -74,9 +74,11 @@ include_once __DIR__ . '/../common/links.php';
                                     <th>Imagen</th>
                                     <th>Planta</th>
                                     <th>Especie</th>
+                                    <th>Ubicación</th>
                                     <th>Fecha Siembra</th>
                                     <th>Cant. Inicial</th>
                                     <th>Cant. Actual</th>
+                                    <th>Precio Unitario</th>
                                     <th>Estado</th>
                                     <th>Origen</th>
                                     <th>Observación</th>
@@ -107,6 +109,15 @@ include_once __DIR__ . '/../common/links.php';
                                 <option value="">Seleccione una planta...</option>
                                 <?php foreach ($plants as $p): ?>
                                 <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['nombre_comun']) ?><?= $p['especie_nombre'] ? ' (' . htmlspecialchars($p['especie_nombre']) . ')' : '' ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Ubicación</label>
+                            <select class="form-select" name="id_ubicacion" required>
+                                <option value="">Seleccione una ubicación...</option>
+                                <?php foreach ($locations as $l): ?>
+                                <option value="<?= $l['id'] ?>"><?= htmlspecialchars($l['nombre_ubicacion']) ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
@@ -186,6 +197,15 @@ include_once __DIR__ . '/../common/links.php';
                                 <option value="">Seleccione una planta...</option>
                                 <?php foreach ($plants as $p): ?>
                                 <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['nombre_comun']) ?><?= $p['especie_nombre'] ? ' (' . htmlspecialchars($p['especie_nombre']) . ')' : '' ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Ubicación</label>
+                            <select class="form-select" name="id_ubicacion" id="editBatchLocation" required>
+                                <option value="">Seleccione una ubicación...</option>
+                                <?php foreach ($locations as $l): ?>
+                                <option value="<?= $l['id'] ?>"><?= htmlspecialchars($l['nombre_ubicacion']) ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
