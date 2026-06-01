@@ -21,10 +21,14 @@ class Batch extends Database implements ReadableInterface, DeletableInterface
                         l.id_lote AS id, l.id_planta, l.id_ubicacion, l.fecha_siembra,
                         l.cantidad_inicial, l.cantidad_actual, l.estado, l.origen, l.observacion, l.imagen,
                         p.nombre_comun AS planta_nombre,
-                        e.nombre_especie AS especie_nombre
+                        e.nombre_especie AS especie_nombre,
+                        u.nombre_ubicacion AS ubicacion_nombre,
+                        c.precio_final_sugerido AS precio_unitario
                     FROM lote l
                     LEFT JOIN plantas p ON l.id_planta = p.id_planta
                     LEFT JOIN especie e ON p.id_especie = e.id_especie
+                    LEFT JOIN ubicacion u ON l.id_ubicacion = u.id_ubicacion
+                    LEFT JOIN calculo_precio c ON l.id_lote = c.id_lote
                     ORDER BY l.fecha_siembra DESC";
             $stmt = $this->db->query($sql);
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
@@ -70,11 +74,12 @@ class Batch extends Database implements ReadableInterface, DeletableInterface
         }
     }
 
-    public function add($id_planta, $fecha_siembra, $cantidad_inicial, $cantidad_actual, $estado = 'Activo', $origen = 'Siembra', $observacion = null, $imagen = null)
+    public function add($id_planta, $id_ubicacion, $fecha_siembra, $cantidad_inicial, $cantidad_actual, $estado = 'Activo', $origen = 'Siembra', $observacion = null, $imagen = null)
     {
-        $stmt = $this->db->prepare("INSERT INTO lote (id_planta, fecha_siembra, cantidad_inicial, cantidad_actual, estado, origen, observacion, imagen) VALUES (:id_planta, :fecha_siembra, :cantidad_inicial, :cantidad_actual, :estado, :origen, :observacion, :imagen)");
+        $stmt = $this->db->prepare("INSERT INTO lote (id_planta, id_ubicacion, fecha_siembra, cantidad_inicial, cantidad_actual, estado, origen, observacion, imagen) VALUES (:id_planta, :id_ubicacion, :fecha_siembra, :cantidad_inicial, :cantidad_actual, :estado, :origen, :observacion, :imagen)");
         return $stmt->execute([
             ':id_planta' => $id_planta,
+            ':id_ubicacion' => $id_ubicacion,
             ':fecha_siembra' => $fecha_siembra,
             ':cantidad_inicial' => $cantidad_inicial,
             ':cantidad_actual' => $cantidad_actual,
@@ -85,15 +90,16 @@ class Batch extends Database implements ReadableInterface, DeletableInterface
         ]);
     }
 
-    public function update($id, $id_planta, $fecha_siembra, $cantidad_inicial, $cantidad_actual, $estado = 'Activo', $origen = 'Siembra', $observacion = null, $imagen = null)
+    public function update($id, $id_planta, $id_ubicacion, $fecha_siembra, $cantidad_inicial, $cantidad_actual, $estado = 'Activo', $origen = 'Siembra', $observacion = null, $imagen = null)
     {
         if (!$this->exists($id)) {
             throw new \Exception("No existe el lote con ID: $id");
         }
-        $stmt = $this->db->prepare("UPDATE lote SET id_planta = :id_planta, fecha_siembra = :fecha_siembra, cantidad_inicial = :cantidad_inicial, cantidad_actual = :cantidad_actual, estado = :estado, origen = :origen, observacion = :observacion, imagen = :imagen WHERE id_lote = :id");
+        $stmt = $this->db->prepare("UPDATE lote SET id_planta = :id_planta, id_ubicacion = :id_ubicacion, fecha_siembra = :fecha_siembra, cantidad_inicial = :cantidad_inicial, cantidad_actual = :cantidad_actual, estado = :estado, origen = :origen, observacion = :observacion, imagen = :imagen WHERE id_lote = :id");
         return $stmt->execute([
             ':id' => $id,
             ':id_planta' => $id_planta,
+            ':id_ubicacion' => $id_ubicacion,
             ':fecha_siembra' => $fecha_siembra,
             ':cantidad_inicial' => $cantidad_inicial,
             ':cantidad_actual' => $cantidad_actual,

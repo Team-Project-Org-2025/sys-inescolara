@@ -4,6 +4,7 @@ require_once __DIR__ . '/controller_helpers.php';
 
 use SysInescolara\models\Batch;
 use SysInescolara\models\Plant;
+use SysInescolara\models\Location;
 use SysInescolara\models\AuditLog;
 
 function index(): void
@@ -28,6 +29,13 @@ function index(): void
 
     $plantModel = new Plant();
     $plants = $plantModel->getAll();
+    try {
+        $locationModel = new Location();
+        $locations = $locationModel->getAll();
+    } catch (\Throwable $e) {
+        $locations = [];
+        error_log('[Batches] Error loading locations: ' . $e->getMessage());
+    }
 
     $view = ROOT_PATH . 'app/views/dashboard/batches.php';
     if (!is_file($view)) {
@@ -47,6 +55,7 @@ function batches_handleAddEdit(string $mode): void
 {
     $model = new Batch();
     $id_planta = (int)($_POST['id_planta'] ?? 0);
+    $id_ubicacion = (int)($_POST['id_ubicacion'] ?? 0);
     $fecha_siembra = trim((string)($_POST['fecha_siembra'] ?? ''));
     $cantidad_inicial = (int)($_POST['cantidad_inicial'] ?? 0);
     $cantidad_actual = (int)($_POST['cantidad_actual'] ?? 0);
@@ -56,6 +65,7 @@ function batches_handleAddEdit(string $mode): void
     if ($observacion === '') $observacion = null;
 
     if ($id_planta <= 0) throw new \Exception('Selecciona una planta.');
+    if ($id_ubicacion <= 0) throw new \Exception('Selecciona una ubicación.');
     if ($fecha_siembra === '') throw new \Exception('La fecha de siembra es requerida.');
     if ($cantidad_inicial <= 0) throw new \Exception('La cantidad inicial debe ser mayor a 0.');
     if ($cantidad_actual < 0) throw new \Exception('La cantidad actual no puede ser negativa.');
@@ -72,10 +82,10 @@ function batches_handleAddEdit(string $mode): void
     }
 
     if ($mode === 'add') {
-        $model->add($id_planta, $fecha_siembra, $cantidad_inicial, $cantidad_actual, $estado, $origen, $observacion, $imagen);
+        $model->add($id_planta, $id_ubicacion, $fecha_siembra, $cantidad_inicial, $cantidad_actual, $estado, $origen, $observacion, $imagen);
         $newId = $model->getLastInsertId() ?? 0;
         AuditLog::record('CREATE', 'lote', $newId, null, [
-            'id_planta' => $id_planta, 'fecha_siembra' => $fecha_siembra,
+            'id_planta' => $id_planta, 'id_ubicacion' => $id_ubicacion, 'fecha_siembra' => $fecha_siembra,
             'cantidad_inicial' => $cantidad_inicial, 'cantidad_actual' => $cantidad_actual,
             'estado' => $estado, 'origen' => $origen, 'observacion' => $observacion, 'imagen' => $imagen,
         ]);
@@ -99,9 +109,9 @@ function batches_handleAddEdit(string $mode): void
         }
     }
 
-    $model->update($id, $id_planta, $fecha_siembra, $cantidad_inicial, $cantidad_actual, $estado, $origen, $observacion, $imagen);
+    $model->update($id, $id_planta, $id_ubicacion, $fecha_siembra, $cantidad_inicial, $cantidad_actual, $estado, $origen, $observacion, $imagen);
     AuditLog::record('UPDATE', 'lote', $id, $oldData, [
-        'id_planta' => $id_planta, 'fecha_siembra' => $fecha_siembra,
+        'id_planta' => $id_planta, 'id_ubicacion' => $id_ubicacion, 'fecha_siembra' => $fecha_siembra,
         'cantidad_inicial' => $cantidad_inicial, 'cantidad_actual' => $cantidad_actual,
         'estado' => $estado, 'origen' => $origen, 'observacion' => $observacion, 'imagen' => $imagen,
     ]);

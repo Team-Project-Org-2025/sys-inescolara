@@ -17,10 +17,15 @@ class Plant extends Database implements ReadableInterface, DeletableInterface
     public function getAll(): array
     {
         try {
-            $sql = "SELECT p.id_planta AS id, p.nombre_comun, p.nombre_tecnico, p.id_especie AS especie_id, p.imagen, p.cantidad_total,
-                           e.nombre_especie AS especie_nombre
+            $sql = "SELECT
+                        p.id_planta AS id, p.nombre_comun, p.nombre_tecnico, p.id_especie AS especie_id, p.imagen,
+                        e.nombre_especie AS especie_nombre,
+                        (SELECT COALESCE(SUM(l2.cantidad_actual), 0) FROM lote l2 WHERE l2.id_planta = p.id_planta) AS stock_lotes,
+                        c.precio_final_sugerido AS precio_vigente
                     FROM plantas p
                     LEFT JOIN especie e ON p.id_especie = e.id_especie
+                    LEFT JOIN planta_precio_vigente pv ON p.id_planta = pv.id_planta
+                    LEFT JOIN calculo_precio c ON pv.id_calculo = c.id_calculo
                     ORDER BY p.nombre_comun ASC";
             $stmt = $this->db->query($sql);
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
