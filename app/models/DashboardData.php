@@ -45,6 +45,7 @@ class DashboardData extends Database
         try { $stats['total_trabajadores'] = (int) $this->db->query("SELECT COUNT(*) FROM trabajadores")->fetchColumn(); } catch (\Throwable $e) { $stats['total_trabajadores'] = 0; }
         try { $stats['total_lotes'] = (int) $this->db->query("SELECT COUNT(*) FROM lote")->fetchColumn(); } catch (\Throwable $e) { $stats['total_lotes'] = 0; }
         try { $stats['total_insumos'] = (int) $this->db->query("SELECT COUNT(*) FROM insumo")->fetchColumn(); } catch (\Throwable $e) { $stats['total_insumos'] = 0; }
+        try { $stats['total_herramientas'] = (int) $this->db->query("SELECT COUNT(*) FROM herramienta")->fetchColumn(); } catch (\Throwable $e) { $stats['total_herramientas'] = 0; }
         try {
             $stmt = $this->db->query("SELECT COUNT(*) FROM movimiento_planta WHERE tipo_movimiento = 'Venta'");
             $stats['total_ventas'] = (int) $stmt->fetchColumn();
