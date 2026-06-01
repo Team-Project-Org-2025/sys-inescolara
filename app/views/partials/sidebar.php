@@ -139,6 +139,18 @@ function hasPermiso(string $codigo): bool
                     </a>
                 </li>
                 <?php endif; ?>
+                <?php if (hasPermiso('UNIDADES_MEDIDA_VIEW')): ?>
+                <li>
+                    <a href="<?= BASE_URL ?>dashboard/unit-measures" class="sidebar-link <?= ($currentPage ?? '') === 'unit-measures' ? 'active' : '' ?>">
+                        <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="2" x2="12" y2="22"></line>
+                            <polyline points="17 7 12 2 7 7"></polyline>
+                            <polyline points="17 17 12 22 7 17"></polyline>
+                        </svg>
+                        <span>U. Medida</span>
+                    </a>
+                </li>
+                <?php endif; ?>
                 <?php if (hasPermiso('HERRAMIENTAS_VIEW')): ?>
                 <li>
                     <a href="<?= BASE_URL ?>dashboard/tools" class="sidebar-link <?= ($currentPage ?? '') === 'tools' ? 'active' : '' ?>">
