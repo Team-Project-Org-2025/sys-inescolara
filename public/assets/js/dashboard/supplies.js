@@ -73,7 +73,7 @@ $(document).ready(function () {
           className: 'btn btn-outline-secondary btn-sm',
           action: () => {
             if (typeof SkeletonHelper !== 'undefined') {
-              SkeletonHelper.showTableSkeleton('suppliesTable', 5, 4);
+              SkeletonHelper.showTableSkeleton('suppliesTable', 5, 6);
             }
             suppliesTable.ajax.reload(null, false);
           },
@@ -199,6 +199,12 @@ $(document).ready(function () {
   $('#addSupplyModal, #editSupplyModal').on('hidden.bs.modal', function () {
     const $form = $(this).find('form');
     Helpers.resetForm($form);
+  });
+
+  // Filter by unit of measure
+  $('#filterUnit').on('change', function () {
+    const val = $(this).val();
+    suppliesTable.column(2).search(val).draw();
   });
 
   initDataTable();

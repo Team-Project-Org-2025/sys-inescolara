@@ -187,6 +187,11 @@ function suppliers(): void
 function supplies(): void
 {
     dashboardCheckPermiso('INSUMOS_VIEW');
+
+    require_once ROOT_PATH . 'vendor/autoload.php';
+    $unidadMedidaModel = new \SysInescolara\models\UnidadMedida();
+    $unidades = $unidadMedidaModel->getAll();
+
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'supplies.php';
 
@@ -446,6 +451,22 @@ function prices(): void
     if (!is_file($view)) {
         http_response_code(500);
         echo 'Vista de precios no encontrada.';
+        return;
+    }
+
+    require $view;
+}
+
+function unitMeasures(): void
+{
+    dashboardCheckPermiso('UNIDADES_MEDIDA_VIEW');
+
+    $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
+        . 'dashboard' . DIRECTORY_SEPARATOR . 'unit-measures.php';
+
+    if (!is_file($view)) {
+        http_response_code(500);
+        echo 'Vista de unidades de medida no encontrada.';
         return;
     }
 

@@ -35,6 +35,17 @@ include_once __DIR__ . '/../common/links.php';
 
             <div class="card shadow-sm">
                 <div class="card-body">
+                    <div class="row mb-3 align-items-center">
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold small text-muted mb-1">Filtrar por Unidad de Medida</label>
+                            <select class="form-select form-select-sm" id="filterUnit">
+                                <option value="">Todas las unidades</option>
+                                <?php if (isset($unidades)): foreach ($unidades as $u): ?>
+                                <option value="<?= htmlspecialchars($u['nombre_unidad_medida']) ?>"><?= htmlspecialchars($u['nombre_unidad_medida']) ?> (<?= htmlspecialchars($u['simbolo']) ?>)</option>
+                                <?php endforeach; endif; ?>
+                            </select>
+                        </div>
+                    </div>
                     <div class="table-responsive">
                         <table id="suppliesTable" class="table table-striped table-hover w-100">
                             <thead>
