@@ -201,11 +201,5 @@ $(document).ready(function () {
     Helpers.resetForm($form);
   });
 
-  // Filter by unit of measure
-  $('#filterUnit').on('change', function () {
-    const val = $(this).val();
-    suppliesTable.column(2).search(val).draw();
-  });
-
   initDataTable();
 });
