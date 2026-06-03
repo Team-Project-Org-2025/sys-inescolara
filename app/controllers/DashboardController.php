@@ -79,6 +79,16 @@ function asistente(): void
 function inventario(): void
 {
     dashboardCheckPermiso('INVENTARIO_VIEW');
+
+    require_once ROOT_PATH . 'vendor/autoload.php';
+    $supplyModel = new \SysInescolara\models\Supplies();
+    $supplies = $supplyModel->getAll();
+    $employeeModel = new \SysInescolara\models\Employee();
+    $employees = $employeeModel->getAll();
+
+    $permisos = $_SESSION['user_permisos'] ?? [];
+    $showAdjustBtn = in_array('INVENTARIO_ADJUST', $permisos, true);
+
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'inventario.php';
 
