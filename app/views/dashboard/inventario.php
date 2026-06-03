@@ -23,12 +23,178 @@ include_once __DIR__ . '/../common/links.php';
         <?php include_once __DIR__ . '/../partials/dashboard-header.php'; ?>
         
         <div class="dashboard-content">
-            <h1>Inventario</h1>
-            <p style="color: var(--text-secondary);">Gestión de inventario del vivero.</p>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1>Inventario General</h1>
+                    <p style="color: var(--text-secondary);">Vista consolidada del inventario, movimientos y ajustes.</p>
+                </div>
+                <?php if (isset($showAdjustBtn) && $showAdjustBtn): ?>
+                <button class="btn btn-warning" id="btnNewAdjustment">
+                    <i class="fas fa-sliders-h"></i> Nuevo Ajuste
+                </button>
+                <?php endif; ?>
+            </div>
+
+            <ul class="nav nav-tabs mb-4" id="inventoryTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="consolidated-tab" data-bs-toggle="tab" data-bs-target="#consolidated" type="button" role="tab">
+                        <i class="fas fa-boxes"></i> Consolidado
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="movements-tab" data-bs-toggle="tab" data-bs-target="#movements" type="button" role="tab">
+                        <i class="fas fa-exchange-alt"></i> Movimientos
+                    </button>
+                </li>
+                <?php if (isset($showAdjustBtn) && $showAdjustBtn): ?>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="adjustments-tab" data-bs-toggle="tab" data-bs-target="#adjustments" type="button" role="tab">
+                        <i class="fas fa-sliders-h"></i> Ajustes
+                    </button>
+                </li>
+                <?php endif; ?>
+            </ul>
+
+            <div class="tab-content" id="inventoryTabsContent">
+                <!-- Consolidado -->
+                <div class="tab-pane fade show active" id="consolidated" role="tabpanel">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table id="consolidatedTable" class="table table-striped table-hover w-100">
+                                    <thead>
+                                        <tr>
+                                            <th>Tipo</th>
+                                            <th>Nombre</th>
+                                            <th>Stock Actual</th>
+                                            <th>Unidad</th>
+                                            <th>Ubicación</th>
+                                            <th>Precio Unitario</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Movimientos -->
+                <div class="tab-pane fade" id="movements" role="tabpanel">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table id="movementsTable" class="table table-striped table-hover w-100">
+                                    <thead>
+                                        <tr>
+                                            <th>Tipo Mov.</th>
+                                            <th>Ítem</th>
+                                            <th>Cliente / Destino</th>
+                                            <th>Gestor</th>
+                                            <th>Detalle</th>
+                                            <th>Fecha</th>
+                                            <th>Observación</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ajustes -->
+                <?php if (isset($showAdjustBtn) && $showAdjustBtn): ?>
+                <div class="tab-pane fade" id="adjustments" role="tabpanel">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table id="adjustmentsTable" class="table table-striped table-hover w-100">
+                                    <thead>
+                                        <tr>
+                                            <th>Insumo</th>
+                                            <th>Trabajador</th>
+                                            <th>Tipo</th>
+                                            <th>Cantidad</th>
+                                            <th>Motivo</th>
+                                            <th>Fecha</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <?php endif; ?>
+            </div>
         </div>
     </main>
-    
+
+    <!-- Ajuste Modal -->
+    <?php if (isset($showAdjustBtn) && $showAdjustBtn): ?>
+    <div class="modal fade" id="adjustmentModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="adjustmentForm">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Nuevo Ajuste de Inventario</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Insumo</label>
+                            <select class="form-select" name="id_insumo" required>
+                                <option value="">Seleccione...</option>
+                                <?php foreach ($supplies as $s): ?>
+                                <option value="<?= $s['id_insumo'] ?>"><?= htmlspecialchars($s['nombre_insumo']) ?> (Stock: <?= $s['stock_actual'] ?>)</option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Trabajador</label>
+                            <select class="form-select" name="id_trabajador" required>
+                                <option value="">Seleccione...</option>
+                                <?php foreach ($employees as $e): ?>
+                                <option value="<?= $e['id'] ?>"><?= htmlspecialchars($e['nombre_trabajador'] . ' ' . $e['apellido_trabajador']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Tipo de Ajuste</label>
+                                <select class="form-select" name="tipo_ajuste" required>
+                                    <option value="">Seleccione...</option>
+                                    <option value="entrada">Entrada</option>
+                                    <option value="salida">Salida</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Cantidad</label>
+                                <input type="number" class="form-control" name="cantidad" step="0.01" min="0.01" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Motivo</label>
+                            <textarea class="form-control" name="motivo" rows="2" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Fecha del Ajuste</label>
+                            <input type="date" class="form-control" name="fecha_ajuste" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-warning">Registrar Ajuste</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+
     <script src="<?= BASE_URL ?>public/assets/js/dashboard/notifications.js"></script>
+    <script type="module" src="<?= BASE_URL ?>public/assets/js/dashboard/inventario.js?v=<?= filemtime(__DIR__ . '/../../../public/assets/js/dashboard/inventario.js') ?>"></script>
     <?= $scripts_links ?>
 </body>
 </html>
