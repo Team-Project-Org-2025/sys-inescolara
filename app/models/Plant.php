@@ -18,14 +18,15 @@ class Plant extends Database implements ReadableInterface, DeletableInterface
     {
         try {
             $sql = "SELECT
-                        p.id_planta AS id, p.nombre_comun, p.nombre_tecnico, p.id_especie AS especie_id, p.imagen,
+                        p.id_planta AS id, p.nombre_comun, p.nombre_tecnico, p.id_especie AS especie_id, p.imagen, p.activo,
                         e.nombre_especie AS especie_nombre,
-                        (SELECT COALESCE(SUM(l2.cantidad_actual), 0) FROM lote l2 WHERE l2.id_planta = p.id_planta) AS stock_lotes,
+                        (SELECT COALESCE(SUM(l2.cantidad_actual), 0) FROM lote l2 WHERE l2.id_planta = p.id_planta AND l2.activo = 1) AS stock_lotes,
                         c.precio_final_sugerido AS precio_vigente
                     FROM plantas p
-                    LEFT JOIN especie e ON p.id_especie = e.id_especie
+                    LEFT JOIN especie e ON p.id_especie = e.id_especie AND e.activo = 1
                     LEFT JOIN planta_precio_vigente pv ON p.id_planta = pv.id_planta
                     LEFT JOIN calculo_precio c ON pv.id_calculo = c.id_calculo
+                    WHERE p.activo = 1
                     ORDER BY p.nombre_comun ASC";
             $stmt = $this->db->query($sql);
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
@@ -54,7 +55,13 @@ class Plant extends Database implements ReadableInterface, DeletableInterface
 
     public function delete(int $id): bool
     {
-        $stmt = $this->db->prepare("DELETE FROM plantas WHERE id_planta = :id");
+        $stmt = $this->db->prepare("UPDATE plantas SET activo = 0 WHERE id_planta = :id");
+        return $stmt->execute([':id' => $id]);
+    }
+
+    public function restore(int $id): bool
+    {
+        $stmt = $this->db->prepare("UPDATE plantas SET activo = 1 WHERE id_planta = :id");
         return $stmt->execute([':id' => $id]);
     }
 

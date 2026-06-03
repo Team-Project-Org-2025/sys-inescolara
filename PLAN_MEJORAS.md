@@ -37,81 +37,61 @@ Refactorizar módulos transaccionales, implementar borrado lógico, centralizar 
 **Archivo existente:** `app/controllers/controller_helpers.php`
 **Propósito:** Centralizar funciones que hoy se repiten en cada controlador.
 
-- `checkModuleAuth()` ✓ (ya existe)
-- `checkPermisoOrFail()` ✓ (ya existe)
-- `jsonResponse()` ✓ (ya existe)
-- `handleError()` ✓ (ya existe)
-- `isAjaxRequest()` ✓ (ya existe)
-- **Agregar:** Función `getRequestData()` que unifique la lectura de `$_POST`/`$_GET` según el Content-Type (JSON vs form data). BarkiOS no lo tiene, pero sería una mejora.
-- **Agregar:** Función `validateAndSanitize()` que aplique `Validation::sanitize()` y `Validation::validate()` en un solo paso.
+- `checkModuleAuth()` ✓ (ya existía)
+- `checkPermisoOrFail()` ✓ (ya existía)
+- `jsonResponse()` ✓ (ya existía, ahora incluye `Content-Type: application/json; charset=utf-8`)
+- `handleError()` ✓ (ya existía)
+- `isAjaxRequest()` ✓ (ya existía)
+- `getRequestData()` ✓ — Función que unifica la lectura de `$_POST`/`$_GET` según el Content-Type (JSON vs form data).
+- `validateAndSanitize()` ✓ — Aplica `Validation::sanitize()` y `Validation::validate()` en un solo paso con excepción.
+- **Refactor:** Se eliminaron las llamadas redundantes `header('Content-Type: application/json; charset=utf-8')` de 17 controladores AJAX y se migró `LoginController`, `NotificationsController` y `FrontController::renderNotFound()` a usar `jsonResponse()` en lugar de `echo json_encode` manual.
 
 ### 1.4 Estandarizar Transacciones en Módulos Existentes
-**Archivos a modificar:** Modelos que realizan operaciones multi-paso.
+**Archivos modificados/creados:** Modelos Task, Tool; controladores TasksController, ToolsController.
+**Propósito:** Asegurar que toda operación que modifique múltiples tablas use transacciones atómicas.
 
-Asegurar que toda operación que modifique múltiples tablas use:
-```php
-$this->db->beginTransaction();
-try {
-    // operaciones
-    $this->db->commit();
-} catch (\Exception $e) {
-    $this->db->rollBack();
-    throw $e;
-}
-```
+**Nuevos modelos creados:**
+- `AsignarTarea.php` — CRUD para `asignar_tarea` (PK id_asignacion, FK a trabajadores/tareas/lote)
+- `ConsumoInsumo.php` — CRUD para `consumo_insumos` (FK a asignar_tarea + insumo)
+- `UsoHerramienta.php` — CRUD para `uso_herramienta` (FK a asignar_tarea + herramienta)
 
-Módulos a revisar:
-- Inventory (✓ ya implementado)
-- Sales (cuando se construya)
-- Purchases (cuando se construya)
-- Tasks (asignación + consumo de insumos)
-- Tools (uso de herramientas + desgaste)
+**Métodos transaccionales agregados:**
+- `Task::assignTaskWithConsumptions($assignmentData, $consumptions)` — Inserta en `asignar_tarea` + `consumo_insumos` + actualiza `insumo.stock_actual` en una sola transacción
+- `Task::completeAssignment($id, $fecha, $horas)` — Actualiza estatus a completada en transacción
+- `Tool::recordUsageWithStateUpdate($usageData)` — Inserta en `uso_herramienta` + actualiza `herramienta.estado` en una sola transacción
+
+**Acciones de controlador agregadas:**
+- TasksController: `assign_ajax`, `complete_ajax`, `cancel_ajax`, `get_assignments`, `get_assignment`
+- ToolsController: `record_usage_ajax`, `get_usages`
+
+**Permisos nuevos:** `TAREAS_ASSIGN` (47), `USO_HERRAMIENTA_CREATE` (48) — ver `scripts/add-permissions-1.4.sql`
 
 ---
 
-## FASE 2: BORRADO LÓGICO (SOFT DELETES)
+## FASE 2: BORRADO LÓGICO (SOFT DELETES) ✅
 
 ### 2.1 Migración BD - Agregar columna `activo`
-**Tablas a modificar:** Agregar columna `activo` TINYINT(1) NOT NULL DEFAULT 1 en todas las tablas que actualmente permiten DELETE físico.
+**Script:** `scripts/add-soft-deletes-2.sql`
 
-| Tabla | PK | Estado Actual |
-|---|---|---|
-| plantas | id_planta | Hard delete |
-| especie | id_especie | Hard delete |
-| insumo | id_insumo | Hard delete |
-| herramienta | id_herramienta | Hard delete |
-| lote | id_lote | Hard delete |
-| proveedores | id_proveedor | Hard delete |
-| trabajadores | id_trabajador | Hard delete |
-| cliente | id_cliente | Hard delete |
-| ubicacion | id_ubicacion | Hard delete |
-| unidad_medida | id_unidad_medida | Hard delete |
+**Tablas modificadas (11):** plantas, especie, insumo, herramienta, lote, proveedores, cliente, ubicacion, unidad_medida, tareas (+ trabajadores ya tenía activo)
 
-**Tablas que NO necesitan soft delete (tablas transaccionales/históricas):**
-- movimiento_planta / movimiento_planta_detalle
-- movimiento_insumo / movimiento_insumo_detalle
-- calculo_precio
-- planta_precio_vigente
-- trazabilidad
-- ajuste_inventario
-- asistencia
+### 2.2 Modelos Refactorizados (11)
+Cada modelo implementa soft delete:
+- `delete()` → `UPDATE SET activo = 0` (en lugar de DELETE)
+- `getAll()` → agrega `WHERE activo = 1`
+- `restore($id)` → nuevo, `UPDATE SET activo = 1`
+- `getById()` y `exists()` sin filtro activo (para auditoría/edición)
 
-### 2.2 Refactorizar Modelos - Soft Delete
-Para cada modelo con `DeletableInterface`:
-- `delete()`: Cambiar `DELETE FROM` por `UPDATE SET activo = 0`.
-- `getAll()`: Agregar `WHERE activo = 1` a todas las consultas de listado.
-- `exists()`: Considerar si debe validar existencia de registros activos.
-- Agregar `restore($id)` para restaurar registros eliminados.
-- Agregar `getDeleted()` para listar registros eliminados (opcional).
+**Modelos modificados:** Plant, Species, Supplies, Tool, Batch, Supplier, Employee, Client, Location, UnidadMedida, Task
 
-### 2.3 Refactorizar Controladores - Soft Delete
-- Los métodos `delete_ajax` deben reflejar que ahora es un soft delete.
-- Mensajes de confirmación: Cambiar "eliminado" por "desactivado" (o similar).
-- La auditoría (`AuditLog::record`) debe registrar que se trata de un soft delete.
+### 2.3 Controladores Actualizados (14)
+- Mensajes de éxito: "eliminado" → "desactivado"
+- Auditoría: `AuditLog::record('DELETE', ...)` → `AuditLog::record('DEACTIVATE', ...)`
+- Excepciones: Backups, Roles, User, Prices mantienen DELETE (hard delete)
 
-### 2.4 Manejo de Relaciones FK
-- Validar que al desactivar un registro padre (ej: especie), los hijos (ej: plantas) puedan seguir existiendo.
-- La UI debe indicar cuando un registro está desactivado (color gris, badge "Inactivo").
+### 2.4 Relaciones FK
+- Las consultas JOIN agregan `AND tabla.activo = 1` para evitar referenciar registros desactivados
+- `Location::hasAssociatedLots()` filtra por `activo = 1` al validar desactivación
 
 ---
 
@@ -213,9 +193,9 @@ La interfaz `DeletableInterface::delete()` actualmente espera un DELETE físico.
 |---|---|---|---|
 | 1 | Fase 1.1 - Validation Helper | Corta | Ninguna |
 | 2 | Fase 1.2 - JS Validation Helper | Corta | Fase 1.1 |
-| 3 | Fase 1.3 - Refactor controller_helpers | Corta | Fase 1.1 |
-| 4 | Fase 1.4 - Transacciones existentes | Media | Fase 1.3 |
-| 5 | **Fase 2 - Soft Deletes** | **Larga** | Fase 1.4 |
+| 3 | Fase 1.3 - Refactor controller_helpers | Corta | Completado ✓ |
+| 4 | Fase 1.4 - Transacciones existentes | Media | Completado ✓ |
+| 5 | **Fase 2 - Soft Deletes** | **Larga** | **Completado ✓** |
 | 6 | Fase 6.3 - DeletableInterface | Corta | Fase 2 |
 | 7 | Fase 5 - Exchange Rate | Corta | Ninguna |
 | 8 | **Fase 3 - Ventas/POS** | **Muy larga** | Fases 1, 2 |

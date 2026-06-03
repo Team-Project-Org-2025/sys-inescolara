@@ -10,7 +10,6 @@ function index(): void
     checkModuleAuth();
     $action = $_GET['action'] ?? '';
     if (isAjaxRequest() && $action !== '') {
-        header('Content-Type: application/json; charset=utf-8');
         try {
             match ($_SERVER['REQUEST_METHOD'] . '_' . $action) {
                 'GET_get_suppliers' => suppliers_getSuppliersAjax(),
@@ -76,8 +75,8 @@ function suppliers_handleDelete(): void
 
     $oldData = $model->getById($id);
     $model->delete($id);
-    AuditLog::record('DELETE', 'proveedores', $id, $oldData, null);
-    jsonResponse(['success' => true, 'message' => 'Proveedor eliminado correctamente', 'supplierId' => $id]);
+    AuditLog::record('DEACTIVATE', 'proveedores', $id, $oldData, null);
+    jsonResponse(['success' => true, 'message' => 'Proveedor desactivado correctamente', 'supplierId' => $id]);
 }
 
 function suppliers_getSuppliersAjax(): void

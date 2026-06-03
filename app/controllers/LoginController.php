@@ -1,5 +1,6 @@
 <?php
 
+require_once __DIR__ . '/controller_helpers.php';
 
 use SysInescolara\models\User;
 use SysInescolara\models\AuditLog;
@@ -44,12 +45,8 @@ function checkAuth()
     }
 
     if (!isset($_SESSION['user_id'])) {
-        $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
-        if ($isAjax) {
-            http_response_code(401);
-            header('Content-Type: application/json');
-            echo json_encode(['success' => false, 'message' => 'No autorizado', 'redirect' => BASE_URL . 'login']);
-            exit();
+        if (isAjaxRequest()) {
+            jsonResponse(['success' => false, 'message' => 'No autorizado', 'redirect' => BASE_URL . 'login'], 401);
         }
         header('Location: ' . BASE_URL . 'login');
         exit();
@@ -196,13 +193,11 @@ function logout_ajax()
     session_unset();
     session_destroy();
 
-    header('Content-Type: application/json');
-    echo json_encode([
+    jsonResponse([
         'success' => true,
         'message' => 'Sesión cerrada correctamente',
         'redirect' => BASE_URL . 'login'
     ]);
-    exit();
 }
 
 function check_session()
@@ -212,11 +207,9 @@ function check_session()
         exit();
     }
 
-    header('Content-Type: application/json');
-
     $active = isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
 
-    echo json_encode([
+    jsonResponse([
         'active' => $active,
         'user_id' => $_SESSION['user_id'] ?? null,
         'user_email' => $_SESSION['user_email'] ?? null,
@@ -224,5 +217,4 @@ function check_session()
         'user_avatar' => $_SESSION['user_avatar'] ?? null,
         'user_rol_id' => $_SESSION['user_rol_id'] ?? null
     ]);
-    exit();
 }

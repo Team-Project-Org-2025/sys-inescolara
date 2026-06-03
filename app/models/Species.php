@@ -17,7 +17,7 @@ class Species extends Database implements ReadableInterface, DeletableInterface
     public function getAll(): array
     {
         try {
-            $sql = "SELECT id_especie AS id, nombre_especie, descripcion FROM especie ORDER BY nombre_especie ASC";
+            $sql = "SELECT id_especie AS id, nombre_especie, descripcion, activo FROM especie WHERE activo = 1 ORDER BY nombre_especie ASC";
             $stmt = $this->db->query($sql);
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
         } catch (\Throwable $e) {
@@ -42,7 +42,13 @@ class Species extends Database implements ReadableInterface, DeletableInterface
 
     public function delete(int $id): bool
     {
-        $stmt = $this->db->prepare("DELETE FROM especie WHERE id_especie = :id");
+        $stmt = $this->db->prepare("UPDATE especie SET activo = 0 WHERE id_especie = :id");
+        return $stmt->execute([':id' => $id]);
+    }
+
+    public function restore(int $id): bool
+    {
+        $stmt = $this->db->prepare("UPDATE especie SET activo = 1 WHERE id_especie = :id");
         return $stmt->execute([':id' => $id]);
     }
 

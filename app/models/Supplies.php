@@ -17,10 +17,11 @@ class Supplies extends Database implements ReadableInterface, DeletableInterface
 
     public function getAll(): array {
         try {
-            $sql = "SELECT i.id_insumo, i.nombre_insumo, i.id_unidad_medida, i.categoria, i.stock_actual, i.costo_unitario_actual,
+            $sql = "SELECT i.id_insumo, i.nombre_insumo, i.id_unidad_medida, i.categoria, i.stock_actual, i.costo_unitario_actual, i.activo,
                            u.nombre_unidad_medida, u.simbolo
                     FROM insumo i
-                    LEFT JOIN unidad_medida u ON i.id_unidad_medida = u.id_unidad_medida
+                    LEFT JOIN unidad_medida u ON i.id_unidad_medida = u.id_unidad_medida AND u.activo = 1
+                    WHERE i.activo = 1
                     ORDER BY i.nombre_insumo ASC";
             $stmt = $this->db->query($sql);
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
@@ -83,7 +84,12 @@ class Supplies extends Database implements ReadableInterface, DeletableInterface
     }
 
     public function delete(int $id): bool {
-        $stmt = $this->db->prepare("DELETE FROM insumo WHERE id_insumo = :id");
+        $stmt = $this->db->prepare("UPDATE insumo SET activo = 0 WHERE id_insumo = :id");
+        return $stmt->execute([':id' => $id]);
+    }
+
+    public function restore(int $id): bool {
+        $stmt = $this->db->prepare("UPDATE insumo SET activo = 1 WHERE id_insumo = :id");
         return $stmt->execute([':id' => $id]);
     }
 

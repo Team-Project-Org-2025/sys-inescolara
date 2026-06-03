@@ -11,7 +11,6 @@ function index(): void
     checkModuleAuth();
     $action = $_GET['action'] ?? '';
     if (isAjaxRequest() && $action !== '') {
-        header('Content-Type: application/json; charset=utf-8');
         try {
             match ($_SERVER['REQUEST_METHOD'] . '_' . $action) {
                 'GET_get_prices'     => prices_getPricesAjax(),
@@ -120,7 +119,7 @@ function prices_handleDelete(): void
     $oldData = $model->getById($id);
     $model->delete($id);
     AuditLog::record('DELETE', 'calculo_precio', $id, $oldData, null);
-    jsonResponse(['success' => true, 'message' => 'Cálculo de precio eliminado correctamente', 'priceId' => $id]);
+    jsonResponse(['success' => true, 'message' => 'Cálculo de precio desactivado correctamente', 'priceId' => $id]);
 }
 
 function prices_getPricesAjax(): void

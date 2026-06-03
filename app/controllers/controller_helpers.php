@@ -2,6 +2,9 @@
 
 function jsonResponse(array $data, int $statusCode = 200): void
 {
+    if (!headers_sent()) {
+        header('Content-Type: application/json; charset=utf-8');
+    }
     http_response_code($statusCode);
     echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     exit();
@@ -30,14 +33,11 @@ function checkModuleAuth(): void
     }
     if (!isset($_SESSION['user_id'])) {
         if (isAjaxRequest()) {
-            header('Content-Type: application/json; charset=utf-8');
-            http_response_code(401);
-            echo json_encode([
+            jsonResponse([
                 'success' => false,
                 'message' => 'No autorizado',
                 'redirect' => BASE_URL . 'login',
-            ]);
-            exit();
+            ], 401);
         }
         header('Location: ' . BASE_URL . 'login');
         exit();
@@ -48,8 +48,37 @@ function checkPermisoOrFail(string $codigo): void
 {
     $permisos = $_SESSION['user_permisos'] ?? [];
     if (!in_array($codigo, $permisos, true)) {
-        http_response_code(403);
-        echo json_encode(['success' => false, 'message' => 'No tienes permiso para realizar esta acción.']);
-        exit();
+        jsonResponse(['success' => false, 'message' => 'No tienes permiso para realizar esta acción.'], 403);
     }
+}
+
+function getRequestData(): array
+{
+    $contentType = $_SERVER['CONTENT_TYPE'] ?? $_SERVER['HTTP_CONTENT_TYPE'] ?? '';
+
+    if (strpos($contentType, 'application/json') !== false) {
+        $raw = file_get_contents('php://input');
+        $data = json_decode($raw, true);
+        return is_array($data) ? $data : [];
+    }
+
+    if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+        return $_GET;
+    }
+
+    return $_POST;
+}
+
+function validateAndSanitize(array $rules): array
+{
+    $data = getRequestData();
+    $sanitized = \SysInescolara\helpers\Validation::sanitize($data);
+    $validation = \SysInescolara\helpers\Validation::validate($sanitized, $rules);
+
+    if (!$validation['valid']) {
+        $errors = implode('; ', $validation['errors']);
+        throw new \InvalidArgumentException("Errores de validación: $errors");
+    }
+
+    return $sanitized;
 }

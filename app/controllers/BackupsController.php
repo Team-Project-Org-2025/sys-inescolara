@@ -12,7 +12,6 @@ function index(): void
     if ($action !== '') {
         try {
             if (isAjaxRequest()) {
-                header('Content-Type: application/json; charset=utf-8');
                 match ($_SERVER['REQUEST_METHOD'] . '_' . $action) {
                     'GET_get_backups'      => backups_getBackupsAjax(),
                     'POST_create_backup'   => backups_createBackupAjax(),

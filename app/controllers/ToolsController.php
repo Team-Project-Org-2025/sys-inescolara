@@ -10,14 +10,15 @@ function index(): void
     checkModuleAuth();
     $action = $_GET['action'] ?? '';
     if (isAjaxRequest() && $action !== '') {
-        header('Content-Type: application/json; charset=utf-8');
         try {
             match ($_SERVER['REQUEST_METHOD'] . '_' . $action) {
-                'GET_get_tools'   => tools_getToolsAjax(),
-                'POST_add_ajax'   => tools_handleAddEdit('add'),
-                'POST_edit_ajax'  => tools_handleAddEdit('edit'),
-                'POST_delete_ajax' => tools_handleDelete(),
-                default           => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
+                'GET_get_tools'          => tools_getToolsAjax(),
+                'POST_add_ajax'          => tools_handleAddEdit('add'),
+                'POST_edit_ajax'         => tools_handleAddEdit('edit'),
+                'POST_delete_ajax'       => tools_handleDelete(),
+                'POST_record_usage_ajax' => tools_recordUsageAjax(),
+                'GET_get_usages'         => tools_getUsagesAjax(),
+                default                  => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
             };
         } catch (\Exception $e) {
             handleError($e, true);
@@ -38,6 +39,8 @@ function get_tools(): void { checkModuleAuth(); tools_getToolsAjax(); }
 function add_ajax(): void { checkModuleAuth(); checkPermisoOrFail('HERRAMIENTAS_CREATE'); tools_handleAddEdit('add'); }
 function edit_ajax(): void { checkModuleAuth(); checkPermisoOrFail('HERRAMIENTAS_EDIT'); tools_handleAddEdit('edit'); }
 function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('HERRAMIENTAS_DELETE'); tools_handleDelete(); }
+function record_usage_ajax(): void { checkModuleAuth(); checkPermisoOrFail('USO_HERRAMIENTA_CREATE'); tools_recordUsageAjax(); }
+function get_usages(): void { checkModuleAuth(); tools_getUsagesAjax(); }
 
 function tools_handleAddEdit(string $mode): void
 {
@@ -93,8 +96,8 @@ function tools_handleDelete(): void
 
     $oldData = $model->getById($id);
     $model->delete($id);
-    AuditLog::record('DELETE', 'herramienta', $id, $oldData, null);
-    jsonResponse(['success' => true, 'message' => 'Herramienta eliminada correctamente', 'toolId' => $id]);
+    AuditLog::record('DEACTIVATE', 'herramienta', $id, $oldData, null);
+    jsonResponse(['success' => true, 'message' => 'Herramienta desactivada correctamente', 'toolId' => $id]);
 }
 
 function tools_getToolsAjax(): void
@@ -102,4 +105,40 @@ function tools_getToolsAjax(): void
     $model = new Tool();
     $tools = $model->getAll();
     jsonResponse(['success' => true, 'tools' => $tools, 'count' => count($tools)]);
+}
+
+// -- Uso de herramientas (transaccional) --
+
+function tools_recordUsageAjax(): void
+{
+    $data = getRequestData();
+
+    $usageData = [
+        'id_asignacion'            => (int)($data['id_asignacion'] ?? 0),
+        'id_herramienta'           => (int)($data['id_herramienta'] ?? 0),
+        'fecha_uso'                => $data['fecha_uso'] ?? date('Y-m-d'),
+        'observacion'              => trim((string)($data['observacion'] ?? '')),
+        'estado_herramienta_post_uso' => $data['estado_herramienta_post_uso'] ?? 'ok',
+    ];
+
+    if (!$usageData['id_asignacion'] || !$usageData['id_herramienta']) {
+        jsonResponse(['success' => false, 'message' => 'Se requieren asignación y herramienta.'], 400);
+    }
+
+    $model = new Tool();
+    $usoId = $model->recordUsageWithStateUpdate($usageData);
+
+    AuditLog::record('CREATE', 'uso_herramienta', $usoId, null, $usageData);
+
+    jsonResponse(['success' => true, 'message' => 'Uso de herramienta registrado', 'id_uso' => $usoId]);
+}
+
+function tools_getUsagesAjax(): void
+{
+    $herramientaId = (int)($_GET['id_herramienta'] ?? 0);
+    if ($herramientaId <= 0) jsonResponse(['success' => false, 'message' => 'ID de herramienta inválido'], 400);
+
+    $model = new Tool();
+    $usages = $model->getUsages($herramientaId);
+    jsonResponse(['success' => true, 'usages' => $usages, 'count' => count($usages)]);
 }
