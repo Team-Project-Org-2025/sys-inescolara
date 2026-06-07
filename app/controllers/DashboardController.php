@@ -457,11 +457,9 @@ function prices(): void
     dashboardCheckPermiso('PRECIOS_VIEW');
 
     require_once ROOT_PATH . 'vendor/autoload.php';
-    $batchModel = new \SysInescolara\models\Batch();
-    $batches = $batchModel->getAll();
 
-    $priceModel = new \SysInescolara\models\PriceCalculation();
-    $batchIdsWithPrices = $priceModel->getBatchIdsWithPrices();
+    $plantModel = new \SysInescolara\models\Plant();
+    $plants = $plantModel->getAll();
 
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'prices.php';

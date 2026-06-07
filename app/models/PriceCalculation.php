@@ -20,7 +20,7 @@ class PriceCalculation extends Database implements ReadableInterface, DeletableI
             $sql = "SELECT
                         c.id_calculo AS id, c.id_lote, c.costo_mano_obra, c.costo_total_insumo,
                         c.porcentaje_ganancia,
-                        c.precio_final_sugerido, c.fecha_calculo, c.vigente,
+                        c.precio_final_sugerido, c.fecha_calculo,
                         l.cantidad_actual,
                         p.nombre_comun AS planta_nombre,
                         p.id_planta
@@ -66,10 +66,8 @@ class PriceCalculation extends Database implements ReadableInterface, DeletableI
     {
         try {
             $this->db->beginTransaction();
-            $stmt1 = $this->db->prepare("DELETE FROM planta_precio_vigente WHERE id_calculo = :id");
-            $stmt1->execute([':id' => $id]);
-            $stmt2 = $this->db->prepare("DELETE FROM calculo_precio WHERE id_calculo = :id");
-            $stmt2->execute([':id' => $id]);
+            $stmt = $this->db->prepare("DELETE FROM calculo_precio WHERE id_calculo = :id");
+            $stmt->execute([':id' => $id]);
             return $this->db->commit();
         } catch (\Throwable $e) {
             $this->db->rollBack();
@@ -113,18 +111,17 @@ class PriceCalculation extends Database implements ReadableInterface, DeletableI
         float $costoTotalInsumo,
         float $porcentajeGanancia,
         float $precioFinalSugerido,
-        string $fechaCalculo,
-        int $vigente = 0
+        string $fechaCalculo
     ): bool {
         $stmt = $this->db->prepare("
             INSERT INTO calculo_precio
                 (id_lote, costo_mano_obra, costo_total_insumo,
                  porcentaje_ganancia, precio_final_sugerido,
-                 fecha_calculo, vigente)
+                 fecha_calculo)
             VALUES
                 (:id_lote, :costo_mano_obra, :costo_total_insumo,
                  :porcentaje_ganancia, :precio_final_sugerido,
-                 :fecha_calculo, :vigente)
+                 :fecha_calculo)
         ");
         return $stmt->execute([
             ':id_lote' => $idLote,
@@ -133,7 +130,6 @@ class PriceCalculation extends Database implements ReadableInterface, DeletableI
             ':porcentaje_ganancia' => $porcentajeGanancia,
             ':precio_final_sugerido' => $precioFinalSugerido,
             ':fecha_calculo' => $fechaCalculo,
-            ':vigente' => $vigente,
         ]);
     }
 
@@ -144,8 +140,7 @@ class PriceCalculation extends Database implements ReadableInterface, DeletableI
         float $costoTotalInsumo,
         float $porcentajeGanancia,
         float $precioFinalSugerido,
-        string $fechaCalculo,
-        int $vigente = 0
+        string $fechaCalculo
     ): bool {
         if (!$this->exists($id)) {
             throw new \Exception('No existe el cálculo de precio solicitado para modificar.');
@@ -157,8 +152,7 @@ class PriceCalculation extends Database implements ReadableInterface, DeletableI
                 costo_total_insumo = :costo_total_insumo,
                 porcentaje_ganancia = :porcentaje_ganancia,
                 precio_final_sugerido = :precio_final_sugerido,
-                fecha_calculo = :fecha_calculo,
-                vigente = :vigente
+                fecha_calculo = :fecha_calculo
             WHERE id_calculo = :id
         ");
         return $stmt->execute([
@@ -169,35 +163,7 @@ class PriceCalculation extends Database implements ReadableInterface, DeletableI
             ':porcentaje_ganancia' => $porcentajeGanancia,
             ':precio_final_sugerido' => $precioFinalSugerido,
             ':fecha_calculo' => $fechaCalculo,
-            ':vigente' => $vigente,
         ]);
-    }
-
-    public function setVigente(int $idCalculo, int $idPlanta): void
-    {
-        $this->db->beginTransaction();
-        try {
-            $stmt = $this->db->prepare("UPDATE calculo_precio SET vigente = 0 WHERE id_lote IN (SELECT id_lote FROM lote WHERE id_planta = :id_planta)");
-            $stmt->execute([':id_planta' => $idPlanta]);
-
-            $stmt2 = $this->db->prepare("UPDATE calculo_precio SET vigente = 1 WHERE id_calculo = :id");
-            $stmt2->execute([':id' => $idCalculo]);
-
-            $this->db->prepare("
-                INSERT INTO planta_precio_vigente (id_planta, id_calculo)
-                VALUES (:id_planta, :id_calculo)
-                ON DUPLICATE KEY UPDATE id_calculo = :id_calculo2
-            ")->execute([
-                ':id_planta' => $idPlanta,
-                ':id_calculo' => $idCalculo,
-                ':id_calculo2' => $idCalculo,
-            ]);
-
-            $this->db->commit();
-        } catch (\Throwable $e) {
-            $this->db->rollBack();
-            throw $e;
-        }
     }
 
     public function getLotesByPlanta(int $idPlanta, ?string $categoria = null): array
@@ -207,12 +173,17 @@ class PriceCalculation extends Database implements ReadableInterface, DeletableI
                         l.id_lote,
                         l.cantidad_actual,
                         l.categoria,
+                        COALESCE(cp.costo_mano_obra, 0) AS costo_mano_obra,
+                        COALESCE(cp.costo_total_insumo, 0) AS costo_insumos,
+                        COALESCE(cp.costo_agua_lote, 0) AS costo_agua,
                         COALESCE(cp.costo_mano_obra, 0) + COALESCE(cp.costo_total_insumo, 0) + COALESCE(cp.costo_agua_lote, 0) AS costo_total_lote,
                         CASE
                             WHEN cp.id_calculo IS NOT NULL THEN 1
                             ELSE 0
-                        END AS tiene_calculo
+                        END AS tiene_calculo,
+                        p.nombre_comun AS planta_nombre
                     FROM lote l
+                    JOIN plantas p ON l.id_planta = p.id_planta
                     LEFT JOIN calculo_precio cp ON cp.id_lote = l.id_lote
                     WHERE l.id_planta = :id_planta AND l.activo = 1";
             $params = [':id_planta' => $idPlanta];
@@ -227,10 +198,16 @@ class PriceCalculation extends Database implements ReadableInterface, DeletableI
 
             // Para lotes sin calculo_precio, calcular costo desde consumos
             foreach ($lotes as &$lote) {
+                $lote['costo_mano_obra'] = (float)$lote['costo_mano_obra'];
+                $lote['costo_insumos'] = (float)$lote['costo_insumos'];
+                $lote['costo_agua'] = (float)$lote['costo_agua'];
                 if ((int)$lote['tiene_calculo'] === 0) {
-                    $lote['costo_total_lote'] = $this->getCostoInsumosByLote((int)$lote['id_lote']);
+                    $insumos = $this->getCostoInsumosByLote((int)$lote['id_lote']);
+                    $lote['costo_insumos'] = $insumos;
+                    $lote['costo_mano_obra'] = 0;
+                    $lote['costo_agua'] = 0;
                 }
-                $lote['costo_total_lote'] = (float)$lote['costo_total_lote'];
+                $lote['costo_total_lote'] = $lote['costo_mano_obra'] + $lote['costo_insumos'] + $lote['costo_agua'];
             }
             return $lotes;
         } catch (\Throwable $e) {
@@ -253,11 +230,13 @@ class PriceCalculation extends Database implements ReadableInterface, DeletableI
         $totalCostos = array_sum(array_column($lotes, 'costo_total_lote'));
         $totalPlantas = array_sum(array_column($lotes, 'cantidad_actual'));
         $costoPorPlanta = $totalPlantas > 0 ? $totalCostos / $totalPlantas : 0;
+        $plantaNombre = !empty($lotes) ? ($lotes[0]['planta_nombre'] ?? '') : '';
         return [
             'lotes' => $lotes,
             'total_costos' => round($totalCostos, 2),
             'total_plantas' => $totalPlantas,
             'costo_por_planta' => round($costoPorPlanta, 2),
+            'planta_nombre' => $plantaNombre,
         ];
     }
 
@@ -275,26 +254,6 @@ class PriceCalculation extends Database implements ReadableInterface, DeletableI
         } catch (\Throwable $e) {
             error_log('Error en PriceCalculation::getCostoInsumosByLote: ' . $e->getMessage());
             return 0;
-        }
-    }
-
-    public function getActivePrices(): array
-    {
-        try {
-            $sql = "SELECT
-                        pv.id_planta, pv.id_calculo,
-                        c.precio_final_sugerido, c.fecha_calculo,
-                        p.nombre_comun AS planta_nombre,
-                        l.id_lote, l.cantidad_actual
-                    FROM planta_precio_vigente pv
-                    JOIN calculo_precio c ON pv.id_calculo = c.id_calculo
-                    JOIN plantas p ON pv.id_planta = p.id_planta
-                    LEFT JOIN lote l ON c.id_lote = l.id_lote";
-            $stmt = $this->db->query($sql);
-            return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
-        } catch (\Throwable $e) {
-            error_log('Error en PriceCalculation::getActivePrices: ' . $e->getMessage());
-            return [];
         }
     }
 }
