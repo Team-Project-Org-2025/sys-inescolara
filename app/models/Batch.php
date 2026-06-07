@@ -19,16 +19,17 @@ class Batch extends Database implements ReadableInterface, DeletableInterface
         try {
             $sql = "SELECT
                         l.id_lote AS id, l.id_planta, l.id_ubicacion, l.fecha_siembra,
-                        l.cantidad_inicial, l.cantidad_actual, l.estado, l.origen, l.observacion, l.imagen,
+                        l.cantidad_inicial, l.cantidad_actual, l.estado, l.origen, l.observacion, l.imagen, l.activo,
                         p.nombre_comun AS planta_nombre,
                         e.nombre_especie AS especie_nombre,
                         u.nombre_ubicacion AS ubicacion_nombre,
                         c.precio_final_sugerido AS precio_unitario
                     FROM lote l
-                    LEFT JOIN plantas p ON l.id_planta = p.id_planta
-                    LEFT JOIN especie e ON p.id_especie = e.id_especie
-                    LEFT JOIN ubicacion u ON l.id_ubicacion = u.id_ubicacion
+                    LEFT JOIN plantas p ON l.id_planta = p.id_planta AND p.activo = 1
+                    LEFT JOIN especie e ON p.id_especie = e.id_especie AND e.activo = 1
+                    LEFT JOIN ubicacion u ON l.id_ubicacion = u.id_ubicacion AND u.activo = 1
                     LEFT JOIN calculo_precio c ON l.id_lote = c.id_lote
+                    WHERE l.activo = 1
                     ORDER BY l.fecha_siembra DESC";
             $stmt = $this->db->query($sql);
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
@@ -61,7 +62,13 @@ class Batch extends Database implements ReadableInterface, DeletableInterface
 
     public function delete(int $id): bool
     {
-        $stmt = $this->db->prepare("DELETE FROM lote WHERE id_lote = :id");
+        $stmt = $this->db->prepare("UPDATE lote SET activo = 0 WHERE id_lote = :id");
+        return $stmt->execute([':id' => $id]);
+    }
+
+    public function restore(int $id): bool
+    {
+        $stmt = $this->db->prepare("UPDATE lote SET activo = 1 WHERE id_lote = :id");
         return $stmt->execute([':id' => $id]);
     }
 

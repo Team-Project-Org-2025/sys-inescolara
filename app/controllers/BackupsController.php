@@ -12,7 +12,6 @@ function index(): void
     if ($action !== '') {
         try {
             if (isAjaxRequest()) {
-                header('Content-Type: application/json; charset=utf-8');
                 match ($_SERVER['REQUEST_METHOD'] . '_' . $action) {
                     'GET_get_backups'      => backups_getBackupsAjax(),
                     'POST_create_backup'   => backups_createBackupAjax(),
@@ -21,6 +20,7 @@ function index(): void
                     default                => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
                 };
             } elseif ($_SERVER['REQUEST_METHOD'] === 'GET' && $action === 'download_backup') {
+                checkPermisoOrFail('BACKUPS_CREATE');
                 backups_downloadBackup();
             }
         } catch (\Exception $e) {
@@ -39,9 +39,9 @@ function index(): void
 }
 
 function get_backups(): void { checkModuleAuth(); backups_getBackupsAjax(); }
-function create_backup(): void { checkModuleAuth(); backups_createBackupAjax(); }
-function restore_backup(): void { checkModuleAuth(); backups_restoreBackupAjax(); }
-function delete_backup(): void { checkModuleAuth(); backups_deleteBackupAjax(); }
+function create_backup(): void { checkModuleAuth(); checkPermisoOrFail('BACKUPS_CREATE'); backups_createBackupAjax(); }
+function restore_backup(): void { checkModuleAuth(); checkPermisoOrFail('BACKUPS_DELETE'); backups_restoreBackupAjax(); }
+function delete_backup(): void { checkModuleAuth(); checkPermisoOrFail('BACKUPS_DELETE'); backups_deleteBackupAjax(); }
 
 function backups_getBackupsAjax(): void
 {

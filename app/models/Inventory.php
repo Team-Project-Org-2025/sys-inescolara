@@ -23,7 +23,7 @@ class Inventory extends Database
                         CONCAT('PLANTA_', p.id_planta) AS id,
                         COALESCE(NULLIF(p.nombre_comun, ''), p.nombre_tecnico) AS nombre,
                         'Planta' AS tipo,
-                        (SELECT COALESCE(SUM(l2.cantidad_actual), 0) FROM lote l2 WHERE l2.id_planta = p.id_planta) AS stock,
+                        (SELECT COALESCE(SUM(l2.cantidad_actual), 0) FROM lote l2 WHERE l2.id_planta = p.id_planta AND l2.activo = 1) AS stock,
                         'unidades' AS unidad,
                         NULL AS ubicacion,
                         c.precio_final_sugerido AS precio,
@@ -31,6 +31,7 @@ class Inventory extends Database
                     FROM plantas p
                     LEFT JOIN planta_precio_vigente pv ON p.id_planta = pv.id_planta
                     LEFT JOIN calculo_precio c ON pv.id_calculo = c.id_calculo
+                    WHERE p.activo = 1
 
                     UNION ALL
 
@@ -46,6 +47,7 @@ class Inventory extends Database
                         i.id_insumo
                     FROM insumo i
                     LEFT JOIN unidad_medida u ON i.id_unidad_medida = u.id_unidad_medida
+                    WHERE i.activo = 1
 
                     UNION ALL
 
@@ -60,6 +62,7 @@ class Inventory extends Database
                         NULL,
                         h.id_herramienta
                     FROM herramienta h
+                    WHERE h.activo = 1
 
                     UNION ALL
 
@@ -74,9 +77,10 @@ class Inventory extends Database
                         c2.precio_final_sugerido,
                         l.id_lote
                     FROM lote l
-                    LEFT JOIN plantas p ON l.id_planta = p.id_planta
-                    LEFT JOIN ubicacion u ON l.id_ubicacion = u.id_ubicacion
+                    LEFT JOIN plantas p ON l.id_planta = p.id_planta AND p.activo = 1
+                    LEFT JOIN ubicacion u ON l.id_ubicacion = u.id_ubicacion AND u.activo = 1
                     LEFT JOIN calculo_precio c2 ON l.id_lote = c2.id_lote
+                    WHERE l.activo = 1
                 ) AS inv
                 ORDER BY tipo, nombre
             ";

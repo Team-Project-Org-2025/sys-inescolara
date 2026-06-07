@@ -45,7 +45,7 @@ class Client extends Database implements ReadableInterface, DeletableInterface
     public function getAll(): array
     {
         try {
-            $sql = "SELECT id_cliente AS id, nombre_cliente, contacto_cliente FROM cliente ORDER BY nombre_cliente ASC";
+            $sql = "SELECT id_cliente AS id, nombre_cliente, contacto_cliente, activo FROM cliente WHERE activo = 1 ORDER BY nombre_cliente ASC";
             $stmt = $this->db->query($sql);
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
         } catch (\Throwable $e) {
@@ -70,7 +70,13 @@ class Client extends Database implements ReadableInterface, DeletableInterface
 
     public function delete(int $id): bool
     {
-        $stmt = $this->db->prepare("DELETE FROM cliente WHERE id_cliente = :id");
+        $stmt = $this->db->prepare("UPDATE cliente SET activo = 0 WHERE id_cliente = :id");
+        return $stmt->execute([':id' => $id]);
+    }
+
+    public function restore(int $id): bool
+    {
+        $stmt = $this->db->prepare("UPDATE cliente SET activo = 1 WHERE id_cliente = :id");
         return $stmt->execute([':id' => $id]);
     }
 

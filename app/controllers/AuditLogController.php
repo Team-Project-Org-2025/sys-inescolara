@@ -9,7 +9,6 @@ function index(): void
     checkModuleAuth();
     $action = $_GET['action'] ?? '';
     if (isAjaxRequest() && $action !== '') {
-        header('Content-Type: application/json; charset=utf-8');
         try {
             match ($_SERVER['REQUEST_METHOD'] . '_' . $action) {
                 'GET_get_auditlogs' => auditlog_getAuditLogsAjax(),
@@ -30,7 +29,7 @@ function index(): void
     require $view;
 }
 
-function get_auditlogs(): void { checkModuleAuth(); auditlog_getAuditLogsAjax(); }
+function get_auditlogs(): void { checkModuleAuth(); checkPermisoOrFail('AUDIT_VIEW'); auditlog_getAuditLogsAjax(); }
 
 function auditlog_getAuditLogsAjax(): void
 {

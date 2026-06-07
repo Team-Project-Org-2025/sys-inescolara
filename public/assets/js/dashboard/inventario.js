@@ -1,11 +1,20 @@
 import * as Helpers from '../utils/helpers.js';
 import * as Ajax from '../utils/ajax-handler.js';
+import { setupRealTimeValidation, validateForm } from '../utils/validation.js';
 
 $(document).ready(function () {
   const baseUrl = `${window.BASE_URL || '/'}inventario`;
   let consolidatedTable = null;
   let movementsTable = null;
   let adjustmentsTable = null;
+
+  const adjustmentRules = {
+    id_insumo: 'select',
+    id_trabajador: 'select',
+    tipo_ajuste: 'select',
+    cantidad: 'cantidad',
+    fecha_ajuste: 'fechaFuturaCheck'
+  };
 
   const initConsolidatedTable = () => {
     if (typeof SkeletonHelper !== 'undefined') {
@@ -183,6 +192,7 @@ $(document).ready(function () {
   // Save adjustment
   $('#adjustmentForm').on('submit', function (e) {
     e.preventDefault();
+    if (!validateForm($(this), adjustmentRules)) return;
     const formData = new FormData(this);
 
     $.ajax({
@@ -214,6 +224,10 @@ $(document).ready(function () {
     const $form = $(this).find('form');
     Helpers.resetForm($form);
   });
+
+  if ($('#adjustmentForm').length) {
+    setupRealTimeValidation($('#adjustmentForm'), adjustmentRules);
+  }
 
   // Init tables
   initConsolidatedTable();

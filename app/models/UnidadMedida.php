@@ -17,7 +17,7 @@ class UnidadMedida extends Database implements ReadableInterface, DeletableInter
     public function getAll(): array
     {
         try {
-            $sql = "SELECT id_unidad_medida AS id, nombre_unidad_medida, simbolo FROM unidad_medida ORDER BY nombre_unidad_medida ASC";
+            $sql = "SELECT id_unidad_medida AS id, nombre_unidad_medida, simbolo, activo FROM unidad_medida WHERE activo = 1 ORDER BY nombre_unidad_medida ASC";
             $stmt = $this->db->query($sql);
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
         } catch (\Throwable $e) {
@@ -64,7 +64,13 @@ class UnidadMedida extends Database implements ReadableInterface, DeletableInter
 
     public function delete(int $id): bool
     {
-        $stmt = $this->db->prepare("DELETE FROM unidad_medida WHERE id_unidad_medida = :id");
+        $stmt = $this->db->prepare("UPDATE unidad_medida SET activo = 0 WHERE id_unidad_medida = :id");
+        return $stmt->execute([':id' => $id]);
+    }
+
+    public function restore(int $id): bool
+    {
+        $stmt = $this->db->prepare("UPDATE unidad_medida SET activo = 1 WHERE id_unidad_medida = :id");
         return $stmt->execute([':id' => $id]);
     }
 
