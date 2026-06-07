@@ -49,6 +49,9 @@ $scripts_links = '
     <!-- Script del Sidebar -->
     <script src="' . BASE_URL . 'public/assets/js/sidebar.js"></script>
 
+    <!-- Bootstrap 5 jQuery Compatibility Bridge -->
+    <script src="' . BASE_URL . 'public/assets/js/utils/bs5-jquery-bridge.js"></script>
+
     <!-- Google reCAPTCHA v2 -->
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 ';

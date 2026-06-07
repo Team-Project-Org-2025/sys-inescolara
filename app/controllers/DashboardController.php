@@ -217,6 +217,14 @@ function supplies(): void
 function tasks(): void
 {
     dashboardCheckPermiso('TAREAS_VIEW');
+    $employeeModel = new \SysInescolara\models\Employee();
+    $trabajadores = $employeeModel->getAll();
+    $batchModel = new \SysInescolara\models\Batch();
+    $lotes = $batchModel->getAll();
+    $suppliesModel = new \SysInescolara\models\Supplies();
+    $insumos = $suppliesModel->getAll();
+    $toolModel = new \SysInescolara\models\Tool();
+    $herramientas = $toolModel->getAll();
     $view = ROOT_PATH . 'app/views/dashboard/task.php';
     if (!is_file($view)) {
         http_response_code(500);
