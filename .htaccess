@@ -1,8 +1,14 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    RewriteBase /sys-inescolara/
+    
+    # 1. Cambiamos la base a la raíz real del dominio en Render
+    RewriteBase /
+
+    # 2. Si el archivo o carpeta existen físicamente, se sirven directamente
     RewriteCond %{REQUEST_FILENAME} -f [OR]
     RewriteCond %{REQUEST_FILENAME} -d
     RewriteRule ^ - [L]
+
+    # 3. Si no existen, todo se procesa a través del index.php de la raíz
     RewriteRule ^ index.php [L]
 </IfModule>
