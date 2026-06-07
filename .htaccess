@@ -1,14 +1,11 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    
-    # 1. Cambiamos la base a la raíz real del dominio en Render
-    RewriteBase /
 
-    # 2. Si el archivo o carpeta existen físicamente, se sirven directamente
+    # Si el archivo o carpeta existen físicamente, se sirven directamente (Funciona en local y Render)
     RewriteCond %{REQUEST_FILENAME} -f [OR]
     RewriteCond %{REQUEST_FILENAME} -d
     RewriteRule ^ - [L]
 
-    # 3. Si no existen, todo se procesa a través del index.php de la raíz
-    RewriteRule ^ index.php [L]
+    # Redirección dinámica: detecta automáticamente si estás en una subcarpeta o en la raíz
+    RewriteRule ^(.*)$ index.php/$1 [L]
 </IfModule>
