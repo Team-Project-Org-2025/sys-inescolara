@@ -59,6 +59,8 @@ function batches_handleAddEdit(string $mode): void
     $cantidad_inicial = (int)($_POST['cantidad_inicial'] ?? 0);
     $cantidad_actual = (int)($_POST['cantidad_actual'] ?? 0);
     $estado = trim((string)($_POST['estado'] ?? ''));
+    $categoria = trim((string)($_POST['categoria'] ?? ''));
+    if ($categoria === '') $categoria = null;
     $origen = trim((string)($_POST['origen'] ?? ''));
     $observacion = trim((string)($_POST['observacion'] ?? ''));
     if ($observacion === '') $observacion = null;
@@ -81,7 +83,7 @@ function batches_handleAddEdit(string $mode): void
     }
 
     if ($mode === 'add') {
-        $model->add($id_planta, $id_ubicacion, $fecha_siembra, $cantidad_inicial, $cantidad_actual, $estado, $origen, $observacion, $imagen);
+        $model->add($id_planta, $id_ubicacion, $fecha_siembra, $cantidad_inicial, $cantidad_actual, $estado, $categoria, $origen, $observacion, $imagen);
         $newId = $model->getLastInsertId() ?? 0;
         AuditLog::record('CREATE', 'lote', $newId, null, [
             'id_planta' => $id_planta, 'id_ubicacion' => $id_ubicacion, 'fecha_siembra' => $fecha_siembra,
@@ -108,7 +110,7 @@ function batches_handleAddEdit(string $mode): void
         }
     }
 
-    $model->update($id, $id_planta, $id_ubicacion, $fecha_siembra, $cantidad_inicial, $cantidad_actual, $estado, $origen, $observacion, $imagen);
+    $model->update($id, $id_planta, $id_ubicacion, $fecha_siembra, $cantidad_inicial, $cantidad_actual, $estado, $categoria, $origen, $observacion, $imagen);
     AuditLog::record('UPDATE', 'lote', $id, $oldData, [
         'id_planta' => $id_planta, 'id_ubicacion' => $id_ubicacion, 'fecha_siembra' => $fecha_siembra,
         'cantidad_inicial' => $cantidad_inicial, 'cantidad_actual' => $cantidad_actual,

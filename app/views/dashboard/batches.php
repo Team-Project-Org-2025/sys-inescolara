@@ -80,6 +80,7 @@ include_once __DIR__ . '/../common/links.php';
                                     <th>Cant. Actual</th>
                                     <th>Precio Unitario</th>
                                     <th>Estado</th>
+                                    <th>Categoría</th>
                                     <th>Origen</th>
                                     <th>Observación</th>
                                     <th>Acciones</th>
@@ -136,7 +137,7 @@ include_once __DIR__ . '/../common/links.php';
                             </div>
                         </div>
                         <div class="row">
-                            <div class="col-6 mb-3">
+                            <div class="col-4 mb-3">
                                 <label class="form-label">Estado</label>
                                 <select class="form-select" name="estado" required>
                                     <option value="">Seleccione...</option>
@@ -147,7 +148,17 @@ include_once __DIR__ . '/../common/links.php';
                                     <option value="Muerto">Muerto</option>
                                 </select>
                             </div>
-                            <div class="col-6 mb-3">
+                            <div class="col-4 mb-3">
+                                <label class="form-label">Categoría</label>
+                                <select class="form-select" name="categoria">
+                                    <option value="">Sin categoría</option>
+                                    <option value="germinado">Germinado</option>
+                                    <option value="en_crecimiento">En Crecimiento</option>
+                                    <option value="para_cosechar">Para Cosechar</option>
+                                    <option value="maduro">Maduro</option>
+                                </select>
+                            </div>
+                            <div class="col-4 mb-3">
                                 <label class="form-label">Origen</label>
                                 <select class="form-select" name="origen" required>
                                     <option value="">Seleccione...</option>
@@ -224,7 +235,7 @@ include_once __DIR__ . '/../common/links.php';
                             </div>
                         </div>
                         <div class="row">
-                            <div class="col-6 mb-3">
+                            <div class="col-4 mb-3">
                                 <label class="form-label">Estado</label>
                                 <select class="form-select" name="estado" id="editBatchStatus" required>
                                     <option value="">Seleccione...</option>
@@ -235,7 +246,17 @@ include_once __DIR__ . '/../common/links.php';
                                     <option value="Muerto">Muerto</option>
                                 </select>
                             </div>
-                            <div class="col-6 mb-3">
+                            <div class="col-4 mb-3">
+                                <label class="form-label">Categoría</label>
+                                <select class="form-select" name="categoria" id="editBatchCategoria">
+                                    <option value="">Sin categoría</option>
+                                    <option value="germinado">Germinado</option>
+                                    <option value="en_crecimiento">En Crecimiento</option>
+                                    <option value="para_cosechar">Para Cosechar</option>
+                                    <option value="maduro">Maduro</option>
+                                </select>
+                            </div>
+                            <div class="col-4 mb-3">
                                 <label class="form-label">Origen</label>
                                 <select class="form-select" name="origen" id="editBatchOrigen" required>
                                     <option value="">Seleccione...</option>

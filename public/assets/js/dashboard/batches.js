@@ -81,6 +81,14 @@ $(document).ready(function () {
           data: 'estado',
           render: (data) => Helpers.getBadge(data),
         },
+        {
+          data: 'categoria',
+          render: (data) => {
+            if (!data) return '<span class="text-muted">—</span>';
+            const colors = { germinado: 'success', en_crecimiento: 'info', para_cosechar: 'warning', maduro: 'danger' };
+            return `<span class="badge bg-${colors[data] || 'secondary'}">${data.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</span>`;
+          },
+        },
         { data: 'origen' },
         {
           data: 'observacion',
@@ -100,6 +108,7 @@ $(document).ready(function () {
                         data-cantidad_inicial="${Helpers.escapeHtml(data.cantidad_inicial)}"
                         data-cantidad_actual="${Helpers.escapeHtml(data.cantidad_actual)}"
                         data-estado="${Helpers.escapeHtml(data.estado || '')}"
+                        data-categoria="${Helpers.escapeHtml(data.categoria || '')}"
                         data-origen="${Helpers.escapeHtml(data.origen || '')}"
                         data-observacion="${Helpers.escapeHtml(data.observacion || '')}"
                         data-imagen="${Helpers.escapeHtml(data.imagen || '')}">
@@ -205,6 +214,7 @@ $(document).ready(function () {
     $('#editBatchQtyInit').val($btn.data('cantidad_inicial'));
     $('#editBatchQtyCurr').val($btn.data('cantidad_actual'));
     $('#editBatchStatus').val($btn.data('estado'));
+    $('#editBatchCategoria').val($btn.data('categoria') || '');
     $('#editBatchOrigen').val($btn.data('origen'));
     $('#editBatchObs').val($btn.data('observacion'));
 
