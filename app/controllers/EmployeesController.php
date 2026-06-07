@@ -10,7 +10,6 @@ function index(): void
     checkModuleAuth();
     $action = $_GET['action'] ?? '';
     if (isAjaxRequest() && $action !== '') {
-        header('Content-Type: application/json; charset=utf-8');
         try {
             match ($_SERVER['REQUEST_METHOD'] . '_' . $action) {
                 'GET_get_employees' => employees_getEmployeesAjax(),
@@ -80,8 +79,8 @@ function employees_handleDelete(): void
 
     $oldData = $model->getById($id);
     $model->delete($id);
-    AuditLog::record('DELETE', 'trabajadores', $id, $oldData, null);
-    jsonResponse(['success' => true, 'message' => 'Trabajador eliminado correctamente', 'employeeId' => $id]);
+    AuditLog::record('DEACTIVATE', 'trabajadores', $id, $oldData, null);
+    jsonResponse(['success' => true, 'message' => 'Trabajador desactivado correctamente', 'employeeId' => $id]);
 }
 
 function employees_getEmployeesAjax(): void

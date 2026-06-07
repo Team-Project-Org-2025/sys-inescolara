@@ -58,7 +58,7 @@ class Supplier extends Database implements ReadableInterface, DeletableInterface
     public function getAll(): array
     {
         try {
-            $sql = "SELECT id_proveedor AS id, nombre_proveedor, rif_proveedor, contacto_vendedor, telefono_proveedor FROM proveedores ORDER BY nombre_proveedor ASC";
+            $sql = "SELECT id_proveedor AS id, nombre_proveedor, rif_proveedor, contacto_vendedor, telefono_proveedor, activo FROM proveedores WHERE activo = 1 ORDER BY nombre_proveedor ASC";
             $stmt = $this->db->query($sql);
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
         } catch (\Throwable $e) {
@@ -83,7 +83,13 @@ class Supplier extends Database implements ReadableInterface, DeletableInterface
 
     public function delete(int $id): bool
     {
-        $stmt = $this->db->prepare("DELETE FROM proveedores WHERE id_proveedor = :id");
+        $stmt = $this->db->prepare("UPDATE proveedores SET activo = 0 WHERE id_proveedor = :id");
+        return $stmt->execute([':id' => $id]);
+    }
+
+    public function restore(int $id): bool
+    {
+        $stmt = $this->db->prepare("UPDATE proveedores SET activo = 1 WHERE id_proveedor = :id");
         return $stmt->execute([':id' => $id]);
     }
 

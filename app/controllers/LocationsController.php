@@ -10,7 +10,6 @@ function index(): void
     checkModuleAuth();
     $action = $_GET['action'] ?? '';
     if (isAjaxRequest() && $action !== '') {
-        header('Content-Type: application/json; charset=utf-8');
         try {
             match ($_SERVER['REQUEST_METHOD'] . '_' . $action) {
                 'GET_get_locations'  => locations_getLocationsAjax(),
@@ -98,10 +97,10 @@ function locations_handleDelete(): void
     $oldData = $model->getById($id);
     if (!$oldData) throw new \Exception('No existe la ubicación solicitada.');
     $model->delete($id);
-    AuditLog::record('DELETE', 'ubicacion', $id, $oldData, null);
+    AuditLog::record('DEACTIVATE', 'ubicacion', $id, $oldData, null);
     jsonResponse([
         'success' => true,
-        'message' => 'Ubicación eliminada correctamente',
+        'message' => 'Ubicación desactivada correctamente',
         'locationId' => $id,
     ]);
 }

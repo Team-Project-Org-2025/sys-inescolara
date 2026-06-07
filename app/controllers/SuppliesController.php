@@ -11,7 +11,6 @@ function index(): void
     checkModuleAuth();
     $action = $_GET['action'] ?? '';
     if (isAjaxRequest() && $action !== '') {
-        header('Content-Type: application/json; charset=utf-8');
         try {
             match ($_SERVER['REQUEST_METHOD'] . '_' . $action) {
                 'GET_get_supplies'  => supplies_getSuppliesAjax(),
@@ -102,8 +101,8 @@ function supplies_handleDelete(): void
 
     $oldData = $model->getById($id);
     $model->delete($id);
-    AuditLog::record('DELETE', 'insumo', $id, $oldData, null);
-    jsonResponse(['success' => true, 'message' => 'Insumo eliminado correctamente', 'supplyId' => $id]);
+    AuditLog::record('DEACTIVATE', 'insumo', $id, $oldData, null);
+    jsonResponse(['success' => true, 'message' => 'Insumo desactivado correctamente', 'supplyId' => $id]);
 }
 
 function supplies_getSuppliesAjax(): void

@@ -17,7 +17,7 @@ class Employee extends Database implements ReadableInterface, DeletableInterface
     public function getAll(): array
     {
         try {
-            $sql = "SELECT id_trabajador AS id, nombre_trabajador, apellido_trabajador, cedula_trabajador, telefono_trabajador, cargo, activo FROM trabajadores ORDER BY nombre_trabajador ASC";
+            $sql = "SELECT id_trabajador AS id, nombre_trabajador, apellido_trabajador, cedula_trabajador, telefono_trabajador, cargo, activo FROM trabajadores WHERE activo = 1 ORDER BY nombre_trabajador ASC";
             $stmt = $this->db->query($sql);
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
         } catch (\Throwable $e) {
@@ -42,7 +42,13 @@ class Employee extends Database implements ReadableInterface, DeletableInterface
 
     public function delete(int $id): bool
     {
-        $stmt = $this->db->prepare("DELETE FROM trabajadores WHERE id_trabajador = :id");
+        $stmt = $this->db->prepare("UPDATE trabajadores SET activo = 0 WHERE id_trabajador = :id");
+        return $stmt->execute([':id' => $id]);
+    }
+
+    public function restore(int $id): bool
+    {
+        $stmt = $this->db->prepare("UPDATE trabajadores SET activo = 1 WHERE id_trabajador = :id");
         return $stmt->execute([':id' => $id]);
     }
 

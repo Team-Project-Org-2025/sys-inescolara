@@ -12,7 +12,6 @@ function index(): void
     checkModuleAuth();
     $action = $_GET['action'] ?? '';
     if (isAjaxRequest() && $action !== '') {
-        header('Content-Type: application/json; charset=utf-8');
         try {
             match ($_SERVER['REQUEST_METHOD'] . '_' . $action) {
                 'GET_get_batches'  => batches_getBatchesAjax(),
@@ -135,8 +134,8 @@ function batches_handleDelete(): void
     }
 
     $model->delete($id);
-    AuditLog::record('DELETE', 'lote', $id, $oldData, null);
-    jsonResponse(['success' => true, 'message' => 'Lote eliminado correctamente', 'batchId' => $id]);
+    AuditLog::record('DEACTIVATE', 'lote', $id, $oldData, null);
+    jsonResponse(['success' => true, 'message' => 'Lote desactivado correctamente', 'batchId' => $id]);
 }
 
 function batches_getBatchesAjax(): void

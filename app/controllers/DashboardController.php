@@ -79,6 +79,16 @@ function asistente(): void
 function inventario(): void
 {
     dashboardCheckPermiso('INVENTARIO_VIEW');
+
+    require_once ROOT_PATH . 'vendor/autoload.php';
+    $supplyModel = new \SysInescolara\models\Supplies();
+    $supplies = $supplyModel->getAll();
+    $employeeModel = new \SysInescolara\models\Employee();
+    $employees = $employeeModel->getAll();
+
+    $permisos = $_SESSION['user_permisos'] ?? [];
+    $showAdjustBtn = in_array('INVENTARIO_ADJUST', $permisos, true);
+
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'inventario.php';
 
@@ -467,6 +477,31 @@ function unitMeasures(): void
     if (!is_file($view)) {
         http_response_code(500);
         echo 'Vista de unidades de medida no encontrada.';
+        return;
+    }
+
+    require $view;
+}
+
+function seedcollection(): void
+{
+    dashboardCheckPermiso('RECOLECCION_VIEW');
+
+    require_once ROOT_PATH . 'vendor/autoload.php';
+    $locationModel = new \SysInescolara\models\Location();
+    $ubicaciones = $locationModel->getAll();
+    $employeeModel = new \SysInescolara\models\Employee();
+    $trabajadores = $employeeModel->getAll();
+    $plantModel = new \SysInescolara\models\Plant();
+    $plantas = $plantModel->getAll();
+    $unidadMedidaModel = new \SysInescolara\models\UnidadMedida();
+    $unidades = $unidadMedidaModel->getAll();
+
+    $view = ROOT_PATH . 'app/views/dashboard/seed-collection.php';
+
+    if (!is_file($view)) {
+        http_response_code(500);
+        echo 'Vista de recolección no encontrada.';
         return;
     }
 

@@ -1,9 +1,17 @@
 import * as Helpers from '../utils/helpers.js';
 import * as Ajax from '../utils/ajax-handler.js';
+import { setupRealTimeValidation, validateForm } from '../utils/validation.js';
 
 $(document).ready(function () {
   const baseUrl = `${window.BASE_URL || '/'}supplies`;
   let suppliesTable = null;
+
+  const supplyRules = {
+    nombre_insumo: 'nombre',
+    id_unidad_medida: 'select',
+    stock_actual: 'precio',
+    costo_unitario_actual: 'precio'
+  };
 
   const initDataTable = () => {
     if (typeof SkeletonHelper !== 'undefined') {
@@ -94,6 +102,7 @@ $(document).ready(function () {
   // Guardar Nuevo Insumo
   $('#addSupplyForm').on('submit', function (e) {
     e.preventDefault();
+    if (!validateForm($(this), supplyRules)) return;
 
     const formData = new FormData(this);
 
@@ -143,6 +152,7 @@ $(document).ready(function () {
   // Procesar Edición de Insumo
   $('#editSupplyForm').on('submit', function (e) {
     e.preventDefault();
+    if (!validateForm($(this), supplyRules, true)) return;
 
     const formData = new FormData(this);
 
@@ -200,6 +210,9 @@ $(document).ready(function () {
     const $form = $(this).find('form');
     Helpers.resetForm($form);
   });
+
+  setupRealTimeValidation($('#addSupplyForm'), supplyRules);
+  setupRealTimeValidation($('#editSupplyForm'), supplyRules, true);
 
   initDataTable();
 });

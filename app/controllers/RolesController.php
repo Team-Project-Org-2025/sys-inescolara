@@ -10,7 +10,6 @@ function index(): void
     checkModuleAuth();
     $action = $_GET['action'] ?? '';
     if (isAjaxRequest() && $action !== '') {
-        header('Content-Type: application/json; charset=utf-8');
         try {
             match ($_SERVER['REQUEST_METHOD'] . '_' . $action) {
                 'GET_get_roles'   => roles_getRolesAjax(),
@@ -89,7 +88,7 @@ function roles_handleDelete(): void
     $oldData = $model->getById($id);
     $model->delete($id);
     AuditLog::record('DELETE', 'roles', $id, $oldData, null);
-    jsonResponse(['success' => true, 'message' => 'Rol eliminado correctamente', 'roleId' => $id]);
+    jsonResponse(['success' => true, 'message' => 'Rol desactivado correctamente', 'roleId' => $id]);
 }
 
 function roles_getRolesAjax(): void
