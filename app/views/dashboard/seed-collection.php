@@ -261,6 +261,6 @@ include_once __DIR__ . '/../common/links.php';
 
     <script src="<?= BASE_URL ?>public/assets/js/dashboard/notifications.js"></script>
     <?= $scripts_links ?>
-    <script type="module" src="<?= BASE_URL ?>public/assets/js/dashboard/seed-collection.js"></script>
+    <script type="module" src="<?= BASE_URL ?>public/assets/js/dashboard/seed-collection.js?v=<?= time() ?>"></script>
 </body>
 </html>

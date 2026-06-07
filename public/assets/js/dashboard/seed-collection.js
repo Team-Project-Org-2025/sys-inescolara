@@ -7,7 +7,7 @@ $(document).ready(function () {
 
   const initDataTable = () => {
     if (typeof SkeletonHelper !== 'undefined') {
-      SkeletonHelper.showTableSkeleton('recoleccionTable', 5, 8);
+      SkeletonHelper.showTableSkeleton('recoleccionTable', 5, 7);
     }
     recoleccionTable = $('#recoleccionTable').DataTable({
       ajax: {
@@ -102,7 +102,7 @@ $(document).ready(function () {
           className: 'btn btn-outline-secondary btn-sm',
           action: () => {
             if (typeof SkeletonHelper !== 'undefined') {
-              SkeletonHelper.showTableSkeleton('recoleccionTable', 5, 8);
+              SkeletonHelper.showTableSkeleton('recoleccionTable', 5, 7);
             }
             recoleccionTable.ajax.reload(null, false);
           },
