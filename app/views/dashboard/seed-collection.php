@@ -47,8 +47,7 @@ include_once __DIR__ . '/../common/links.php';
                                     <th>Fecha Asignación</th>
                                     <th>Fecha Recolección</th>
                                     <th>Estatus</th>
-                                    <th>Insumo</th>
-                                    <th>Cantidad</th>
+                                    <th>Semillas Registradas</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
