@@ -23,37 +23,156 @@ include_once __DIR__ . '/../common/links.php';
         <?php include_once __DIR__ . '/../partials/dashboard-header.php'; ?>
 
         <div class="dashboard-content">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                    <h1>Cálculo de Precios</h1>
-                    <p style="color: var(--text-secondary);">Gestión de costos y precios de venta por lote de producción.</p>
-                </div>
-                <button class="btn btn-primary" id="btnAddPrice">
-                    <i class="fas fa-plus"></i> Nuevo Cálculo
-                </button>
-            </div>
 
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table id="pricesTable" class="table table-striped table-hover w-100">
-                            <thead>
-                                <tr>
-                                    <th>Lote</th>
-                                    <th>Planta</th>
-                                    <th>Costo MO</th>
-                                    <th>Costo Insumos</th>
-                                    <th>Ganancia</th>
-                                    <th>Precio Sugerido</th>
-                                    <th>Vigente</th>
-                                    <th>Fecha</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
+            <ul class="nav nav-tabs mb-4" id="pricesTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="per-lote-tab" data-bs-toggle="tab" data-bs-target="#per-lote-pane" type="button" role="tab">
+                        <i class="fas fa-box"></i> Por Lote
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="per-planta-tab" data-bs-toggle="tab" data-bs-target="#per-planta-pane" type="button" role="tab">
+                        <i class="fas fa-seedling"></i> Por Planta
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="pricesTabsContent">
+
+                <!-- ===== TAB POR LOTE ===== -->
+                <div class="tab-pane fade show active" id="per-lote-pane" role="tabpanel">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div>
+                            <h1>Cálculo de Precios</h1>
+                            <p style="color: var(--text-secondary);">Gestión de costos y precios de venta por lote de producción.</p>
+                        </div>
+                        <button class="btn btn-primary" id="btnAddPrice">
+                            <i class="fas fa-plus"></i> Nuevo Cálculo
+                        </button>
+                    </div>
+
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table id="pricesTable" class="table table-striped table-hover w-100" data-colcount="8">
+                                    <thead>
+                                        <tr>
+                                            <th>Lote</th>
+                                            <th>Planta</th>
+                                            <th>Costo Insumos</th>
+                                            <th>Ganancia</th>
+                                            <th>Precio Sugerido</th>
+                                            <th>Vigente</th>
+                                            <th>Fecha</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
+
+                <!-- ===== TAB POR PLANTA ===== -->
+                <div class="tab-pane fade" id="per-planta-pane" role="tabpanel">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div>
+                            <h1>Calcular Precio por Planta</h1>
+                            <p style="color: var(--text-secondary);">Suma todos los lotes de una planta y calcula el costo unitario por planta.</p>
+                        </div>
+                    </div>
+
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <div class="row g-3 align-items-end mb-3">
+                                <div class="col-md-4">
+                                    <label class="form-label">Planta *</label>
+                                    <select class="form-select" id="calcPlanta">
+                                        <option value="">Seleccione...</option>
+                                        <?php foreach ($plants as $p): ?>
+                                        <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['nombre_comun']) ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Filtrar por Categoría</label>
+                                    <select class="form-select" id="calcCategoria">
+                                        <option value="">Todas</option>
+                                        <option value="germinado">Germinado</option>
+                                        <option value="en_crecimiento">En Crecimiento</option>
+                                        <option value="para_cosechar">Para Cosechar</option>
+                                        <option value="maduro">Maduro</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">% Ganancia</label>
+                                    <input type="number" class="form-control" id="calcGanancia" step="0.01" min="0" value="30">
+                                </div>
+                                <div class="col-md-2">
+                                    <button class="btn btn-primary w-100" id="btnCalcularPlanta">
+                                        <i class="fas fa-calculator"></i> Calcular
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div id="calcResultContainer" class="d-none">
+                                <hr>
+                                <div class="row mb-3">
+                                    <div class="col-md-3">
+                                        <div class="alert alert-secondary py-2 mb-0 text-center">
+                                            <small class="d-block text-muted">Total Costos</small>
+                                            <strong id="calcTotalInsumos" class="fs-5">Bs 0,00</strong>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="alert alert-secondary py-2 mb-0 text-center">
+                                            <small class="d-block text-muted">Total Plantas</small>
+                                            <strong id="calcTotalPlantas" class="fs-5">0</strong>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="alert alert-info py-2 mb-0 text-center">
+                                            <small class="d-block text-muted">Costo por Planta</small>
+                                            <strong id="calcCostoPlanta" class="fs-5">Bs 0,00</strong>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="alert alert-success py-2 mb-0 text-center">
+                                            <small class="d-block text-muted">Precio Sugerido</small>
+                                            <strong id="calcPrecioSugerido" class="fs-5">Bs 0,00</strong>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="table-responsive mb-3">
+                                    <table class="table table-sm table-bordered" id="calcLotesTable">
+                                        <thead>
+                                            <tr>
+                                                <th># Lote</th>
+                                                <th>Categoría</th>
+                                                <th>Cant. Actual</th>
+                                                <th>Costo Total</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="calcLotesBody"></tbody>
+                                    </table>
+                                </div>
+
+                                <div class="d-flex gap-2 align-items-center">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="calcVigente" value="1" checked>
+                                        <label class="form-check-label" for="calcVigente">Marcar como precio vigente</label>
+                                    </div>
+                                    <button class="btn btn-success" id="btnGuardarPlanta">
+                                        <i class="fas fa-save"></i> Guardar Precio para Todos los Lotes
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </main>
@@ -83,15 +202,14 @@ include_once __DIR__ . '/../common/links.php';
                             </div>
                         </div>
                         <div class="row">
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label">Costo Mano de Obra (Bs)</label>
-                                <input type="number" class="form-control" name="costo_mano_obra" step="0.01" min="0" value="0" id="addCostoManoObra">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Costo Total Insumos (Bs) <i class="fas fa-calculator text-muted" title="Calculado automáticamente desde consumos de tareas"></i></label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" name="costo_total_insumo" step="0.01" min="0" value="0" id="addCostoInsumo" readonly>
+                                    <span class="input-group-text bg-light text-muted small" id="addCostoInsumoBadge">Auto</span>
+                                </div>
                             </div>
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label">Costo Total Insumos (Bs)</label>
-                                <input type="number" class="form-control" name="costo_total_insumo" step="0.01" min="0" value="0" id="addCostoInsumo">
-                            </div>
-                            <div class="col-md-4 mb-3">
+                            <div class="col-md-6 mb-3">
                                 <label class="form-label">% Ganancia</label>
                                 <input type="number" class="form-control" name="porcentaje_ganancia" step="0.01" min="0" value="30" id="addPorcentajeGanancia">
                             </div>
@@ -119,7 +237,8 @@ include_once __DIR__ . '/../common/links.php';
                         <div class="alert alert-info mb-0">
                             <i class="fas fa-calculator"></i>
                             <strong>Fórmula:</strong>
-                            Precio Unitario = (Costo MO + Costo Insumos) &times; (1 + %Ganancia/100) &divide; Cantidad del Lote
+                            Precio Unitario = Costo Total Insumos &times; (1 + %Ganancia/100) &divide; Cantidad del Lote
+                            <br><small class="text-muted">Costo Insumos se calcula automáticamente desde los consumos de tareas del lote.</small>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -157,15 +276,14 @@ include_once __DIR__ . '/../common/links.php';
                             </div>
                         </div>
                         <div class="row">
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label">Costo Mano de Obra (Bs)</label>
-                                <input type="number" class="form-control" name="costo_mano_obra" id="editCostoManoObra" step="0.01" min="0" value="0">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Costo Total Insumos (Bs) <i class="fas fa-calculator text-muted" title="Calculado automáticamente desde consumos de tareas"></i></label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" name="costo_total_insumo" id="editCostoInsumo" step="0.01" min="0" value="0" readonly>
+                                    <span class="input-group-text bg-light text-muted small" id="editCostoInsumoBadge">Auto</span>
+                                </div>
                             </div>
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label">Costo Total Insumos (Bs)</label>
-                                <input type="number" class="form-control" name="costo_total_insumo" id="editCostoInsumo" step="0.01" min="0" value="0">
-                            </div>
-                            <div class="col-md-4 mb-3">
+                            <div class="col-md-6 mb-3">
                                 <label class="form-label">% Ganancia</label>
                                 <input type="number" class="form-control" name="porcentaje_ganancia" id="editPorcentajeGanancia" step="0.01" min="0" value="30">
                             </div>
@@ -193,7 +311,8 @@ include_once __DIR__ . '/../common/links.php';
                         <div class="alert alert-info mb-0">
                             <i class="fas fa-calculator"></i>
                             <strong>Fórmula:</strong>
-                            Precio Unitario = (Costo MO + Costo Insumos) &times; (1 + %Ganancia/100) &divide; Cantidad del Lote
+                            Precio Unitario = Costo Total Insumos &times; (1 + %Ganancia/100) &divide; Cantidad del Lote
+                            <br><small class="text-muted">Costo Insumos se calcula automáticamente desde los consumos de tareas del lote.</small>
                         </div>
                     </div>
                     <div class="modal-footer">

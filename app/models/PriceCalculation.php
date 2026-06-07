@@ -64,8 +64,18 @@ class PriceCalculation extends Database implements ReadableInterface, DeletableI
 
     public function delete(int $id): bool
     {
-        $stmt = $this->db->prepare("DELETE FROM calculo_precio WHERE id_calculo = :id");
-        return $stmt->execute([':id' => $id]);
+        try {
+            $this->db->beginTransaction();
+            $stmt1 = $this->db->prepare("DELETE FROM planta_precio_vigente WHERE id_calculo = :id");
+            $stmt1->execute([':id' => $id]);
+            $stmt2 = $this->db->prepare("DELETE FROM calculo_precio WHERE id_calculo = :id");
+            $stmt2->execute([':id' => $id]);
+            return $this->db->commit();
+        } catch (\Throwable $e) {
+            $this->db->rollBack();
+            error_log('Error en PriceCalculation::delete: ' . $e->getMessage());
+            return false;
+        }
     }
 
     public function existsByBatch(int $idLote, ?int $excludeId = null): bool
@@ -187,6 +197,84 @@ class PriceCalculation extends Database implements ReadableInterface, DeletableI
         } catch (\Throwable $e) {
             $this->db->rollBack();
             throw $e;
+        }
+    }
+
+    public function getLotesByPlanta(int $idPlanta, ?string $categoria = null): array
+    {
+        try {
+            $sql = "SELECT
+                        l.id_lote,
+                        l.cantidad_actual,
+                        l.categoria,
+                        COALESCE(cp.costo_mano_obra, 0) + COALESCE(cp.costo_total_insumo, 0) + COALESCE(cp.costo_agua_lote, 0) AS costo_total_lote,
+                        CASE
+                            WHEN cp.id_calculo IS NOT NULL THEN 1
+                            ELSE 0
+                        END AS tiene_calculo
+                    FROM lote l
+                    LEFT JOIN calculo_precio cp ON cp.id_lote = l.id_lote
+                    WHERE l.id_planta = :id_planta AND l.activo = 1";
+            $params = [':id_planta' => $idPlanta];
+            if ($categoria !== null) {
+                $sql .= " AND l.categoria = :categoria";
+                $params[':categoria'] = $categoria;
+            }
+            $sql .= " ORDER BY l.fecha_siembra DESC";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute($params);
+            $lotes = $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+
+            // Para lotes sin calculo_precio, calcular costo desde consumos
+            foreach ($lotes as &$lote) {
+                if ((int)$lote['tiene_calculo'] === 0) {
+                    $lote['costo_total_lote'] = $this->getCostoInsumosByLote((int)$lote['id_lote']);
+                }
+                $lote['costo_total_lote'] = (float)$lote['costo_total_lote'];
+            }
+            return $lotes;
+        } catch (\Throwable $e) {
+            error_log('Error en PriceCalculation::getLotesByPlanta: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    public function calcularCostoPorPlanta(int $idPlanta, ?string $categoria = null): array
+    {
+        $lotes = $this->getLotesByPlanta($idPlanta, $categoria);
+        if (empty($lotes)) {
+            return [
+                'lotes' => [],
+                'total_costos' => 0,
+                'total_plantas' => 0,
+                'costo_por_planta' => 0,
+            ];
+        }
+        $totalCostos = array_sum(array_column($lotes, 'costo_total_lote'));
+        $totalPlantas = array_sum(array_column($lotes, 'cantidad_actual'));
+        $costoPorPlanta = $totalPlantas > 0 ? $totalCostos / $totalPlantas : 0;
+        return [
+            'lotes' => $lotes,
+            'total_costos' => round($totalCostos, 2),
+            'total_plantas' => $totalPlantas,
+            'costo_por_planta' => round($costoPorPlanta, 2),
+        ];
+    }
+
+    public function getCostoInsumosByLote(int $idLote): float
+    {
+        try {
+            $stmt = $this->db->prepare("
+                SELECT COALESCE(SUM(ci.cantidad_usada * ci.costo_unitario), 0)
+                FROM consumo_insumos ci
+                JOIN asignar_tarea a ON ci.id_asignacion = a.id_asignacion
+                WHERE a.id_lote = :id_lote
+            ");
+            $stmt->execute([':id_lote' => $idLote]);
+            return (float)$stmt->fetchColumn();
+        } catch (\Throwable $e) {
+            error_log('Error en PriceCalculation::getCostoInsumosByLote: ' . $e->getMessage());
+            return 0;
         }
     }
 
