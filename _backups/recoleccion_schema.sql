@@ -18,7 +18,19 @@ CREATE TABLE IF NOT EXISTS `recoleccion_semillas` (
   FOREIGN KEY (`id_insumo`) REFERENCES `insumo`(`id_insumo`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Tareas de recolección de semillas en sitios externos.';
 
--- 2. Permisos (ejecutar en BD SysInescolara-Seguridad)
+-- 2. Tabla de detalle (múltiples tipos de semillas por recolección)
+CREATE TABLE IF NOT EXISTS `recoleccion_semillas_detalle` (
+  `id_recoleccion_detalle` INT AUTO_INCREMENT PRIMARY KEY,
+  `id_recoleccion`         INT NOT NULL,
+  `planta_origen`          VARCHAR(150) DEFAULT NULL,
+  `nombre_semilla`         VARCHAR(150) NOT NULL,
+  `id_unidad_medida`       INT NOT NULL,
+  `cantidad`               DECIMAL(10,2) NOT NULL,
+  FOREIGN KEY (`id_recoleccion`) REFERENCES `recoleccion_semillas`(`id_recoleccion`),
+  FOREIGN KEY (`id_unidad_medida`) REFERENCES `unidad_medida`(`id_unidad_medida`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Tipos de semillas recolectadas por tarea.';
+
+-- 3. Permisos (ejecutar en BD SysInescolara-Seguridad)
 -- INSERT IGNORE INTO permisos (id_permiso, codigo_permiso, descripcion) VALUES
 -- (NULL, 'RECOLECCION_VIEW', 'Ver recolecciones de semillas'),
 -- (NULL, 'RECOLECCION_CREATE', 'Crear recolecciones de semillas'),

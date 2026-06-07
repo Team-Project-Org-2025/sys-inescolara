@@ -5,6 +5,7 @@ require_once __DIR__ . '/controller_helpers.php';
 use SysInescolara\models\SeedCollection;
 use SysInescolara\models\Location;
 use SysInescolara\models\Employee;
+use SysInescolara\models\Plant;
 use SysInescolara\models\Supplies;
 use SysInescolara\models\UnidadMedida;
 use SysInescolara\models\AuditLog;
@@ -35,6 +36,8 @@ function index(): void
     $ubicaciones = $locationModel->getAll();
     $employeeModel = new Employee();
     $trabajadores = $employeeModel->getAll();
+    $plantModel = new Plant();
+    $plantas = $plantModel->getAll();
     $unidadMedidaModel = new UnidadMedida();
     $unidades = $unidadMedidaModel->getAll();
 
@@ -130,26 +133,38 @@ function recoleccion_handleRegistrarInsumo(): void
     $model = new SeedCollection();
     $data = $model->getById($id);
     if (!$data) throw new \Exception('No existe la recolección');
-    if ($data['estatus'] !== 'Realizada') throw new \Exception('Debe completar la recolección antes de registrar el insumo.');
-    if (!empty($data['id_insumo'])) throw new \Exception('Esta recolección ya tiene un insumo registrado.');
+    if ($data['estatus'] !== 'Realizada') throw new \Exception('Debe completar la recolección antes de registrar los insumos.');
 
-    $nombreInsumo = trim((string)($_POST['nombre_insumo'] ?? ''));
-    if ($nombreInsumo === '') throw new \Exception('El nombre del insumo es requerido.');
-    $idUnidadMedida = (int)($_POST['id_unidad_medida'] ?? 0);
-    if ($idUnidadMedida <= 0) throw new \Exception('La unidad de medida es requerida.');
-    $cantidad = floatval($_POST['cantidad'] ?? 0);
-    if ($cantidad <= 0) throw new \Exception('La cantidad debe ser mayor a cero.');
+    $itemsJson = trim((string)($_POST['items'] ?? ''));
+    if ($itemsJson === '') throw new \Exception('Debe agregar al menos un tipo de semilla.');
+
+    $items = json_decode($itemsJson, true);
+    if (!is_array($items) || empty($items)) throw new \Exception('Debe agregar al menos un tipo de semilla.');
 
     $suppliesModel = new Supplies();
-    $ok = $suppliesModel->add($nombreInsumo, $idUnidadMedida, 'Semillas', $cantidad, 0);
-    if (!$ok) throw new \Exception('Error al crear el insumo.');
+    $createdCount = 0;
 
-    $idInsumo = $suppliesModel->getLastInsertId();
-    if ($idInsumo === null) throw new \Exception('Error al obtener el ID del insumo.');
+    foreach ($items as $item) {
+        $nombreSemilla = trim((string)($item['nombre_semilla'] ?? ''));
+        if ($nombreSemilla === '') continue;
+        $idUnidadMedida = (int)($item['id_unidad_medida'] ?? 0);
+        if ($idUnidadMedida <= 0) continue;
+        $cantidad = floatval($item['cantidad'] ?? 0);
+        if ($cantidad <= 0) continue;
+        $plantaOrigen = trim((string)($item['planta_origen'] ?? ''));
+        if ($plantaOrigen === '') $plantaOrigen = null;
 
-    $model->linkInsumo($id, $idInsumo, $cantidad);
-    AuditLog::record('CREATE', 'insumo', $idInsumo, null, ['nombre_insumo' => $nombreInsumo, 'cantidad' => $cantidad, 'origen' => 'recoleccion_semillas', 'id_recoleccion' => $id]);
-    jsonResponse(['success' => true, 'message' => 'Insumo registrado correctamente', 'id_insumo' => $idInsumo]);
+        $ok = $suppliesModel->add($nombreSemilla, $idUnidadMedida, 'Semillas', $cantidad, 0);
+        if (!$ok) continue;
+
+        $model->addDetail($id, $plantaOrigen, $nombreSemilla, $idUnidadMedida, $cantidad);
+        $createdCount++;
+    }
+
+    if ($createdCount === 0) throw new \Exception('No se pudo registrar ningún insumo. Verifique los datos.');
+
+    AuditLog::record('UPDATE', 'recoleccion_semillas', $id, $data, ['insumos_registrados' => $createdCount]);
+    jsonResponse(['success' => true, 'message' => "$createdCount tipo(s) de semilla registrado(s) correctamente"]);
 }
 
 function recoleccion_getRecoleccionesAjax(): void

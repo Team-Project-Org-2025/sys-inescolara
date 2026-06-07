@@ -492,6 +492,8 @@ function seedcollection(): void
     $ubicaciones = $locationModel->getAll();
     $employeeModel = new \SysInescolara\models\Employee();
     $trabajadores = $employeeModel->getAll();
+    $plantModel = new \SysInescolara\models\Plant();
+    $plantas = $plantModel->getAll();
     $unidadMedidaModel = new \SysInescolara\models\UnidadMedida();
     $unidades = $unidadMedidaModel->getAll();
 

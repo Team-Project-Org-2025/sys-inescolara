@@ -180,56 +180,85 @@ include_once __DIR__ . '/../common/links.php';
         </div>
     </div>
 
-    <!-- Modal Registrar Insumo (Semillas recolectadas) -->
+    <!-- Modal Registrar Insumos (múltiples semillas) -->
     <div class="modal fade" id="insumoModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Registrar Semillas como Insumo</h5>
+                    <h5 class="modal-title">Registrar Semillas Recolectadas</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <form id="insumoForm">
                     <input type="hidden" name="id" id="insumoRecoleccionId" value="0">
                     <div class="modal-body">
-                        <p style="color: var(--text-secondary);">Registra las semillas recolectadas en el inventario de insumos.</p>
-                        <div class="row g-3">
-                            <div class="col-md-12">
-                                <label class="form-label" for="id_planta_insumo">Planta de origen <span class="text-danger">*</span></label>
-                                <select class="form-select" id="id_planta_insumo">
-                                    <option value="">Seleccione una planta</option>
-                                </select>
-                            </div>
-                            <div class="col-md-12">
-                                <label class="form-label" for="nombre_insumo">Nombre de la Semilla <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" name="nombre_insumo" id="nombre_insumo" placeholder="Ej: Semillas de Araguaney" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label" for="insumo_id_unidad_medida">Unidad de Medida <span class="text-danger">*</span></label>
-                                <select class="form-select" name="id_unidad_medida" id="insumo_id_unidad_medida" required>
-                                    <option value="">Seleccione</option>
-                                    <?php foreach ($unidades as $un): ?>
-                                        <option value="<?= (int)$un['id'] ?>">
-                                            <?= htmlspecialchars($un['nombre_unidad_medida'] ?? '') ?> (<?= htmlspecialchars($un['simbolo'] ?? '') ?>)
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label" for="cantidad">Cantidad <span class="text-danger">*</span></label>
-                                <input type="number" step="0.01" min="0.01" class="form-control" name="cantidad" id="cantidad" required>
-                            </div>
+                        <p style="color: var(--text-secondary);">Agrega los tipos de semillas recolectadas. Cada tipo se registrará como un insumo.</p>
+                        <div class="table-responsive">
+                            <table class="table table-bordered" id="insumosTable">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width:28%;">Planta de origen</th>
+                                        <th style="width:28%;">Nombre de la Semilla</th>
+                                        <th style="width:18%;">U. Medida</th>
+                                        <th style="width:16%;">Cantidad</th>
+                                        <th style="width:10%;"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="insumosTableBody">
+                                    <!-- filas se agregan dinámicamente -->
+                                </tbody>
+                            </table>
                         </div>
+                        <button type="button" class="btn btn-sm btn-outline-success" id="btnAddInsumoRow">
+                            <i class="fas fa-plus"></i> Agregar otra semilla
+                        </button>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                         <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-seedling"></i> Registrar Insumo
+                            <i class="fas fa-seedling"></i> Registrar Semillas
                         </button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
+
+    <!-- Template oculto para fila de insumo -->
+    <template id="insumoRowTemplate">
+        <tr>
+            <td>
+                <select class="form-select form-select-sm insumo-planta">
+                    <option value="">Seleccione</option>
+                    <?php foreach ($plantas as $p): ?>
+                        <option value="<?= htmlspecialchars($p['nombre_comun'] ?? $p['nombre_tecnico'] ?? '') ?>">
+                            <?= htmlspecialchars($p['nombre_comun'] ?? $p['nombre_tecnico'] ?? '') ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </td>
+            <td>
+                <input type="text" class="form-control form-control-sm insumo-nombre" placeholder="Ej: Semillas de Araguaney" required>
+            </td>
+            <td>
+                <select class="form-select form-select-sm insumo-unidad" required>
+                    <option value="">Seleccione</option>
+                    <?php foreach ($unidades as $un): ?>
+                        <option value="<?= (int)$un['id'] ?>">
+                            <?= htmlspecialchars($un['nombre_unidad_medida'] ?? '') ?> (<?= htmlspecialchars($un['simbolo'] ?? '') ?>)
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </td>
+            <td>
+                <input type="number" step="0.01" min="0.01" class="form-control form-control-sm insumo-cantidad" placeholder="0.00" required>
+            </td>
+            <td class="text-center">
+                <button type="button" class="btn btn-sm btn-outline-danger btn-remove-insumo-row" title="Quitar">
+                    <i class="fas fa-times"></i>
+                </button>
+            </td>
+        </tr>
+    </template>
 
     <script src="<?= BASE_URL ?>public/assets/js/dashboard/notifications.js"></script>
     <?= $scripts_links ?>

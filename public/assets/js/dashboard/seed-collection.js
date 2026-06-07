@@ -35,14 +35,14 @@ $(document).ready(function () {
           },
         },
         {
-          data: 'id_insumo',
-          render: (data) => data
-            ? `<span class="badge bg-info text-dark"><i class="fas fa-seedling"></i> Registrado</span>`
-            : '<span class="text-muted">—</span>',
-        },
-        {
-          data: 'cantidad_recolectada',
-          render: (data) => data ? parseFloat(data).toFixed(2) : '<span class="text-muted">—</span>',
+          data: 'total_detalles',
+          render: (data) => {
+            const count = parseInt(data);
+            if (count > 0) {
+              return `<span class="badge bg-info text-dark"><i class="fas fa-seedling"></i> ${count} tipo(s)</span>`;
+            }
+            return '<span class="text-muted">—</span>';
+          },
         },
         {
           data: null,
@@ -71,7 +71,7 @@ $(document).ready(function () {
               `;
             }
 
-            if (data.estatus === 'Realizada' && !data.id_insumo) {
+            if (data.estatus === 'Realizada' && (!data.total_detalles || parseInt(data.total_detalles) === 0)) {
               html += `
                 <button class="btn btn-sm btn-outline-info btn-registrar-insumo"
                         data-id="${Helpers.escapeHtml(data.id)}">
@@ -80,8 +80,8 @@ $(document).ready(function () {
               `;
             }
 
-            if (data.id_insumo) {
-              html += `<span class="text-success" style="font-size:0.85rem;"><i class="fas fa-check-circle"></i> Completado</span>`;
+            if (data.total_detalles && parseInt(data.total_detalles) > 0) {
+              html += `<span class="text-success" style="font-size:0.85rem;"><i class="fas fa-check-circle"></i> ${data.total_detalles} tipo(s)</span>`;
             }
 
             html += '</div>';
@@ -268,46 +268,91 @@ $(document).ready(function () {
       });
   });
 
-  // Cargar plantas al abrir modal de insumo
-  const loadPlantas = (callback) => {
-    $.getJSON(`${window.BASE_URL || '/'}plants?action=get_plants`, { 'X-Requested-With': 'XMLHttpRequest' })
-      .done((res) => {
-        if (res.success) {
-          callback(res.plants);
-        }
-      });
+  // --- Múltiples insumos por recolección ---
+  const addInsumoRow = (planta, nombre, unidad, cantidad) => {
+    const $template = $($('#insumoRowTemplate').html());
+    if (planta) $template.find('.insumo-planta').val(planta);
+    if (nombre) $template.find('.insumo-nombre').val(nombre);
+    if (unidad) $template.find('.insumo-unidad').val(unidad);
+    if (cantidad) $template.find('.insumo-cantidad').val(cantidad);
+    $('#insumosTableBody').append($template);
   };
 
   // Abrir Modal Registrar Insumo
   $(document).on('click', '.btn-registrar-insumo', function () {
     const id = $(this).data('id');
     $('#insumoRecoleccionId').val(id);
-    $('#insumoForm')[0].reset();
-    const $plantSelect = $('#id_planta_insumo');
-    $plantSelect.find('option:not(:first)').remove();
-    loadPlantas((plants) => {
-      plants.forEach((p) => {
-        $plantSelect.append(`<option value="${Helpers.escapeHtml(p.nombre_comun || p.nombre_tecnico)}">${Helpers.escapeHtml(p.nombre_comun || p.nombre_tecnico)}</option>`);
-      });
-    });
-    $plantSelect.val('');
+    $('#insumosTableBody').empty();
+    addInsumoRow('', '', '', '');
     $('#insumoModal').modal({ focus: false }).modal('show');
   });
 
-  // Auto-completar nombre de semilla al seleccionar planta
-  $('#id_planta_insumo').on('change', function () {
-    const planta = $(this).val();
-    if (planta) {
-      $('#nombre_insumo').val(`Semillas de ${planta}`);
+  // Agregar fila
+  $('#btnAddInsumoRow').on('click', function () {
+    addInsumoRow('', '', '', '');
+  });
+
+  // Remover fila
+  $(document).on('click', '.btn-remove-insumo-row', function () {
+    const $tbody = $('#insumosTableBody');
+    if ($tbody.find('tr').length > 1) {
+      $(this).closest('tr').remove();
     } else {
-      $('#nombre_insumo').val('');
+      Helpers.toast('warning', 'Debe haber al menos un tipo de semilla.');
     }
   });
 
-  // Registrar Insumo (Semillas)
+  // Auto-completar nombre al seleccionar planta
+  $(document).on('change', '.insumo-planta', function () {
+    const $row = $(this).closest('tr');
+    const planta = $(this).val();
+    const $nombreInput = $row.find('.insumo-nombre');
+    if (planta && !$nombreInput.val()) {
+      $nombreInput.val(`Semillas de ${planta}`);
+    }
+  });
+
+  // Registrar todos los insumos
   $('#insumoForm').on('submit', function (e) {
     e.preventDefault();
-    const formData = new FormData(this);
+    const id = $('#insumoRecoleccionId').val();
+    const items = [];
+    let valid = true;
+
+    $('#insumosTableBody tr').each(function () {
+      const $row = $(this);
+      const plantaOrigen = $row.find('.insumo-planta').val() || '';
+      const nombreSemilla = $row.find('.insumo-nombre').val().trim();
+      const idUnidadMedida = $row.find('.insumo-unidad').val();
+      const cantidad = parseFloat($row.find('.insumo-cantidad').val());
+
+      if (!nombreSemilla || !idUnidadMedida || !cantidad || cantidad <= 0) {
+        valid = false;
+        $row.addClass('table-danger');
+        return;
+      }
+      $row.removeClass('table-danger');
+      items.push({
+        planta_origen: plantaOrigen,
+        nombre_semilla: nombreSemilla,
+        id_unidad_medida: parseInt(idUnidadMedida),
+        cantidad: cantidad,
+      });
+    });
+
+    if (!valid) {
+      Helpers.toast('error', 'Complete todos los campos de las filas marcadas en rojo.');
+      return;
+    }
+
+    if (items.length === 0) {
+      Helpers.toast('error', 'Debe agregar al menos un tipo de semilla.');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('id', id);
+    formData.append('items', JSON.stringify(items));
 
     $.ajax({
       url: `${baseUrl}?action=registrar_insumo_ajax`,
@@ -320,7 +365,7 @@ $(document).ready(function () {
     })
       .done((response) => {
         if (response.success) {
-          Helpers.toast('success', 'Semillas registradas como insumo correctamente');
+          Helpers.toast('success', response.message);
           $('#insumoModal').modal('hide');
           recoleccionTable.ajax.reload(null, false);
         } else {
@@ -328,7 +373,7 @@ $(document).ready(function () {
         }
       })
       .fail((err) => {
-        Helpers.toast('error', err.responseJSON?.message || 'Error al registrar insumo');
+        Helpers.toast('error', err.responseJSON?.message || 'Error al registrar semillas');
       });
   });
 

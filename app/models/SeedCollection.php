@@ -25,8 +25,7 @@ class SeedCollection extends Database implements ReadableInterface, DeletableInt
                         r.fecha_recoleccion,
                         r.estatus,
                         r.observacion,
-                        r.id_insumo,
-                        r.cantidad_recolectada,
+                        (SELECT COUNT(*) FROM recoleccion_semillas_detalle d WHERE d.id_recoleccion = r.id_recoleccion) AS total_detalles,
                         CONCAT(t.nombre_trabajador, ' ', t.apellido_trabajador) AS trabajador_nombre,
                         u.nombre_ubicacion
                     FROM recoleccion_semillas r
@@ -136,21 +135,49 @@ class SeedCollection extends Database implements ReadableInterface, DeletableInt
         ]);
     }
 
-    public function linkInsumo(int $id, int $idInsumo, float $cantidad): bool
+    public function addDetail(int $idRecoleccion, ?string $plantaOrigen, string $nombreSemilla, int $idUnidadMedida, float $cantidad): bool
     {
-        if (!$this->exists($id)) {
-            throw new \Exception('No existe la recolección solicitada.');
-        }
         $stmt = $this->db->prepare("
-            UPDATE recoleccion_semillas
-            SET id_insumo = :id_insumo,
-                cantidad_recolectada = :cantidad
-            WHERE id_recoleccion = :id
+            INSERT INTO recoleccion_semillas_detalle
+                (id_recoleccion, planta_origen, nombre_semilla, id_unidad_medida, cantidad)
+            VALUES
+                (:id_recoleccion, :planta_origen, :nombre_semilla, :id_unidad_medida, :cantidad)
         ");
         return $stmt->execute([
-            ':id' => $id,
-            ':id_insumo' => $idInsumo,
-            ':cantidad' => $cantidad,
+            ':id_recoleccion'   => $idRecoleccion,
+            ':planta_origen'    => $plantaOrigen,
+            ':nombre_semilla'   => $nombreSemilla,
+            ':id_unidad_medida' => $idUnidadMedida,
+            ':cantidad'         => $cantidad,
         ]);
+    }
+
+    public function getDetails(int $idRecoleccion): array
+    {
+        try {
+            $stmt = $this->db->prepare("
+                SELECT d.*, u.nombre_unidad_medida, u.simbolo
+                FROM recoleccion_semillas_detalle d
+                LEFT JOIN unidad_medida u ON d.id_unidad_medida = u.id_unidad_medida
+                WHERE d.id_recoleccion = :id
+                ORDER BY d.id_recoleccion_detalle ASC
+            ");
+            $stmt->execute([':id' => $idRecoleccion]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (\Throwable $e) {
+            error_log('Error en SeedCollection::getDetails: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    public function getDetailsCount(int $idRecoleccion): int
+    {
+        try {
+            $stmt = $this->db->prepare("SELECT COUNT(*) FROM recoleccion_semillas_detalle WHERE id_recoleccion = :id");
+            $stmt->execute([':id' => $idRecoleccion]);
+            return (int)$stmt->fetchColumn();
+        } catch (\Throwable $e) {
+            return 0;
+        }
     }
 }
