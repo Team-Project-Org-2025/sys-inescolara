@@ -224,12 +224,84 @@ $(document).ready(function () {
       });
   });
 
+  // Quick-add Ubicación
+  $('#btnAddUbicacionQuick').on('click', function () {
+    $('#ubicacionQuickForm')[0].reset();
+    $('#ubicacionQuickModal').modal({ focus: false }).modal('show');
+  });
+
+  $('#ubicacionQuickForm').on('submit', function (e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+
+    $.ajax({
+      url: `${window.BASE_URL || '/'}locations?action=add_ajax`,
+      method: 'POST',
+      data: formData,
+      processData: false,
+      contentType: false,
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+      dataType: 'json',
+    })
+      .done((response) => {
+        if (response.success) {
+          Helpers.toast('success', 'Ubicación agregada correctamente');
+          $('#ubicacionQuickModal').modal('hide');
+          // Recargar ubicaciones en el select
+          $.getJSON(`${window.BASE_URL || '/'}locations?action=get_locations`, { 'X-Requested-With': 'XMLHttpRequest' })
+            .done((res) => {
+              if (res.success) {
+                const $select = $('#id_ubicacion');
+                $select.find('option:not(:first)').remove();
+                res.locations.forEach((loc) => {
+                  $select.append(`<option value="${loc.id}">${Helpers.escapeHtml(loc.nombre_ubicacion)}</option>`);
+                });
+                $select.val(response.id || '');
+              }
+            });
+        } else {
+          Helpers.toast('error', response.message);
+        }
+      })
+      .fail((err) => {
+        Helpers.toast('error', err.responseJSON?.message || 'Error al crear ubicación');
+      });
+  });
+
+  // Cargar plantas al abrir modal de insumo
+  const loadPlantas = (callback) => {
+    $.getJSON(`${window.BASE_URL || '/'}plants?action=get_plants`, { 'X-Requested-With': 'XMLHttpRequest' })
+      .done((res) => {
+        if (res.success) {
+          callback(res.plants);
+        }
+      });
+  };
+
   // Abrir Modal Registrar Insumo
   $(document).on('click', '.btn-registrar-insumo', function () {
     const id = $(this).data('id');
     $('#insumoRecoleccionId').val(id);
     $('#insumoForm')[0].reset();
+    const $plantSelect = $('#id_planta_insumo');
+    $plantSelect.find('option:not(:first)').remove();
+    loadPlantas((plants) => {
+      plants.forEach((p) => {
+        $plantSelect.append(`<option value="${Helpers.escapeHtml(p.nombre_comun || p.nombre_tecnico)}">${Helpers.escapeHtml(p.nombre_comun || p.nombre_tecnico)}</option>`);
+      });
+    });
+    $plantSelect.val('');
     $('#insumoModal').modal({ focus: false }).modal('show');
+  });
+
+  // Auto-completar nombre de semilla al seleccionar planta
+  $('#id_planta_insumo').on('change', function () {
+    const planta = $(this).val();
+    if (planta) {
+      $('#nombre_insumo').val(`Semillas de ${planta}`);
+    } else {
+      $('#nombre_insumo').val('');
+    }
   });
 
   // Registrar Insumo (Semillas)
@@ -261,7 +333,7 @@ $(document).ready(function () {
   });
 
   // Limpiar formularios al cerrar modales
-  $('#recoleccionModal, #completarModal, #insumoModal').on('hidden.bs.modal', function () {
+  $('#recoleccionModal, #completarModal, #insumoModal, #ubicacionQuickModal').on('hidden.bs.modal', function () {
     const $form = $(this).find('form');
     Helpers.resetForm($form);
   });

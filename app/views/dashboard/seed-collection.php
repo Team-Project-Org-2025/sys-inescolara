@@ -85,14 +85,19 @@ include_once __DIR__ . '/../common/links.php';
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label" for="id_ubicacion">Sitio de Recolección <span class="text-danger">*</span></label>
-                                <select class="form-select" name="id_ubicacion" id="id_ubicacion" required>
-                                    <option value="">Seleccione una ubicación</option>
-                                    <?php foreach ($ubicaciones as $u): ?>
-                                        <option value="<?= (int)$u['id'] ?>">
-                                            <?= htmlspecialchars($u['nombre_ubicacion'] ?? '') ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
+                                <div class="input-group">
+                                    <select class="form-select" name="id_ubicacion" id="id_ubicacion" required>
+                                        <option value="">Seleccione una ubicación</option>
+                                        <?php foreach ($ubicaciones as $u): ?>
+                                            <option value="<?= (int)$u['id'] ?>">
+                                                <?= htmlspecialchars($u['nombre_ubicacion'] ?? '') ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <button class="btn btn-outline-success" type="button" id="btnAddUbicacionQuick" title="Agregar nueva ubicación">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label" for="fecha_asignacion">Fecha de Asignación <span class="text-danger">*</span></label>
@@ -107,6 +112,40 @@ include_once __DIR__ . '/../common/links.php';
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                         <button type="submit" class="btn btn-primary" id="recoleccionSubmitBtn">Guardar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Quick-Add Ubicación -->
+    <div class="modal fade" id="ubicacionQuickModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Nueva Ubicación</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="ubicacionQuickForm">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label" for="quick_nombre_ubicacion">Nombre <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="nombre_ubicacion" id="quick_nombre_ubicacion" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="quick_descripcion">Descripción</label>
+                            <textarea class="form-control" name="descripcion" id="quick_descripcion" rows="2"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="quick_zona">Zona</label>
+                            <input type="text" class="form-control" name="zona" id="quick_zona">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save"></i> Guardar Ubicación
+                        </button>
                     </div>
                 </form>
             </div>
@@ -154,6 +193,12 @@ include_once __DIR__ . '/../common/links.php';
                     <div class="modal-body">
                         <p style="color: var(--text-secondary);">Registra las semillas recolectadas en el inventario de insumos.</p>
                         <div class="row g-3">
+                            <div class="col-md-12">
+                                <label class="form-label" for="id_planta_insumo">Planta de origen <span class="text-danger">*</span></label>
+                                <select class="form-select" id="id_planta_insumo">
+                                    <option value="">Seleccione una planta</option>
+                                </select>
+                            </div>
                             <div class="col-md-12">
                                 <label class="form-label" for="nombre_insumo">Nombre de la Semilla <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" name="nombre_insumo" id="nombre_insumo" placeholder="Ej: Semillas de Araguaney" required>
