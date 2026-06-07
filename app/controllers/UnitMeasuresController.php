@@ -10,7 +10,6 @@ function index(): void
     checkModuleAuth();
     $action = $_GET['action'] ?? '';
     if (isAjaxRequest() && $action !== '') {
-        header('Content-Type: application/json; charset=utf-8');
         try {
             match ($_SERVER['REQUEST_METHOD'] . '_' . $action) {
                 'GET_get_units'     => units_getUnitsAjax(),
@@ -73,8 +72,8 @@ function units_handleDelete(): void
     try {
         $oldData = $model->getById($id);
         $model->delete($id);
-        AuditLog::record('DELETE', 'unidad_medida', $id, $oldData, null);
-        jsonResponse(['success' => true, 'message' => 'Unidad eliminada correctamente', 'unitId' => $id]);
+        AuditLog::record('DEACTIVATE', 'unidad_medida', $id, $oldData, null);
+        jsonResponse(['success' => true, 'message' => 'Unidad desactivada correctamente', 'unitId' => $id]);
     } catch (\PDOException $e) {
         if ($e->getCode() == 23000 || str_contains($e->getMessage(), '1451')) {
             throw new \Exception('No se puede eliminar la unidad porque está siendo usada por uno o más insumos.');

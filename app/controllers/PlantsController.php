@@ -11,7 +11,6 @@ function index(): void
     checkModuleAuth();
     $action = $_GET['action'] ?? '';
     if (isAjaxRequest() && $action !== '') {
-        header('Content-Type: application/json; charset=utf-8');
         try {
             match ($_SERVER['REQUEST_METHOD'] . '_' . $action) {
                 'GET_get_plants'   => plants_getPlantsAjax(),
@@ -105,8 +104,8 @@ function plants_handleDelete(): void
     if (!empty($oldData['imagen'])) {
         (new \SysInescolara\helpers\ImageUploader())->delete($oldData['imagen']);
     }
-    AuditLog::record('DELETE', 'plantas', $id, $oldData, null);
-    jsonResponse(['success' => true, 'message' => 'Planta eliminada correctamente', 'plantId' => $id]);
+    AuditLog::record('DEACTIVATE', 'plantas', $id, $oldData, null);
+    jsonResponse(['success' => true, 'message' => 'Planta desactivada correctamente', 'plantId' => $id]);
 }
 
 function plants_getPlantsAjax(): void

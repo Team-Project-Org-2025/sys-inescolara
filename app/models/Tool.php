@@ -19,8 +19,9 @@ class Tool extends Database implements ReadableInterface, DeletableInterface
         try {
             $stmt = $this->db->query("
                 SELECT id_herramienta AS id, nombre_herramienta, tipo, estado,
-                       fecha_adquisicion, fecha_ultimo_mantenimiento, observacion
+                       fecha_adquisicion, fecha_ultimo_mantenimiento, observacion, activo
                 FROM herramienta
+                WHERE activo = 1
                 ORDER BY nombre_herramienta ASC
             ");
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
@@ -98,7 +99,13 @@ class Tool extends Database implements ReadableInterface, DeletableInterface
 
     public function delete(int $id): bool
     {
-        $stmt = $this->db->prepare("DELETE FROM herramienta WHERE id_herramienta = :id");
+        $stmt = $this->db->prepare("UPDATE herramienta SET activo = 0 WHERE id_herramienta = :id");
+        return $stmt->execute([':id' => $id]);
+    }
+
+    public function restore(int $id): bool
+    {
+        $stmt = $this->db->prepare("UPDATE herramienta SET activo = 1 WHERE id_herramienta = :id");
         return $stmt->execute([':id' => $id]);
     }
 
@@ -106,5 +113,51 @@ class Tool extends Database implements ReadableInterface, DeletableInterface
     {
         $id = $this->db->lastInsertId();
         return $id !== false ? (int) $id : null;
+    }
+
+    // -- Transactional: record tool usage + update tool state --
+
+    public function recordUsageWithStateUpdate(array $usageData): int
+    {
+        $this->db->beginTransaction();
+        try {
+            $stmt = $this->db->prepare("
+                INSERT INTO uso_herramienta (id_asignacion, id_herramienta, fecha_uso, observacion, estado_herramienta_post_uso)
+                VALUES (:id_asignacion, :id_herramienta, :fecha_uso, :observacion, :estado_herramienta_post_uso)
+            ");
+            $stmt->execute([
+                ':id_asignacion'            => $usageData['id_asignacion'],
+                ':id_herramienta'           => $usageData['id_herramienta'],
+                ':fecha_uso'                => $usageData['fecha_uso'],
+                ':observacion'              => $usageData['observacion'] ?? null,
+                ':estado_herramienta_post_uso' => $usageData['estado_herramienta_post_uso'] ?? 'ok',
+            ]);
+            $usoId = (int)$this->db->lastInsertId();
+
+            $stmt = $this->db->prepare("UPDATE herramienta SET estado = :estado WHERE id_herramienta = :id");
+            $stmt->execute([
+                ':estado' => $usageData['estado_herramienta_post_uso'] ?? 'ok',
+                ':id'     => $usageData['id_herramienta'],
+            ]);
+
+            $this->db->commit();
+            return $usoId;
+        } catch (\Exception $e) {
+            $this->db->rollBack();
+            throw $e;
+        }
+    }
+
+    public function getUsages(int $herramientaId): array
+    {
+        $sql = "SELECT u.*, a.id_tarea, t.nombre_tarea
+                FROM uso_herramienta u
+                LEFT JOIN asignar_tarea a ON u.id_asignacion = a.id_asignacion
+                LEFT JOIN tareas t ON a.id_tarea = t.id_tarea
+                WHERE u.id_herramienta = :id_herramienta
+                ORDER BY u.fecha_uso DESC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([':id_herramienta' => $herramientaId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }
