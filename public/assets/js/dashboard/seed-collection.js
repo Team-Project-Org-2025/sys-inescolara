@@ -1,9 +1,16 @@
 import * as Helpers from '../utils/helpers.js';
 import * as Ajax from '../utils/ajax-handler.js';
+import { setupRealTimeValidation, validateForm, clearValidation } from '../utils/validation.js';
 
 $(document).ready(function () {
   const baseUrl = `${window.BASE_URL || '/'}recoleccion`;
   let recoleccionTable = null;
+
+  const recoleccionRules = {
+    id_trabajador: 'select',
+    id_ubicacion: 'select',
+    fecha_asignacion: 'fechaFuturaCheck',
+  };
 
   const initDataTable = () => {
     if (typeof SkeletonHelper !== 'undefined') {
@@ -111,19 +118,20 @@ $(document).ready(function () {
     });
   };
 
-  // Abrir Modal Registrar Recolección
   $('#btnAddRecoleccion').on('click', function () {
     $('#recoleccionModalTitle').text('Registrar Recolección');
     $('#recoleccionId').val('0');
     $('#recoleccionForm')[0].reset();
+    clearValidation($('#recoleccionForm'));
     $('#fecha_asignacion').val(new Date().toISOString().split('T')[0]);
     $('#recoleccionSubmitBtn').text('Guardar');
     $('#recoleccionModal').modal({ focus: false }).modal('show');
   });
 
-  // Guardar o Editar Recolección
   $('#recoleccionForm').on('submit', function (e) {
     e.preventDefault();
+    if (!validateForm($(this), recoleccionRules)) return;
+
     const id = $('#recoleccionId').val();
     const action = id && id !== '0' ? 'edit_ajax' : 'add_ajax';
     const formData = new FormData(this);
@@ -151,7 +159,6 @@ $(document).ready(function () {
       });
   });
 
-  // Abrir Modal Editar Recolección
   $(document).on('click', '.btn-edit', function () {
     const $btn = $(this);
     $('#recoleccionModalTitle').text('Editar Recolección');
@@ -160,21 +167,21 @@ $(document).ready(function () {
     $('#id_ubicacion').val($btn.data('id_ubicacion'));
     $('#fecha_asignacion').val($btn.data('fecha_asignacion'));
     $('#observacion').val($btn.data('observacion'));
+    clearValidation($('#recoleccionForm'));
     $('#recoleccionSubmitBtn').text('Actualizar');
     $('#recoleccionModal').modal({ focus: false }).modal('show');
   });
 
-  // Eliminar Recolección
   $(document).on('click', '.btn-delete', function () {
     const id = $(this).data('id');
     Helpers.confirmDialog(
-      '¿Eliminar recolección?',
-      '¿Deseas eliminar esta tarea de recolección? Esta acción no se puede deshacer.',
+      '¿Desactivar recolección?',
+      '¿Deseas desactivar esta tarea de recolección?',
       () => {
         Ajax.post(`${baseUrl}?action=delete_ajax`, { id })
           .then((response) => {
             if (response.success) {
-              Helpers.toast('success', 'Recolección eliminada correctamente');
+              Helpers.toast('success', 'Recolección desactivada correctamente');
               recoleccionTable.ajax.reload(null, false);
             } else {
               Helpers.toast('error', response.message);
@@ -184,21 +191,23 @@ $(document).ready(function () {
             Helpers.toast('error', err);
           });
       },
-      'Sí, eliminar'
+      'Sí, desactivar'
     );
   });
 
-  // Abrir Modal Completar Recolección
   $(document).on('click', '.btn-completar', function () {
     const id = $(this).data('id');
     $('#completarId').val(id);
     $('#fecha_recoleccion').val(new Date().toISOString().split('T')[0]);
+    clearValidation($('#completarForm'));
     $('#completarModal').modal({ focus: false }).modal('show');
   });
 
-  // Completar Recolección
   $('#completarForm').on('submit', function (e) {
     e.preventDefault();
+    const fechaRules = { fecha_recoleccion: 'fechaFuturaCheck' };
+    if (!validateForm($(this), fechaRules)) return;
+
     const formData = new FormData(this);
 
     $.ajax({
@@ -224,9 +233,9 @@ $(document).ready(function () {
       });
   });
 
-  // Quick-add Ubicación
   $('#btnAddUbicacionQuick').on('click', function () {
     $('#ubicacionQuickForm')[0].reset();
+    clearValidation($('#ubicacionQuickForm'));
     $('#ubicacionQuickModal').modal({ focus: false }).modal('show');
   });
 
@@ -247,7 +256,6 @@ $(document).ready(function () {
         if (response.success) {
           Helpers.toast('success', 'Ubicación agregada correctamente');
           $('#ubicacionQuickModal').modal('hide');
-          // Recargar ubicaciones en el select
           $.getJSON(`${window.BASE_URL || '/'}locations?action=get_locations`, { 'X-Requested-With': 'XMLHttpRequest' })
             .done((res) => {
               if (res.success) {
@@ -268,7 +276,6 @@ $(document).ready(function () {
       });
   });
 
-  // --- Múltiples insumos por recolección ---
   const addInsumoRow = (planta, nombre, unidad, cantidad) => {
     const $template = $($('#insumoRowTemplate').html());
     if (planta) $template.find('.insumo-planta').val(planta);
@@ -278,7 +285,6 @@ $(document).ready(function () {
     $('#insumosTableBody').append($template);
   };
 
-  // Abrir Modal Registrar Insumo
   $(document).on('click', '.btn-registrar-insumo', function () {
     const id = $(this).data('id');
     $('#insumoRecoleccionId').val(id);
@@ -287,12 +293,10 @@ $(document).ready(function () {
     $('#insumoModal').modal({ focus: false }).modal('show');
   });
 
-  // Agregar fila
   $('#btnAddInsumoRow').on('click', function () {
     addInsumoRow('', '', '', '');
   });
 
-  // Remover fila
   $(document).on('click', '.btn-remove-insumo-row', function () {
     const $tbody = $('#insumosTableBody');
     if ($tbody.find('tr').length > 1) {
@@ -302,7 +306,6 @@ $(document).ready(function () {
     }
   });
 
-  // Auto-completar nombre al seleccionar planta
   $(document).on('change', '.insumo-planta', function () {
     const $row = $(this).closest('tr');
     const planta = $(this).val();
@@ -312,7 +315,6 @@ $(document).ready(function () {
     }
   });
 
-  // Registrar todos los insumos
   $('#insumoForm').on('submit', function (e) {
     e.preventDefault();
     const id = $('#insumoRecoleccionId').val();
@@ -377,11 +379,14 @@ $(document).ready(function () {
       });
   });
 
-  // Limpiar formularios al cerrar modales
   $('#recoleccionModal, #completarModal, #insumoModal, #ubicacionQuickModal').on('hidden.bs.modal', function () {
     const $form = $(this).find('form');
     Helpers.resetForm($form);
+    clearValidation($form);
   });
+
+  setupRealTimeValidation($('#recoleccionForm'), recoleccionRules);
+  setupRealTimeValidation($('#completarForm'), { fecha_recoleccion: 'fechaFuturaCheck' });
 
   initDataTable();
 });
