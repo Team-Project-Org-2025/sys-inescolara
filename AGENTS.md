@@ -19,12 +19,13 @@ Control de inventario, ventas, producción, lotes, insumos, trabajadores, tareas
 - Namespace: `SysInescolara\controllers`
 - Analiza URL → carga controlador + acción
 - Rutas predefinidas: `catalogo`, `servicios`, `nosotros`, `contacto`
-- Soporte dual: clase con namespace (prioridad) o función global legacy
-- `class_exists($className, false)` para evitar autoload duplicado
+- Soporte único: funciones globales (sin clases)
+- `class_exists($className, false)` para detectar si hay clase (ya no usado, legacy)
 
 ### Controladores
-- **Clase (namespace `SysInescolara\controllers`):** SuppliesController, TasksController, BatchesController, ClientsController, EmployeesController, PlantsController, SpeciesController, SuppliersController, UserController, AuditLogController, BackupsController, ReportsController, NotificationsController
-- **Función global (legacy):** LoginController, DashboardController, RecuperarpasswordController, PublicController
+- **Función global:** Todos los controladores usan funciones globales (sin clases ni namespace)
+- **Lista:** SuppliesController, TasksController, BatchesController, ClientsController, EmployeesController, PlantsController, SpeciesController, LocationsController, SuppliersController, UserController, RolesController, AuditLogController, BackupsController, ReportsController, NotificationsController, LoginController, DashboardController, RecuperarpasswordController, PublicController, InicioController, AuthController, InventarioController
+- **Helpers compartidos:** `app/controllers/controller_helpers.php` (jsonResponse, checkModuleAuth, checkPermisoOrFail, isAjaxRequest, handleError, getRequestData, validateAndSanitize)
 - **Ubicación:** `app/controllers/`
 
 ### Modelos
@@ -33,9 +34,9 @@ Control de inventario, ventas, producción, lotes, insumos, trabajadores, tareas
 - Conexiones: `'default'` → `sysinescolara`, `'security'` → `SysInescolara-Seguridad`
 - Ubicación: `app/models/`
 
-### Traits
-- `app/traits/ResponseTrait.php` — `jsonResponse()`, `handleError()`, `isAjaxRequest()`
-- `app/traits/PermissionTrait.php` — `checkModuleAuth()`, `checkPermisoOrFail()`
+### Traits (solo disponibles como referencia, ya no usados en controladores)
+- `app/traits/ResponseTrait.php` — `jsonResponse()`, `handleError()`, `isAjaxRequest()` → migrado a `controller_helpers.php`
+- `app/traits/PermissionTrait.php` — `checkModuleAuth()`, `checkPermisoOrFail()` → migrado a `controller_helpers.php`
 
 ### Vistas
 - Dashboard: `app/views/dashboard/*.php`
@@ -68,7 +69,7 @@ Tablas: usuarios, roles, permisos, rol_permisos, usuario_permisos, sesiones_acti
 - Tablas BD: singular (cliente, lote, insumo, especie)
 - Primary keys: `id_<tabla>` (id_usuario, id_planta, etc.)
 - `getAll()` usa `PK AS id` para DataTables
-- Controladores clase: método público por cada acción
+- Controladores: funciones globales (una función pública por cada acción)
 - Permisos: constantes `MODULO_ACCION` (PLANTAS_VIEW, PLANTAS_CREATE, etc.)
 
 ## Estado Actual
@@ -83,19 +84,18 @@ Tablas: usuarios, roles, permisos, rol_permisos, usuario_permisos, sesiones_acti
 - Frontend responsive público
 - Login responsive (mobile)
 - Recuperación de contraseña (backend listo, SMTP pendiente)
-- Controladores refactorizados a clases con traits
+- Controladores refactorizados a funciones globales (sin clases ni traits)
+- Módulo Inventario (modelo, controlador, vista, permisos INVENTARIO_ADJUST)
+- Fase 1.1 — Validation Helper (app/helpers/Validation.php)
+- Fase 1.2 — JS Validation Helper (public/assets/js/utils/validation.js) + migración supplies.js, inventario.js
+- Fase 1.3 — controller_helpers.php (getRequestData, validateAndSanitize, jsonResponse mejorado, redundancia eliminada)
+- Fase 1.4 — Transacciones en Tasks/Tools (modelos AsignarTarea, ConsumoInsumo, UsoHerramienta creados; Task.assignTaskWithConsumptions, Tool.recordUsageWithStateUpdate)
+- Fase 2 — Soft Deletes (11 modelos refactorizados, 14 controladores actualizados, SQL migration)
 
 ### Pendiente
-- Catálogo público desde BD
-- Módulo de Ventas/POS (movimiento_planta)
-- Módulo de Cálculo de Precios
-- Asignación de Tareas + Consumo de Insumos
-- Trazabilidad fitosanitaria
-- Herramientas + Uso de herramientas
-- Asistencia de trabajadores
-- Ajustes de inventario
+- Fase 2 — Soft Deletes
 - Migrar modelos a la nueva estructura BD
-- Deploy en Render
+- Catálogo público desde BD
 
 ## Datos Críticos
 - Admin: `admin@inecolara.gob.ve` / `Admin123!`

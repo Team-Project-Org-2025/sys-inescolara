@@ -13,9 +13,8 @@ $(document).ready(function () {
   
   const initDataTable = () => {
     if (typeof SkeletonHelper !== 'undefined') {
-      SkeletonHelper.showTableSkeleton('locationsTable', 5, 3);
+SkeletonHelper.showTableSkeleton('locationsTable', 5, 5);
     }
-    
     locationsTable = $('#locationsTable').DataTable({
       ajax: {
         url: `${baseUrl}?action=get_locations`,
@@ -33,6 +32,14 @@ $(document).ready(function () {
           data: 'nombre_ubicacion' 
         },
         {
+          data: 'descripcion',
+          render: (data) => data || '<span class="text-muted">—</span>',
+        },
+        {
+          data: 'zona',
+          render: (data) => data || '<span class="text-muted">—</span>',
+        },
+        {
           data: null,
           orderable: false,
           searchable: false,
@@ -42,7 +49,9 @@ $(document).ready(function () {
               <div class="d-flex gap-1">
                 <button class="btn btn-sm btn-outline-primary btn-edit"
                         data-id="${Helpers.escapeHtml(data.id)}"
-                        data-nombre_ubicacion="${Helpers.escapeHtml(data.nombre_ubicacion)}">
+                        data-nombre_ubicacion="${Helpers.escapeHtml(data.nombre_ubicacion)}"
+                        data-descripcion="${Helpers.escapeHtml(data.descripcion || '')}"
+                        data-zona="${Helpers.escapeHtml(data.zona || '')}">
                     <i class="fas fa-edit"></i> Editar
                 </button>
                 <button class="btn btn-sm btn-outline-danger btn-delete"
@@ -128,6 +137,8 @@ $(document).ready(function () {
 
     $('#editLocationId').val($btn.data('id'));
     $('#editLocationName').val($btn.data('nombre_ubicacion'));
+    $('#editLocationDesc').val($btn.data('descripcion'));
+    $('#editLocationZona').val($btn.data('zona'));
 
     $('#editLocationModal').modal({ focus: false }).modal('show');
   });

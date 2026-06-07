@@ -141,6 +141,12 @@ export const emptyHtml = (colspan = 5, msg = 'No hay datos disponibles') => {
 };
 
 //Debounce para búsquedas
+export const truncateText = (str, maxLen = 50) => {
+  if (!str) return '';
+  const text = String(str);
+  return text.length > maxLen ? text.substring(0, maxLen) + '...' : text;
+};
+
 export const debounce = (func, wait = 300) => {
   let timeout;
   return function executedFunction(...args) {

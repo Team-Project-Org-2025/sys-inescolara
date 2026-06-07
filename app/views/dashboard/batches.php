@@ -74,11 +74,15 @@ include_once __DIR__ . '/../common/links.php';
                                     <th>Imagen</th>
                                     <th>Planta</th>
                                     <th>Especie</th>
+                                    <th>Ubicación</th>
                                     <th>Fecha Siembra</th>
                                     <th>Cant. Inicial</th>
                                     <th>Cant. Actual</th>
+                                    <th>Precio Unitario</th>
                                     <th>Estado</th>
-                                    <th>Ubicación</th>
+                                    <th>Categoría</th>
+                                    <th>Origen</th>
+                                    <th>Observación</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
@@ -110,6 +114,15 @@ include_once __DIR__ . '/../common/links.php';
                             </select>
                         </div>
                         <div class="mb-3">
+                            <label class="form-label">Ubicación</label>
+                            <select class="form-select" name="id_ubicacion" required>
+                                <option value="">Seleccione una ubicación...</option>
+                                <?php foreach ($locations as $l): ?>
+                                <option value="<?= $l['id'] ?>"><?= htmlspecialchars($l['nombre_ubicacion']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="mb-3">
                             <label class="form-label">Fecha de Siembra</label>
                             <input type="date" class="form-control" name="fecha_siembra" required>
                         </div>
@@ -124,7 +137,7 @@ include_once __DIR__ . '/../common/links.php';
                             </div>
                         </div>
                         <div class="row">
-                            <div class="col-6 mb-3">
+                            <div class="col-4 mb-3">
                                 <label class="form-label">Estado</label>
                                 <select class="form-select" name="estado" required>
                                     <option value="">Seleccione...</option>
@@ -135,10 +148,30 @@ include_once __DIR__ . '/../common/links.php';
                                     <option value="Muerto">Muerto</option>
                                 </select>
                             </div>
-                            <div class="col-6 mb-3">
-                                <label class="form-label">Ubicación</label>
-                                <input type="text" class="form-control" name="ubicacion" placeholder="Ej: Invernadero A" required>
+                            <div class="col-4 mb-3">
+                                <label class="form-label">Categoría</label>
+                                <select class="form-select" name="categoria">
+                                    <option value="">Sin categoría</option>
+                                    <option value="germinado">Germinado</option>
+                                    <option value="en_crecimiento">En Crecimiento</option>
+                                    <option value="para_cosechar">Para Cosechar</option>
+                                    <option value="maduro">Maduro</option>
+                                </select>
                             </div>
+                            <div class="col-4 mb-3">
+                                <label class="form-label">Origen</label>
+                                <select class="form-select" name="origen" required>
+                                    <option value="">Seleccione...</option>
+                                    <option value="Siembra">Siembra</option>
+                                    <option value="Ampliación">Ampliación</option>
+                                    <option value="Donación">Donación</option>
+                                    <option value="Compra">Compra</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Observación</label>
+                            <textarea class="form-control" name="observacion" rows="2" placeholder="Opcional"></textarea>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Imagen del Lote</label>
@@ -179,6 +212,15 @@ include_once __DIR__ . '/../common/links.php';
                             </select>
                         </div>
                         <div class="mb-3">
+                            <label class="form-label">Ubicación</label>
+                            <select class="form-select" name="id_ubicacion" id="editBatchLocation" required>
+                                <option value="">Seleccione una ubicación...</option>
+                                <?php foreach ($locations as $l): ?>
+                                <option value="<?= $l['id'] ?>"><?= htmlspecialchars($l['nombre_ubicacion']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="mb-3">
                             <label class="form-label">Fecha de Siembra</label>
                             <input type="date" class="form-control" name="fecha_siembra" id="editBatchDate" required>
                         </div>
@@ -193,7 +235,7 @@ include_once __DIR__ . '/../common/links.php';
                             </div>
                         </div>
                         <div class="row">
-                            <div class="col-6 mb-3">
+                            <div class="col-4 mb-3">
                                 <label class="form-label">Estado</label>
                                 <select class="form-select" name="estado" id="editBatchStatus" required>
                                     <option value="">Seleccione...</option>
@@ -204,10 +246,30 @@ include_once __DIR__ . '/../common/links.php';
                                     <option value="Muerto">Muerto</option>
                                 </select>
                             </div>
-                            <div class="col-6 mb-3">
-                                <label class="form-label">Ubicación</label>
-                                <input type="text" class="form-control" name="ubicacion" id="editBatchLocation" required>
+                            <div class="col-4 mb-3">
+                                <label class="form-label">Categoría</label>
+                                <select class="form-select" name="categoria" id="editBatchCategoria">
+                                    <option value="">Sin categoría</option>
+                                    <option value="germinado">Germinado</option>
+                                    <option value="en_crecimiento">En Crecimiento</option>
+                                    <option value="para_cosechar">Para Cosechar</option>
+                                    <option value="maduro">Maduro</option>
+                                </select>
                             </div>
+                            <div class="col-4 mb-3">
+                                <label class="form-label">Origen</label>
+                                <select class="form-select" name="origen" id="editBatchOrigen" required>
+                                    <option value="">Seleccione...</option>
+                                    <option value="Siembra">Siembra</option>
+                                    <option value="Ampliación">Ampliación</option>
+                                    <option value="Donación">Donación</option>
+                                    <option value="Compra">Compra</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Observación</label>
+                            <textarea class="form-control" name="observacion" id="editBatchObs" rows="2" placeholder="Opcional"></textarea>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Imagen del Lote</label>

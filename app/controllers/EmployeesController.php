@@ -1,104 +1,90 @@
 <?php
 
-namespace SysInescolara\controllers;
+require_once __DIR__ . '/controller_helpers.php';
 
 use SysInescolara\models\Employee;
 use SysInescolara\models\AuditLog;
-use SysInescolara\traits\ResponseTrait;
-use SysInescolara\traits\PermissionTrait;
 
-class EmployeesController
+function index(): void
 {
-    use ResponseTrait, PermissionTrait;
-
-    private Employee $model;
-
-    public function __construct()
-    {
-        if (session_status() === PHP_SESSION_NONE) session_start();
-        $this->model = new Employee();
-    }
-
-    public function index(): void
-    {
-        $this->checkModuleAuth();
-        $this->handleAjaxRequest();
-
-        $view = ROOT_PATH . 'app/views/dashboard/employees.php';
-        if (!is_file($view)) {
-            http_response_code(500);
-            echo 'Vista de empleados no encontrada.';
-            return;
-        }
-        require $view;
-    }
-
-    public function get_employees(): void { $this->checkModuleAuth(); $this->getEmployeesAjax(); }
-    public function add_ajax(): void { $this->checkModuleAuth(); $this->checkPermisoOrFail('TRABAJADORES_CREATE'); $this->handleAddEdit('add'); }
-    public function edit_ajax(): void { $this->checkModuleAuth(); $this->checkPermisoOrFail('TRABAJADORES_EDIT'); $this->handleAddEdit('edit'); }
-    public function delete_ajax(): void { $this->checkModuleAuth(); $this->checkPermisoOrFail('TRABAJADORES_DELETE'); $this->handleDelete(); }
-
-    private function handleAjaxRequest(): void
-    {
-        $action = $_GET['action'] ?? '';
-        if (!$this->isAjaxRequest() || $action === '') return;
-
-        header('Content-Type: application/json; charset=utf-8');
+    checkModuleAuth();
+    $action = $_GET['action'] ?? '';
+    if (isAjaxRequest() && $action !== '') {
         try {
             match ($_SERVER['REQUEST_METHOD'] . '_' . $action) {
-                'GET_get_employees'  => $this->getEmployeesAjax(),
-                'POST_add_ajax'     => $this->handleAddEdit('add'),
-                'POST_edit_ajax'    => $this->handleAddEdit('edit'),
-                'POST_delete_ajax'  => $this->handleDelete(),
-                default             => $this->jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
+                'GET_get_employees' => employees_getEmployeesAjax(),
+                'POST_add_ajax'     => employees_handleAddEdit('add'),
+                'POST_edit_ajax'    => employees_handleAddEdit('edit'),
+                'POST_delete_ajax'  => employees_handleDelete(),
+                default             => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
             };
         } catch (\Exception $e) {
-            $this->handleError($e, true);
+            handleError($e, true);
         }
+        return;
     }
 
-    private function handleAddEdit(string $mode): void
-    {
-        $nombre = trim((string)($_POST['nombre_trabajador'] ?? ''));
-        if ($nombre === '') throw new \Exception('El nombre del trabajador es requerido.');
+    $view = ROOT_PATH . 'app/views/dashboard/employees.php';
+    if (!is_file($view)) {
+        http_response_code(500);
+        echo 'Vista de empleados no encontrada.';
+        return;
+    }
+    require $view;
+}
 
-        $apellido = trim((string)($_POST['apellido_trabajador'] ?? ''));
-        if ($apellido === '') $apellido = null;
-        $cedula = trim((string)($_POST['cedula_trabajador'] ?? ''));
-        if ($cedula === '') $cedula = null;
-        $telefono = trim((string)($_POST['telefono_trabajador'] ?? ''));
-        if ($telefono === '') $telefono = null;
+function get_employees(): void { checkModuleAuth(); employees_getEmployeesAjax(); }
+function add_ajax(): void { checkModuleAuth(); checkPermisoOrFail('TRABAJADORES_CREATE'); employees_handleAddEdit('add'); }
+function edit_ajax(): void { checkModuleAuth(); checkPermisoOrFail('TRABAJADORES_EDIT'); employees_handleAddEdit('edit'); }
+function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('TRABAJADORES_DELETE'); employees_handleDelete(); }
 
-        if ($mode === 'add') {
-            $this->model->add($nombre, $apellido, $cedula, $telefono);
-            $newId = $this->model->getLastInsertId() ?? 0;
-            AuditLog::record('CREATE', 'trabajadores', $newId, null, compact('nombre', 'apellido', 'cedula', 'telefono'));
-            $this->jsonResponse(['success' => true, 'message' => 'Trabajador agregado correctamente', 'employee' => ['id' => $newId, 'nombre_trabajador' => $nombre, 'apellido_trabajador' => $apellido, 'cedula_trabajador' => $cedula, 'telefono_trabajador' => $telefono]]);
-        }
+function employees_handleAddEdit(string $mode): void
+{
+    $model = new Employee();
+    $nombre = trim((string)($_POST['nombre_trabajador'] ?? ''));
+    if ($nombre === '') throw new \Exception('El nombre del trabajador es requerido.');
 
-        $id = (int)($_POST['id'] ?? 0);
-        if ($id <= 0) throw new \Exception('ID inválido');
+    $apellido = trim((string)($_POST['apellido_trabajador'] ?? ''));
+    if ($apellido === '') $apellido = null;
+    $cedula = trim((string)($_POST['cedula_trabajador'] ?? ''));
+    if ($cedula === '') $cedula = null;
+    $telefono = trim((string)($_POST['telefono_trabajador'] ?? ''));
+    if ($telefono === '') $telefono = null;
+    $cargo = trim((string)($_POST['cargo'] ?? ''));
+    if ($cargo === '') $cargo = null;
+    $activo = isset($_POST['activo']) ? (bool)$_POST['activo'] : true;
 
-        $oldData = $this->model->getById($id);
-        $this->model->update($id, $nombre, $apellido, $cedula, $telefono);
-        AuditLog::record('UPDATE', 'trabajadores', $id, $oldData, compact('nombre', 'apellido', 'cedula', 'telefono'));
-        $this->jsonResponse(['success' => true, 'message' => 'Trabajador actualizado correctamente', 'employee' => ['id' => $id, 'nombre_trabajador' => $nombre, 'apellido_trabajador' => $apellido, 'cedula_trabajador' => $cedula, 'telefono_trabajador' => $telefono]]);
+    if ($mode === 'add') {
+        $model->add($nombre, $apellido, $cedula, $telefono, $cargo, $activo);
+        $newId = $model->getLastInsertId() ?? 0;
+        AuditLog::record('CREATE', 'trabajadores', $newId, null, compact('nombre', 'apellido', 'cedula', 'telefono', 'cargo', 'activo'));
+        jsonResponse(['success' => true, 'message' => 'Trabajador agregado correctamente', 'employee' => ['id' => $newId, 'nombre_trabajador' => $nombre, 'apellido_trabajador' => $apellido, 'cedula_trabajador' => $cedula, 'telefono_trabajador' => $telefono, 'cargo' => $cargo, 'activo' => $activo]]);
     }
 
-    private function handleDelete(): void
-    {
-        $id = (int)($_POST['id'] ?? 0);
-        if ($id <= 0) throw new \Exception('ID inválido');
-        if (!$this->model->exists($id)) throw new \Exception('No existe el trabajador');
+    $id = (int)($_POST['id'] ?? 0);
+    if ($id <= 0) throw new \Exception('ID inválido');
 
-        $oldData = $this->model->getById($id);
-        $this->model->delete($id);
-        AuditLog::record('DELETE', 'trabajadores', $id, $oldData, null);
-        $this->jsonResponse(['success' => true, 'message' => 'Trabajador eliminado correctamente', 'employeeId' => $id]);
-    }
+    $oldData = $model->getById($id);
+    $model->update($id, $nombre, $apellido, $cedula, $telefono, $cargo, $activo);
+    AuditLog::record('UPDATE', 'trabajadores', $id, $oldData, compact('nombre', 'apellido', 'cedula', 'telefono', 'cargo', 'activo'));
+    jsonResponse(['success' => true, 'message' => 'Trabajador actualizado correctamente', 'employee' => ['id' => $id, 'nombre_trabajador' => $nombre, 'apellido_trabajador' => $apellido, 'cedula_trabajador' => $cedula, 'telefono_trabajador' => $telefono, 'cargo' => $cargo, 'activo' => $activo]]);
+}
 
-    private function getEmployeesAjax(): void
-    {
-        $this->jsonResponse(['success' => true, 'employees' => $this->model->getAll(), 'count' => 0]);
-    }
+function employees_handleDelete(): void
+{
+    $model = new Employee();
+    $id = (int)($_POST['id'] ?? 0);
+    if ($id <= 0) throw new \Exception('ID inválido');
+    if (!$model->exists($id)) throw new \Exception('No existe el trabajador');
+
+    $oldData = $model->getById($id);
+    $model->delete($id);
+    AuditLog::record('DEACTIVATE', 'trabajadores', $id, $oldData, null);
+    jsonResponse(['success' => true, 'message' => 'Trabajador desactivado correctamente', 'employeeId' => $id]);
+}
+
+function employees_getEmployeesAjax(): void
+{
+    $model = new Employee();
+    jsonResponse(['success' => true, 'employees' => $model->getAll(), 'count' => 0]);
 }

@@ -8,11 +8,12 @@ $(document).ready(function () {
 
   const batchValidationRules = {
     id_planta: 'select',
+    id_ubicacion: 'select',
     fecha_siembra: 'fechaFuturaCheck',
     cantidad_inicial: 'cantidad',
     cantidad_actual: 'cantidad',
     estado: 'select',
-    ubicacion: 'ubicacion',
+    origen: 'select',
   };
 
   const showImagePreview = (inputId, previewId) => {
@@ -36,7 +37,7 @@ $(document).ready(function () {
 
   const initDataTable = () => {
     if (typeof SkeletonHelper !== 'undefined') {
-      SkeletonHelper.showTableSkeleton('batchesTable', 5, 9);
+      SkeletonHelper.showTableSkeleton('batchesTable', 5, 12);
     }
     batchesTable = $('#batchesTable').DataTable({
       ajax: {
@@ -63,16 +64,36 @@ $(document).ready(function () {
           render: (data) => data || '<span class="text-muted">—</span>',
         },
         {
+          data: 'ubicacion_nombre',
+          render: (data) => data || '<span class="text-muted">—</span>',
+        },
+        {
           data: 'fecha_siembra',
           render: (data) => data ? Helpers.formatDate(data) : '—',
         },
         { data: 'cantidad_inicial' },
         { data: 'cantidad_actual' },
         {
+          data: 'precio_unitario',
+          render: (data) => data ? Helpers.formatCurrencyBs(data) : '<span class="text-muted">—</span>',
+        },
+        {
           data: 'estado',
           render: (data) => Helpers.getBadge(data),
         },
-        { data: 'ubicacion' },
+        {
+          data: 'categoria',
+          render: (data) => {
+            if (!data) return '<span class="text-muted">—</span>';
+            const colors = { germinado: 'success', en_crecimiento: 'info', para_cosechar: 'warning', maduro: 'danger' };
+            return `<span class="badge bg-${colors[data] || 'secondary'}">${data.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</span>`;
+          },
+        },
+        { data: 'origen' },
+        {
+          data: 'observacion',
+          render: (data) => data || '<span class="text-muted">—</span>',
+        },
         {
           data: null,
           orderable: false,
@@ -82,11 +103,14 @@ $(document).ready(function () {
                 <button class="btn btn-sm btn-outline-primary btn-edit"
                         data-id="${Helpers.escapeHtml(data.id)}"
                         data-id_planta="${Helpers.escapeHtml(data.id_planta)}"
+                        data-id_ubicacion="${Helpers.escapeHtml(data.id_ubicacion)}"
                         data-fecha_siembra="${Helpers.escapeHtml(data.fecha_siembra || '')}"
                         data-cantidad_inicial="${Helpers.escapeHtml(data.cantidad_inicial)}"
                         data-cantidad_actual="${Helpers.escapeHtml(data.cantidad_actual)}"
                         data-estado="${Helpers.escapeHtml(data.estado || '')}"
-                        data-ubicacion="${Helpers.escapeHtml(data.ubicacion || '')}"
+                        data-categoria="${Helpers.escapeHtml(data.categoria || '')}"
+                        data-origen="${Helpers.escapeHtml(data.origen || '')}"
+                        data-observacion="${Helpers.escapeHtml(data.observacion || '')}"
                         data-imagen="${Helpers.escapeHtml(data.imagen || '')}">
                     <i class="fas fa-edit"></i>
                 </button>
@@ -113,7 +137,7 @@ $(document).ready(function () {
           className: 'btn btn-outline-secondary btn-sm',
           action: () => {
             if (typeof SkeletonHelper !== 'undefined') {
-              SkeletonHelper.showTableSkeleton('batchesTable', 5, 9);
+              SkeletonHelper.showTableSkeleton('batchesTable', 5, 12);
             }
             batchesTable.ajax.reload(null, false);
           },
@@ -185,11 +209,14 @@ $(document).ready(function () {
 
     $('#editBatchId').val($btn.data('id'));
     $('#editBatchPlant').val($btn.data('id_planta'));
+    $('#editBatchLocation').val($btn.data('id_ubicacion'));
     $('#editBatchDate').val($btn.data('fecha_siembra'));
     $('#editBatchQtyInit').val($btn.data('cantidad_inicial'));
     $('#editBatchQtyCurr').val($btn.data('cantidad_actual'));
     $('#editBatchStatus').val($btn.data('estado'));
-    $('#editBatchLocation').val($btn.data('ubicacion'));
+    $('#editBatchCategoria').val($btn.data('categoria') || '');
+    $('#editBatchOrigen').val($btn.data('origen'));
+    $('#editBatchObs').val($btn.data('observacion'));
 
     const imagen = $btn.data('imagen');
     const $currentImg = $('#editImageCurrent');

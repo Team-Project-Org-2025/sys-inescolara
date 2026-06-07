@@ -11,7 +11,7 @@ class DashboardData extends Database
 
     public function __construct()
     {
-        parent::__construct();
+        parent::__construct('default');
         $this->secDb = $this->createSecurityConnection();
     }
 
@@ -25,27 +25,30 @@ class DashboardData extends Database
 
         $dsn = sprintf('mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4', $host, $port, $dbname);
 
-        $options = [
+        return new PDO($dsn, $username, $password, [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             PDO::ATTR_EMULATE_PREPARES => false,
-        ];
-
-        return new PDO($dsn, $username, $password, $options);
+        ]);
     }
 
     public function getStats(): array
     {
         $stats = [];
 
-        try { $stats['total_especies'] = (int) $this->db->query("SELECT COUNT(*) FROM especies")->fetchColumn(); } catch (\Throwable $e) { $stats['total_especies'] = 0; }
-        try { $stats['total_plantas'] = (int) $this->db->query("SELECT COUNT(*) FROM plantas")->fetchColumn(); } catch (\Throwable $e) { $stats['total_plantas'] = 0; }
-        try { $stats['total_clientes'] = (int) $this->db->query("SELECT COUNT(*) FROM cliente")->fetchColumn(); } catch (\Throwable $e) { $stats['total_clientes'] = 0; }
-        try { $stats['total_proveedores'] = (int) $this->db->query("SELECT COUNT(*) FROM proveedores")->fetchColumn(); } catch (\Throwable $e) { $stats['total_proveedores'] = 0; }
-        try { $stats['total_trabajadores'] = (int) $this->db->query("SELECT COUNT(*) FROM trabajadores")->fetchColumn(); } catch (\Throwable $e) { $stats['total_trabajadores'] = 0; }
-        try { $stats['total_lotes'] = (int) $this->db->query("SELECT COUNT(*) FROM lote")->fetchColumn(); } catch (\Throwable $e) { $stats['total_lotes'] = 0; }
-        try { $stats['total_insumos'] = (int) $this->db->query("SELECT COUNT(*) FROM insumo")->fetchColumn(); } catch (\Throwable $e) { $stats['total_insumos'] = 0; }
-        try { $stats['total_ventas'] = (int) $this->db->query("SELECT COUNT(*) FROM venta")->fetchColumn(); } catch (\Throwable $e) { $stats['total_ventas'] = 0; }
+        try { $stats['total_especies'] = (int) $this->db->query("SELECT COUNT(*) FROM especie WHERE activo = 1")->fetchColumn(); } catch (\Throwable $e) { $stats['total_especies'] = 0; }
+        try { $stats['total_plantas'] = (int) $this->db->query("SELECT COUNT(*) FROM plantas WHERE activo = 1")->fetchColumn(); } catch (\Throwable $e) { $stats['total_plantas'] = 0; }
+        try { $stats['total_clientes'] = (int) $this->db->query("SELECT COUNT(*) FROM cliente WHERE activo = 1")->fetchColumn(); } catch (\Throwable $e) { $stats['total_clientes'] = 0; }
+        try { $stats['total_proveedores'] = (int) $this->db->query("SELECT COUNT(*) FROM proveedores WHERE activo = 1")->fetchColumn(); } catch (\Throwable $e) { $stats['total_proveedores'] = 0; }
+        try { $stats['total_trabajadores'] = (int) $this->db->query("SELECT COUNT(*) FROM trabajadores WHERE activo = 1")->fetchColumn(); } catch (\Throwable $e) { $stats['total_trabajadores'] = 0; }
+        try { $stats['total_lotes'] = (int) $this->db->query("SELECT COUNT(*) FROM lote WHERE activo = 1")->fetchColumn(); } catch (\Throwable $e) { $stats['total_lotes'] = 0; }
+        try { $stats['total_insumos'] = (int) $this->db->query("SELECT COUNT(*) FROM insumo WHERE activo = 1")->fetchColumn(); } catch (\Throwable $e) { $stats['total_insumos'] = 0; }
+        try { $stats['total_herramientas'] = (int) $this->db->query("SELECT COUNT(*) FROM herramienta WHERE activo = 1")->fetchColumn(); } catch (\Throwable $e) { $stats['total_herramientas'] = 0; }
+        try { $stats['total_precios_vigentes'] = (int) $this->db->query("SELECT COUNT(*) FROM planta_precio_vigente")->fetchColumn(); } catch (\Throwable $e) { $stats['total_precios_vigentes'] = 0; }
+        try {
+            $stmt = $this->db->query("SELECT COUNT(*) FROM movimiento_planta WHERE tipo_movimiento = 'Venta'");
+            $stats['total_ventas'] = (int) $stmt->fetchColumn();
+        } catch (\Throwable $e) { $stats['total_ventas'] = 0; }
 
         return $stats;
     }
@@ -75,8 +78,8 @@ class DashboardData extends Database
             $stmt = $this->db->prepare("
                 SELECT l.id_lote, l.cantidad_actual, l.estado, p.nombre_comun AS planta_nombre
                 FROM lote l
-                LEFT JOIN plantas p ON l.id_planta = p.id_planta
-                WHERE l.cantidad_actual < :threshold
+                LEFT JOIN plantas p ON l.id_planta = p.id_planta AND p.activo = 1
+                WHERE l.cantidad_actual < :threshold AND l.activo = 1
                 ORDER BY l.cantidad_actual ASC
                 LIMIT 10
             ");
@@ -93,10 +96,11 @@ class DashboardData extends Database
     {
         try {
             $stmt = $this->db->prepare("
-                SELECT id_insumo, nombre_insumo, stock_actual, unidad_medida
-                FROM insumo
-                WHERE stock_actual < :threshold
-                ORDER BY stock_actual ASC
+                SELECT i.id_insumo, i.nombre_insumo, i.stock_actual, u.nombre_unidad_medida AS unidad_medida
+                FROM insumo i
+                LEFT JOIN unidad_medida u ON i.id_unidad_medida = u.id_unidad_medida AND u.activo = 1
+                WHERE i.stock_actual < :threshold AND i.activo = 1
+                ORDER BY i.stock_actual ASC
                 LIMIT 10
             ");
             $stmt->bindValue(':threshold', $threshold, PDO::PARAM_INT);
@@ -130,10 +134,11 @@ class DashboardData extends Database
     {
         try {
             return $this->db->query("
-                SELECT e.nombre_comun AS especie, COUNT(p.id_planta) AS total_plantas
-                FROM especies e
-                LEFT JOIN plantas p ON p.id_categoria = e.id_especie
-                GROUP BY e.id_especie, e.nombre_comun
+                SELECT e.nombre_especie AS especie, COUNT(p.id_planta) AS total_plantas
+                FROM especie e
+                LEFT JOIN plantas p ON p.id_especie = e.id_especie AND p.activo = 1
+                WHERE e.activo = 1
+                GROUP BY e.id_especie, e.nombre_especie
                 ORDER BY total_plantas DESC
             ")->fetchAll();
         } catch (\Throwable $e) {
@@ -148,6 +153,7 @@ class DashboardData extends Database
             return $this->db->query("
                 SELECT l.estado, COUNT(*) AS total_lotes, SUM(l.cantidad_actual) AS total_plantas
                 FROM lote l
+                WHERE l.activo = 1
                 GROUP BY l.estado
                 ORDER BY total_lotes DESC
             ")->fetchAll();
@@ -171,6 +177,7 @@ class DashboardData extends Database
                     COUNT(*) AS total_lotes,
                     SUM(l.cantidad_actual) AS total_plantas
                 FROM lote l
+                WHERE l.activo = 1
                 GROUP BY nivel_stock
                 ORDER BY FIELD(nivel_stock, 'Alto', 'Medio', 'Bajo', 'Sin stock')
             ")->fetchAll();
@@ -184,9 +191,11 @@ class DashboardData extends Database
     {
         try {
             return $this->db->query("
-                SELECT id_insumo, nombre_insumo, stock_actual, unidad_medida, costo_unitario_actual
-                FROM insumo
-                ORDER BY stock_actual ASC
+                SELECT i.id_insumo, i.nombre_insumo, i.stock_actual, u.nombre_unidad_medida AS unidad_medida, i.costo_unitario_actual
+                FROM insumo i
+                LEFT JOIN unidad_medida u ON i.id_unidad_medida = u.id_unidad_medida AND u.activo = 1
+                WHERE i.activo = 1
+                ORDER BY i.stock_actual ASC
             ")->fetchAll();
         } catch (\Throwable $e) {
             error_log('Error en reportSupplyStock: ' . $e->getMessage());
@@ -198,10 +207,13 @@ class DashboardData extends Database
     {
         try {
             return $this->db->query("
-                SELECT v.id_venta, c.nombre_cliente, v.monto_total, v.fecha_venta
-                FROM venta v
-                LEFT JOIN cliente c ON v.id_cliente = c.id_cliente
-                ORDER BY v.fecha_venta DESC
+                SELECT mp.id_movimiento_planta, c.nombre_cliente, mpd.sub_total AS monto_total, mp.fecha_movimiento AS fecha_venta
+                FROM movimiento_planta mp
+                LEFT JOIN cliente c ON mp.id_cliente = c.id_cliente AND c.activo = 1
+                LEFT JOIN movimiento_planta_detalle mpd ON mp.id_movimiento_planta = mpd.id_movimiento_planta
+                WHERE mp.tipo_movimiento = 'Venta'
+                GROUP BY mp.id_movimiento_planta
+                ORDER BY mp.fecha_movimiento DESC
                 LIMIT 100
             ")->fetchAll();
         } catch (\Throwable $e) {

@@ -39,8 +39,8 @@ include_once __DIR__ . '/../common/links.php';
                         <table id="speciesTable" class="table table-striped table-hover w-100">
                             <thead>
                                 <tr>
-                                    <th>Nombre Común</th>
-                                    <th>Nombre Técnico</th>
+                                    <th>Nombre de la Especie</th>
+                                    <th>Descripción</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
@@ -63,12 +63,12 @@ include_once __DIR__ . '/../common/links.php';
                     </div>
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label class="form-label">Nombre Común</label>
-                            <input type="text" class="form-control" name="nombre_comun" required placeholder="Ej: Rosa, Girasol, Cactus">
+                            <label class="form-label">Nombre de la Especie</label>
+                            <input type="text" class="form-control" name="nombre_especie" required placeholder="Ej: Rosal, Girasol, Cactus">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Nombre Técnico (Científico)</label>
-                            <input type="text" class="form-control" name="nombre_tecnico" placeholder="Ej: Rosa gallica, Helianthus annuus">
+                            <label class="form-label">Descripción</label>
+                            <textarea class="form-control" name="descripcion" rows="2" placeholder="Ej: Arbusto perenne con flores de colores variados"></textarea>
                             <small class="text-muted">Opcional</small>
                         </div>
                     </div>
@@ -93,12 +93,12 @@ include_once __DIR__ . '/../common/links.php';
                     </div>
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label class="form-label">Nombre Común</label>
-                            <input type="text" class="form-control" name="nombre_comun" id="editSpeciesName" required>
+                            <label class="form-label">Nombre de la Especie</label>
+                            <input type="text" class="form-control" name="nombre_especie" id="editSpeciesName" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Nombre Técnico (Científico)</label>
-                            <input type="text" class="form-control" name="nombre_tecnico" id="editSpeciesTecnico" placeholder="Opcional">
+                            <label class="form-label">Descripción</label>
+                            <textarea class="form-control" name="descripcion" id="editSpeciesDescripcion" rows="2" placeholder="Opcional"></textarea>
                         </div>
                     </div>
                     <div class="modal-footer">

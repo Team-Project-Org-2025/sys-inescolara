@@ -41,7 +41,7 @@ function hasPermiso(string $codigo): bool
             </ul>
         </div>
 
-        <?php if (hasPermiso('INVENTARIO_VIEW') || hasPermiso('PLANTAS_VIEW') || hasPermiso('PROVEEDORES_VIEW') || hasPermiso('TRABAJADORES_VIEW') || hasPermiso('INSUMOS_VIEW') || hasPermiso('CLIENTES_VIEW') || hasPermiso('TAREAS_VIEW')): ?>
+        <?php if (hasPermiso('INVENTARIO_VIEW') || hasPermiso('PLANTAS_VIEW') || hasPermiso('PROVEEDORES_VIEW') || hasPermiso('TRABAJADORES_VIEW') || hasPermiso('INSUMOS_VIEW') || hasPermiso('CLIENTES_VIEW') || hasPermiso('TAREAS_VIEW') || hasPermiso('HERRAMIENTAS_VIEW') || hasPermiso('PRECIOS_VIEW') || hasPermiso('RECOLECCION_VIEW')): ?>
         <div class="sidebar-section">
             <span class="sidebar-section-title">Gestión</span>
             <ul class="sidebar-menu">
@@ -139,6 +139,39 @@ function hasPermiso(string $codigo): bool
                     </a>
                 </li>
                 <?php endif; ?>
+                <?php if (hasPermiso('UNIDADES_MEDIDA_VIEW')): ?>
+                <li>
+                    <a href="<?= BASE_URL ?>dashboard/unit-measures" class="sidebar-link <?= ($currentPage ?? '') === 'unit-measures' ? 'active' : '' ?>">
+                        <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="2" x2="12" y2="22"></line>
+                            <polyline points="17 7 12 2 7 7"></polyline>
+                            <polyline points="17 17 12 22 7 17"></polyline>
+                        </svg>
+                        <span>U. Medida</span>
+                    </a>
+                </li>
+                <?php endif; ?>
+                <?php if (hasPermiso('HERRAMIENTAS_VIEW')): ?>
+                <li>
+                    <a href="<?= BASE_URL ?>dashboard/tools" class="sidebar-link <?= ($currentPage ?? '') === 'tools' ? 'active' : '' ?>">
+                        <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+                        </svg>
+                        <span>Herramientas</span>
+                    </a>
+                </li>
+                <?php endif; ?>
+                <?php if (hasPermiso('PRECIOS_VIEW')): ?>
+                <li>
+                    <a href="<?= BASE_URL ?>dashboard/prices" class="sidebar-link <?= ($currentPage ?? '') === 'prices' ? 'active' : '' ?>">
+                        <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="1" x2="12" y2="23"></line>
+                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                        </svg>
+                        <span>Precios</span>
+                    </a>
+                </li>
+                <?php endif; ?>
                 <?php if (hasPermiso('CLIENTES_VIEW')): ?>
                 <li>
                     <a href="<?= BASE_URL ?>dashboard/clients" class="sidebar-link <?= ($currentPage ?? '') === 'clients' ? 'active' : '' ?>">
@@ -163,6 +196,19 @@ function hasPermiso(string $codigo): bool
                             <path d="M7 14v.01"></path>
                         </svg>
                         <span>Tareas</span>
+                    </a>
+                </li>
+                <?php endif; ?>
+                <?php if (hasPermiso('RECOLECCION_VIEW')): ?>
+                <li>
+                    <a href="<?= BASE_URL ?>dashboard/seed-collection" class="sidebar-link <?= ($currentPage ?? '') === 'seed-collection' ? 'active' : '' ?>">
+                        <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 22V11"></path>
+                            <path d="M12 14c2.5-2.5 6-3 7.5-1.5s1 5-1.5 7.5"></path>
+                            <path d="M12 11c-2.5-2.5-6-3-7.5-1.5s-1 5 1.5 7.5"></path>
+                            <circle cx="9" cy="9" r="2"></circle>
+                        </svg>
+                        <span>Recolección</span>
                     </a>
                 </li>
                 <?php endif; ?>
@@ -238,6 +284,15 @@ function hasPermiso(string $codigo): bool
                             <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                         </svg>
                         <span>Usuarios</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="<?= BASE_URL ?>dashboard/roles" class="sidebar-link <?= ($currentPage ?? '') === 'roles' ? 'active' : '' ?>">
+                        <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                        <span>Roles</span>
                     </a>
                 </li>
                 <li>

@@ -1,137 +1,123 @@
 <?php
 
-namespace SysInescolara\controllers;
+require_once __DIR__ . '/controller_helpers.php';
 
 use SysInescolara\models\Backup;
 use SysInescolara\models\AuditLog;
-use SysInescolara\traits\ResponseTrait;
-use SysInescolara\traits\PermissionTrait;
 
-class BackupsController
+function index(): void
 {
-    use ResponseTrait, PermissionTrait;
-
-    private Backup $model;
-
-    public function __construct()
-    {
-        if (session_status() === PHP_SESSION_NONE) session_start();
-        $this->model = new Backup();
-    }
-
-    public function index(): void
-    {
-        $this->checkModuleAuth();
-        $this->handleAjaxRequest();
-
-        $view = ROOT_PATH . 'app/views/dashboard/backups.php';
-        if (!is_file($view)) {
-            http_response_code(500);
-            echo 'Vista de respaldos no encontrada.';
-            return;
-        }
-        require $view;
-    }
-
-    public function get_backups(): void { $this->checkModuleAuth(); $this->getBackupsAjax(); }
-    public function create_backup(): void { $this->checkModuleAuth(); $this->createBackupAjax(); }
-    public function restore_backup(): void { $this->checkModuleAuth(); $this->restoreBackupAjax(); }
-    public function delete_backup(): void { $this->checkModuleAuth(); $this->deleteBackupAjax(); }
-
-    private function handleAjaxRequest(): void
-    {
-        $action = $_GET['action'] ?? '';
-        if ($action === '') return;
-
+    checkModuleAuth();
+    $action = $_GET['action'] ?? '';
+    if ($action !== '') {
         try {
-            if ($this->isAjaxRequest()) {
-                header('Content-Type: application/json; charset=utf-8');
+            if (isAjaxRequest()) {
                 match ($_SERVER['REQUEST_METHOD'] . '_' . $action) {
-                    'GET_get_backups'      => $this->getBackupsAjax(),
-                    'POST_create_backup'   => $this->createBackupAjax(),
-                    'POST_restore_backup'  => $this->restoreBackupAjax(),
-                    'POST_delete_backup'   => $this->deleteBackupAjax(),
-                    default                => $this->jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
+                    'GET_get_backups'      => backups_getBackupsAjax(),
+                    'POST_create_backup'   => backups_createBackupAjax(),
+                    'POST_restore_backup'  => backups_restoreBackupAjax(),
+                    'POST_delete_backup'   => backups_deleteBackupAjax(),
+                    default                => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
                 };
             } elseif ($_SERVER['REQUEST_METHOD'] === 'GET' && $action === 'download_backup') {
-                $this->downloadBackup();
+                checkPermisoOrFail('BACKUPS_CREATE');
+                backups_downloadBackup();
             }
         } catch (\Exception $e) {
-            $this->handleError($e, $this->isAjaxRequest());
+            handleError($e, isAjaxRequest());
         }
+        return;
     }
 
-    private function getBackupsAjax(): void
-    {
-        $backups = $this->model->list();
-        $this->jsonResponse(['success' => true, 'backups' => $backups, 'count' => count($backups)]);
+    $view = ROOT_PATH . 'app/views/dashboard/backups.php';
+    if (!is_file($view)) {
+        http_response_code(500);
+        echo 'Vista de respaldos no encontrada.';
+        return;
     }
+    require $view;
+}
 
-    private function createBackupAjax(): void
-    {
-        $dbConfigs = $this->model->getDbConfigs();
-        $results = [];
-        foreach ($dbConfigs as $key => $config) {
-            $result = $this->model->create($config['host'], $config['port'], $config['name'], $config['user'], $config['pass'], $config['label']);
-            if (!$result['success']) {
-                $this->jsonResponse(['success' => false, 'message' => "Error al respaldar {$config['label']}: {$result['message']}"]);
-                return;
-            }
-            $results[] = $result;
-        }
-        AuditLog::record('CREATE', 'backups', null, null, ['files' => array_map(fn($r) => $r['filename'], $results)]);
-        $totalSize = array_sum(array_map(fn($r) => $r['size'], $results));
-        $this->jsonResponse(['success' => true, 'message' => 'Respaldo completo creado exitosamente.', 'files' => array_map(fn($r) => $r['filename'], $results), 'total_size' => $totalSize]);
-    }
+function get_backups(): void { checkModuleAuth(); backups_getBackupsAjax(); }
+function create_backup(): void { checkModuleAuth(); checkPermisoOrFail('BACKUPS_CREATE'); backups_createBackupAjax(); }
+function restore_backup(): void { checkModuleAuth(); checkPermisoOrFail('BACKUPS_DELETE'); backups_restoreBackupAjax(); }
+function delete_backup(): void { checkModuleAuth(); checkPermisoOrFail('BACKUPS_DELETE'); backups_deleteBackupAjax(); }
 
-    private function restoreBackupAjax(): void
-    {
-        $filename = $_POST['filename'] ?? '';
-        if ($filename === '') {
-            $this->jsonResponse(['success' => false, 'message' => 'Nombre de archivo requerido.'], 400);
+function backups_getBackupsAjax(): void
+{
+    $model = new Backup();
+    $backups = $model->list();
+    jsonResponse(['success' => true, 'backups' => $backups, 'count' => count($backups)]);
+}
+
+function backups_createBackupAjax(): void
+{
+    $model = new Backup();
+    $dbConfigs = $model->getDbConfigs();
+    $results = [];
+    foreach ($dbConfigs as $key => $config) {
+        $result = $model->create($config['host'], $config['port'], $config['name'], $config['user'], $config['pass'], $config['label']);
+        if (!$result['success']) {
+            jsonResponse(['success' => false, 'message' => "Error al respaldar {$config['label']}: {$result['message']}"]);
             return;
         }
-        $result = $this->model->restore($filename);
-        if ($result['success']) {
-            AuditLog::record('UPDATE', 'backups', null, null, ['action' => 'restore', 'file' => $filename, 'result' => 'success']);
-        }
-        $this->jsonResponse($result);
+        $results[] = $result;
     }
+    AuditLog::record('CREATE', 'backups', null, null, ['files' => array_map(fn($r) => $r['filename'], $results)]);
+    $totalSize = array_sum(array_map(fn($r) => $r['size'], $results));
+    jsonResponse(['success' => true, 'message' => 'Respaldo completo creado exitosamente.', 'files' => array_map(fn($r) => $r['filename'], $results), 'total_size' => $totalSize]);
+}
 
-    private function deleteBackupAjax(): void
-    {
-        $filename = $_POST['filename'] ?? '';
-        if ($filename === '') {
-            $this->jsonResponse(['success' => false, 'message' => 'Nombre de archivo requerido.'], 400);
-            return;
-        }
-        if ($this->model->delete($filename)) {
-            AuditLog::record('DELETE', 'backups', null, null, ['file' => $filename]);
-            $this->jsonResponse(['success' => true, 'message' => 'Respaldo eliminado correctamente.']);
-        } else {
-            $this->jsonResponse(['success' => false, 'message' => 'No se pudo eliminar el archivo.'], 500);
-        }
+function backups_restoreBackupAjax(): void
+{
+    $model = new Backup();
+    $filename = $_POST['filename'] ?? '';
+    if ($filename === '') {
+        jsonResponse(['success' => false, 'message' => 'Nombre de archivo requerido.'], 400);
+        return;
     }
+    $result = $model->restore($filename);
+    if ($result['success']) {
+        AuditLog::record('UPDATE', 'backups', null, null, ['action' => 'restore', 'file' => $filename, 'result' => 'success']);
+    }
+    jsonResponse($result);
+}
 
-    private function downloadBackup(): void
-    {
-        $filename = $_GET['file'] ?? '';
-        if ($filename === '') {
-            http_response_code(400);
-            echo 'Nombre de archivo requerido.';
-            exit();
-        }
-        $filepath = $this->model->getFilePath($filename);
-        if ($filepath === null) {
-            http_response_code(404);
-            echo 'Archivo no encontrado.';
-            exit();
-        }
-        header('Content-Type: application/sql');
-        header('Content-Disposition: attachment; filename="' . basename($filepath) . '"');
-        header('Content-Length: ' . filesize($filepath));
-        header('X-Robots-Tag: noindex');
-        readfile($filepath);
+function backups_deleteBackupAjax(): void
+{
+    $model = new Backup();
+    $filename = $_POST['filename'] ?? '';
+    if ($filename === '') {
+        jsonResponse(['success' => false, 'message' => 'Nombre de archivo requerido.'], 400);
+        return;
+    }
+    if ($model->delete($filename)) {
+        AuditLog::record('DELETE', 'backups', null, null, ['file' => $filename]);
+        jsonResponse(['success' => true, 'message' => 'Respaldo eliminado correctamente.']);
+    } else {
+        jsonResponse(['success' => false, 'message' => 'No se pudo eliminar el archivo.'], 500);
+    }
+}
+
+function backups_downloadBackup(): void
+{
+    $model = new Backup();
+    $filename = $_GET['file'] ?? '';
+    if ($filename === '') {
+        http_response_code(400);
+        echo 'Nombre de archivo requerido.';
         exit();
     }
+    $filepath = $model->getFilePath($filename);
+    if ($filepath === null) {
+        http_response_code(404);
+        echo 'Archivo no encontrado.';
+        exit();
+    }
+    header('Content-Type: application/sql');
+    header('Content-Disposition: attachment; filename="' . basename($filepath) . '"');
+    header('Content-Length: ' . filesize($filepath));
+    header('X-Robots-Tag: noindex');
+    readfile($filepath);
+    exit();
 }

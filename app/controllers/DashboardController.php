@@ -79,6 +79,16 @@ function asistente(): void
 function inventario(): void
 {
     dashboardCheckPermiso('INVENTARIO_VIEW');
+
+    require_once ROOT_PATH . 'vendor/autoload.php';
+    $supplyModel = new \SysInescolara\models\Supplies();
+    $supplies = $supplyModel->getAll();
+    $employeeModel = new \SysInescolara\models\Employee();
+    $employees = $employeeModel->getAll();
+
+    $permisos = $_SESSION['user_permisos'] ?? [];
+    $showAdjustBtn = in_array('INVENTARIO_ADJUST', $permisos, true);
+
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'inventario.php';
 
@@ -154,6 +164,8 @@ function batches(): void
     require_once ROOT_PATH . 'vendor/autoload.php';
     $plantModel = new \SysInescolara\models\Plant();
     $plants = $plantModel->getAll();
+    $locationModel = new \SysInescolara\models\Location();
+    $locations = $locationModel->getAll();
 
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'batches.php';
@@ -185,6 +197,11 @@ function suppliers(): void
 function supplies(): void
 {
     dashboardCheckPermiso('INSUMOS_VIEW');
+
+    require_once ROOT_PATH . 'vendor/autoload.php';
+    $unidadMedidaModel = new \SysInescolara\models\UnidadMedida();
+    $unidades = $unidadMedidaModel->getAll();
+
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'supplies.php';
 
@@ -200,6 +217,14 @@ function supplies(): void
 function tasks(): void
 {
     dashboardCheckPermiso('TAREAS_VIEW');
+    $employeeModel = new \SysInescolara\models\Employee();
+    $trabajadores = $employeeModel->getAll();
+    $batchModel = new \SysInescolara\models\Batch();
+    $lotes = $batchModel->getAll();
+    $suppliesModel = new \SysInescolara\models\Supplies();
+    $insumos = $suppliesModel->getAll();
+    $toolModel = new \SysInescolara\models\Tool();
+    $herramientas = $toolModel->getAll();
     $view = ROOT_PATH . 'app/views/dashboard/task.php';
     if (!is_file($view)) {
         http_response_code(500);
@@ -376,6 +401,25 @@ function backups(): void
 
     require $view;
 }
+function roles(): void
+{
+    dashboardCheckPermiso('USUARIOS_MANAGE');
+
+    require_once ROOT_PATH . 'vendor/autoload.php';
+    $roleModel = new \SysInescolara\models\Role();
+    $allPermisos = $roleModel->getAllPermissions();
+
+    $view = ROOT_PATH . 'app/views/dashboard/roles.php';
+
+    if (!is_file($view)) {
+        http_response_code(500);
+        echo 'Vista de roles no encontrada.';
+        return;
+    }
+
+    require $view;
+}
+
 function locations(): void
 {
     dashboardCheckPermiso('UBICACIONES_VIEW');
@@ -386,6 +430,84 @@ function locations(): void
     if (!is_file($view)) {
         http_response_code(500);
         echo 'Vista de ubicaciones no encontrada.';
+        return;
+    }
+
+    require $view;
+}
+
+function tools(): void
+{
+    dashboardCheckPermiso('HERRAMIENTAS_VIEW');
+
+    $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
+        . 'dashboard' . DIRECTORY_SEPARATOR . 'tools.php';
+
+    if (!is_file($view)) {
+        http_response_code(500);
+        echo 'Vista de herramientas no encontrada.';
+        return;
+    }
+
+    require $view;
+}
+
+function prices(): void
+{
+    dashboardCheckPermiso('PRECIOS_VIEW');
+
+    require_once ROOT_PATH . 'vendor/autoload.php';
+
+    $plantModel = new \SysInescolara\models\Plant();
+    $plants = $plantModel->getAll();
+
+    $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
+        . 'dashboard' . DIRECTORY_SEPARATOR . 'prices.php';
+
+    if (!is_file($view)) {
+        http_response_code(500);
+        echo 'Vista de precios no encontrada.';
+        return;
+    }
+
+    require $view;
+}
+
+function unitMeasures(): void
+{
+    dashboardCheckPermiso('UNIDADES_MEDIDA_VIEW');
+
+    $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
+        . 'dashboard' . DIRECTORY_SEPARATOR . 'unit-measures.php';
+
+    if (!is_file($view)) {
+        http_response_code(500);
+        echo 'Vista de unidades de medida no encontrada.';
+        return;
+    }
+
+    require $view;
+}
+
+function seedcollection(): void
+{
+    dashboardCheckPermiso('RECOLECCION_VIEW');
+
+    require_once ROOT_PATH . 'vendor/autoload.php';
+    $locationModel = new \SysInescolara\models\Location();
+    $ubicaciones = $locationModel->getAll();
+    $employeeModel = new \SysInescolara\models\Employee();
+    $trabajadores = $employeeModel->getAll();
+    $plantModel = new \SysInescolara\models\Plant();
+    $plantas = $plantModel->getAll();
+    $unidadMedidaModel = new \SysInescolara\models\UnidadMedida();
+    $unidades = $unidadMedidaModel->getAll();
+
+    $view = ROOT_PATH . 'app/views/dashboard/seed-collection.php';
+
+    if (!is_file($view)) {
+        http_response_code(500);
+        echo 'Vista de recolección no encontrada.';
         return;
     }
 

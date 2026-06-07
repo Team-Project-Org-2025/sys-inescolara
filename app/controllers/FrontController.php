@@ -4,7 +4,7 @@
 
 namespace SysInescolara\controllers;
 
-
+require_once __DIR__ . '/controller_helpers.php';
 
 use Exception;
 
@@ -152,23 +152,10 @@ class FrontController
 
         http_response_code(404);
 
-
-
-        $isAjax = $isAjax || (
-
-            !empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&
-
-            strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest'
-
-        );
-
-
+        $isAjax = $isAjax || isAjaxRequest();
 
         if ($isAjax) {
-
-            header('Content-Type: application/json');
-
-            echo json_encode(['success' => false, 'message' => $message]);
+            jsonResponse(['success' => false, 'message' => $message], 404);
         } else {
 
             echo "<!DOCTYPE html>

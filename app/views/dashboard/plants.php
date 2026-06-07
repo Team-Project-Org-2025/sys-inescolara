@@ -75,6 +75,8 @@ include_once __DIR__ . '/../common/links.php';
                                     <th>Nombre Común</th>
                                     <th>Nombre Técnico</th>
                                     <th>Especie</th>
+                                    <th>Stock en Lotes</th>
+                                    <th>Precio Vigente</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
@@ -109,7 +111,7 @@ include_once __DIR__ . '/../common/links.php';
                             <select class="form-select" name="especie_id">
                                 <option value="">Sin especie</option>
                                 <?php foreach ($species as $s): ?>
-                                <option value="<?= $s['id'] ?>"><?= htmlspecialchars($s['nombre_comun']) ?></option>
+                                <option value="<?= $s['id'] ?>"><?= htmlspecialchars($s['nombre_especie']) ?></option>
                                 <?php endforeach; ?>
                             </select>
                             <small class="text-muted">Opcional. Selecciona la especie a la que pertenece.</small>
@@ -156,7 +158,7 @@ include_once __DIR__ . '/../common/links.php';
                             <select class="form-select" name="especie_id" id="editPlantSpecies">
                                 <option value="">Sin especie</option>
                                 <?php foreach ($species as $s): ?>
-                                <option value="<?= $s['id'] ?>"><?= htmlspecialchars($s['nombre_comun']) ?></option>
+                                <option value="<?= $s['id'] ?>"><?= htmlspecialchars($s['nombre_especie']) ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>

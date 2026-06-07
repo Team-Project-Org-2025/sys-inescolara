@@ -22,7 +22,8 @@ CREATE TABLE `plantas` (
   `id_especie` int NOT NULL,
   `nombre_tecnico` varchar(150) NOT NULL,
   `nombre_comun` varchar(150),
-  `cantidad_total` int NOT NULL DEFAULT 0
+  `cantidad_total` int NOT NULL DEFAULT 0,
+  `imagen` varchar(255)
 );
 
 CREATE TABLE `planta_precio_vigente` (
@@ -37,8 +38,10 @@ CREATE TABLE `lote` (
   `fecha_siembra` date NOT NULL,
   `cantidad_inicial` int NOT NULL,
   `cantidad_actual` int NOT NULL,
+  `estado` varchar(50) DEFAULT 'Activo',
   `origen` varchar(30) NOT NULL,
-  `observacion` varchar(255)
+  `observacion` varchar(255),
+  `imagen` varchar(255)
 );
 
 CREATE TABLE `calculo_precio` (

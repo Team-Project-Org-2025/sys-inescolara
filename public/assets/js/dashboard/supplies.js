@@ -1,13 +1,21 @@
 import * as Helpers from '../utils/helpers.js';
 import * as Ajax from '../utils/ajax-handler.js';
+import { setupRealTimeValidation, validateForm } from '../utils/validation.js';
 
 $(document).ready(function () {
   const baseUrl = `${window.BASE_URL || '/'}supplies`;
   let suppliesTable = null;
 
+  const supplyRules = {
+    nombre_insumo: 'nombre',
+    id_unidad_medida: 'select',
+    stock_actual: 'precio',
+    costo_unitario_actual: 'precio'
+  };
+
   const initDataTable = () => {
     if (typeof SkeletonHelper !== 'undefined') {
-      SkeletonHelper.showTableSkeleton('suppliesTable', 5, 4);
+      SkeletonHelper.showTableSkeleton('suppliesTable', 5, 6);
     }
     suppliesTable = $('#suppliesTable').DataTable({
       ajax: {
@@ -19,7 +27,14 @@ $(document).ready(function () {
       },
       columns: [
         { data: 'nombre_insumo' },
-        { data: 'unidad_medida' },
+        {
+          data: 'categoria',
+          render: (data) => data || '<span class="text-muted">—</span>',
+        },
+        {
+          data: 'nombre_unidad_medida',
+          render: (data) => data || '<span class="text-muted">—</span>',
+        },
         { 
           data: 'stock_actual',
           render: (data) => parseFloat(data).toFixed(2)
@@ -37,7 +52,8 @@ $(document).ready(function () {
                 <button class="btn btn-sm btn-outline-primary btn-edit"
                         data-id="${Helpers.escapeHtml(data.id_insumo)}"
                         data-nombre_insumo="${Helpers.escapeHtml(data.nombre_insumo)}"
-                        data-unidad_medida="${Helpers.escapeHtml(data.unidad_medida)}"
+                        data-id_unidad_medida="${Helpers.escapeHtml(data.id_unidad_medida)}"
+                        data-categoria="${Helpers.escapeHtml(data.categoria || '')}"
                         data-stock_actual="${Helpers.escapeHtml(data.stock_actual)}"
                         data-costo_unitario_actual="${Helpers.escapeHtml(data.costo_unitario_actual)}">
                     <i class="fas fa-edit"></i> Editar
@@ -65,7 +81,7 @@ $(document).ready(function () {
           className: 'btn btn-outline-secondary btn-sm',
           action: () => {
             if (typeof SkeletonHelper !== 'undefined') {
-              SkeletonHelper.showTableSkeleton('suppliesTable', 5, 4);
+              SkeletonHelper.showTableSkeleton('suppliesTable', 5, 6);
             }
             suppliesTable.ajax.reload(null, false);
           },
@@ -86,6 +102,7 @@ $(document).ready(function () {
   // Guardar Nuevo Insumo
   $('#addSupplyForm').on('submit', function (e) {
     e.preventDefault();
+    if (!validateForm($(this), supplyRules)) return;
 
     const formData = new FormData(this);
 
@@ -124,7 +141,8 @@ $(document).ready(function () {
     // Mapeo exacto a los inputs del Modal de Edición
     $('#editSupplyId').val($btn.data('id'));
     $('#editSupplyName').val($btn.data('nombre_insumo'));
-    $('#editSupplyUnit').val($btn.data('unidad_medida'));
+    $('#editSupplyUnit').val($btn.data('id_unidad_medida'));
+    $('#editSupplyCat').val($btn.data('categoria'));
     $('#editSupplyStock').val($btn.data('stock_actual'));
     $('#editSupplyCost').val($btn.data('costo_unitario_actual'));
 
@@ -134,6 +152,7 @@ $(document).ready(function () {
   // Procesar Edición de Insumo
   $('#editSupplyForm').on('submit', function (e) {
     e.preventDefault();
+    if (!validateForm($(this), supplyRules, true)) return;
 
     const formData = new FormData(this);
 
@@ -191,6 +210,9 @@ $(document).ready(function () {
     const $form = $(this).find('form');
     Helpers.resetForm($form);
   });
+
+  setupRealTimeValidation($('#addSupplyForm'), supplyRules);
+  setupRealTimeValidation($('#editSupplyForm'), supplyRules, true);
 
   initDataTable();
 });
