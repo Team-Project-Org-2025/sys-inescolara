@@ -10,7 +10,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 if (!defined('ROOT_PATH')) {
-    define('ROOT_PATH', dirname(__DIR__, 3) . '/');
+    define('ROOT_PATH', dirname(__DIR__, 2) . '/');
 }
 
 $GLOBALS['userModel'] = new User();

@@ -17,7 +17,7 @@ class Supplies extends Database implements ReadableInterface, DeletableInterface
 
     public function getAll(): array {
         try {
-            $sql = "SELECT i.id_insumo, i.nombre_insumo, i.id_unidad_medida, i.categoria, i.stock_actual, i.costo_unitario_actual, i.activo,
+            $sql = "SELECT i.id_insumo AS id, i.id_insumo, i.nombre_insumo, i.id_unidad_medida, i.categoria, i.stock_actual, i.costo_unitario_actual, i.activo,
                            u.nombre_unidad_medida, u.simbolo
                     FROM insumo i
                     LEFT JOIN unidad_medida u ON i.id_unidad_medida = u.id_unidad_medida AND u.activo = 1

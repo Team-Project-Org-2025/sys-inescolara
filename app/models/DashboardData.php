@@ -11,7 +11,7 @@ class DashboardData extends Database
 
     public function __construct()
     {
-        parent::__construct();
+        parent::__construct('default');
         $this->secDb = $this->createSecurityConnection();
     }
 
@@ -25,13 +25,11 @@ class DashboardData extends Database
 
         $dsn = sprintf('mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4', $host, $port, $dbname);
 
-        $options = [
+        return new PDO($dsn, $username, $password, [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             PDO::ATTR_EMULATE_PREPARES => false,
-        ];
-
-        return new PDO($dsn, $username, $password, $options);
+        ]);
     }
 
     public function getStats(): array

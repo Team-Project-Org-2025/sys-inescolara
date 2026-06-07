@@ -29,7 +29,7 @@ function index(): void
     require $view;
 }
 
-function get_auditlogs(): void { checkModuleAuth(); auditlog_getAuditLogsAjax(); }
+function get_auditlogs(): void { checkModuleAuth(); checkPermisoOrFail('AUDIT_VIEW'); auditlog_getAuditLogsAjax(); }
 
 function auditlog_getAuditLogsAjax(): void
 {
