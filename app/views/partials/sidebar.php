@@ -41,7 +41,7 @@ function hasPermiso(string $codigo): bool
             </ul>
         </div>
 
-        <?php if (hasPermiso('INVENTARIO_VIEW') || hasPermiso('PLANTAS_VIEW') || hasPermiso('PROVEEDORES_VIEW') || hasPermiso('TRABAJADORES_VIEW') || hasPermiso('INSUMOS_VIEW') || hasPermiso('CLIENTES_VIEW') || hasPermiso('TAREAS_VIEW') || hasPermiso('HERRAMIENTAS_VIEW') || hasPermiso('PRECIOS_VIEW')): ?>
+        <?php if (hasPermiso('INVENTARIO_VIEW') || hasPermiso('PLANTAS_VIEW') || hasPermiso('PROVEEDORES_VIEW') || hasPermiso('TRABAJADORES_VIEW') || hasPermiso('INSUMOS_VIEW') || hasPermiso('CLIENTES_VIEW') || hasPermiso('TAREAS_VIEW') || hasPermiso('HERRAMIENTAS_VIEW') || hasPermiso('PRECIOS_VIEW') || hasPermiso('RECOLECCION_VIEW')): ?>
         <div class="sidebar-section">
             <span class="sidebar-section-title">Gestión</span>
             <ul class="sidebar-menu">
