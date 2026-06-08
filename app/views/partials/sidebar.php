@@ -41,7 +41,7 @@ function hasPermiso(string $codigo): bool
             </ul>
         </div>
 
-        <?php if (hasPermiso('INVENTARIO_VIEW') || hasPermiso('PLANTAS_VIEW') || hasPermiso('PROVEEDORES_VIEW') || hasPermiso('TRABAJADORES_VIEW') || hasPermiso('INSUMOS_VIEW') || hasPermiso('CLIENTES_VIEW') || hasPermiso('TAREAS_VIEW') || hasPermiso('HERRAMIENTAS_VIEW') || hasPermiso('PRECIOS_VIEW') || hasPermiso('RECOLECCION_VIEW') || hasPermiso('TRAZABILIDAD_VIEW') || hasPermiso('MERMAS_VIEW')): ?>
+        <?php if (hasPermiso('INVENTARIO_VIEW') || hasPermiso('PLANTAS_VIEW') || hasPermiso('PROVEEDORES_VIEW') || hasPermiso('COMPRAS_VIEW') || hasPermiso('CUENTAS_VIEW') || hasPermiso('TRABAJADORES_VIEW') || hasPermiso('INSUMOS_VIEW') || hasPermiso('CLIENTES_VIEW') || hasPermiso('TAREAS_VIEW') || hasPermiso('HERRAMIENTAS_VIEW') || hasPermiso('PRECIOS_VIEW') || hasPermiso('RECOLECCION_VIEW') || hasPermiso('TRAZABILIDAD_VIEW') || hasPermiso('MERMAS_VIEW')): ?>
         <div class="sidebar-section">
             <span class="sidebar-section-title">Gestión</span>
             <ul class="sidebar-menu">
@@ -111,6 +111,29 @@ function hasPermiso(string $codigo): bool
                             <circle cx="18.5" cy="18.5" r="2.5"></circle>
                         </svg>
                         <span>Proveedores</span>
+                    </a>
+                </li>
+                <?php endif; ?>
+                <?php if (hasPermiso('COMPRAS_VIEW')): ?>
+                <li>
+                    <a href="<?= BASE_URL ?>dashboard/compras" class="sidebar-link <?= ($currentPage ?? '') === 'compras' ? 'active' : '' ?>">
+                        <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <path d="M16 10a4 4 0 0 1-8 0"></path>
+                        </svg>
+                        <span>Compras</span>
+                    </a>
+                </li>
+                <?php endif; ?>
+                <?php if (hasPermiso('CUENTAS_VIEW')): ?>
+                <li>
+                    <a href="<?= BASE_URL ?>dashboard/cuentas-pagar" class="sidebar-link <?= ($currentPage ?? '') === 'cuentas-pagar' ? 'active' : '' ?>">
+                        <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                            <line x1="1" y1="10" x2="23" y2="10"></line>
+                        </svg>
+                        <span>Cuentas x Pagar</span>
                     </a>
                 </li>
                 <?php endif; ?>
