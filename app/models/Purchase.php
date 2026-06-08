@@ -14,7 +14,54 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
         parent::__construct();
     }
 
+    // ============================================================
+    //  Interfaces (wrappers)
+    // ============================================================
+
     public function getAll(): array
+    {
+        return $this->obtenerTodas();
+    }
+
+    public function getById(int $id): ?array
+    {
+        return $this->obtenerPorId($id);
+    }
+
+    public function delete(int $id): bool
+    {
+        return $this->eliminar($id);
+    }
+
+    public function exists(int $id): bool
+    {
+        return $this->existe($id);
+    }
+
+    // ============================================================
+    //  Transacciones
+    // ============================================================
+
+    public function iniciarTransaccion(): bool
+    {
+        return $this->db->beginTransaction();
+    }
+
+    public function confirmarTransaccion(): bool
+    {
+        return $this->db->commit();
+    }
+
+    public function revertirTransaccion(): bool
+    {
+        return $this->db->rollBack();
+    }
+
+    // ============================================================
+    //  Consultas
+    // ============================================================
+
+    public function obtenerTodas(): array
     {
         try {
             $sql = "SELECT
@@ -31,12 +78,12 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
             $stmt = $this->db->query($sql);
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
         } catch (\Throwable $e) {
-            error_log('Error en Purchase::getAll: ' . $e->getMessage());
+            error_log('Error en Purchase::obtenerTodas: ' . $e->getMessage());
             return [];
         }
     }
 
-    public function getById(int $id): ?array
+    public function obtenerPorId(int $id): ?array
     {
         try {
             $stmt = $this->db->prepare("
@@ -48,12 +95,12 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
             $stmt->execute([':id' => $id]);
             return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
         } catch (\Throwable $e) {
-            error_log('Error en Purchase::getById: ' . $e->getMessage());
+            error_log('Error en Purchase::obtenerPorId: ' . $e->getMessage());
             return null;
         }
     }
 
-    public function getDetails(int $idCompra): array
+    public function obtenerDetalles(int $idCompra): array
     {
         try {
             $stmt = $this->db->prepare("
@@ -75,19 +122,23 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
             $stmt->execute([':id_compra' => $idCompra]);
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
         } catch (\Throwable $e) {
-            error_log('Error en Purchase::getDetails: ' . $e->getMessage());
+            error_log('Error en Purchase::obtenerDetalles: ' . $e->getMessage());
             return [];
         }
     }
 
-    public function exists(int $id): bool
+    public function existe(int $id): bool
     {
         $stmt = $this->db->prepare("SELECT COUNT(*) FROM compra WHERE id_compra = :id AND activo = 1");
         $stmt->execute([':id' => $id]);
         return $stmt->fetchColumn() > 0;
     }
 
-    public function add(
+    // ============================================================
+    //  CRUD
+    // ============================================================
+
+    public function agregar(
         int $idProveedor,
         string $fechaCompra,
         string $tipoComprobante,
@@ -117,7 +168,7 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
         ]);
     }
 
-    public function update(
+    public function actualizar(
         int $id,
         int $idProveedor,
         string $fechaCompra,
@@ -128,7 +179,7 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
         float $total,
         ?string $observacion
     ): bool {
-        if (!$this->exists($id)) {
+        if (!$this->existe($id)) {
             throw new \Exception('No existe la compra solicitada para modificar.');
         }
         $stmt = $this->db->prepare("
@@ -156,19 +207,23 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
         ]);
     }
 
-    public function delete(int $id): bool
+    public function eliminar(int $id): bool
     {
         $stmt = $this->db->prepare("UPDATE compra SET activo = 0 WHERE id_compra = :id");
         return $stmt->execute([':id' => $id]);
     }
 
-    public function restore(int $id): bool
+    public function restaurar(int $id): bool
     {
         $stmt = $this->db->prepare("UPDATE compra SET activo = 1 WHERE id_compra = :id");
         return $stmt->execute([':id' => $id]);
     }
 
-    public function addDetail(int $idCompra, string $tipoItem, int $idItem, float $cantidad, float $costoUnitario, float $subtotal, ?string $categoriaLote = null, ?int $idUbicacion = null): bool
+    // ============================================================
+    //  Detalles
+    // ============================================================
+
+    public function agregarDetalle(int $idCompra, string $tipoItem, int $idItem, float $cantidad, float $costoUnitario, float $subtotal, ?string $categoriaLote = null, ?int $idUbicacion = null): bool
     {
         $stmt = $this->db->prepare("
             INSERT INTO compra_detalle (id_compra, tipo_item, id_item, cantidad, costo_unitario, subtotal, categoria_lote, id_ubicacion)
@@ -186,99 +241,142 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
         ]);
     }
 
-    public function deleteDetails(int $idCompra): bool
+    public function eliminarDetalles(int $idCompra): bool
     {
         $stmt = $this->db->prepare("UPDATE compra_detalle SET activo = 0 WHERE id_compra = :id_compra");
         return $stmt->execute([':id_compra' => $idCompra]);
     }
 
-    public function updateEstado(int $id, string $estado): bool
+    // ============================================================
+    //  Estado
+    // ============================================================
+
+    public function actualizarEstado(int $id, string $estado): bool
     {
-        if (!in_array($estado, ['pendiente', 'completada', 'cancelada'], true)) {
+        if (!in_array($estado, ['pendiente', 'recibida', 'cancelada'], true)) {
             throw new \Exception('Estado inválido.');
         }
-        if (!$this->exists($id)) {
+        $compra = $this->obtenerPorId($id);
+        if (!$compra) {
             throw new \Exception('No existe la compra.');
         }
         $stmt = $this->db->prepare("UPDATE compra SET estado = :estado WHERE id_compra = :id AND activo = 1");
         return $stmt->execute([':estado' => $estado, ':id' => $id]);
     }
 
-    public function aplicarStock(int $idCompra): array
+    public function marcarRecibida(int $id): bool
     {
-        $details = $this->getDetails($idCompra);
-        $results = [];
-
-        // Group plant items by (id_item, categoria_lote)
-        $plantGroups = [];
-        foreach ($details as $d) {
-            if ($d['tipo_item'] !== 'planta') continue;
-            $key = $d['id_item'] . '_' . ($d['categoria_lote'] ?? 'germinado');
-            if (!isset($plantGroups[$key])) {
-                $plantGroups[$key] = [
-                    'id_item'    => $d['id_item'],
-                    'nombre'     => $d['item_nombre'],
-                    'categoria'  => $d['categoria_lote'] ?? 'germinado',
-                    'ubicacion'  => $d['id_ubicacion'],
-                    'cantidad'   => 0,
-                    'costo_total' => 0,
-                ];
-            }
-            $plantGroups[$key]['cantidad'] += $d['cantidad'];
-            $plantGroups[$key]['costo_total'] += $d['cantidad'] * $d['costo_unitario'];
+        $compra = $this->obtenerPorId($id);
+        if (!$compra) {
+            throw new \Exception('No existe la compra.');
         }
-
-        foreach ($details as $d) {
-            if ($d['tipo_item'] === 'insumo') {
-                $stmt = $this->db->prepare("
-                    UPDATE insumo
-                    SET stock_actual = stock_actual + :cantidad,
-                        costo_unitario_actual = :costo_unitario
-                    WHERE id_insumo = :id_insumo AND activo = 1
-                ");
-                $stmt->execute([
-                    ':cantidad' => $d['cantidad'],
-                    ':costo_unitario' => $d['costo_unitario'],
-                    ':id_insumo' => $d['id_item'],
-                ]);
-                $results[] = ['tipo' => 'insumo', 'id' => $d['id_item'], 'nombre' => $d['item_nombre'], 'cantidad' => $d['cantidad']];
-            }
+        if ($compra['estado'] !== 'pendiente') {
+            throw new \Exception('Solo se pueden recibir compras pendientes.');
         }
-
-        foreach ($plantGroups as $g) {
-            $totalPlants = (int)$g['cantidad'];
-            $costoUnitario = $totalPlants > 0 ? round($g['costo_total'] / $totalPlants, 2) : 0;
-
-            $stmt = $this->db->prepare("
-                INSERT INTO lote
-                    (id_planta, id_ubicacion, fecha_siembra, cantidad_inicial, cantidad_actual,
-                     estado, categoria, origen, costo_unitario, observacion)
-                VALUES
-                    (:id_planta, :id_ubicacion, CURDATE(), :cantidad_ini, :cantidad_act,
-                     'Activo', :categoria, 'Compra', :costo_unitario, :observacion)
-            ");
-            $stmt->execute([
-                ':id_planta'       => $g['id_item'],
-                ':id_ubicacion'    => $g['ubicacion'],
-                ':cantidad_ini'    => $totalPlants,
-                ':cantidad_act'    => $totalPlants,
-                ':categoria'       => $g['categoria'],
-                ':costo_unitario'  => $costoUnitario,
-                ':observacion'     => 'Ingresado por compra #' . $idCompra,
-            ]);
-            $loteId = $this->db->lastInsertId();
-
-            // Update plant total count
-            $stmt2 = $this->db->prepare("UPDATE plantas SET cantidad_total = cantidad_total + :cantidad WHERE id_planta = :id_planta");
-            $stmt2->execute([':cantidad' => $totalPlants, ':id_planta' => $g['id_item']]);
-
-            $results[] = ['tipo' => 'planta', 'id' => $g['id_item'], 'lote_id' => $loteId, 'nombre' => $g['nombre'], 'cantidad' => $totalPlants, 'costo_unitario' => $costoUnitario];
-        }
-
-        return $results;
+        $stmt = $this->db->prepare("UPDATE compra SET estado = 'recibida', fecha_recepcion = CURDATE() WHERE id_compra = :id AND activo = 1");
+        return $stmt->execute([':id' => $id]);
     }
 
-    public function getLastInsertId(): ?int
+    // ============================================================
+    //  Stock y lotes
+    // ============================================================
+
+    public function aplicarStock(int $idCompra): array
+    {
+        $detalles = $this->obtenerDetalles($idCompra);
+        $resultados = [];
+
+        $this->iniciarTransaccion();
+
+        try {
+            // Agrupar plantas por (id_item, categoria_lote)
+            $gruposPlantas = [];
+            foreach ($detalles as $d) {
+                if ($d['tipo_item'] !== 'planta') continue;
+                $clave = $d['id_item'] . '_' . ($d['categoria_lote'] ?? 'germinado');
+                if (!isset($gruposPlantas[$clave])) {
+                    $gruposPlantas[$clave] = [
+                        'id_item'    => $d['id_item'],
+                        'nombre'     => $d['item_nombre'],
+                        'categoria'  => $d['categoria_lote'] ?? 'germinado',
+                        'ubicacion'  => $d['id_ubicacion'],
+                        'cantidad'   => 0,
+                        'costo_total' => 0,
+                    ];
+                }
+                $gruposPlantas[$clave]['cantidad'] += $d['cantidad'];
+                $gruposPlantas[$clave]['costo_total'] += $d['cantidad'] * $d['costo_unitario'];
+            }
+
+            // Procesar cada detalle según su tipo
+            foreach ($detalles as $d) {
+                if ($d['tipo_item'] === 'insumo') {
+                    $stmt = $this->db->prepare("
+                        UPDATE insumo
+                        SET stock_actual = stock_actual + :cantidad,
+                            costo_unitario_actual = :costo_unitario
+                        WHERE id_insumo = :id_insumo AND activo = 1
+                    ");
+                    $stmt->execute([
+                        ':cantidad' => $d['cantidad'],
+                        ':costo_unitario' => $d['costo_unitario'],
+                        ':id_insumo' => $d['id_item'],
+                    ]);
+                    $resultados[] = ['tipo' => 'insumo', 'id' => $d['id_item'], 'nombre' => $d['item_nombre'], 'cantidad' => $d['cantidad']];
+                }
+
+                if ($d['tipo_item'] === 'herramienta') {
+                    $stmt = $this->db->prepare("
+                        UPDATE herramienta
+                        SET estado = 'disponible',
+                            fecha_adquisicion = COALESCE(fecha_adquisicion, CURDATE())
+                        WHERE id_herramienta = :id_herramienta AND activo = 1
+                    ");
+                    $stmt->execute([':id_herramienta' => $d['id_item']]);
+                    $resultados[] = ['tipo' => 'herramienta', 'id' => $d['id_item'], 'nombre' => $d['item_nombre'], 'cantidad' => $d['cantidad']];
+                }
+            }
+
+            // Crear lotes para plantas agrupadas
+            foreach ($gruposPlantas as $g) {
+                $totalPlantas = (int)$g['cantidad'];
+                $costoUnitario = $totalPlantas > 0 ? round($g['costo_total'] / $totalPlantas, 2) : 0;
+
+                $stmt = $this->db->prepare("
+                    INSERT INTO lote
+                        (id_planta, id_ubicacion, fecha_siembra, cantidad_inicial, cantidad_actual,
+                         estado, categoria, origen, costo_unitario, observacion)
+                    VALUES
+                        (:id_planta, :id_ubicacion, CURDATE(), :cantidad_ini, :cantidad_act,
+                         'Activo', :categoria, 'Compra', :costo_unitario, :observacion)
+                ");
+                $stmt->execute([
+                    ':id_planta'       => $g['id_item'],
+                    ':id_ubicacion'    => $g['ubicacion'],
+                    ':cantidad_ini'    => $totalPlantas,
+                    ':cantidad_act'    => $totalPlantas,
+                    ':categoria'       => $g['categoria'],
+                    ':costo_unitario'  => $costoUnitario,
+                    ':observacion'     => 'Ingresado por compra #' . $idCompra,
+                ]);
+                $loteId = $this->db->lastInsertId();
+
+                $stmt2 = $this->db->prepare("UPDATE plantas SET cantidad_total = cantidad_total + :cantidad WHERE id_planta = :id_planta");
+                $stmt2->execute([':cantidad' => $totalPlantas, ':id_planta' => $g['id_item']]);
+
+                $resultados[] = ['tipo' => 'planta', 'id' => $g['id_item'], 'lote_id' => $loteId, 'nombre' => $g['nombre'], 'cantidad' => $totalPlantas, 'costo_unitario' => $costoUnitario];
+            }
+
+            $this->confirmarTransaccion();
+        } catch (\Exception $e) {
+            $this->revertirTransaccion();
+            throw $e;
+        }
+
+        return $resultados;
+    }
+
+    public function obtenerUltimoId(): ?int
     {
         $id = $this->db->lastInsertId();
         return $id !== false ? (int) $id : null;

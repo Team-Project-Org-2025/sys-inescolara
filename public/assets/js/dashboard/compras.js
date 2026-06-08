@@ -3,11 +3,11 @@ import * as Ajax from '../utils/ajax-handler.js';
 import { setupRealTimeValidation, validateForm } from '../utils/validation.js';
 
 $(document).ready(function () {
-  const baseUrl = `${window.BASE_URL || '/'}compras`;
-  let comprasTable = null;
-  let editingId = null;
+  const urlBase = `${window.BASE_URL || '/'}compras`;
+  let tablaCompras = null;
+  let editandoId = null;
 
-  const compraRules = {
+  const reglasCompra = {
     id_proveedor: 'select',
     fecha_compra: 'fechaFuturaCheck',
   };
@@ -19,9 +19,9 @@ $(document).ready(function () {
     { value: 'maduro', label: 'Maduro' },
   ];
 
-  function addItemRow(tipo, idItem, nombre, cantidad, costoUnitario, categoriaLote, idUbicacion) {
+  function agregarFilaItem(tipo, idItem, nombre, cantidad, costoUnitario, categoriaLote, idUbicacion) {
     const subtotal = (parseFloat(cantidad) || 0) * (parseFloat(costoUnitario) || 0);
-    const row = `
+    const fila = `
       <tr>
         <td>
           <select class="form-select form-select-sm item-tipo" required>
@@ -36,11 +36,11 @@ $(document).ready(function () {
               <select class="form-select form-select-sm item-select flex-grow-1" required>
                 <option value="">Seleccione...</option>
               </select>
-              <button type="button" class="btn btn-success btn-add-item-quick" title="Crear nueva planta" style="display:none; line-height:1; flex-shrink: 0;">
+              <button type="button" class="btn btn-success btn-add-item-quick d-none" title="Crear nueva planta" style="line-height:1; flex-shrink: 0;">
                 <i class="fas fa-plus"></i>
               </button>
             </div>
-            <div class="d-flex gap-1 planta-extras" ${tipo !== 'planta' ? 'style="display:none"' : ''}>
+            <div class="d-flex gap-1 planta-extras ${tipo !== 'planta' ? 'd-none' : ''}">
               <select class="form-select form-select-sm item-categoria" style="min-width:120px">
                 <option value="germinado">Germinado</option>
                 <option value="en_crecimiento" ${categoriaLote === 'en_crecimiento' ? 'selected' : ''}>En Crecimiento</option>
@@ -65,22 +65,27 @@ $(document).ready(function () {
           <button type="button" class="btn btn-sm btn-outline-danger btn-remove-item"><i class="fas fa-times"></i></button>
         </td>
       </tr>`;
-    $('#itemsBody').append(row);
+    $('#itemsBody').append(fila);
 
-    const $row = $('#itemsBody tr:last');
-    $row.find('.btn-add-item-quick').toggle(tipo === 'planta');
-    togglePlantaFields($row, tipo === 'planta');
-    loadItemOptions($row, tipo);
-    if (idItem) $row.find('.item-select').val(idItem);
-    updateItemSubtotal($row);
+    const $fila = $('#itemsBody tr:last');
+    $fila.find('.btn-add-item-quick').addClass('d-none');
+    if (tipo === 'planta') $fila.find('.btn-add-item-quick').removeClass('d-none');
+    alternarCamposPlanta($fila, tipo === 'planta');
+    cargarOpcionesItem($fila, tipo);
+    if (idItem) $fila.find('.item-select').val(idItem);
+    actualizarSubtotalItem($fila);
   }
 
-  function togglePlantaFields($row, isPlanta) {
-    $row.find('.planta-extras').toggle(isPlanta);
+  function alternarCamposPlanta($fila, esPlanta) {
+    if (esPlanta) {
+      $fila.find('.planta-extras').removeClass('d-none');
+    } else {
+      $fila.find('.planta-extras').addClass('d-none');
+    }
   }
 
-  function loadItemOptions($row, tipo, callback) {
-    const $select = $row.find('.item-select');
+  function cargarOpcionesItem($fila, tipo, callback) {
+    const $select = $fila.find('.item-select');
     $select.empty().append('<option value="">Seleccione...</option>');
 
     const urls = {
@@ -96,26 +101,26 @@ $(document).ready(function () {
       headers: { 'X-Requested-With': 'XMLHttpRequest' },
     }).done((r) => {
       if (!r.success) return;
-      const listMap = { insumo: 'supplies', herramienta: 'tools', planta: 'plants' };
-      const list = r[listMap[tipo]] || [];
-      list.forEach((item) => {
-        const labelMap = { insumo: 'nombre_insumo', herramienta: 'nombre_herramienta', planta: 'nombre_comun' };
-        const idMap = { insumo: item.id_insumo || item.id, herramienta: item.id_herramienta || item.id, planta: item.id };
-        const label = item[labelMap[tipo]] || '';
-        $select.append(`<option value="${Helpers.escapeHtml(idMap[tipo])}">${Helpers.escapeHtml(label)}</option>`);
+      const mapaLista = { insumo: 'supplies', herramienta: 'tools', planta: 'plants' };
+      const lista = r[mapaLista[tipo]] || [];
+      lista.forEach((item) => {
+        const mapaEtiqueta = { insumo: 'nombre_insumo', herramienta: 'nombre_herramienta', planta: 'nombre_comun' };
+        const mapaId = { insumo: item.id_insumo || item.id, herramienta: item.id_herramienta || item.id, planta: item.id };
+        const etiqueta = item[mapaEtiqueta[tipo]] || '';
+        $select.append(`<option value="${Helpers.escapeHtml(mapaId[tipo])}">${Helpers.escapeHtml(etiqueta)}</option>`);
       });
       if (typeof callback === 'function') callback();
     });
   }
 
-  function updateItemSubtotal($row) {
-    const cant = parseFloat($row.find('.item-cantidad').val()) || 0;
-    const costo = parseFloat($row.find('.item-costo').val()) || 0;
-    $row.find('.item-subtotal').text(Helpers.formatCurrencyBs(cant * costo));
-    updateTotals();
+  function actualizarSubtotalItem($fila) {
+    const cant = parseFloat($fila.find('.item-cantidad').val()) || 0;
+    const costo = parseFloat($fila.find('.item-costo').val()) || 0;
+    $fila.find('.item-subtotal').text(Helpers.formatCurrencyBs(cant * costo));
+    actualizarTotales();
   }
 
-  function updateTotals() {
+  function actualizarTotales() {
     let total = 0;
     $('#itemsBody tr').each(function () {
       const cant = parseFloat($(this).find('.item-cantidad').val()) || 0;
@@ -127,16 +132,16 @@ $(document).ready(function () {
     $('#frmTotal').val(total.toFixed(2));
   }
 
-  function getItemsData() {
+  function obtenerDatosItems() {
     const items = [];
-    let valid = true;
+    let valido = true;
     $('#itemsBody tr').each(function () {
       const tipo = $(this).find('.item-tipo').val();
       const idItem = parseInt($(this).find('.item-select').val()) || 0;
       const cantidad = parseFloat($(this).find('.item-cantidad').val()) || 0;
       const costo = parseFloat($(this).find('.item-costo').val()) || 0;
       if (!tipo || !idItem || cantidad <= 0) {
-        valid = false;
+        valido = false;
         return;
       }
       const item = { tipo_item: tipo, id_item: idItem, cantidad, costo_unitario: costo };
@@ -147,64 +152,62 @@ $(document).ready(function () {
       }
       items.push(item);
     });
-    return valid ? items : null;
+    return valido ? items : null;
   }
 
   // ============================================================
-  //  Eventos items
+  //  Eventos de items
   // ============================================================
 
   $(document).on('change', '.item-tipo', function () {
-    const $row = $(this).closest('tr');
+    const $fila = $(this).closest('tr');
     const tipo = $(this).val();
-    loadItemOptions($row, tipo);
-    $row.find('.btn-add-item-quick').toggle(tipo === 'planta');
-    togglePlantaFields($row, tipo === 'planta');
+    cargarOpcionesItem($fila, tipo);
+    $fila.find('.btn-add-item-quick').addClass('d-none');
+    if (tipo === 'planta') $fila.find('.btn-add-item-quick').removeClass('d-none');
+    alternarCamposPlanta($fila, tipo === 'planta');
   });
 
   $(document).on('input', '.item-cantidad, .item-costo', function () {
-    updateItemSubtotal($(this).closest('tr'));
+    actualizarSubtotalItem($(this).closest('tr'));
   });
-
-
 
   $(document).on('click', '.btn-remove-item', function () {
     $(this).closest('tr').remove();
-    updateTotals();
+    actualizarTotales();
   });
 
   $(document).on('click', '.btn-add-item-quick', function () {
-    const $row = $(this).closest('tr');
-    const $select = $row.find('.item-select');
+    const $fila = $(this).closest('tr');
+    const $select = $fila.find('.item-select');
     const $btn = $(this);
 
-    // Switch to inline input
     $select.hide();
     $btn.hide();
-    const $inlineInput = $(`<input type="text" class="form-control form-control-sm flex-grow-1 inline-plant-input" placeholder="Nombre común..." autofocus>`);
-    const $saveBtn = $(`<button type="button" class="btn btn-sm btn-success flex-shrink-0 inline-plant-save" title="Guardar"><i class="fas fa-check"></i></button>`);
-    const $cancelBtn = $(`<button type="button" class="btn btn-sm btn-outline-secondary flex-shrink-0 inline-plant-cancel" title="Cancelar"><i class="fas fa-times"></i></button>`);
-    $btn.parent().append($inlineInput, $saveBtn, $cancelBtn);
-    $inlineInput.focus();
+    const $inputEnLinea = $(`<input type="text" class="form-control form-control-sm flex-grow-1 inline-plant-input" placeholder="Nombre común..." autofocus>`);
+    const $btnGuardar = $(`<button type="button" class="btn btn-sm btn-success flex-shrink-0 inline-plant-save" title="Guardar"><i class="fas fa-check"></i></button>`);
+    const $btnCancelar = $(`<button type="button" class="btn btn-sm btn-outline-secondary flex-shrink-0 inline-plant-cancel" title="Cancelar"><i class="fas fa-times"></i></button>`);
+    $btn.parent().append($inputEnLinea, $btnGuardar, $btnCancelar);
+    $inputEnLinea.focus();
 
-    function revertInline() {
-      $inlineInput.remove();
-      $saveBtn.remove();
-      $cancelBtn.remove();
+    function revertirEnLinea() {
+      $inputEnLinea.remove();
+      $btnGuardar.remove();
+      $btnCancelar.remove();
       $select.show();
       $btn.show();
     }
 
-    function doCreate() {
-      const nombre = $inlineInput.val().trim();
+    function crearPlanta() {
+      const nombre = $inputEnLinea.val().trim();
       if (!nombre) {
-        $inlineInput.focus();
+        $inputEnLinea.focus();
         return;
       }
-      $saveBtn.prop('disabled', true);
-      $inlineInput.prop('disabled', true);
+      $btnGuardar.prop('disabled', true);
+      $inputEnLinea.prop('disabled', true);
       $.ajax({
-        url: `${baseUrl}?action=quick_add_planta`,
+        url: `${urlBase}?action=agregar_planta_rapido`,
         method: 'POST',
         data: { nombre_comun: nombre },
         headers: { 'X-Requested-With': 'XMLHttpRequest' },
@@ -212,45 +215,45 @@ $(document).ready(function () {
       }).done((r) => {
         if (r.success && r.planta) {
           Helpers.toast('success', `"${Helpers.escapeHtml(nombre)}" creada`);
-          revertInline();
-          loadItemOptions($row, 'planta', () => {
+          revertirEnLinea();
+          cargarOpcionesItem($fila, 'planta', () => {
             $select.val(String(r.planta.id)).trigger('change');
           });
         } else {
           Helpers.toast('error', r.message || 'Error al crear la planta');
-          $saveBtn.prop('disabled', false);
-          $inlineInput.prop('disabled', false).focus();
+          $btnGuardar.prop('disabled', false);
+          $inputEnLinea.prop('disabled', false).focus();
         }
       }).fail(() => {
         Helpers.toast('error', 'Error de conexión al crear la planta');
-        $saveBtn.prop('disabled', false);
-        $inlineInput.prop('disabled', false).focus();
+        $btnGuardar.prop('disabled', false);
+        $inputEnLinea.prop('disabled', false).focus();
       });
     }
 
-    $saveBtn.on('click', doCreate);
-    $cancelBtn.on('click', revertInline);
-    $inlineInput.on('keydown', (e) => {
-      if (e.key === 'Enter') { e.preventDefault(); doCreate(); }
-      if (e.key === 'Escape') { e.preventDefault(); revertInline(); }
+    $btnGuardar.on('click', crearPlanta);
+    $btnCancelar.on('click', revertirEnLinea);
+    $inputEnLinea.on('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); crearPlanta(); }
+      if (e.key === 'Escape') { e.preventDefault(); revertirEnLinea(); }
     });
   });
 
   $('#btnAddItem').on('click', function () {
-    addItemRow('insumo', null, '', 1, 0);
+    agregarFilaItem('insumo', null, '', 1, 0);
   });
 
   // ============================================================
   //  DataTable
   // ============================================================
 
-  function initDataTable() {
+  function inicializarDataTable() {
     if (typeof SkeletonHelper !== 'undefined') {
       SkeletonHelper.showTableSkeleton('comprasTable', 5, 10);
     }
-    comprasTable = $('#comprasTable').DataTable({
+    tablaCompras = $('#comprasTable').DataTable({
       ajax: {
-        url: `${baseUrl}?action=get_compras`,
+        url: `${urlBase}?action=obtener_compras`,
         method: 'GET',
         dataType: 'json',
         headers: { 'X-Requested-With': 'XMLHttpRequest' },
@@ -276,7 +279,7 @@ $(document).ready(function () {
           data: 'estado',
           className: 'text-center',
           render: (data) => {
-            const badges = { pendiente: 'warning', completada: 'success', cancelada: 'secondary' };
+            const badges = { pendiente: 'warning', recibida: 'success', cancelada: 'secondary' };
             return `<span class="badge bg-${badges[data] || 'dark'}">${data}</span>`;
           },
         },
@@ -284,19 +287,19 @@ $(document).ready(function () {
           data: null,
           orderable: false,
           render: (data) => {
-            const isPendiente = data.estado === 'pendiente';
+            const esPendiente = data.estado === 'pendiente';
             return `
               <div class="d-flex gap-1">
                 <button class="btn btn-sm btn-outline-info btn-detail"
                         data-id="${Helpers.escapeHtml(data.id_compra)}">
                     <i class="fas fa-eye"></i>
                 </button>
-                ${isPendiente ? `
+                ${esPendiente ? `
                 <button class="btn btn-sm btn-outline-primary btn-edit"
                         data-id="${Helpers.escapeHtml(data.id_compra)}">
                     <i class="fas fa-edit"></i>
                 </button>
-                <button class="btn btn-sm btn-outline-success btn-completar"
+                <button class="btn btn-sm btn-outline-success btn-recibir"
                         data-id="${Helpers.escapeHtml(data.id_compra)}"
                         data-info="#${Helpers.escapeHtml(data.id_compra)} - ${Helpers.escapeHtml(data.proveedor_nombre || '')}">
                     <i class="fas fa-check"></i>
@@ -306,12 +309,12 @@ $(document).ready(function () {
                         data-info="#${Helpers.escapeHtml(data.id_compra)}">
                     <i class="fas fa-ban"></i>
                 </button>
-                ` : ''}
                 <button class="btn btn-sm btn-outline-danger btn-delete"
                         data-id="${Helpers.escapeHtml(data.id_compra)}"
                         data-info="#${Helpers.escapeHtml(data.id_compra)} - ${Helpers.escapeHtml(data.proveedor_nombre || '')}">
                     <i class="fas fa-trash"></i>
                 </button>
+                ` : ''}
               </div>
             `;
           },
@@ -333,7 +336,7 @@ $(document).ready(function () {
             if (typeof SkeletonHelper !== 'undefined') {
               SkeletonHelper.showTableSkeleton('comprasTable', 5, 10);
             }
-            comprasTable.ajax.reload(null, false);
+            tablaCompras.ajax.reload(null, false);
           },
         },
       ],
@@ -341,30 +344,30 @@ $(document).ready(function () {
   }
 
   // ============================================================
-  //  Open Add Modal
+  //  Abrir modal de agregar
   // ============================================================
 
   $('#btnAddCompra').on('click', function () {
-    editingId = null;
+    editandoId = null;
     $('#compraId').val('');
     $('#compraModalTitle').text('Nueva Compra');
     $('#compraForm')[0].reset();
     $('#frmFecha').val(new Date().toISOString().split('T')[0]);
     $('#itemsBody').empty();
-    addItemRow('insumo', null, '', 1, 0);
-    updateTotals();
+    agregarFilaItem('insumo', null, '', 1, 0);
+    actualizarTotales();
     $('#compraModal').modal('show');
   });
 
   // ============================================================
-  //  Submit Form (Add / Edit)
+  //  Enviar formulario (agregar / editar)
   // ============================================================
 
   $('#compraForm').on('submit', function (e) {
     e.preventDefault();
-    if (!validateForm($(this), compraRules)) return;
+    if (!validateForm($(this), reglasCompra)) return;
 
-    const items = getItemsData();
+    const items = obtenerDatosItems();
     if (!items) {
       Helpers.toast('error', 'Debe agregar al menos un item válido.');
       return;
@@ -377,11 +380,11 @@ $(document).ready(function () {
     const formData = new FormData(this);
     formData.set('items', JSON.stringify(items));
 
-    const action = editingId ? 'edit_ajax' : 'add_ajax';
-    if (editingId) formData.set('id', editingId);
+    const accion = editandoId ? 'editar_ajax' : 'agregar_ajax';
+    if (editandoId) formData.set('id', editandoId);
 
     $.ajax({
-      url: `${baseUrl}?action=${action}`,
+      url: `${urlBase}?action=${accion}`,
       method: 'POST',
       data: formData,
       processData: false,
@@ -393,7 +396,7 @@ $(document).ready(function () {
         if (response.success) {
           Helpers.toast('success', response.message);
           $('#compraModal').modal('hide');
-          comprasTable.ajax.reload(null, false);
+          tablaCompras.ajax.reload(null, false);
         } else {
           Helpers.toast('error', response.message);
         }
@@ -404,18 +407,18 @@ $(document).ready(function () {
   });
 
   // ============================================================
-  //  Edit
+  //  Editar
   // ============================================================
 
   $(document).on('click', '.btn-edit', function () {
     const id = $(this).data('id');
-    editingId = id;
+    editandoId = id;
     $('#compraModalTitle').text('Editar Compra');
     $('#compraForm')[0].reset();
     $('#itemsBody').empty();
 
     $.ajax({
-      url: `${baseUrl}?action=get_details&id_compra=${id}`,
+      url: `${urlBase}?action=obtener_detalles&id_compra=${id}`,
       method: 'GET',
       dataType: 'json',
       headers: { 'X-Requested-With': 'XMLHttpRequest' },
@@ -434,24 +437,24 @@ $(document).ready(function () {
 
       if (r.details && r.details.length) {
         r.details.forEach((d) => {
-          addItemRow(d.tipo_item, d.id_item, d.item_nombre, d.cantidad, d.costo_unitario, d.categoria_lote, d.id_ubicacion);
+          agregarFilaItem(d.tipo_item, d.id_item, d.item_nombre, d.cantidad, d.costo_unitario, d.categoria_lote, d.id_ubicacion);
         });
       } else {
-        addItemRow('insumo', null, '', 1, 0);
+        agregarFilaItem('insumo', null, '', 1, 0);
       }
-      updateTotals();
+      actualizarTotales();
       $('#compraModal').modal('show');
     }).fail(() => Helpers.toast('error', 'Error al cargar datos de la compra.'));
   });
 
   // ============================================================
-  //  Detail
+  //  Detalle
   // ============================================================
 
   $(document).on('click', '.btn-detail', function () {
     const id = $(this).data('id');
     $.ajax({
-      url: `${baseUrl}?action=get_details&id_compra=${id}`,
+      url: `${urlBase}?action=obtener_detalles&id_compra=${id}`,
       method: 'GET',
       dataType: 'json',
       headers: { 'X-Requested-With': 'XMLHttpRequest' },
@@ -471,7 +474,7 @@ $(document).ready(function () {
           </div>
           <div class="col-md-6 text-md-end">
             <strong>Comprobante:</strong> ${Helpers.escapeHtml(c.tipo_comprobante || '')} ${Helpers.escapeHtml(c.numero_comprobante || '')}<br>
-            <strong>Estado:</strong> <span class="badge bg-${c.estado === 'completada' ? 'success' : c.estado === 'cancelada' ? 'secondary' : 'warning'}">${c.estado || ''}</span><br>
+            <strong>Estado:</strong> <span class="badge bg-${c.estado === 'recibida' ? 'success' : c.estado === 'cancelada' ? 'secondary' : 'warning'}">${c.estado || ''}</span><br>
             <strong>Total:</strong> ${Helpers.formatCurrencyBs(c.total)}
           </div>
         </div>
@@ -518,27 +521,27 @@ $(document).ready(function () {
   });
 
   // ============================================================
-  //  Completar
+  //  Recibir
   // ============================================================
 
-  $(document).on('click', '.btn-completar', function () {
+  $(document).on('click', '.btn-recibir', function () {
     const id = $(this).data('id');
     const info = $(this).data('info');
     Helpers.confirmDialog(
-      '¿Completar compra?',
-      `Al completar la compra <strong>${Helpers.escapeHtml(info)}</strong> se actualizará el stock y se crearán lotes para las plantas con los datos de categoría y ubicación configurados en cada item. ¿Desea continuar?`,
+      '¿Recibir compra?',
+      `Al recibir la compra <strong>${Helpers.escapeHtml(info)}</strong> se actualizará el stock y se crearán lotes para las plantas con los datos de categoría y ubicación configurados en cada item. ¿Desea continuar?`,
       () => {
-        Ajax.post(`${baseUrl}?action=completar_ajax`, { id })
+        Ajax.post(`${urlBase}?action=recibir_ajax`, { id })
           .then((response) => {
             if (response.success) {
               Helpers.toast('success', response.message);
-              comprasTable.ajax.reload(null, false);
+              tablaCompras.ajax.reload(null, false);
             } else {
               Helpers.toast('error', response.message);
             }
           }).catch((err) => Helpers.toast('error', err));
       },
-      'Sí, completar'
+      'Sí, recibir'
     );
   });
 
@@ -553,11 +556,11 @@ $(document).ready(function () {
       '¿Cancelar compra?',
       `¿Deseas cancelar la compra <strong>${Helpers.escapeHtml(info)}</strong>?`,
       () => {
-        Ajax.post(`${baseUrl}?action=cancelar_ajax`, { id })
+        Ajax.post(`${urlBase}?action=cancelar_ajax`, { id })
           .then((response) => {
             if (response.success) {
               Helpers.toast('success', response.message);
-              comprasTable.ajax.reload(null, false);
+              tablaCompras.ajax.reload(null, false);
             } else {
               Helpers.toast('error', response.message);
             }
@@ -568,7 +571,7 @@ $(document).ready(function () {
   });
 
   // ============================================================
-  //  Delete
+  //  Eliminar
   // ============================================================
 
   $(document).on('click', '.btn-delete', function () {
@@ -578,11 +581,11 @@ $(document).ready(function () {
       '¿Eliminar compra?',
       `¿Deseas eliminar la compra <strong>${Helpers.escapeHtml(info)}</strong>?`,
       () => {
-        Ajax.post(`${baseUrl}?action=delete_ajax`, { id })
+        Ajax.post(`${urlBase}?action=eliminar_ajax`, { id })
           .then((response) => {
             if (response.success) {
               Helpers.toast('success', response.message);
-              comprasTable.ajax.reload(null, false);
+              tablaCompras.ajax.reload(null, false);
             } else {
               Helpers.toast('error', response.message);
             }
@@ -593,7 +596,7 @@ $(document).ready(function () {
   });
 
   // ============================================================
-  //  Modal cleanup
+  //  Limpiar modal al cerrar
   // ============================================================
 
   $('#compraModal').on('hidden.bs.modal', function () {
@@ -602,9 +605,9 @@ $(document).ready(function () {
   });
 
   // ============================================================
-  //  Init
+  //  Inicializar
   // ============================================================
 
-  setupRealTimeValidation($('#compraForm'), compraRules);
-  initDataTable();
+  setupRealTimeValidation($('#compraForm'), reglasCompra);
+  inicializarDataTable();
 });

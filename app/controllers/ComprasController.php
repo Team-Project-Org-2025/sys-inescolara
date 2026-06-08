@@ -16,15 +16,15 @@ function index(): void
     if (isAjaxRequest() && $action !== '') {
         try {
             match ($_SERVER['REQUEST_METHOD'] . '_' . $action) {
-                'GET_get_compras'      => compras_getComprasAjax(),
-                'GET_get_details'      => compras_getDetailsAjax(),
-                'POST_add_ajax'        => compras_handleAddEdit('add'),
-                'POST_edit_ajax'       => compras_handleAddEdit('edit'),
-                'POST_delete_ajax'     => compras_handleDelete(),
-                'POST_completar_ajax'  => compras_handleCompletar(),
-                'POST_cancelar_ajax'   => compras_handleCancelar(),
-                'POST_quick_add_planta' => compras_quickAddPlanta(),
-                default                => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
+                'GET_obtener_compras'        => compras_obtenerComprasAjax(),
+                'GET_obtener_detalles'       => compras_obtenerDetallesAjax(),
+                'POST_agregar_ajax'          => compras_manejarAgregarEditar('add'),
+                'POST_editar_ajax'           => compras_manejarAgregarEditar('edit'),
+                'POST_eliminar_ajax'         => compras_manejarEliminar(),
+                'POST_recibir_ajax'           => compras_manejarRecibir(),
+                'POST_cancelar_ajax'         => compras_manejarCancelar(),
+                'POST_agregar_planta_rapido' => compras_agregarPlantaRapido(),
+                default                      => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
             };
         } catch (\Exception $e) {
             handleError($e, true);
@@ -32,34 +32,34 @@ function index(): void
         return;
     }
 
-    $supplierModel = new Supplier();
-    $proveedores = $supplierModel->getAll();
-    $supplyModel = new Supplies();
-    $insumos = $supplyModel->getAll();
-    $locationModel = new Location();
-    $ubicaciones = $locationModel->getAll();
+    $modeloProveedor = new Supplier();
+    $proveedores = $modeloProveedor->getAll();
+    $modeloInsumo = new Supplies();
+    $insumos = $modeloInsumo->getAll();
+    $modeloUbicacion = new Location();
+    $ubicaciones = $modeloUbicacion->getAll();
 
-    $view = ROOT_PATH . 'app/views/dashboard/compras.php';
-    if (!is_file($view)) {
+    $vista = ROOT_PATH . 'app/views/dashboard/compras.php';
+    if (!is_file($vista)) {
         http_response_code(500);
         echo 'Vista de compras no encontrada.';
         return;
     }
-    require $view;
+    require $vista;
 }
 
-function get_compras(): void { checkModuleAuth(); compras_getComprasAjax(); }
-function get_details(): void { checkModuleAuth(); compras_getDetailsAjax(); }
-function add_ajax(): void { checkModuleAuth(); checkPermisoOrFail('COMPRAS_CREATE'); compras_handleAddEdit('add'); }
-function edit_ajax(): void { checkModuleAuth(); checkPermisoOrFail('COMPRAS_EDIT'); compras_handleAddEdit('edit'); }
-function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('COMPRAS_DELETE'); compras_handleDelete(); }
-function completar_ajax(): void { checkModuleAuth(); checkPermisoOrFail('COMPRAS_COMPLETE'); compras_handleCompletar(); }
-function cancelar_ajax(): void { checkModuleAuth(); checkPermisoOrFail('COMPRAS_COMPLETE'); compras_handleCancelar(); }
-function quick_add_planta(): void { checkModuleAuth(); compras_quickAddPlanta(); }
+function obtener_compras(): void { checkModuleAuth(); compras_obtenerComprasAjax(); }
+function obtener_detalles(): void { checkModuleAuth(); compras_obtenerDetallesAjax(); }
+function agregar_ajax(): void { checkModuleAuth(); checkPermisoOrFail('COMPRAS_CREATE'); compras_manejarAgregarEditar('add'); }
+function editar_ajax(): void { checkModuleAuth(); checkPermisoOrFail('COMPRAS_EDIT'); compras_manejarAgregarEditar('edit'); }
+function eliminar_ajax(): void { checkModuleAuth(); checkPermisoOrFail('COMPRAS_DELETE'); compras_manejarEliminar(); }
+function recibir_ajax(): void { checkModuleAuth(); checkPermisoOrFail('COMPRAS_COMPLETE'); compras_manejarRecibir(); }
+function cancelar_ajax(): void { checkModuleAuth(); checkPermisoOrFail('COMPRAS_COMPLETE'); compras_manejarCancelar(); }
+function agregar_planta_rapido(): void { checkModuleAuth(); compras_agregarPlantaRapido(); }
 
-function compras_handleAddEdit(string $mode): void
+function compras_manejarAgregarEditar(string $modo): void
 {
-    $model = new Purchase();
+    $modelo = new Purchase();
 
     $idProveedor = (int)($_POST['id_proveedor'] ?? 0);
     if ($idProveedor <= 0) throw new \Exception('El proveedor es requerido.');
@@ -85,10 +85,42 @@ function compras_handleAddEdit(string $mode): void
     $items = isset($_POST['items']) ? json_decode($_POST['items'], true) : [];
     if (!is_array($items) || empty($items)) throw new \Exception('Debe agregar al menos un item.');
 
-    if ($mode === 'add') {
-        $model->add($idProveedor, $fechaCompra, $tipoComprobante, $numeroComprobante, $subtotal, $iva, $total, $observacion);
-        $newId = $model->getLastInsertId() ?? 0;
+    $modelo->iniciarTransaccion();
 
+    try {
+        if ($modo === 'add') {
+            $modelo->agregar($idProveedor, $fechaCompra, $tipoComprobante, $numeroComprobante, $subtotal, $iva, $total, $observacion);
+            $nuevoId = $modelo->obtenerUltimoId() ?? 0;
+
+            foreach ($items as $item) {
+                $tipoItem = $item['tipo_item'] ?? '';
+                $idItem = (int)($item['id_item'] ?? 0);
+                $cantidad = (float)($item['cantidad'] ?? 0);
+                $costoUnitario = (float)($item['costo_unitario'] ?? 0);
+                $subtotalItem = $cantidad * $costoUnitario;
+                $categoriaLote = $tipoItem === 'planta' ? ($item['categoria_lote'] ?? null) : null;
+                $idUbicacionItem = $tipoItem === 'planta' ? (!empty($item['id_ubicacion']) ? (int)$item['id_ubicacion'] : null) : null;
+                $modelo->agregarDetalle($nuevoId, $tipoItem, $idItem, $cantidad, $costoUnitario, $subtotalItem, $categoriaLote, $idUbicacionItem);
+            }
+
+            $modelo->confirmarTransaccion();
+
+            AuditLog::record('CREATE', 'compra', $nuevoId, null, [
+                'id_proveedor' => $idProveedor, 'total' => $total, 'items' => count($items),
+            ]);
+
+            jsonResponse(['success' => true, 'message' => 'Compra registrada correctamente.', 'id' => $nuevoId]);
+            return;
+        }
+
+        // --- Modo editar ---
+        $id = (int)($_POST['id'] ?? 0);
+        if ($id <= 0) throw new \Exception('ID inválido');
+
+        $datosViejos = $modelo->obtenerPorId($id);
+        $modelo->actualizar($id, $idProveedor, $fechaCompra, $tipoComprobante, $numeroComprobante, $subtotal, $iva, $total, $observacion);
+
+        $modelo->eliminarDetalles($id);
         foreach ($items as $item) {
             $tipoItem = $item['tipo_item'] ?? '';
             $idItem = (int)($item['id_item'] ?? 0);
@@ -97,108 +129,86 @@ function compras_handleAddEdit(string $mode): void
             $subtotalItem = $cantidad * $costoUnitario;
             $categoriaLote = $tipoItem === 'planta' ? ($item['categoria_lote'] ?? null) : null;
             $idUbicacionItem = $tipoItem === 'planta' ? (!empty($item['id_ubicacion']) ? (int)$item['id_ubicacion'] : null) : null;
-            $model->addDetail($newId, $tipoItem, $idItem, $cantidad, $costoUnitario, $subtotalItem, $categoriaLote, $idUbicacionItem);
+            $modelo->agregarDetalle($id, $tipoItem, $idItem, $cantidad, $costoUnitario, $subtotalItem, $categoriaLote, $idUbicacionItem);
         }
 
-        AuditLog::record('CREATE', 'compra', $newId, null, [
+        $modelo->confirmarTransaccion();
+
+        AuditLog::record('UPDATE', 'compra', $id, $datosViejos, [
             'id_proveedor' => $idProveedor, 'total' => $total, 'items' => count($items),
         ]);
 
-        jsonResponse(['success' => true, 'message' => 'Compra registrada correctamente.', 'id' => $newId]);
+        jsonResponse(['success' => true, 'message' => 'Compra actualizada correctamente.']);
+    } catch (\Exception $e) {
+        $modelo->revertirTransaccion();
+        throw $e;
     }
-
-    $id = (int)($_POST['id'] ?? 0);
-    if ($id <= 0) throw new \Exception('ID inválido');
-
-    $oldData = $model->getById($id);
-    $model->update($id, $idProveedor, $fechaCompra, $tipoComprobante, $numeroComprobante, $subtotal, $iva, $total, $observacion);
-
-    $model->deleteDetails($id);
-    foreach ($items as $item) {
-        $tipoItem = $item['tipo_item'] ?? '';
-        $idItem = (int)($item['id_item'] ?? 0);
-        $cantidad = (float)($item['cantidad'] ?? 0);
-        $costoUnitario = (float)($item['costo_unitario'] ?? 0);
-        $subtotalItem = $cantidad * $costoUnitario;
-        $categoriaLote = $tipoItem === 'planta' ? ($item['categoria_lote'] ?? null) : null;
-        $idUbicacionItem = $tipoItem === 'planta' ? (!empty($item['id_ubicacion']) ? (int)$item['id_ubicacion'] : null) : null;
-        $model->addDetail($id, $tipoItem, $idItem, $cantidad, $costoUnitario, $subtotalItem, $categoriaLote, $idUbicacionItem);
-    }
-
-    AuditLog::record('UPDATE', 'compra', $id, $oldData, [
-        'id_proveedor' => $idProveedor, 'total' => $total, 'items' => count($items),
-    ]);
-
-    jsonResponse(['success' => true, 'message' => 'Compra actualizada correctamente.']);
 }
 
-function compras_handleDelete(): void
+function compras_manejarEliminar(): void
 {
-    $model = new Purchase();
+    $modelo = new Purchase();
     $id = (int)($_POST['id'] ?? 0);
     if ($id <= 0) throw new \Exception('ID inválido');
-    if (!$model->exists($id)) throw new \Exception('No existe la compra');
 
-    $oldData = $model->getById($id);
-    $model->delete($id);
-    AuditLog::record('DEACTIVATE', 'compra', $id, $oldData, null);
+    $datosViejos = $modelo->obtenerPorId($id);
+    if (!$datosViejos) throw new \Exception('No existe la compra');
+
+    $modelo->eliminar($id);
+    AuditLog::record('DEACTIVATE', 'compra', $id, $datosViejos, null);
     jsonResponse(['success' => true, 'message' => 'Compra eliminada correctamente.']);
 }
 
-function compras_handleCompletar(): void
+function compras_manejarRecibir(): void
 {
-    $model = new Purchase();
+    $modelo = new Purchase();
     $id = (int)($_POST['id'] ?? 0);
     if ($id <= 0) throw new \Exception('ID inválido');
-    if (!$model->exists($id)) throw new \Exception('No existe la compra');
 
-    $compra = $model->getById($id);
-    if ($compra['estado'] !== 'pendiente') throw new \Exception('Solo se pueden completar compras pendientes.');
+    $modelo->aplicarStock($id);
+    $modelo->marcarRecibida($id);
 
-    $model->aplicarStock($id);
-    $model->updateEstado($id, 'completada');
-
-    AuditLog::record('UPDATE', 'compra', $id, ['estado' => 'pendiente'], ['estado' => 'completada', 'stock_aplicado' => true]);
-    jsonResponse(['success' => true, 'message' => 'Compra completada y stock actualizado.']);
+    AuditLog::record('UPDATE', 'compra', $id, ['estado' => 'pendiente', 'fecha_recepcion' => null], ['estado' => 'recibida', 'stock_aplicado' => true]);
+    jsonResponse(['success' => true, 'message' => 'Compra recibida y stock actualizado.']);
 }
 
-function compras_handleCancelar(): void
+function compras_manejarCancelar(): void
 {
-    $model = new Purchase();
+    $modelo = new Purchase();
     $id = (int)($_POST['id'] ?? 0);
     if ($id <= 0) throw new \Exception('ID inválido');
-    if (!$model->exists($id)) throw new \Exception('No existe la compra');
 
-    $compra = $model->getById($id);
+    $compra = $modelo->obtenerPorId($id);
+    if (!$compra) throw new \Exception('No existe la compra');
     if ($compra['estado'] !== 'pendiente') throw new \Exception('Solo se pueden cancelar compras pendientes.');
 
-    $model->updateEstado($id, 'cancelada');
+    $modelo->actualizarEstado($id, 'cancelada');
 
     AuditLog::record('UPDATE', 'compra', $id, ['estado' => 'pendiente'], ['estado' => 'cancelada']);
     jsonResponse(['success' => true, 'message' => 'Compra cancelada.']);
 }
 
-function compras_getComprasAjax(): void
+function compras_obtenerComprasAjax(): void
 {
-    $model = new Purchase();
-    $compras = $model->getAll();
+    $modelo = new Purchase();
+    $compras = $modelo->obtenerTodas();
     jsonResponse(['success' => true, 'compras' => $compras, 'count' => count($compras)]);
 }
 
-function compras_getDetailsAjax(): void
+function compras_obtenerDetallesAjax(): void
 {
     $idCompra = (int)($_GET['id_compra'] ?? 0);
     if ($idCompra <= 0) {
         jsonResponse(['success' => false, 'message' => 'ID de compra inválido.'], 400);
         return;
     }
-    $model = new Purchase();
-    $details = $model->getDetails($idCompra);
-    $compra = $model->getById($idCompra);
-    jsonResponse(['success' => true, 'details' => $details, 'compra' => $compra]);
+    $modelo = new Purchase();
+    $detalles = $modelo->obtenerDetalles($idCompra);
+    $compra = $modelo->obtenerPorId($idCompra);
+    jsonResponse(['success' => true, 'details' => $detalles, 'compra' => $compra]);
 }
 
-function compras_quickAddPlanta(): void
+function compras_agregarPlantaRapido(): void
 {
     $nombre = trim((string)($_POST['nombre_comun'] ?? ''));
     if ($nombre === '') {
@@ -206,21 +216,21 @@ function compras_quickAddPlanta(): void
         return;
     }
 
-    $model = new Plant();
-    $model->add($nombre, $nombre);
-    $newId = $model->getLastInsertId() ?? 0;
+    $modelo = new Plant();
+    $modelo->add($nombre, $nombre);
+    $nuevoId = $modelo->getLastInsertId() ?? 0;
 
-    if ($newId <= 0) {
+    if ($nuevoId <= 0) {
         jsonResponse(['success' => false, 'message' => 'Error al crear la planta.'], 500);
         return;
     }
 
-    $planta = $model->getById($newId);
-    AuditLog::record('CREATE', 'planta', $newId, null, ['nombre_comun' => $nombre, 'origen' => 'compra_rapida']);
+    $planta = $modelo->getById($nuevoId);
+    AuditLog::record('CREATE', 'plantas', $nuevoId, null, ['nombre_comun' => $nombre, 'origen' => 'compra_rapida']);
 
     jsonResponse([
         'success' => true,
         'message' => 'Planta creada correctamente.',
-        'planta' => ['id' => $planta['id_planta'] ?? $newId, 'nombre_comun' => $planta['nombre_comun'] ?? $nombre],
+        'planta' => ['id' => $planta['id_planta'] ?? $nuevoId, 'nombre_comun' => $planta['nombre_comun'] ?? $nombre],
     ]);
 }

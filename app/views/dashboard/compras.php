@@ -66,7 +66,7 @@ include_once __DIR__ . '/../common/links.php';
 
     <!-- Add/Edit Modal -->
     <div class="modal fade" id="compraModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
                 <form id="compraForm">
                     <input type="hidden" name="id" id="compraId">
@@ -101,10 +101,6 @@ include_once __DIR__ . '/../common/links.php';
                             <div class="col-md-4">
                                 <label class="form-label">N° Comprobante</label>
                                 <input type="text" class="form-control" name="numero_comprobante" id="frmNumComprobante" placeholder="Opcional">
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label">Observación</label>
-                                <textarea class="form-control" name="observacion" id="frmObservacion" rows="2" placeholder="Opcional"></textarea>
                             </div>
                         </div>
 
@@ -141,6 +137,13 @@ include_once __DIR__ . '/../common/links.php';
                                 </tfoot>
                             </table>
                         </div>
+
+                        <div class="row g-3 mt-1">
+                            <div class="col-12">
+                                <label class="form-label">Observación</label>
+                                <textarea class="form-control" name="observacion" id="frmObservacion" rows="2" placeholder="Opcional"></textarea>
+                            </div>
+                        </div>
                     </div>
                     <input type="hidden" name="subtotal" id="frmSubtotal" value="0">
                     <input type="hidden" name="total" id="frmTotal" value="0">
@@ -155,7 +158,7 @@ include_once __DIR__ . '/../common/links.php';
 
     <!-- Detail Modal -->
     <div class="modal fade" id="detailModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Detalle de Compra</h5>
