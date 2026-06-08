@@ -41,7 +41,7 @@ function hasPermiso(string $codigo): bool
             </ul>
         </div>
 
-        <?php if (hasPermiso('INVENTARIO_VIEW') || hasPermiso('PLANTAS_VIEW') || hasPermiso('PROVEEDORES_VIEW') || hasPermiso('TRABAJADORES_VIEW') || hasPermiso('INSUMOS_VIEW') || hasPermiso('CLIENTES_VIEW') || hasPermiso('TAREAS_VIEW') || hasPermiso('HERRAMIENTAS_VIEW') || hasPermiso('PRECIOS_VIEW') || hasPermiso('RECOLECCION_VIEW') || hasPermiso('TRAZABILIDAD_VIEW')): ?>
+        <?php if (hasPermiso('INVENTARIO_VIEW') || hasPermiso('PLANTAS_VIEW') || hasPermiso('PROVEEDORES_VIEW') || hasPermiso('TRABAJADORES_VIEW') || hasPermiso('INSUMOS_VIEW') || hasPermiso('CLIENTES_VIEW') || hasPermiso('TAREAS_VIEW') || hasPermiso('HERRAMIENTAS_VIEW') || hasPermiso('PRECIOS_VIEW') || hasPermiso('RECOLECCION_VIEW') || hasPermiso('TRAZABILIDAD_VIEW') || hasPermiso('MERMAS_VIEW')): ?>
         <div class="sidebar-section">
             <span class="sidebar-section-title">Gestión</span>
             <ul class="sidebar-menu">
@@ -223,6 +223,18 @@ function hasPermiso(string $codigo): bool
                             <path d="M12 9v6"></path>
                         </svg>
                         <span>Monitoreo</span>
+                    </a>
+                </li>
+                <?php endif; ?>
+                <?php if (hasPermiso('MERMAS_VIEW')): ?>
+                <li>
+                    <a href="<?= BASE_URL ?>dashboard/mermas" class="sidebar-link <?= ($currentPage ?? '') === 'mermas' ? 'active' : '' ?>">
+                        <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="15" y1="9" x2="9" y2="15"></line>
+                            <line x1="9" y1="9" x2="15" y2="15"></line>
+                        </svg>
+                        <span>Mermas</span>
                     </a>
                 </li>
                 <?php endif; ?>
