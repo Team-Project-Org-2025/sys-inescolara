@@ -530,3 +530,20 @@ function trazabilidad(): void
 
     require $view;
 }
+
+function mermas(): void
+{
+    dashboardCheckPermiso('MERMAS_VIEW');
+
+    require_once ROOT_PATH . 'vendor/autoload.php';
+
+    $view = ROOT_PATH . 'app/views/dashboard/mermas.php';
+
+    if (!is_file($view)) {
+        http_response_code(500);
+        echo 'Vista de mermas no encontrada.';
+        return;
+    }
+
+    require $view;
+}
