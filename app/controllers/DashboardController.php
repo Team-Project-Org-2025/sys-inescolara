@@ -513,3 +513,24 @@ function seedcollection(): void
 
     require $view;
 }
+
+function ampliacion(): void
+{
+    dashboardCheckPermiso('AMPLIACION_VIEW');
+
+    require_once ROOT_PATH . 'vendor/autoload.php';
+    $clientModel = new \SysInescolara\models\Client();
+    $clientes = $clientModel->getAll();
+    $employeeModel = new \SysInescolara\models\Employee();
+    $trabajadores = $employeeModel->getAll();
+
+    $view = ROOT_PATH . 'app/views/dashboard/ampliacion.php';
+
+    if (!is_file($view)) {
+        http_response_code(500);
+        echo 'Vista de ampliación no encontrada.';
+        return;
+    }
+
+    require $view;
+}

@@ -2226,7 +2226,7 @@ div.dataTables_wrapper .dt-buttons .btn {
   visibility: visible;
 }
 
-.modal-content {
+.modal-overlay .modal-content {
   background-color: var(--bg-primary);
   border-radius: var(--radius-xl);
   max-width: 800px;
@@ -2241,7 +2241,7 @@ div.dataTables_wrapper .dt-buttons .btn {
   transform: scale(1);
 }
 
-.modal-header {
+.modal-overlay .modal-header {
   position: sticky;
   top: 0;
   display: flex;
@@ -2251,7 +2251,7 @@ div.dataTables_wrapper .dt-buttons .btn {
   z-index: 1;
 }
 
-.modal-body {
+.modal-overlay .modal-body {
   padding: 0 var(--space-6) var(--space-6);
 }
 
