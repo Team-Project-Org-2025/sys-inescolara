@@ -110,6 +110,8 @@ class User extends Database
                 ['codigo' => 'RECOLECCION_EDIT', 'desc' => 'Editar recolecciones'],
                 ['codigo' => 'RECOLECCION_DELETE', 'desc' => 'Eliminar recolecciones'],
                 ['codigo' => 'RECOLECCION_COMPLETE', 'desc' => 'Completar recolecciones y registrar insumos'],
+                ['codigo' => 'CUENTAS_COBRAR_VIEW', 'desc' => 'Ver cuentas por cobrar'],
+                ['codigo' => 'CUENTAS_COBRAR_PAY', 'desc' => 'Registrar pagos de cuentas por cobrar'],
             ];
 
             $stmtCheckPermiso = $this->db->prepare("SELECT COUNT(*) FROM permisos WHERE codigo_permiso = :codigo");

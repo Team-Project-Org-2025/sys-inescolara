@@ -244,6 +244,17 @@ function hasPermiso(string $codigo): bool
                         <span>Venta</span>
                     </a>
                 </li>
+                <?php if (hasPermiso('CUENTAS_COBRAR_VIEW')): ?>
+                <li>
+                    <a href="<?= BASE_URL ?>dashboard/cuentas_cobrar" class="sidebar-link <?= ($currentPage ?? '') === 'cuentas-cobrar' ? 'active' : '' ?>">
+                        <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 1v22"></path>
+                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                        </svg>
+                        <span>Cuentas por Cobrar</span>
+                    </a>
+                </li>
+                <?php endif; ?>
             </ul>
         </div>
         <?php endif; ?>
