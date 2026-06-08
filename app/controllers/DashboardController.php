@@ -513,3 +513,20 @@ function seedcollection(): void
 
     require $view;
 }
+
+function trazabilidad(): void
+{
+    dashboardCheckPermiso('TRAZABILIDAD_VIEW');
+
+    require_once ROOT_PATH . 'vendor/autoload.php';
+
+    $view = ROOT_PATH . 'app/views/dashboard/trazabilidad.php';
+
+    if (!is_file($view)) {
+        http_response_code(500);
+        echo 'Vista de trazabilidad no encontrada.';
+        return;
+    }
+
+    require $view;
+}

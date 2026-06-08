@@ -26,11 +26,16 @@ class Inventory extends Database
                         (SELECT COALESCE(SUM(l2.cantidad_actual), 0) FROM lote l2 WHERE l2.id_planta = p.id_planta AND l2.activo = 1) AS stock,
                         'unidades' AS unidad,
                         NULL AS ubicacion,
-                        c.precio_final_sugerido AS precio,
+                        (
+                            SELECT c3.precio_final_sugerido
+                            FROM calculo_precio c3
+                            JOIN lote l3 ON c3.id_lote = l3.id_lote
+                            WHERE l3.id_planta = p.id_planta AND l3.activo = 1
+                            ORDER BY c3.fecha_calculo DESC, c3.id_calculo DESC
+                            LIMIT 1
+                        ) AS precio,
                         p.id_planta AS item_id
                     FROM plantas p
-                    LEFT JOIN planta_precio_vigente pv ON p.id_planta = pv.id_planta
-                    LEFT JOIN calculo_precio c ON pv.id_calculo = c.id_calculo
                     WHERE p.activo = 1
 
                     UNION ALL
