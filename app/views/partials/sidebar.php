@@ -41,6 +41,7 @@ function hasPermiso(string $codigo): bool
             </ul>
         </div>
 
+        <?php if (hasPermiso('INVENTARIO_VIEW') || hasPermiso('PLANTAS_VIEW') || hasPermiso('PROVEEDORES_VIEW') || hasPermiso('TRABAJADORES_VIEW') || hasPermiso('INSUMOS_VIEW') || hasPermiso('CLIENTES_VIEW') || hasPermiso('TAREAS_VIEW') || hasPermiso('HERRAMIENTAS_VIEW') || hasPermiso('PRECIOS_VIEW') || hasPermiso('RECOLECCION_VIEW') || hasPermiso('AMPLIACION_VIEW')): ?>
         <?php if (hasPermiso('INVENTARIO_VIEW') || hasPermiso('PLANTAS_VIEW') || hasPermiso('PROVEEDORES_VIEW') || hasPermiso('TRABAJADORES_VIEW') || hasPermiso('INSUMOS_VIEW') || hasPermiso('CLIENTES_VIEW') || hasPermiso('TAREAS_VIEW') || hasPermiso('HERRAMIENTAS_VIEW') || hasPermiso('PRECIOS_VIEW') || hasPermiso('RECOLECCION_VIEW') || hasPermiso('TRAZABILIDAD_VIEW') || hasPermiso('MERMAS_VIEW')): ?>
         <div class="sidebar-section">
             <span class="sidebar-section-title">Gestión</span>
@@ -224,6 +225,16 @@ function hasPermiso(string $codigo): bool
                     </a>
                 </li>
                 <?php endif; ?>
+                <?php if (hasPermiso('AMPLIACION_VIEW')): ?>
+                <li>
+                    <a href="<?= BASE_URL ?>dashboard/ampliacion" class="sidebar-link <?= ($currentPage ?? '') === 'ampliacion' ? 'active' : '' ?>">
+                        <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17 1l4 4-4 4"></path>
+                            <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+                            <path d="M7 23l-4-4 4-4"></path>
+                            <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+                        </svg>
+                        <span>Ampliación</span>
                 <?php if (hasPermiso('ORNATOS_VIEW')): ?>
                 <li>
                     <a href="<?= BASE_URL ?>dashboard/ornatos" class="sidebar-link <?= ($currentPage ?? '') === 'ornatos' ? 'active' : '' ?>">
