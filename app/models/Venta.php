@@ -198,20 +198,26 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
             $referencia = $this->generarReferencia();
 
             $estado = ($datos['tipo_venta'] ?? 'contado') === 'credito' ? 'pendiente' : 'completada';
+            $fechaVencimiento = null;
+            if ($datos['tipo_venta'] === 'credito') {
+                $fechaBase = $datos['fecha_venta'] ?? date('Y-m-d H:i:s');
+                $fechaVencimiento = date('Y-m-d', strtotime($fechaBase . ' +30 days'));
+            }
 
             $stmt = $this->db->prepare("INSERT INTO venta
-                (referencia, id_cliente, id_trabajador, tipo_venta, estado, iva_porcentaje, fecha_venta, observaciones)
-                VALUES (:referencia, :id_cliente, :id_trabajador, :tipo_venta, :estado, :iva_porcentaje, :fecha_venta, :observaciones)");
+                (referencia, id_cliente, id_trabajador, tipo_venta, estado, iva_porcentaje, fecha_venta, fecha_vencimiento, observaciones)
+                VALUES (:referencia, :id_cliente, :id_trabajador, :tipo_venta, :estado, :iva_porcentaje, :fecha_venta, :fecha_vencimiento, :observaciones)");
 
             $stmt->execute([
-                ':referencia'    => $referencia,
-                ':id_cliente'    => (int)$datos['id_cliente'],
-                ':id_trabajador' => (int)$datos['id_trabajador'],
-                ':tipo_venta'    => $datos['tipo_venta'] ?? 'contado',
-                ':estado'        => $estado,
-                ':iva_porcentaje'=> self::IVA_PORCENTAJE,
-                ':fecha_venta'   => $datos['fecha_venta'] ?? date('Y-m-d H:i:s'),
-                ':observaciones' => $datos['observaciones'] ?? null,
+                ':referencia'       => $referencia,
+                ':id_cliente'       => (int)$datos['id_cliente'],
+                ':id_trabajador'    => (int)$datos['id_trabajador'],
+                ':tipo_venta'       => $datos['tipo_venta'] ?? 'contado',
+                ':estado'           => $estado,
+                ':iva_porcentaje'   => self::IVA_PORCENTAJE,
+                ':fecha_venta'      => $datos['fecha_venta'] ?? date('Y-m-d H:i:s'),
+                ':fecha_vencimiento'=> $fechaVencimiento,
+                ':observaciones'    => $datos['observaciones'] ?? null,
             ]);
 
             $ventaId = (int)$this->db->lastInsertId();
@@ -219,7 +225,7 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
             $this->agregarDetalles($ventaId, $datos['productos']);
 
             if (!empty($datos['pagos'])) {
-                $this->agregarPagos($ventaId, $datos['pagos']);
+                $this->agregarPagos($ventaId, $datos['pagos'], $datos['tipo_venta'] ?? 'contado');
             }
 
             $this->db->commit();
@@ -273,7 +279,7 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
         }
     }
 
-    private function agregarPagos(int $idVenta, array $pagos): void
+    private function agregarPagos(int $idVenta, array $pagos, string $tipoVenta = 'contado'): void
     {
         $totalProductos = 0;
         $detalles = $this->obtenerDetalles($idVenta);
@@ -298,7 +304,7 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
             ]);
         }
 
-        if (abs($totalPagos - $totalProductos) > 0.01) {
+        if ($tipoVenta !== 'credito' && abs($totalPagos - $totalProductos) > 0.01) {
             throw new \Exception("El total de pagos ({$totalPagos}) no coincide con el total de la venta ({$totalProductos}).");
         }
     }
