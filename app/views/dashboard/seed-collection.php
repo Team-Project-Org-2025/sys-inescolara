@@ -242,7 +242,7 @@ include_once __DIR__ . '/../common/links.php';
                 <select class="form-select form-select-sm insumo-unidad" required>
                     <option value="">Seleccione</option>
                     <?php foreach ($unidades as $un): ?>
-                        <option value="<?= (int)$un['id'] ?>">
+                        <option value="<?= (int)$un['id'] ?>" <?= ((int)$un['id'] === 5) ? 'selected' : '' ?>>
                             <?= htmlspecialchars($un['nombre_unidad_medida'] ?? '') ?> (<?= htmlspecialchars($un['simbolo'] ?? '') ?>)
                         </option>
                     <?php endforeach; ?>
