@@ -361,7 +361,8 @@ const Ventas = {
             }
         });
 
-        if (pagos.length === 0) {
+        const tipoVenta = document.getElementById('tipoVenta')?.value;
+        if (pagos.length === 0 && tipoVenta !== 'credito') {
             Swal.fire('Error', 'Debe registrar al menos un pago.', 'warning');
             return;
         }
