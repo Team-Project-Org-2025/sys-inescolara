@@ -57,7 +57,7 @@ include_once __DIR__ . '/../common/links.php';
 $modulos = [
     'Dashboard' => ['DASHBOARD_VIEW' => 'Ver'],
     'Inventario' => ['INVENTARIO_VIEW' => 'Ver'],
-    'Ventas' => ['VENTAS_ACCESS' => 'Acceder'],
+    'Ventas' => ['VENTAS_ACCESS' => 'Acceder', 'VENTAS_CREATE' => 'Crear', 'VENTAS_EDIT' => 'Editar', 'VENTAS_DELETE' => 'Anular', 'VENTAS_PDF' => 'PDF'],
     'Plantas' => ['PLANTAS_VIEW' => 'Ver', 'PLANTAS_CREATE' => 'Crear', 'PLANTAS_EDIT' => 'Editar', 'PLANTAS_DELETE' => 'Eliminar'],
     'Proveedores' => ['PROVEEDORES_VIEW' => 'Ver', 'PROVEEDORES_CREATE' => 'Crear', 'PROVEEDORES_EDIT' => 'Editar', 'PROVEEDORES_DELETE' => 'Eliminar'],
     'Insumos' => ['INSUMOS_VIEW' => 'Ver', 'INSUMOS_CREATE' => 'Crear', 'INSUMOS_EDIT' => 'Editar', 'INSUMOS_DELETE' => 'Eliminar'],
@@ -65,6 +65,7 @@ $modulos = [
     'Clientes' => ['CLIENTES_VIEW' => 'Ver', 'CLIENTES_CREATE' => 'Crear', 'CLIENTES_EDIT' => 'Editar', 'CLIENTES_DELETE' => 'Eliminar'],
     'Tareas' => ['TAREAS_VIEW' => 'Ver', 'TAREAS_CREATE' => 'Crear', 'TAREAS_EDIT' => 'Editar', 'TAREAS_DELETE' => 'Eliminar'],
     'Ubicaciones' => ['UBICACIONES_VIEW' => 'Ver', 'UBICACIONES_CREATE' => 'Crear', 'UBICACIONES_EDIT' => 'Editar', 'UBICACIONES_DELETE' => 'Eliminar'],
+    'Ornatos' => ['ORNATOS_VIEW' => 'Ver', 'ORNATOS_CREATE' => 'Crear', 'ORNATOS_EDIT' => 'Editar', 'ORNATOS_DELETE' => 'Eliminar'],
     'Asistente IA' => ['ASISTENTE_ACCESS' => 'Acceder'],
     'Sistema' => ['USUARIOS_MANAGE' => 'Gestionar (usuarios, bitácora, respaldos)'],
 ];

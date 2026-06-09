@@ -1,0 +1,409 @@
+<?php
+
+namespace SysInescolara\models;
+
+use SysInescolara\core\Database;
+use SysInescolara\interfaces\ReadableInterface;
+use SysInescolara\interfaces\DeletableInterface;
+use PDO;
+
+class Venta extends Database implements ReadableInterface, DeletableInterface
+{
+    private const IVA_PORCENTAJE = 16.00;
+    private const IVA_MULTIPLICADOR = 1.16;
+
+    public function __construct()
+    {
+        parent::__construct();
+    }
+
+    public function getAll(): array
+    {
+        try {
+            $sql = "SELECT
+                        v.id_venta AS id,
+                        v.id_venta,
+                        v.referencia,
+                        v.id_cliente,
+                        v.id_trabajador,
+                        v.tipo_venta,
+                        v.estado,
+                        v.iva_porcentaje,
+                        v.fecha_venta,
+                        v.observaciones,
+                        v.activo,
+                        c.nombre_cliente,
+                        t.nombre_trabajador,
+                        t.apellido_trabajador,
+                        COALESCE((SELECT SUM(dv.cantidad * dv.precio_unitario) FROM detalle_venta dv WHERE dv.id_venta = v.id_venta), 0) AS monto_subtotal,
+                        COALESCE((SELECT SUM(dv.cantidad * dv.precio_unitario) / :iva_mult FROM detalle_venta dv WHERE dv.id_venta = v.id_venta), 0) AS monto_sin_iva,
+                        COALESCE((SELECT SUM(pv.monto) FROM pago_venta pv WHERE pv.id_venta = v.id_venta), 0) AS total_pagado
+                    FROM venta v
+                    LEFT JOIN cliente c ON v.id_cliente = c.id_cliente AND c.activo = 1
+                    LEFT JOIN trabajadores t ON v.id_trabajador = t.id_trabajador AND t.activo = 1
+                    WHERE v.activo = 1
+                    ORDER BY v.fecha_venta DESC, v.id_venta DESC";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([':iva_mult' => self::IVA_MULTIPLICADOR]);
+            return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+        } catch (\Throwable $e) {
+            error_log('Error al obtener ventas: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    public function getById(int $id): ?array
+    {
+        try {
+            $sql = "SELECT
+                        v.*,
+                        c.nombre_cliente,
+                        t.nombre_trabajador,
+                        t.apellido_trabajador,
+                        COALESCE((SELECT SUM(dv.cantidad * dv.precio_unitario) FROM detalle_venta dv WHERE dv.id_venta = v.id_venta), 0) AS monto_subtotal,
+                        COALESCE((SELECT SUM(pv.monto) FROM pago_venta pv WHERE pv.id_venta = v.id_venta), 0) AS total_pagado
+                    FROM venta v
+                    LEFT JOIN cliente c ON v.id_cliente = c.id_cliente
+                    LEFT JOIN trabajadores t ON v.id_trabajador = t.id_trabajador
+                    WHERE v.id_venta = :id";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([':id' => $id]);
+            return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+        } catch (\Throwable $e) {
+            error_log('Error al obtener venta por ID: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    public function obtenerVentaConDetalles(int $id): ?array
+    {
+        $venta = $this->getById($id);
+        if (!$venta) {
+            return null;
+        }
+
+        $venta['detalles'] = $this->obtenerDetalles($id);
+        $venta['pagos'] = $this->obtenerPagos($id);
+
+        $subtotalConIva = array_sum(array_column($venta['detalles'], 'sub_total'));
+        $venta['monto_sin_iva'] = $subtotalConIva / self::IVA_MULTIPLICADOR;
+        $venta['monto_iva'] = $venta['monto_sin_iva'] * (self::IVA_PORCENTAJE / 100);
+        $venta['monto_total'] = $venta['monto_sin_iva'] + $venta['monto_iva'];
+
+        return $venta;
+    }
+
+    public function exists(int $id): bool
+    {
+        try {
+            $stmt = $this->db->prepare("SELECT COUNT(*) FROM venta WHERE id_venta = :id");
+            $stmt->execute([':id' => $id]);
+            return $stmt->fetchColumn() > 0;
+        } catch (\Throwable $e) {
+            error_log('Error en exists: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function delete(int $id): bool
+    {
+        return $this->cancelar($id);
+    }
+
+    public function cancelar(int $id): bool
+    {
+        try {
+            $this->db->beginTransaction();
+
+            $detalles = $this->obtenerDetalles($id);
+            if (empty($detalles)) {
+                throw new \Exception('No se encontraron detalles para esta venta.');
+            }
+
+            $stmtStock = $this->db->prepare("UPDATE lote SET cantidad_actual = cantidad_actual + :cantidad, estado = IF(cantidad_actual + :cantidad2 > 0, 'Activo', estado) WHERE id_lote = :id_lote");
+            foreach ($detalles as $det) {
+                $stmtStock->execute([
+                    ':cantidad' => (int)$det['cantidad'],
+                    ':cantidad2' => (int)$det['cantidad'],
+                    ':id_lote' => (int)$det['id_lote'],
+                ]);
+            }
+
+            $stmt = $this->db->prepare("UPDATE venta SET activo = 0, estado = 'cancelada', updated_at = NOW() WHERE id_venta = :id");
+            $stmt->execute([':id' => $id]);
+
+            $this->db->commit();
+            return true;
+        } catch (\Throwable $e) {
+            $this->db->rollBack();
+            error_log('Error al cancelar venta: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function restore(int $id): bool
+    {
+        try {
+            $this->db->beginTransaction();
+
+            $stmt = $this->db->prepare("UPDATE venta SET activo = 1, estado = 'completada', updated_at = NOW() WHERE id_venta = :id");
+            $stmt->execute([':id' => $id]);
+
+            $detalles = $this->obtenerDetalles($id);
+            $stmtStock = $this->db->prepare("UPDATE lote SET cantidad_actual = cantidad_actual - :cantidad WHERE id_lote = :id_lote");
+            foreach ($detalles as $det) {
+                $stmtStock->execute([
+                    ':cantidad' => (int)$det['cantidad'],
+                    ':id_lote' => (int)$det['id_lote'],
+                ]);
+            }
+
+            $this->db->commit();
+            return true;
+        } catch (\Throwable $e) {
+            $this->db->rollBack();
+            error_log('Error al restaurar venta: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function obtenerUltimoId(): ?int
+    {
+        try {
+            $stmt = $this->db->query("SELECT MAX(id_venta) FROM venta");
+            return (int)$stmt->fetchColumn();
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
+
+    public function generarReferencia(): string
+    {
+        try {
+            $fecha = date('Ymd');
+            $stmt = $this->db->prepare("SELECT MAX(CAST(SUBSTRING_INDEX(referencia, '-', -1) AS UNSIGNED)) FROM venta WHERE referencia LIKE :patron");
+            $stmt->execute([':patron' => "VEN-{$fecha}-%"]);
+            $maxNum = (int)$stmt->fetchColumn();
+            return sprintf('VEN-%s-%03d', $fecha, $maxNum + 1);
+        } catch (\Throwable $e) {
+            return 'VEN-' . date('Ymd') . '-001';
+        }
+    }
+
+    public function agregar(array $datos): int
+    {
+        try {
+            $this->db->beginTransaction();
+
+            $referencia = $this->generarReferencia();
+
+            $estado = ($datos['tipo_venta'] ?? 'contado') === 'credito' ? 'pendiente' : 'completada';
+
+            $stmt = $this->db->prepare("INSERT INTO venta
+                (referencia, id_cliente, id_trabajador, tipo_venta, estado, iva_porcentaje, fecha_venta, observaciones)
+                VALUES (:referencia, :id_cliente, :id_trabajador, :tipo_venta, :estado, :iva_porcentaje, :fecha_venta, :observaciones)");
+
+            $stmt->execute([
+                ':referencia'    => $referencia,
+                ':id_cliente'    => (int)$datos['id_cliente'],
+                ':id_trabajador' => (int)$datos['id_trabajador'],
+                ':tipo_venta'    => $datos['tipo_venta'] ?? 'contado',
+                ':estado'        => $estado,
+                ':iva_porcentaje'=> self::IVA_PORCENTAJE,
+                ':fecha_venta'   => $datos['fecha_venta'] ?? date('Y-m-d H:i:s'),
+                ':observaciones' => $datos['observaciones'] ?? null,
+            ]);
+
+            $ventaId = (int)$this->db->lastInsertId();
+
+            $this->agregarDetalles($ventaId, $datos['productos']);
+
+            if (!empty($datos['pagos'])) {
+                $this->agregarPagos($ventaId, $datos['pagos']);
+            }
+
+            $this->db->commit();
+            return $ventaId;
+        } catch (\Throwable $e) {
+            $this->db->rollBack();
+            error_log('Error al agregar venta: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    private function agregarDetalles(int $idVenta, array $productos): void
+    {
+        $stmtDet = $this->db->prepare("INSERT INTO detalle_venta
+            (id_venta, id_lote, cantidad, precio_unitario)
+            VALUES (:id_venta, :id_lote, :cantidad, :precio_unitario)");
+
+        $stmtStock = $this->db->prepare("UPDATE lote SET
+            cantidad_actual = cantidad_actual - :cantidad,
+            estado = IF(cantidad_actual - :cantidad2 <= 0, 'Agotado', estado)
+            WHERE id_lote = :id_lote");
+
+        foreach ($productos as $item) {
+            $idLote = (int)($item['id_lote'] ?? 0);
+            $cantidad = (int)($item['cantidad'] ?? 0);
+
+            $stmtCheck = $this->db->prepare("SELECT cantidad_actual FROM lote WHERE id_lote = :id_lote AND activo = 1");
+            $stmtCheck->execute([':id_lote' => $idLote]);
+            $lote = $stmtCheck->fetch(PDO::FETCH_ASSOC);
+
+            if (!$lote) {
+                throw new \Exception("El lote ID {$idLote} no existe.");
+            }
+
+            if ((int)$lote['cantidad_actual'] < $cantidad) {
+                throw new \Exception("Stock insuficiente en el lote ID {$idLote}. Disponible: {$lote['cantidad_actual']}, solicitado: {$cantidad}.");
+            }
+
+            $stmtDet->execute([
+                ':id_venta'       => $idVenta,
+                ':id_lote'        => $idLote,
+                ':cantidad'       => $cantidad,
+                ':precio_unitario'=> $item['precio_unitario'] ?? 0,
+            ]);
+
+            $stmtStock->execute([
+                ':cantidad'  => $cantidad,
+                ':cantidad2' => $cantidad,
+                ':id_lote'   => $idLote,
+            ]);
+        }
+    }
+
+    private function agregarPagos(int $idVenta, array $pagos): void
+    {
+        $totalProductos = 0;
+        $detalles = $this->obtenerDetalles($idVenta);
+        foreach ($detalles as $d) {
+            $totalProductos += (float)$d['sub_total'];
+        }
+
+        $totalPagos = 0;
+        $stmtPago = $this->db->prepare("INSERT INTO pago_venta
+            (id_venta, metodo, monto, referencia)
+            VALUES (:id_venta, :metodo, :monto, :referencia)");
+
+        foreach ($pagos as $pago) {
+            $monto = (float)($pago['monto'] ?? 0);
+            $totalPagos += $monto;
+
+            $stmtPago->execute([
+                ':id_venta'  => $idVenta,
+                ':metodo'    => $pago['metodo'] ?? 'efectivo',
+                ':monto'     => $monto,
+                ':referencia'=> $pago['referencia'] ?? null,
+            ]);
+        }
+
+        if (abs($totalPagos - $totalProductos) > 0.01) {
+            throw new \Exception("El total de pagos ({$totalPagos}) no coincide con el total de la venta ({$totalProductos}).");
+        }
+    }
+
+    public function obtenerDetalles(int $idVenta): array
+    {
+        try {
+            $stmt = $this->db->prepare("SELECT
+                                            dv.id_detalle_venta,
+                                            dv.id_venta,
+                                            dv.id_lote,
+                                            dv.cantidad,
+                                            dv.precio_unitario,
+                                            (dv.cantidad * dv.precio_unitario) AS sub_total,
+                                            l.cantidad_actual,
+                                            p.nombre_comun AS planta_nombre,
+                                            e.nombre_especie AS especie_nombre
+                                        FROM detalle_venta dv
+                                        JOIN lote l ON dv.id_lote = l.id_lote
+                                        LEFT JOIN plantas p ON l.id_planta = p.id_planta
+                                        LEFT JOIN especie e ON p.id_especie = e.id_especie
+                                        WHERE dv.id_venta = :id_venta
+                                        ORDER BY dv.id_detalle_venta ASC");
+            $stmt->execute([':id_venta' => $idVenta]);
+            return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+        } catch (\Throwable $e) {
+            error_log('Error al obtener detalles de venta: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    public function obtenerPagos(int $idVenta): array
+    {
+        try {
+            $stmt = $this->db->prepare("SELECT * FROM pago_venta WHERE id_venta = :id_venta ORDER BY created_at ASC");
+            $stmt->execute([':id_venta' => $idVenta]);
+            return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+        } catch (\Throwable $e) {
+            error_log('Error al obtener pagos: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    public function obtenerLotesDisponibles(string $query): array
+    {
+        try {
+            $stmt = $this->db->prepare("SELECT
+                                            l.id_lote,
+                                            l.cantidad_actual,
+                                            l.estado,
+                                            p.nombre_comun AS planta_nombre,
+                                            e.nombre_especie AS especie_nombre,
+                                            c.precio_final_sugerido AS precio_unitario
+                                        FROM lote l
+                                        JOIN plantas p ON l.id_planta = p.id_planta AND p.activo = 1
+                                        LEFT JOIN especie e ON p.id_especie = e.id_especie
+                                        LEFT JOIN calculo_precio c ON l.id_lote = c.id_lote
+                                        WHERE l.activo = 1
+                                        AND l.cantidad_actual > 0
+                                        AND (p.nombre_comun LIKE ? OR e.nombre_especie LIKE ? OR p.nombre_tecnico LIKE ?)
+                                        ORDER BY p.nombre_comun ASC
+                                        LIMIT 20");
+            $searchTerm = "%{$query}%";
+            $stmt->execute([$searchTerm, $searchTerm, $searchTerm]);
+            return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+        } catch (\Throwable $e) {
+            error_log('Error al buscar lotes: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    public function buscarClientes(string $query): array
+    {
+        try {
+            $stmt = $this->db->prepare("SELECT
+                                            id_cliente,
+                                            nombre_cliente,
+                                            contacto_cliente
+                                        FROM cliente
+                                        WHERE activo = 1
+                                        AND (nombre_cliente LIKE ? OR contacto_cliente LIKE ?)
+                                        ORDER BY nombre_cliente ASC
+                                        LIMIT 10");
+            $searchTerm = "%{$query}%";
+            $stmt->execute([$searchTerm, $searchTerm]);
+            return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+        } catch (\Throwable $e) {
+            error_log('Error al buscar clientes: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    public function obtenerTrabajadoresActivos(): array
+    {
+        try {
+            $stmt = $this->db->query("SELECT id_trabajador, nombre_trabajador, apellido_trabajador, cedula_trabajador FROM trabajadores WHERE activo = 1 ORDER BY nombre_trabajador ASC");
+            return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+        } catch (\Throwable $e) {
+            error_log('Error al obtener trabajadores: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    public function getLastInsertId(): ?int
+    {
+        return $this->obtenerUltimoId();
+    }
+}

@@ -1,6 +1,6 @@
 // Expresiones regulares reutilizables
 export const REGEX = {
-  cedula: /^\d{7,10}$/,
+  cedula: /^\d{7,8}$/,
   codigo: /^\d{9}$/,
   factura: /^\d{8}$/,
   nombre: /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]{2,100}$/,
@@ -58,7 +58,7 @@ export const validateNoFutureDate = ($input) => {
 
 // Mensajes de error personalizados
 export const MESSAGES = {
-  cedula: 'Cédula inválida (7-10 dígitos)',
+  cedula: 'Cédula inválida (7-8 dígitos)',
   codigo: 'Código inválido (9 dígitos)',
   factura: 'Factura inválida (8 dígitos)',
   nombre: 'Nombre inválido (2-100 caracteres, solo letras)',
