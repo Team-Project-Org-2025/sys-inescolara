@@ -701,6 +701,29 @@ LOCK TABLES `uso_herramienta` WRITE;
 /*!40000 ALTER TABLE `uso_herramienta` ENABLE KEYS */;
 UNLOCK TABLES;
 
+CREATE TABLE `ornatos` (
+  `id_ornato` int PRIMARY KEY AUTO_INCREMENT,
+  `id_cliente` int NOT NULL,
+  `tipo_ornato` enum('Venta','Donacion') NOT NULL DEFAULT 'Venta',
+  `descripcion` text,
+  `ubicacion` varchar(255) DEFAULT NULL,
+  `monto_total` decimal(10,2) DEFAULT 0.00,
+  `fecha` date NOT NULL,
+  `activo` tinyint(1) NOT NULL DEFAULT 1,
+  FOREIGN KEY (`id_cliente`) REFERENCES `cliente` (`id_cliente`)
+);
+
+CREATE TABLE `detalle_ornatos` (
+  `id_detalle_ornato` int PRIMARY KEY AUTO_INCREMENT,
+  `id_ornato` int NOT NULL,
+  `id_lote` int NOT NULL,
+  `cantidad` int NOT NULL,
+  `precio_unitario` decimal(10,2) DEFAULT NULL,
+  `sub_total` decimal(10,2) DEFAULT NULL,
+  FOREIGN KEY (`id_ornato`) REFERENCES `ornatos` (`id_ornato`) ON DELETE CASCADE,
+  FOREIGN KEY (`id_lote`) REFERENCES `lote` (`id_lote`)
+);
+
 --
 -- Dumping routines for database 'sysinescolara'
 --

@@ -214,6 +214,30 @@ function supplies(): void
     require $view;
 }
 
+function compras(): void
+{
+    dashboardCheckPermiso('COMPRAS_VIEW');
+
+    require_once ROOT_PATH . 'vendor/autoload.php';
+    $supplierModel = new \SysInescolara\models\Supplier();
+    $proveedores = $supplierModel->getAll();
+    $supplyModel = new \SysInescolara\models\Supplies();
+    $insumos = $supplyModel->getAll();
+    $locationModel = new \SysInescolara\models\Location();
+    $ubicaciones = $locationModel->getAll();
+
+    $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
+        . 'dashboard' . DIRECTORY_SEPARATOR . 'compras.php';
+
+    if (!is_file($view)) {
+        http_response_code(500);
+        echo 'Vista de compras no encontrada.';
+        return;
+    }
+
+    require $view;
+}
+
 function tasks(): void
 {
     dashboardCheckPermiso('TAREAS_VIEW');
@@ -401,6 +425,25 @@ function backups(): void
 
     require $view;
 }
+function ornatos(): void
+{
+    dashboardCheckPermiso('ORNATOS_VIEW');
+
+    require_once ROOT_PATH . 'vendor/autoload.php';
+    $modeloCliente = new \SysInescolara\models\Client();
+    $clientes = $modeloCliente->getAll();
+    $modeloLote = new \SysInescolara\models\Batch();
+    $lotes = $modeloLote->getAll();
+
+    $vista = ROOT_PATH . 'app/views/dashboard/ornatos.php';
+    if (!is_file($vista)) {
+        http_response_code(500);
+        echo 'Vista de ornatos no encontrada.';
+        return;
+    }
+    require $vista;
+}
+
 function roles(): void
 {
     dashboardCheckPermiso('USUARIOS_MANAGE');
@@ -529,6 +572,34 @@ function ampliacion(): void
     if (!is_file($view)) {
         http_response_code(500);
         echo 'Vista de ampliación no encontrada.';
+function trazabilidad(): void
+{
+    dashboardCheckPermiso('TRAZABILIDAD_VIEW');
+
+    require_once ROOT_PATH . 'vendor/autoload.php';
+
+    $view = ROOT_PATH . 'app/views/dashboard/trazabilidad.php';
+
+    if (!is_file($view)) {
+        http_response_code(500);
+        echo 'Vista de trazabilidad no encontrada.';
+        return;
+    }
+
+    require $view;
+}
+
+function mermas(): void
+{
+    dashboardCheckPermiso('MERMAS_VIEW');
+
+    require_once ROOT_PATH . 'vendor/autoload.php';
+
+    $view = ROOT_PATH . 'app/views/dashboard/mermas.php';
+
+    if (!is_file($view)) {
+        http_response_code(500);
+        echo 'Vista de mermas no encontrada.';
         return;
     }
 
