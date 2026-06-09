@@ -572,6 +572,12 @@ function ampliacion(): void
     if (!is_file($view)) {
         http_response_code(500);
         echo 'Vista de ampliación no encontrada.';
+        return;
+    }
+
+    require $view;
+}
+
 function trazabilidad(): void
 {
     dashboardCheckPermiso('TRAZABILIDAD_VIEW');

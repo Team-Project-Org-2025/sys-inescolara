@@ -42,7 +42,7 @@ function hasPermiso(string $codigo): bool
         </div>
 
         <?php if (hasPermiso('INVENTARIO_VIEW') || hasPermiso('PLANTAS_VIEW') || hasPermiso('PROVEEDORES_VIEW') || hasPermiso('TRABAJADORES_VIEW') || hasPermiso('INSUMOS_VIEW') || hasPermiso('CLIENTES_VIEW') || hasPermiso('TAREAS_VIEW') || hasPermiso('HERRAMIENTAS_VIEW') || hasPermiso('PRECIOS_VIEW') || hasPermiso('RECOLECCION_VIEW') || hasPermiso('AMPLIACION_VIEW')): ?>
-        <?php if (hasPermiso('INVENTARIO_VIEW') || hasPermiso('PLANTAS_VIEW') || hasPermiso('PROVEEDORES_VIEW') || hasPermiso('TRABAJADORES_VIEW') || hasPermiso('INSUMOS_VIEW') || hasPermiso('CLIENTES_VIEW') || hasPermiso('TAREAS_VIEW') || hasPermiso('HERRAMIENTAS_VIEW') || hasPermiso('PRECIOS_VIEW') || hasPermiso('RECOLECCION_VIEW') || hasPermiso('TRAZABILIDAD_VIEW') || hasPermiso('MERMAS_VIEW')): ?>
+        <?php if (hasPermiso('INVENTARIO_VIEW') || hasPermiso('PLANTAS_VIEW') || hasPermiso('PROVEEDORES_VIEW') || hasPermiso('TRABAJADORES_VIEW') || hasPermiso('INSUMOS_VIEW') || hasPermiso('CLIENTES_VIEW') || hasPermiso('TAREAS_VIEW') || hasPermiso('HERRAMIENTAS_VIEW') || hasPermiso('PRECIOS_VIEW') || hasPermiso('RECOLECCION_VIEW') || hasPermiso('AMPLIACION_VIEW') || hasPermiso('TRAZABILIDAD_VIEW') || hasPermiso('MERMAS_VIEW')): ?>
         <div class="sidebar-section">
             <span class="sidebar-section-title">Gestión</span>
             <ul class="sidebar-menu">
@@ -235,6 +235,9 @@ function hasPermiso(string $codigo): bool
                             <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
                         </svg>
                         <span>Ampliación</span>
+                    </a>
+                </li>
+                <?php endif; ?>
                 <?php if (hasPermiso('ORNATOS_VIEW')): ?>
                 <li>
                     <a href="<?= BASE_URL ?>dashboard/ornatos" class="sidebar-link <?= ($currentPage ?? '') === 'ornatos' ? 'active' : '' ?>">
@@ -272,6 +275,7 @@ function hasPermiso(string $codigo): bool
                 <?php endif; ?>
             </ul>
         </div>
+        <?php endif; ?>
         <?php endif; ?>
 
         <?php if (hasPermiso('VENTAS_ACCESS')): ?>
