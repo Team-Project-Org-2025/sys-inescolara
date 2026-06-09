@@ -2,7 +2,12 @@
 
 require_once __DIR__ . '/controller_helpers.php';
 
-use SysInescolara\models\SeedCollection;
+use SysInescolara\models\SeedCollection;//no lo borre
+use SysInescolara\models\Location;
+use SysInescolara\models\Employee;//no lo borre
+use SysInescolara\models\Plant;
+use SysInescolara\models\Supplies;
+use SysInescolara\models\UnidadMedida;
 use SysInescolara\models\AuditLog;
 
 function index(): void
