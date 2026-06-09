@@ -114,6 +114,18 @@ function hasPermiso(string $codigo): bool
                     </a>
                 </li>
                 <?php endif; ?>
+                <?php if (hasPermiso('COMPRAS_VIEW')): ?>
+                <li>
+                    <a href="<?= BASE_URL ?>dashboard/compras" class="sidebar-link <?= ($currentPage ?? '') === 'compras' ? 'active' : '' ?>">
+                        <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <path d="M16 10a4 4 0 0 1-8 0"></path>
+                        </svg>
+                        <span>Compras</span>
+                    </a>
+                </li>
+                <?php endif; ?>
                 <?php if (hasPermiso('TRABAJADORES_VIEW')): ?>
                 <li>
                     <a href="<?= BASE_URL ?>dashboard/employees" class="sidebar-link <?= ($currentPage ?? '') === 'employees' ? 'active' : '' ?>">

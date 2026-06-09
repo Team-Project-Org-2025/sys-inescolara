@@ -226,7 +226,7 @@ class Inventory extends Database
         try {
             $stmt = $this->db->prepare("
                 UPDATE insumo
-                SET stock_actual = GREATEST(0, stock_actual + CASE WHEN :tipo = 'entrada' THEN :cantidad ELSE -:cantidad END)
+                SET stock_actual = GREATEST(0, stock_actual + :cantidad * CASE WHEN :tipo = 'entrada' THEN 1 ELSE -1 END)
                 WHERE id_insumo = :id
             ");
             return $stmt->execute([
