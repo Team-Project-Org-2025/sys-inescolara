@@ -123,6 +123,29 @@ function ventas(): void
     require $view;
 }
 
+function cuentas_cobrar(): void
+{
+    dashboardCheckPermiso('CUENTAS_COBRAR_VIEW');
+
+    require_once ROOT_PATH . 'vendor/autoload.php';
+    $employeeModel = new \SysInescolara\models\Employee();
+    $employees = $employeeModel->getAll();
+
+    $permisos = $_SESSION['user_permisos'] ?? [];
+    $canPay = in_array('CUENTAS_COBRAR_PAY', $permisos, true);
+
+    $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
+        . 'dashboard' . DIRECTORY_SEPARATOR . 'cuentas-cobrar.php';
+
+    if (!is_file($view)) {
+        http_response_code(500);
+        echo 'Vista de cuentas por cobrar no encontrada.';
+        return;
+    }
+
+    require $view;
+}
+
 function usuarios(): void
 {
     dashboardCheckPermiso('USUARIOS_MANAGE');
