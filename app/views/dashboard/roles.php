@@ -12,6 +12,7 @@ $modulos = [
     'Clientes' => ['CLIENTES_VIEW' => 'Ver', 'CLIENTES_CREATE' => 'Crear', 'CLIENTES_EDIT' => 'Editar', 'CLIENTES_DELETE' => 'Eliminar'],
     'Tareas' => ['TAREAS_VIEW' => 'Ver', 'TAREAS_CREATE' => 'Crear', 'TAREAS_EDIT' => 'Editar', 'TAREAS_DELETE' => 'Eliminar'],
     'Ubicaciones' => ['UBICACIONES_VIEW' => 'Ver', 'UBICACIONES_CREATE' => 'Crear', 'UBICACIONES_EDIT' => 'Editar', 'UBICACIONES_DELETE' => 'Eliminar'],
+    'Ornatos' => ['ORNATOS_VIEW' => 'Ver', 'ORNATOS_CREATE' => 'Crear', 'ORNATOS_EDIT' => 'Editar', 'ORNATOS_DELETE' => 'Eliminar'],
     'Asistente IA' => ['ASISTENTE_ACCESS' => 'Acceder'],
     'Sistema' => ['USUARIOS_MANAGE' => 'Gestionar (usuarios, bitácora, respaldos)'],
 ];

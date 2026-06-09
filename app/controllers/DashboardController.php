@@ -425,6 +425,25 @@ function backups(): void
 
     require $view;
 }
+function ornatos(): void
+{
+    dashboardCheckPermiso('ORNATOS_VIEW');
+
+    require_once ROOT_PATH . 'vendor/autoload.php';
+    $modeloCliente = new \SysInescolara\models\Client();
+    $clientes = $modeloCliente->getAll();
+    $modeloLote = new \SysInescolara\models\Batch();
+    $lotes = $modeloLote->getAll();
+
+    $vista = ROOT_PATH . 'app/views/dashboard/ornatos.php';
+    if (!is_file($vista)) {
+        http_response_code(500);
+        echo 'Vista de ornatos no encontrada.';
+        return;
+    }
+    require $vista;
+}
+
 function roles(): void
 {
     dashboardCheckPermiso('USUARIOS_MANAGE');
