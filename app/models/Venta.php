@@ -181,10 +181,10 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
     {
         try {
             $fecha = date('Ymd');
-            $stmt = $this->db->prepare("SELECT COUNT(*) FROM venta WHERE DATE(fecha_venta) = CURDATE()");
-            $stmt->execute();
-            $count = (int)$stmt->fetchColumn() + 1;
-            return sprintf('VEN-%s-%03d', $fecha, $count);
+            $stmt = $this->db->prepare("SELECT MAX(CAST(SUBSTRING_INDEX(referencia, '-', -1) AS UNSIGNED)) FROM venta WHERE referencia LIKE :patron");
+            $stmt->execute([':patron' => "VEN-{$fecha}-%"]);
+            $maxNum = (int)$stmt->fetchColumn();
+            return sprintf('VEN-%s-%03d', $fecha, $maxNum + 1);
         } catch (\Throwable $e) {
             return 'VEN-' . date('Ymd') . '-001';
         }
