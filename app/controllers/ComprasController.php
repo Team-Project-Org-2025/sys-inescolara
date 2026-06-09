@@ -7,6 +7,7 @@ use SysInescolara\models\Supplier;
 use SysInescolara\models\Supplies;
 use SysInescolara\models\Location;
 use SysInescolara\models\Plant;
+use SysInescolara\models\CuentaPagar;
 use SysInescolara\models\AuditLog;
 
 function index(): void
@@ -104,6 +105,13 @@ function compras_manejarAgregarEditar(string $modo): void
             }
 
             $modelo->confirmarTransaccion();
+
+            try {
+                $cuentaPagar = new CuentaPagar();
+                $cuentaPagar->crear($nuevoId, $total);
+            } catch (\Throwable $e) {
+                error_log('Error al crear cuenta por pagar: ' . $e->getMessage());
+            }
 
             AuditLog::record('CREATE', 'compra', $nuevoId, null, [
                 'id_proveedor' => $idProveedor, 'total' => $total, 'items' => count($items),
