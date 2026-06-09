@@ -1,0 +1,145 @@
+<?php
+include_once __DIR__ . '/../common/links.php';
+?>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mermas - INECOLARA</title>
+    <?= $css_links ?>
+</head>
+<body>
+
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <?php
+    $currentPage = 'mermas';
+    include_once __DIR__ . '/../partials/sidebar.php';
+    ?>
+
+    <main class="main-content">
+        <?php $title = 'Mermas'; ?>
+        <?php include_once __DIR__ . '/../partials/dashboard-header.php'; ?>
+
+        <div class="dashboard-content">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1>Mermas y Bajas Definitivas</h1>
+                    <p style="color: var(--text-secondary);">Registro formal de pérdidas de ejemplares desde cuarentena por plaga, daño mecánico, factores climáticos u otros.</p>
+                </div>
+                <button class="btn btn-danger" id="btnAddMerma">
+                    <i class="fas fa-plus"></i> Registrar Merma
+                </button>
+            </div>
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <div class="card shadow-sm text-center p-3">
+                        <h6 class="text-muted mb-1">Total Mermas</h6>
+                        <h3 class="mb-0" id="totalCount">0</h3>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card shadow-sm text-center p-3">
+                        <h6 class="text-muted mb-1">Ejemplares Perdidos</h6>
+                        <h3 class="mb-0" id="totalQuantity">0</h3>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card shadow-sm text-center p-3">
+                        <h6 class="text-muted mb-1">Impacto Económico</h6>
+                        <h3 class="mb-0 text-danger" id="totalImpact">$0.00</h3>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card shadow-sm text-center p-3">
+                        <h6 class="text-muted mb-1">Última Merma</h6>
+                        <h3 class="mb-0" id="lastDate" style="font-size: 1.1rem;">—</h3>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table id="mermasTable" class="table table-striped table-hover w-100">
+                            <thead>
+                                <tr>
+                                    <th>Cuarentena</th>
+                                    <th>Planta</th>
+                                    <th>Cantidad</th>
+                                    <th>Motivo</th>
+                                    <th>Fecha Merma</th>
+                                    <th>Impacto Económico</th>
+                                    <th>Registrado por</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add Merma Modal -->
+    <div class="modal fade" id="addMermaModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="addMermaForm">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Registrar Merma desde Cuarentena</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Registro de Cuarentena</label>
+                            <select class="form-select" name="id_trazabilidad" id="mermaQuarantine" required>
+                                <option value="">Seleccione una cuarentena...</option>
+                            </select>
+                            <div class="form-text">Solo se muestran cuarentenas con ejemplares disponibles.</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Cantidad de ejemplares perdidos</label>
+                            <input type="number" class="form-control" name="cantidad" id="mermaCantidad" min="1" required placeholder="Ej: 5">
+                            <div class="form-text" id="quarantineStockInfo"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Motivo</label>
+                            <select class="form-select" name="motivo" required>
+                                <option value="">Seleccione un motivo...</option>
+                                <option value="plaga">Plaga</option>
+                                <option value="enfermedad">Enfermedad</option>
+                                <option value="daño_mecanico">Daño Mecánico</option>
+                                <option value="factor_climatico">Factor Climático</option>
+                                <option value="otro">Otro</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Fecha de la merma</label>
+                            <input type="date" class="form-control" name="fecha_merma" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Descripción (opcional)</label>
+                            <textarea class="form-control" name="descripcion" rows="3" placeholder="Detalles adicionales sobre la pérdida..."></textarea>
+                        </div>
+                        <div class="alert alert-info mb-0" id="impactoPreview" style="display:none;">
+                            Impacto económico estimado: <strong id="impactoValue">$0.00</strong>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-danger">Registrar Merma</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="<?= BASE_URL ?>public/assets/js/dashboard/notifications.js"></script>
+    <?= $scripts_links ?>
+    <script type="module" src="<?= BASE_URL ?>public/assets/js/dashboard/mermas.js"></script>
+</body>
+</html>

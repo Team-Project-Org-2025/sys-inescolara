@@ -41,7 +41,7 @@ function hasPermiso(string $codigo): bool
             </ul>
         </div>
 
-        <?php if (hasPermiso('INVENTARIO_VIEW') || hasPermiso('PLANTAS_VIEW') || hasPermiso('PROVEEDORES_VIEW') || hasPermiso('TRABAJADORES_VIEW') || hasPermiso('INSUMOS_VIEW') || hasPermiso('CLIENTES_VIEW') || hasPermiso('TAREAS_VIEW') || hasPermiso('HERRAMIENTAS_VIEW') || hasPermiso('PRECIOS_VIEW') || hasPermiso('RECOLECCION_VIEW') || hasPermiso('ORNATOS_VIEW')): ?>
+        <?php if (hasPermiso('INVENTARIO_VIEW') || hasPermiso('PLANTAS_VIEW') || hasPermiso('PROVEEDORES_VIEW') || hasPermiso('TRABAJADORES_VIEW') || hasPermiso('INSUMOS_VIEW') || hasPermiso('CLIENTES_VIEW') || hasPermiso('TAREAS_VIEW') || hasPermiso('HERRAMIENTAS_VIEW') || hasPermiso('PRECIOS_VIEW') || hasPermiso('RECOLECCION_VIEW') || hasPermiso('TRAZABILIDAD_VIEW') || hasPermiso('MERMAS_VIEW')): ?>
         <div class="sidebar-section">
             <span class="sidebar-section-title">Gestión</span>
             <ul class="sidebar-menu">
@@ -111,6 +111,18 @@ function hasPermiso(string $codigo): bool
                             <circle cx="18.5" cy="18.5" r="2.5"></circle>
                         </svg>
                         <span>Proveedores</span>
+                    </a>
+                </li>
+                <?php endif; ?>
+                <?php if (hasPermiso('COMPRAS_VIEW')): ?>
+                <li>
+                    <a href="<?= BASE_URL ?>dashboard/compras" class="sidebar-link <?= ($currentPage ?? '') === 'compras' ? 'active' : '' ?>">
+                        <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <path d="M16 10a4 4 0 0 1-8 0"></path>
+                        </svg>
+                        <span>Compras</span>
                     </a>
                 </li>
                 <?php endif; ?>
@@ -215,6 +227,9 @@ function hasPermiso(string $codigo): bool
                 <?php if (hasPermiso('ORNATOS_VIEW')): ?>
                 <li>
                     <a href="<?= BASE_URL ?>dashboard/ornatos" class="sidebar-link <?= ($currentPage ?? '') === 'ornatos' ? 'active' : '' ?>">
+                <?php if (hasPermiso('TRAZABILIDAD_VIEW')): ?>
+                <li>
+                    <a href="<?= BASE_URL ?>dashboard/trazabilidad" class="sidebar-link <?= ($currentPage ?? '') === 'trazabilidad' ? 'active' : '' ?>">
                         <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M12 22V11"></path>
                             <path d="M12 14c2.5-2.5 6-3 7.5-1.5s1 5-1.5 7.5"></path>
@@ -222,6 +237,22 @@ function hasPermiso(string $codigo): bool
                             <circle cx="9" cy="9" r="2"></circle>
                         </svg>
                         <span>Ornatos</span>
+                            <path d="M9 12h6"></path>
+                            <path d="M12 9v6"></path>
+                        </svg>
+                        <span>Monitoreo</span>
+                    </a>
+                </li>
+                <?php endif; ?>
+                <?php if (hasPermiso('MERMAS_VIEW')): ?>
+                <li>
+                    <a href="<?= BASE_URL ?>dashboard/mermas" class="sidebar-link <?= ($currentPage ?? '') === 'mermas' ? 'active' : '' ?>">
+                        <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="15" y1="9" x2="9" y2="15"></line>
+                            <line x1="9" y1="9" x2="15" y2="15"></line>
+                        </svg>
+                        <span>Mermas</span>
                     </a>
                 </li>
                 <?php endif; ?>

@@ -214,9 +214,41 @@ function supplies(): void
     require $view;
 }
 
+function compras(): void
+{
+    dashboardCheckPermiso('COMPRAS_VIEW');
+
+    require_once ROOT_PATH . 'vendor/autoload.php';
+    $supplierModel = new \SysInescolara\models\Supplier();
+    $proveedores = $supplierModel->getAll();
+    $supplyModel = new \SysInescolara\models\Supplies();
+    $insumos = $supplyModel->getAll();
+    $locationModel = new \SysInescolara\models\Location();
+    $ubicaciones = $locationModel->getAll();
+
+    $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
+        . 'dashboard' . DIRECTORY_SEPARATOR . 'compras.php';
+
+    if (!is_file($view)) {
+        http_response_code(500);
+        echo 'Vista de compras no encontrada.';
+        return;
+    }
+
+    require $view;
+}
+
 function tasks(): void
 {
     dashboardCheckPermiso('TAREAS_VIEW');
+    $employeeModel = new \SysInescolara\models\Employee();
+    $trabajadores = $employeeModel->getAll();
+    $batchModel = new \SysInescolara\models\Batch();
+    $lotes = $batchModel->getAll();
+    $suppliesModel = new \SysInescolara\models\Supplies();
+    $insumos = $suppliesModel->getAll();
+    $toolModel = new \SysInescolara\models\Tool();
+    $herramientas = $toolModel->getAll();
     $view = ROOT_PATH . 'app/views/dashboard/task.php';
     if (!is_file($view)) {
         http_response_code(500);
@@ -468,11 +500,9 @@ function prices(): void
     dashboardCheckPermiso('PRECIOS_VIEW');
 
     require_once ROOT_PATH . 'vendor/autoload.php';
-    $batchModel = new \SysInescolara\models\Batch();
-    $batches = $batchModel->getAll();
 
-    $priceModel = new \SysInescolara\models\PriceCalculation();
-    $batchIdsWithPrices = $priceModel->getBatchIdsWithPrices();
+    $plantModel = new \SysInescolara\models\Plant();
+    $plants = $plantModel->getAll();
 
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'prices.php';
@@ -521,6 +551,40 @@ function seedcollection(): void
     if (!is_file($view)) {
         http_response_code(500);
         echo 'Vista de recolección no encontrada.';
+        return;
+    }
+
+    require $view;
+}
+
+function trazabilidad(): void
+{
+    dashboardCheckPermiso('TRAZABILIDAD_VIEW');
+
+    require_once ROOT_PATH . 'vendor/autoload.php';
+
+    $view = ROOT_PATH . 'app/views/dashboard/trazabilidad.php';
+
+    if (!is_file($view)) {
+        http_response_code(500);
+        echo 'Vista de trazabilidad no encontrada.';
+        return;
+    }
+
+    require $view;
+}
+
+function mermas(): void
+{
+    dashboardCheckPermiso('MERMAS_VIEW');
+
+    require_once ROOT_PATH . 'vendor/autoload.php';
+
+    $view = ROOT_PATH . 'app/views/dashboard/mermas.php';
+
+    if (!is_file($view)) {
+        http_response_code(500);
+        echo 'Vista de mermas no encontrada.';
         return;
     }
 
