@@ -78,7 +78,7 @@ CREATE TABLE `asignar_tarea` (
   CONSTRAINT `asignar_tarea_ibfk_1` FOREIGN KEY (`id_trabajador`) REFERENCES `trabajadores` (`id_trabajador`),
   CONSTRAINT `asignar_tarea_ibfk_2` FOREIGN KEY (`id_tarea`) REFERENCES `tareas` (`id_tarea`),
   CONSTRAINT `asignar_tarea_ibfk_3` FOREIGN KEY (`id_lote`) REFERENCES `lote` (`id_lote`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Nodo central entre talento humano y producci├│n.';
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Nodo central entre talento humano y producci├│n.';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -87,6 +87,7 @@ CREATE TABLE `asignar_tarea` (
 
 LOCK TABLES `asignar_tarea` WRITE;
 /*!40000 ALTER TABLE `asignar_tarea` DISABLE KEYS */;
+INSERT INTO `asignar_tarea` VALUES (1,1,1,4,'2026-06-07','2026-06-07','completada',1.00),(2,1,2,4,'2026-06-07','2026-06-07','completada',10.00),(3,1,3,4,'2026-06-07','2026-06-07','completada',NULL),(4,1,4,5,'2026-06-07','2026-06-07','completada',NULL);
 /*!40000 ALTER TABLE `asignar_tarea` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -140,7 +141,7 @@ CREATE TABLE `calculo_precio` (
   PRIMARY KEY (`id_calculo`),
   KEY `id_lote` (`id_lote`),
   CONSTRAINT `calculo_precio_ibfk_1` FOREIGN KEY (`id_lote`) REFERENCES `lote` (`id_lote`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='C├ílculo de precio por lote.';
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='C├ílculo de precio por lote.';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -149,7 +150,7 @@ CREATE TABLE `calculo_precio` (
 
 LOCK TABLES `calculo_precio` WRITE;
 /*!40000 ALTER TABLE `calculo_precio` DISABLE KEYS */;
-INSERT INTO `calculo_precio` VALUES (1,4,10.00,20.00,30.00,30.00,1,78.00,'2026-06-01',1);
+INSERT INTO `calculo_precio` VALUES (5,5,0.00,40.00,0.00,30.00,0,4.42,'2026-06-08',0),(6,4,0.00,130.00,0.00,30.00,0,4.42,'2026-06-08',0);
 /*!40000 ALTER TABLE `calculo_precio` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -164,6 +165,7 @@ CREATE TABLE `cliente` (
   `id_cliente` int(11) NOT NULL AUTO_INCREMENT,
   `nombre_cliente` varchar(100) NOT NULL,
   `contacto_cliente` varchar(250) DEFAULT NULL,
+  `activo` tinyint(1) NOT NULL DEFAULT 1,
   PRIMARY KEY (`id_cliente`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Cat├ílogo de clientes.';
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -174,8 +176,80 @@ CREATE TABLE `cliente` (
 
 LOCK TABLES `cliente` WRITE;
 /*!40000 ALTER TABLE `cliente` DISABLE KEYS */;
-INSERT INTO `cliente` VALUES (1,'Mayra Perez','04123005644');
+INSERT INTO `cliente` VALUES (1,'Mayra Perez','04123005644',1);
 /*!40000 ALTER TABLE `cliente` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `compra`
+--
+
+DROP TABLE IF EXISTS `compra`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `compra` (
+  `id_compra` int(11) NOT NULL AUTO_INCREMENT,
+  `id_proveedor` int(11) NOT NULL,
+  `fecha_compra` date NOT NULL,
+  `tipo_comprobante` varchar(30) DEFAULT 'Factura',
+  `numero_comprobante` varchar(50) DEFAULT NULL,
+  `subtotal` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `iva` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `total` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `estado` enum('pendiente','completada','cancelada') NOT NULL DEFAULT 'pendiente',
+  `observacion` text DEFAULT NULL,
+  `activo` tinyint(1) NOT NULL DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id_compra`),
+  KEY `idx_compra_proveedor` (`id_proveedor`),
+  KEY `idx_compra_estado` (`estado`),
+  CONSTRAINT `fk_compra_proveedor` FOREIGN KEY (`id_proveedor`) REFERENCES `proveedores` (`id_proveedor`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `compra`
+--
+
+LOCK TABLES `compra` WRITE;
+/*!40000 ALTER TABLE `compra` DISABLE KEYS */;
+INSERT INTO `compra` VALUES (1,1,'2026-06-08','Factura',NULL,10.00,0.00,10.00,'completada',NULL,1,'2026-06-08 16:39:54','2026-06-08 16:56:26'),(2,1,'2026-06-09','Factura',NULL,200.00,0.00,200.00,'cancelada',NULL,1,'2026-06-09 00:25:25','2026-06-09 00:29:38'),(3,1,'2026-06-09','Factura',NULL,200.00,0.00,200.00,'pendiente',NULL,0,'2026-06-09 00:30:00','2026-06-09 00:31:13');
+/*!40000 ALTER TABLE `compra` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `compra_detalle`
+--
+
+DROP TABLE IF EXISTS `compra_detalle`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `compra_detalle` (
+  `id_detalle` int(11) NOT NULL AUTO_INCREMENT,
+  `id_compra` int(11) NOT NULL,
+  `tipo_item` enum('insumo','herramienta','planta') NOT NULL,
+  `id_item` int(11) NOT NULL,
+  `categoria_lote` varchar(30) DEFAULT 'germinado',
+  `id_ubicacion` int(11) DEFAULT NULL,
+  `cantidad` decimal(10,2) NOT NULL,
+  `costo_unitario` decimal(10,2) NOT NULL,
+  `subtotal` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `activo` tinyint(1) NOT NULL DEFAULT 1,
+  PRIMARY KEY (`id_detalle`),
+  KEY `idx_detalle_compra` (`id_compra`),
+  CONSTRAINT `fk_detalle_compra` FOREIGN KEY (`id_compra`) REFERENCES `compra` (`id_compra`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `compra_detalle`
+--
+
+LOCK TABLES `compra_detalle` WRITE;
+/*!40000 ALTER TABLE `compra_detalle` DISABLE KEYS */;
+INSERT INTO `compra_detalle` VALUES (1,1,'planta',5,'germinado',NULL,1.00,10.00,10.00,1),(2,2,'planta',5,'en_crecimiento',3,20.00,10.00,200.00,1),(3,3,'planta',5,'germinado',3,20.00,10.00,200.00,1);
+/*!40000 ALTER TABLE `compra_detalle` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -191,13 +265,14 @@ CREATE TABLE `consumo_insumos` (
   `id_insumo` int(11) NOT NULL,
   `cantidad_usada` decimal(10,2) NOT NULL,
   `costo_unitario` decimal(10,2) NOT NULL,
+  `stock_actual` decimal(10,2) DEFAULT NULL,
   `fecha_consumo` date NOT NULL,
   PRIMARY KEY (`id_consumo`),
   KEY `id_asignacion` (`id_asignacion`),
   KEY `id_insumo` (`id_insumo`),
   CONSTRAINT `consumo_insumos_ibfk_1` FOREIGN KEY (`id_asignacion`) REFERENCES `asignar_tarea` (`id_asignacion`),
   CONSTRAINT `consumo_insumos_ibfk_2` FOREIGN KEY (`id_insumo`) REFERENCES `insumo` (`id_insumo`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Todo consumo debe estar justificado por una tarea.';
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Todo consumo debe estar justificado por una tarea.';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -206,7 +281,71 @@ CREATE TABLE `consumo_insumos` (
 
 LOCK TABLES `consumo_insumos` WRITE;
 /*!40000 ALTER TABLE `consumo_insumos` DISABLE KEYS */;
+INSERT INTO `consumo_insumos` VALUES (1,1,3,1.00,10.00,1.00,'2026-06-07'),(2,2,6,5.00,20.00,10.00,'2026-06-07'),(3,3,6,1.00,20.00,5.00,'2026-06-07'),(4,4,6,2.00,20.00,4.00,'2026-06-07');
 /*!40000 ALTER TABLE `consumo_insumos` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `detalle_ornatos`
+--
+
+DROP TABLE IF EXISTS `detalle_ornatos`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `detalle_ornatos` (
+  `id_detalle_ornato` int(11) NOT NULL AUTO_INCREMENT,
+  `id_ornato` int(11) NOT NULL,
+  `id_lote` int(11) NOT NULL,
+  `cantidad` int(11) NOT NULL,
+  `precio_unitario` decimal(10,2) DEFAULT NULL,
+  `sub_total` decimal(10,2) DEFAULT NULL,
+  PRIMARY KEY (`id_detalle_ornato`),
+  KEY `id_ornato` (`id_ornato`),
+  KEY `id_lote` (`id_lote`),
+  CONSTRAINT `detalle_ornatos_ibfk_lote` FOREIGN KEY (`id_lote`) REFERENCES `lote` (`id_lote`),
+  CONSTRAINT `detalle_ornatos_ibfk_ornato` FOREIGN KEY (`id_ornato`) REFERENCES `ornatos` (`id_ornato`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `detalle_ornatos`
+--
+
+LOCK TABLES `detalle_ornatos` WRITE;
+/*!40000 ALTER TABLE `detalle_ornatos` DISABLE KEYS */;
+INSERT INTO `detalle_ornatos` VALUES (2,1,10,20,0.00,0.00);
+/*!40000 ALTER TABLE `detalle_ornatos` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `detalle_venta`
+--
+
+DROP TABLE IF EXISTS `detalle_venta`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `detalle_venta` (
+  `id_detalle_venta` int(11) NOT NULL AUTO_INCREMENT,
+  `id_venta` int(11) NOT NULL,
+  `id_lote` int(11) NOT NULL,
+  `cantidad` int(11) NOT NULL,
+  `precio_unitario` decimal(10,2) NOT NULL,
+  PRIMARY KEY (`id_detalle_venta`),
+  KEY `id_venta` (`id_venta`),
+  KEY `id_lote` (`id_lote`),
+  CONSTRAINT `detalle_venta_ibfk_1` FOREIGN KEY (`id_venta`) REFERENCES `venta` (`id_venta`),
+  CONSTRAINT `detalle_venta_ibfk_2` FOREIGN KEY (`id_lote`) REFERENCES `lote` (`id_lote`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `detalle_venta`
+--
+
+LOCK TABLES `detalle_venta` WRITE;
+/*!40000 ALTER TABLE `detalle_venta` DISABLE KEYS */;
+INSERT INTO `detalle_venta` VALUES (3,3,10,20,10.00),(6,6,13,20,100.00);
+/*!40000 ALTER TABLE `detalle_venta` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -220,6 +359,7 @@ CREATE TABLE `especie` (
   `id_especie` int(11) NOT NULL AUTO_INCREMENT,
   `nombre_especie` varchar(150) NOT NULL,
   `descripcion` text DEFAULT NULL,
+  `activo` tinyint(1) NOT NULL DEFAULT 1,
   PRIMARY KEY (`id_especie`)
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Cat├ílogo bot├ínico.';
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -230,7 +370,7 @@ CREATE TABLE `especie` (
 
 LOCK TABLES `especie` WRITE;
 /*!40000 ALTER TABLE `especie` DISABLE KEYS */;
-INSERT INTO `especie` VALUES (1,'dsadasdasdasa',NULL),(2,'dadada',NULL),(3,'dsadasdasdasad',NULL);
+INSERT INTO `especie` VALUES (1,'dsadasdasdasa',NULL,1),(2,'dadada',NULL,1),(3,'dsadasdasdasad',NULL,1);
 /*!40000 ALTER TABLE `especie` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -249,8 +389,9 @@ CREATE TABLE `herramienta` (
   `fecha_adquisicion` date DEFAULT NULL,
   `fecha_ultimo_mantenimiento` date DEFAULT NULL,
   `observacion` text DEFAULT NULL,
+  `activo` tinyint(1) NOT NULL DEFAULT 1,
   PRIMARY KEY (`id_herramienta`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Herramientas con ciclo de vida propio.';
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Herramientas con ciclo de vida propio.';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -259,7 +400,7 @@ CREATE TABLE `herramienta` (
 
 LOCK TABLES `herramienta` WRITE;
 /*!40000 ALTER TABLE `herramienta` DISABLE KEYS */;
-INSERT INTO `herramienta` VALUES (1,'Pala',NULL,'en_uso','2026-06-02','2026-06-02',NULL),(2,'Martillo','nose','en_uso','2026-06-02','2026-06-02','dsadasdada'),(3,'Pico','herramienta','en_uso','2026-06-02','2026-06-02',NULL);
+INSERT INTO `herramienta` VALUES (1,'Pala',NULL,'en_uso','2026-06-02','2026-06-02',NULL,1),(2,'Martillo','nose','en_uso','2026-06-02','2026-06-02','dsadasdada',1),(3,'Pico','herramienta','en_uso','2026-06-02','2026-06-02',NULL,1),(5,'Pico','nose','ok',NULL,NULL,NULL,1);
 /*!40000 ALTER TABLE `herramienta` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -277,10 +418,11 @@ CREATE TABLE `insumo` (
   `categoria` varchar(50) DEFAULT NULL,
   `stock_actual` decimal(10,2) NOT NULL DEFAULT 0.00,
   `costo_unitario_actual` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `activo` tinyint(1) NOT NULL DEFAULT 1,
   PRIMARY KEY (`id_insumo`),
   KEY `id_unidad_medida` (`id_unidad_medida`),
   CONSTRAINT `insumo_ibfk_1` FOREIGN KEY (`id_unidad_medida`) REFERENCES `unidad_medida` (`id_unidad_medida`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Inventario de insumos.';
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Inventario de insumos.';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -289,6 +431,7 @@ CREATE TABLE `insumo` (
 
 LOCK TABLES `insumo` WRITE;
 /*!40000 ALTER TABLE `insumo` DISABLE KEYS */;
+INSERT INTO `insumo` VALUES (2,14,'Fertilizante','dasd',0.01,0.01,0),(3,5,'Semillas de Simon','Semillas',0.00,10.00,0),(4,5,'Semillas de Simon','Semillas',20.00,0.00,0),(5,5,'Semillas de Simon','Semillas',20.00,0.00,0),(6,5,'Semillas de Simon','Semillas',2.00,20.00,1);
 /*!40000 ALTER TABLE `insumo` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -302,20 +445,23 @@ DROP TABLE IF EXISTS `lote`;
 CREATE TABLE `lote` (
   `id_lote` int(11) NOT NULL AUTO_INCREMENT,
   `id_planta` int(11) NOT NULL,
-  `id_ubicacion` int(11) NOT NULL,
+  `id_ubicacion` int(11) DEFAULT NULL,
   `fecha_siembra` date NOT NULL,
   `cantidad_inicial` int(11) NOT NULL,
   `cantidad_actual` int(11) NOT NULL,
+  `costo_unitario` decimal(10,2) DEFAULT 0.00,
   `estado` varchar(50) DEFAULT 'Activo',
+  `categoria` varchar(30) DEFAULT NULL,
   `origen` varchar(30) NOT NULL,
   `observacion` varchar(255) DEFAULT NULL,
   `imagen` varchar(255) DEFAULT NULL,
+  `activo` tinyint(1) NOT NULL DEFAULT 1,
   PRIMARY KEY (`id_lote`),
   KEY `id_planta` (`id_planta`),
   KEY `id_ubicacion` (`id_ubicacion`),
   CONSTRAINT `lote_ibfk_1` FOREIGN KEY (`id_planta`) REFERENCES `plantas` (`id_planta`),
   CONSTRAINT `lote_ibfk_2` FOREIGN KEY (`id_ubicacion`) REFERENCES `ubicacion` (`id_ubicacion`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Unidad de producci├│n.';
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Unidad de producci├│n.';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -324,8 +470,46 @@ CREATE TABLE `lote` (
 
 LOCK TABLES `lote` WRITE;
 /*!40000 ALTER TABLE `lote` DISABLE KEYS */;
-INSERT INTO `lote` VALUES (4,2,3,'2026-06-01',1,1,'Vivo','Siembra',NULL,'public/assets/uploads/batches/batch_1780330649_5cde51b9.jpg');
+INSERT INTO `lote` VALUES (4,2,3,'2026-06-01',1,30,0.00,'Vivo','germinado','Siembra',NULL,'public/assets/uploads/batches/batch_1780330649_5cde51b9.jpg',1),(5,2,3,'2026-06-07',20,20,0.00,'Vivo','germinado','Siembra',NULL,NULL,1),(6,5,NULL,'2026-06-08',1,1,0.00,'Activo','germinado','Compra','Ingresado por compra #1',NULL,1),(7,5,3,'2026-06-08',20,20,10.00,'Activo','en_crecimiento','Compra','Ingresado por compra #2',NULL,1),(8,5,3,'2026-06-08',20,20,10.00,'Activo','en_crecimiento','Compra','Ingresado por compra #2',NULL,1),(9,5,3,'2026-06-08',20,20,10.00,'Activo','en_crecimiento','Compra','Ingresado por compra #2',NULL,1),(10,5,3,'2026-06-08',20,0,10.00,'Agotado','en_crecimiento','Compra','Ingresado por compra #2',NULL,1),(11,5,3,'2026-06-08',20,20,10.00,'Activo','en_crecimiento','Compra','Ingresado por compra #2',NULL,1),(12,5,3,'2026-06-08',20,20,10.00,'Activo','en_crecimiento','Compra','Ingresado por compra #2',NULL,1),(13,5,3,'2026-06-08',20,0,10.00,'Agotado','en_crecimiento','Compra','Ingresado por compra #2',NULL,1),(14,5,3,'2026-06-08',20,20,10.00,'Activo','germinado','Compra','Ingresado por compra #3',NULL,1);
 /*!40000 ALTER TABLE `lote` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `mermas_historico`
+--
+
+DROP TABLE IF EXISTS `mermas_historico`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `mermas_historico` (
+  `id_merma` int(11) NOT NULL AUTO_INCREMENT,
+  `id_trazabilidad` int(11) NOT NULL,
+  `id_lote` int(11) NOT NULL,
+  `cantidad` int(11) NOT NULL,
+  `motivo` enum('plaga','da±o_mecanico','factor_climatico','enfermedad','otro') NOT NULL,
+  `descripcion` text DEFAULT NULL,
+  `fecha_merma` date NOT NULL,
+  `impacto_economico` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `id_usuario_registra` int(11) DEFAULT NULL,
+  `activo` tinyint(1) NOT NULL DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id_merma`),
+  KEY `id_trazabilidad` (`id_trazabilidad`),
+  KEY `id_lote` (`id_lote`),
+  KEY `fk_merma_usuario` (`id_usuario_registra`),
+  CONSTRAINT `fk_merma_usuario` FOREIGN KEY (`id_usuario_registra`) REFERENCES `sysinescolara-seguridad`.`usuarios` (`id_usuario`),
+  CONSTRAINT `mermas_historico_ibfk_1` FOREIGN KEY (`id_trazabilidad`) REFERENCES `trazabilidad` (`id_trazabilidad`),
+  CONSTRAINT `mermas_historico_ibfk_2` FOREIGN KEY (`id_lote`) REFERENCES `lote` (`id_lote`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `mermas_historico`
+--
+
+LOCK TABLES `mermas_historico` WRITE;
+/*!40000 ALTER TABLE `mermas_historico` DISABLE KEYS */;
+/*!40000 ALTER TABLE `mermas_historico` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -404,9 +588,11 @@ CREATE TABLE `movimiento_planta` (
   `id_trabajador_gestor` int(11) NOT NULL,
   `fecha_movimiento` date NOT NULL,
   `observacion` text DEFAULT NULL,
+  `activo` tinyint(1) NOT NULL DEFAULT 1,
   PRIMARY KEY (`id_movimiento_planta`),
   KEY `id_cliente` (`id_cliente`),
   KEY `id_trabajador_gestor` (`id_trabajador_gestor`),
+  KEY `idx_mp_activo` (`activo`),
   CONSTRAINT `movimiento_planta_ibfk_1` FOREIGN KEY (`id_cliente`) REFERENCES `cliente` (`id_cliente`),
   CONSTRAINT `movimiento_planta_ibfk_2` FOREIGN KEY (`id_trabajador_gestor`) REFERENCES `trabajadores` (`id_trabajador`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Unifica venta, ornato, donaci├│n e intercambio de plantas.';
@@ -432,12 +618,15 @@ CREATE TABLE `movimiento_planta_detalle` (
   `id_detalle_mov_planta` int(11) NOT NULL AUTO_INCREMENT,
   `id_movimiento_planta` int(11) NOT NULL,
   `id_lote` int(11) NOT NULL,
+  `tipo` enum('entrada','salida') NOT NULL DEFAULT 'salida',
   `cantidad` int(11) NOT NULL,
   `precio_unitario` decimal(10,2) DEFAULT NULL,
   `sub_total` decimal(10,2) DEFAULT NULL,
+  `activo` tinyint(1) NOT NULL DEFAULT 1,
   PRIMARY KEY (`id_detalle_mov_planta`),
   KEY `id_movimiento_planta` (`id_movimiento_planta`),
   KEY `id_lote` (`id_lote`),
+  KEY `idx_mpd_activo` (`activo`),
   CONSTRAINT `movimiento_planta_detalle_ibfk_1` FOREIGN KEY (`id_movimiento_planta`) REFERENCES `movimiento_planta` (`id_movimiento_planta`),
   CONSTRAINT `movimiento_planta_detalle_ibfk_2` FOREIGN KEY (`id_lote`) REFERENCES `lote` (`id_lote`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Detalle por lote del movimiento de plantas.';
@@ -453,6 +642,73 @@ LOCK TABLES `movimiento_planta_detalle` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `ornatos`
+--
+
+DROP TABLE IF EXISTS `ornatos`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `ornatos` (
+  `id_ornato` int(11) NOT NULL AUTO_INCREMENT,
+  `id_cliente` int(11) NOT NULL,
+  `tipo_ornato` enum('Venta','Donacion') NOT NULL DEFAULT 'Venta',
+  `descripcion` text DEFAULT NULL,
+  `ubicacion` varchar(255) DEFAULT NULL,
+  `monto_total` decimal(10,2) DEFAULT 0.00,
+  `fecha` date NOT NULL,
+  `activo` tinyint(1) NOT NULL DEFAULT 1,
+  PRIMARY KEY (`id_ornato`),
+  KEY `id_cliente` (`id_cliente`),
+  CONSTRAINT `ornatos_ibfk_cliente` FOREIGN KEY (`id_cliente`) REFERENCES `cliente` (`id_cliente`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `ornatos`
+--
+
+LOCK TABLES `ornatos` WRITE;
+/*!40000 ALTER TABLE `ornatos` DISABLE KEYS */;
+INSERT INTO `ornatos` VALUES (1,1,'Donacion',NULL,NULL,0.00,'2026-06-09',1);
+/*!40000 ALTER TABLE `ornatos` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `pago_venta`
+--
+
+DROP TABLE IF EXISTS `pago_venta`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `pago_venta` (
+  `id_pago` int(11) NOT NULL AUTO_INCREMENT,
+  `id_venta` int(11) NOT NULL,
+  `metodo` enum('efectivo','transferencia','punto','pago_movil','otro') NOT NULL,
+  `monto` decimal(10,2) NOT NULL,
+  `referencia` varchar(50) DEFAULT NULL,
+  `fecha_pago` datetime DEFAULT current_timestamp(),
+  `estado_pago` enum('registrado','confirmado','rechazado') NOT NULL DEFAULT 'registrado',
+  `banco` varchar(100) DEFAULT NULL,
+  `id_trabajador` int(11) DEFAULT NULL,
+  `observaciones` text DEFAULT NULL,
+  `created_at` datetime DEFAULT current_timestamp(),
+  PRIMARY KEY (`id_pago`),
+  KEY `id_venta` (`id_venta`),
+  CONSTRAINT `pago_venta_ibfk_1` FOREIGN KEY (`id_venta`) REFERENCES `venta` (`id_venta`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `pago_venta`
+--
+
+LOCK TABLES `pago_venta` WRITE;
+/*!40000 ALTER TABLE `pago_venta` DISABLE KEYS */;
+INSERT INTO `pago_venta` VALUES (3,3,'',200.00,NULL,'2026-06-08 23:25:26','registrado',NULL,NULL,NULL,'2026-06-08 23:14:38'),(6,6,'transferencia',10.00,NULL,'2026-06-08 23:25:26','registrado',NULL,NULL,NULL,'2026-06-08 23:23:58');
+/*!40000 ALTER TABLE `pago_venta` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `planta_precio_vigente`
 --
 
@@ -465,7 +721,7 @@ CREATE TABLE `planta_precio_vigente` (
   PRIMARY KEY (`id_planta`),
   UNIQUE KEY `id_calculo` (`id_calculo`),
   CONSTRAINT `planta_precio_vigente_ibfk_1` FOREIGN KEY (`id_planta`) REFERENCES `plantas` (`id_planta`),
-  CONSTRAINT `planta_precio_vigente_ibfk_2` FOREIGN KEY (`id_calculo`) REFERENCES `calculo_precio` (`id_calculo`)
+  CONSTRAINT `planta_precio_vigente_ibfk_2` FOREIGN KEY (`id_calculo`) REFERENCES `calculo_precio` (`id_calculo`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='1 planta -> 1 c├ílculo vigente.';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -475,7 +731,7 @@ CREATE TABLE `planta_precio_vigente` (
 
 LOCK TABLES `planta_precio_vigente` WRITE;
 /*!40000 ALTER TABLE `planta_precio_vigente` DISABLE KEYS */;
-INSERT INTO `planta_precio_vigente` VALUES (2,1);
+INSERT INTO `planta_precio_vigente` VALUES (2,6);
 /*!40000 ALTER TABLE `planta_precio_vigente` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -488,15 +744,16 @@ DROP TABLE IF EXISTS `plantas`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `plantas` (
   `id_planta` int(11) NOT NULL AUTO_INCREMENT,
-  `id_especie` int(11) NOT NULL,
-  `nombre_tecnico` varchar(150) NOT NULL,
+  `id_especie` int(11) DEFAULT NULL,
+  `nombre_tecnico` varchar(150) DEFAULT '',
   `nombre_comun` varchar(150) DEFAULT NULL,
   `cantidad_total` int(11) NOT NULL DEFAULT 0,
   `imagen` varchar(255) DEFAULT NULL,
+  `activo` tinyint(1) NOT NULL DEFAULT 1,
   PRIMARY KEY (`id_planta`),
   KEY `id_especie` (`id_especie`),
   CONSTRAINT `plantas_ibfk_1` FOREIGN KEY (`id_especie`) REFERENCES `especie` (`id_especie`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Cat├ílogo de plantas.';
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Cat├ílogo de plantas.';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -505,7 +762,7 @@ CREATE TABLE `plantas` (
 
 LOCK TABLES `plantas` WRITE;
 /*!40000 ALTER TABLE `plantas` DISABLE KEYS */;
-INSERT INTO `plantas` VALUES (2,1,'Cactuspro','Simon',0,'public/assets/uploads/plants/plant_1780267336_412abda4.png');
+INSERT INTO `plantas` VALUES (2,1,'Cactuspro','Simon',0,'public/assets/uploads/plants/plant_1780267336_412abda4.png',1),(4,NULL,'Planta Test','Planta Test',0,NULL,1),(5,NULL,'Girasol','Girasol',160,NULL,1);
 /*!40000 ALTER TABLE `plantas` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -522,9 +779,10 @@ CREATE TABLE `proveedores` (
   `rif_proveedor` varchar(20) NOT NULL,
   `contacto_vendedor` varchar(100) DEFAULT NULL,
   `telefono_proveedor` varchar(20) DEFAULT NULL,
+  `activo` tinyint(1) NOT NULL DEFAULT 1,
   PRIMARY KEY (`id_proveedor`),
   UNIQUE KEY `rif_proveedor` (`rif_proveedor`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Cat├ílogo de proveedores.';
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Cat├ílogo de proveedores.';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -533,7 +791,72 @@ CREATE TABLE `proveedores` (
 
 LOCK TABLES `proveedores` WRITE;
 /*!40000 ALTER TABLE `proveedores` DISABLE KEYS */;
+INSERT INTO `proveedores` VALUES (1,'Plantas nuevas','J-123456789','Prueba','04123232323',1);
 /*!40000 ALTER TABLE `proveedores` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `recoleccion_semillas`
+--
+
+DROP TABLE IF EXISTS `recoleccion_semillas`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `recoleccion_semillas` (
+  `id_recoleccion` int(11) NOT NULL AUTO_INCREMENT,
+  `id_trabajador` int(11) NOT NULL,
+  `id_ubicacion` int(11) NOT NULL,
+  `fecha_asignacion` date NOT NULL,
+  `fecha_recoleccion` date DEFAULT NULL,
+  `estatus` varchar(20) NOT NULL DEFAULT 'Pendiente',
+  `observacion` text DEFAULT NULL,
+  PRIMARY KEY (`id_recoleccion`),
+  KEY `idx_recoleccion_trabajador` (`id_trabajador`),
+  KEY `idx_recoleccion_ubicacion` (`id_ubicacion`),
+  KEY `idx_recoleccion_estatus` (`estatus`),
+  CONSTRAINT `fk_recoleccion_trabajador` FOREIGN KEY (`id_trabajador`) REFERENCES `trabajadores` (`id_trabajador`),
+  CONSTRAINT `fk_recoleccion_ubicacion` FOREIGN KEY (`id_ubicacion`) REFERENCES `ubicacion` (`id_ubicacion`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `recoleccion_semillas`
+--
+
+LOCK TABLES `recoleccion_semillas` WRITE;
+/*!40000 ALTER TABLE `recoleccion_semillas` DISABLE KEYS */;
+INSERT INTO `recoleccion_semillas` VALUES (1,1,2,'2026-06-07','2026-06-07','Realizada','Nada'),(2,1,3,'2026-06-07','2026-06-07','Realizada',NULL),(3,1,2,'2026-06-07','2026-06-07','Realizada',NULL),(4,1,2,'2026-06-07','2026-06-07','Realizada',NULL),(5,1,6,'2026-06-07',NULL,'Pendiente',NULL);
+/*!40000 ALTER TABLE `recoleccion_semillas` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `recoleccion_semillas_detalle`
+--
+
+DROP TABLE IF EXISTS `recoleccion_semillas_detalle`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `recoleccion_semillas_detalle` (
+  `id_recoleccion_detalle` int(11) NOT NULL AUTO_INCREMENT,
+  `id_recoleccion` int(11) NOT NULL,
+  `planta_origen` varchar(150) DEFAULT NULL,
+  `nombre_semilla` varchar(100) NOT NULL,
+  `id_unidad_medida` int(11) NOT NULL,
+  `cantidad` decimal(10,2) NOT NULL DEFAULT 0.00,
+  PRIMARY KEY (`id_recoleccion_detalle`),
+  KEY `idx_detalle_recoleccion` (`id_recoleccion`),
+  CONSTRAINT `fk_detalle_recoleccion` FOREIGN KEY (`id_recoleccion`) REFERENCES `recoleccion_semillas` (`id_recoleccion`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `recoleccion_semillas_detalle`
+--
+
+LOCK TABLES `recoleccion_semillas_detalle` WRITE;
+/*!40000 ALTER TABLE `recoleccion_semillas_detalle` DISABLE KEYS */;
+INSERT INTO `recoleccion_semillas_detalle` VALUES (1,1,'Simon','Semillas de Simon',5,1.00),(2,2,'Simon','Semillas de Simon',5,20.00),(3,3,'Simon','Semillas de Simon',5,20.00),(4,4,'Simon','Semillas de Simon',5,10.00);
+/*!40000 ALTER TABLE `recoleccion_semillas_detalle` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -547,9 +870,10 @@ CREATE TABLE `tareas` (
   `id_tarea` int(11) NOT NULL AUTO_INCREMENT,
   `nombre_tarea` varchar(100) NOT NULL,
   `descripcion` text DEFAULT NULL,
+  `activo` tinyint(1) NOT NULL DEFAULT 1,
   `categoria` varchar(50) DEFAULT NULL,
   PRIMARY KEY (`id_tarea`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Cat├ílogo de tareas.';
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Cat├ílogo de tareas.';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -558,6 +882,7 @@ CREATE TABLE `tareas` (
 
 LOCK TABLES `tareas` WRITE;
 /*!40000 ALTER TABLE `tareas` DISABLE KEYS */;
+INSERT INTO `tareas` VALUES (1,'FJadfhjdkf','No hay detalles',1,NULL),(2,'FJadfhjdkf',NULL,1,NULL),(3,'FJadfhjdkf','jhjhj',1,NULL),(4,'JDiksadjasldas','dasdasdadasdas',1,NULL);
 /*!40000 ALTER TABLE `tareas` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -601,8 +926,10 @@ DROP TABLE IF EXISTS `trazabilidad`;
 CREATE TABLE `trazabilidad` (
   `id_trazabilidad` int(11) NOT NULL AUTO_INCREMENT,
   `id_lote` int(11) NOT NULL,
+  `cantidad` int(11) NOT NULL DEFAULT 1,
   `estado_salud` varchar(30) NOT NULL,
   `observacion` text DEFAULT NULL,
+  `activo` tinyint(1) NOT NULL DEFAULT 1,
   `fecha_registro` date NOT NULL,
   PRIMARY KEY (`id_trazabilidad`),
   KEY `id_lote` (`id_lote`),
@@ -631,8 +958,9 @@ CREATE TABLE `ubicacion` (
   `nombre_ubicacion` varchar(100) NOT NULL,
   `descripcion` varchar(255) DEFAULT NULL,
   `zona` varchar(50) DEFAULT NULL,
+  `activo` tinyint(1) NOT NULL DEFAULT 1,
   PRIMARY KEY (`id_ubicacion`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Espacios f├¡sicos del vivero.';
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Espacios f├¡sicos del vivero.';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -641,7 +969,7 @@ CREATE TABLE `ubicacion` (
 
 LOCK TABLES `ubicacion` WRITE;
 /*!40000 ALTER TABLE `ubicacion` DISABLE KEYS */;
-INSERT INTO `ubicacion` VALUES (2,'Invernadero Central','Invernadero principal','A'),(3,'Almacén Norte','Almacén de insumos','B'),(4,'Vivero Exterior','Área de exposición','C');
+INSERT INTO `ubicacion` VALUES (2,'Invernadero Central','Invernadero principal','A',1),(3,'Almacén Norte','Almacén de insumos','B',1),(4,'Vivero Exterior','Área de exposición','C',1),(5,'Prueba',NULL,'dxsdsdsd',1),(6,'Nueva',NULL,'dasdasdasa',1);
 /*!40000 ALTER TABLE `ubicacion` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -656,6 +984,7 @@ CREATE TABLE `unidad_medida` (
   `id_unidad_medida` int(11) NOT NULL AUTO_INCREMENT,
   `nombre_unidad_medida` varchar(50) NOT NULL,
   `simbolo` varchar(10) DEFAULT NULL,
+  `activo` tinyint(1) NOT NULL DEFAULT 1,
   PRIMARY KEY (`id_unidad_medida`)
 ) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Unidades de medida para insumos.';
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -666,7 +995,7 @@ CREATE TABLE `unidad_medida` (
 
 LOCK TABLES `unidad_medida` WRITE;
 /*!40000 ALTER TABLE `unidad_medida` DISABLE KEYS */;
-INSERT INTO `unidad_medida` VALUES (1,'Kilogramo','kg'),(2,'Gramo','g'),(3,'Litro','L'),(4,'Mililitro','mL'),(5,'Unidad','und'),(6,'Metro','m'),(7,'CentÝmetro','cm'),(8,'Saco','saco'),(9,'Bolsa','bolsa'),(10,'Paquete','pqte'),(11,'Gal¾n','gal'),(12,'Caja','caja'),(13,'Rollos','rllo'),(14,'Bidon','bidon');
+INSERT INTO `unidad_medida` VALUES (1,'Kilogramo','kg',1),(2,'Gramo','g',1),(3,'Litro','L',1),(4,'Mililitro','mL',1),(5,'Unidad','und',1),(6,'Metro','m',1),(7,'CentÝmetro','cm',1),(8,'Saco','saco',1),(9,'Bolsa','bolsa',1),(10,'Paquete','pqte',1),(11,'Gal¾n','gal',1),(12,'Caja','caja',1),(13,'Rollos','rllo',1),(14,'Bidon','bidon',1);
 /*!40000 ALTER TABLE `unidad_medida` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -689,7 +1018,7 @@ CREATE TABLE `uso_herramienta` (
   KEY `id_herramienta` (`id_herramienta`),
   CONSTRAINT `uso_herramienta_ibfk_1` FOREIGN KEY (`id_asignacion`) REFERENCES `asignar_tarea` (`id_asignacion`),
   CONSTRAINT `uso_herramienta_ibfk_2` FOREIGN KEY (`id_herramienta`) REFERENCES `herramienta` (`id_herramienta`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Herramienta ligada a una tarea.';
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Herramienta ligada a una tarea.';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -698,31 +1027,49 @@ CREATE TABLE `uso_herramienta` (
 
 LOCK TABLES `uso_herramienta` WRITE;
 /*!40000 ALTER TABLE `uso_herramienta` DISABLE KEYS */;
+INSERT INTO `uso_herramienta` VALUES (1,3,5,'2026-06-07','','ok');
 /*!40000 ALTER TABLE `uso_herramienta` ENABLE KEYS */;
 UNLOCK TABLES;
 
-CREATE TABLE `ornatos` (
-  `id_ornato` int PRIMARY KEY AUTO_INCREMENT,
-  `id_cliente` int NOT NULL,
-  `tipo_ornato` enum('Venta','Donacion') NOT NULL DEFAULT 'Venta',
-  `descripcion` text,
-  `ubicacion` varchar(255) DEFAULT NULL,
-  `monto_total` decimal(10,2) DEFAULT 0.00,
-  `fecha` date NOT NULL,
-  `activo` tinyint(1) NOT NULL DEFAULT 1,
-  FOREIGN KEY (`id_cliente`) REFERENCES `cliente` (`id_cliente`)
-);
+--
+-- Table structure for table `venta`
+--
 
-CREATE TABLE `detalle_ornatos` (
-  `id_detalle_ornato` int PRIMARY KEY AUTO_INCREMENT,
-  `id_ornato` int NOT NULL,
-  `id_lote` int NOT NULL,
-  `cantidad` int NOT NULL,
-  `precio_unitario` decimal(10,2) DEFAULT NULL,
-  `sub_total` decimal(10,2) DEFAULT NULL,
-  FOREIGN KEY (`id_ornato`) REFERENCES `ornatos` (`id_ornato`) ON DELETE CASCADE,
-  FOREIGN KEY (`id_lote`) REFERENCES `lote` (`id_lote`)
-);
+DROP TABLE IF EXISTS `venta`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `venta` (
+  `id_venta` int(11) NOT NULL AUTO_INCREMENT,
+  `referencia` varchar(30) NOT NULL,
+  `id_cliente` int(11) NOT NULL,
+  `id_trabajador` int(11) NOT NULL,
+  `tipo_venta` enum('contado','credito') NOT NULL DEFAULT 'contado',
+  `estado` enum('pendiente','completada','cancelada') NOT NULL DEFAULT 'completada',
+  `iva_porcentaje` decimal(5,2) NOT NULL DEFAULT 16.00,
+  `fecha_venta` datetime NOT NULL DEFAULT current_timestamp(),
+  `fecha_vencimiento` date DEFAULT NULL,
+  `observaciones` text DEFAULT NULL,
+  `activo` tinyint(1) NOT NULL DEFAULT 1,
+  `created_at` datetime DEFAULT current_timestamp(),
+  `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id_venta`),
+  UNIQUE KEY `referencia` (`referencia`),
+  KEY `id_cliente` (`id_cliente`),
+  KEY `id_trabajador` (`id_trabajador`),
+  CONSTRAINT `venta_ibfk_1` FOREIGN KEY (`id_cliente`) REFERENCES `cliente` (`id_cliente`),
+  CONSTRAINT `venta_ibfk_2` FOREIGN KEY (`id_trabajador`) REFERENCES `trabajadores` (`id_trabajador`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `venta`
+--
+
+LOCK TABLES `venta` WRITE;
+/*!40000 ALTER TABLE `venta` DISABLE KEYS */;
+INSERT INTO `venta` VALUES (3,'VEN-20260608-001',1,1,'credito','pendiente',16.00,'2026-06-09 03:13:00',NULL,NULL,1,'2026-06-08 23:14:38','2026-06-08 23:14:38'),(6,'VEN-20260608-002',1,1,'credito','pendiente',16.00,'2026-06-09 03:21:00','2026-07-09',NULL,1,'2026-06-08 23:23:58','2026-06-08 23:23:58');
+/*!40000 ALTER TABLE `venta` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Dumping routines for database 'sysinescolara'
@@ -737,4 +1084,4 @@ CREATE TABLE `detalle_ornatos` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-06-06 19:57:47
+-- Dump completed on 2026-06-08 23:26:56

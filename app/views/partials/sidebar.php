@@ -42,6 +42,8 @@ function hasPermiso(string $codigo): bool
         </div>
 
         <?php if (hasPermiso('INVENTARIO_VIEW') || hasPermiso('PLANTAS_VIEW') || hasPermiso('PROVEEDORES_VIEW') || hasPermiso('COMPRAS_VIEW') || hasPermiso('CUENTAS_VIEW') || hasPermiso('TRABAJADORES_VIEW') || hasPermiso('INSUMOS_VIEW') || hasPermiso('CLIENTES_VIEW') || hasPermiso('TAREAS_VIEW') || hasPermiso('HERRAMIENTAS_VIEW') || hasPermiso('PRECIOS_VIEW') || hasPermiso('RECOLECCION_VIEW') || hasPermiso('TRAZABILIDAD_VIEW') || hasPermiso('MERMAS_VIEW')): ?>
+        <?php if (hasPermiso('INVENTARIO_VIEW') || hasPermiso('PLANTAS_VIEW') || hasPermiso('PROVEEDORES_VIEW') || hasPermiso('TRABAJADORES_VIEW') || hasPermiso('INSUMOS_VIEW') || hasPermiso('CLIENTES_VIEW') || hasPermiso('TAREAS_VIEW') || hasPermiso('HERRAMIENTAS_VIEW') || hasPermiso('PRECIOS_VIEW') || hasPermiso('RECOLECCION_VIEW') || hasPermiso('AMPLIACION_VIEW')): ?>
+        <?php if (hasPermiso('INVENTARIO_VIEW') || hasPermiso('PLANTAS_VIEW') || hasPermiso('PROVEEDORES_VIEW') || hasPermiso('TRABAJADORES_VIEW') || hasPermiso('INSUMOS_VIEW') || hasPermiso('CLIENTES_VIEW') || hasPermiso('TAREAS_VIEW') || hasPermiso('HERRAMIENTAS_VIEW') || hasPermiso('PRECIOS_VIEW') || hasPermiso('RECOLECCION_VIEW') || hasPermiso('AMPLIACION_VIEW') || hasPermiso('TRAZABILIDAD_VIEW') || hasPermiso('MERMAS_VIEW')): ?>
         <div class="sidebar-section">
             <span class="sidebar-section-title">Gestión</span>
             <ul class="sidebar-menu">
@@ -235,6 +237,29 @@ function hasPermiso(string $codigo): bool
                     </a>
                 </li>
                 <?php endif; ?>
+                <?php if (hasPermiso('AMPLIACION_VIEW')): ?>
+                <li>
+                    <a href="<?= BASE_URL ?>dashboard/ampliacion" class="sidebar-link <?= ($currentPage ?? '') === 'ampliacion' ? 'active' : '' ?>">
+                        <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17 1l4 4-4 4"></path>
+                            <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+                            <path d="M7 23l-4-4 4-4"></path>
+                            <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+                        </svg>
+                        <span>Ampliación</span>
+                    </a>
+                </li>
+                <?php endif; ?>
+                <?php if (hasPermiso('ORNATOS_VIEW')): ?>
+                <li>
+                    <a href="<?= BASE_URL ?>dashboard/ornatos" class="sidebar-link <?= ($currentPage ?? '') === 'ornatos' ? 'active' : '' ?>">
+                        <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2L9.5 9.5L2 12l7.5 2.5L12 22l2.5-7.5L22 12l-7.5-2.5L12 2z"></path>
+                        </svg>
+                        <span>Ornatos</span>
+                    </a>
+                </li>
+                <?php endif; ?>
                 <?php if (hasPermiso('TRAZABILIDAD_VIEW')): ?>
                 <li>
                     <a href="<?= BASE_URL ?>dashboard/trazabilidad" class="sidebar-link <?= ($currentPage ?? '') === 'trazabilidad' ? 'active' : '' ?>">
@@ -242,8 +267,7 @@ function hasPermiso(string $codigo): bool
                             <path d="M12 22V11"></path>
                             <path d="M12 14c2.5-2.5 6-3 7.5-1.5s1 5-1.5 7.5"></path>
                             <path d="M12 11c-2.5-2.5-6-3-7.5-1.5s-1 5 1.5 7.5"></path>
-                            <path d="M9 12h6"></path>
-                            <path d="M12 9v6"></path>
+                            <circle cx="9" cy="9" r="2"></circle>
                         </svg>
                         <span>Monitoreo</span>
                     </a>
@@ -264,6 +288,7 @@ function hasPermiso(string $codigo): bool
             </ul>
         </div>
         <?php endif; ?>
+        <?php endif; ?>
 
         <?php if (hasPermiso('VENTAS_ACCESS')): ?>
         <div class="sidebar-section">
@@ -279,6 +304,17 @@ function hasPermiso(string $codigo): bool
                         <span>Venta</span>
                     </a>
                 </li>
+                <?php if (hasPermiso('CUENTAS_COBRAR_VIEW')): ?>
+                <li>
+                    <a href="<?= BASE_URL ?>dashboard/cuentas_cobrar" class="sidebar-link <?= ($currentPage ?? '') === 'cuentas-cobrar' ? 'active' : '' ?>">
+                        <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 1v22"></path>
+                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                        </svg>
+                        <span>Cuentas por Cobrar</span>
+                    </a>
+                </li>
+                <?php endif; ?>
             </ul>
         </div>
         <?php endif; ?>

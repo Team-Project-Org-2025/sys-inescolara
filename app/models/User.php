@@ -57,6 +57,10 @@ class User extends Database
                 ['codigo' => 'DASHBOARD_VIEW', 'desc' => 'Ver panel principal'],
                 ['codigo' => 'INVENTARIO_VIEW', 'desc' => 'Ver inventario'],
                 ['codigo' => 'VENTAS_ACCESS', 'desc' => 'Acceder a ventas/POS'],
+                ['codigo' => 'VENTAS_CREATE', 'desc' => 'Crear ventas'],
+                ['codigo' => 'VENTAS_EDIT', 'desc' => 'Editar ventas'],
+                ['codigo' => 'VENTAS_DELETE', 'desc' => 'Anular ventas'],
+                ['codigo' => 'VENTAS_PDF', 'desc' => 'Exportar comprobante PDF'],
                 ['codigo' => 'USUARIOS_MANAGE', 'desc' => 'Gestionar usuarios'],
                 ['codigo' => 'PLANTAS_VIEW', 'desc' => 'Ver plantas'],
                 ['codigo' => 'PLANTAS_CREATE', 'desc' => 'Crear plantas'],
@@ -110,6 +114,8 @@ class User extends Database
                 ['codigo' => 'RECOLECCION_EDIT', 'desc' => 'Editar recolecciones'],
                 ['codigo' => 'RECOLECCION_DELETE', 'desc' => 'Eliminar recolecciones'],
                 ['codigo' => 'RECOLECCION_COMPLETE', 'desc' => 'Completar recolecciones y registrar insumos'],
+                ['codigo' => 'CUENTAS_COBRAR_VIEW', 'desc' => 'Ver cuentas por cobrar'],
+                ['codigo' => 'CUENTAS_COBRAR_PAY', 'desc' => 'Registrar pagos de cuentas por cobrar'],
             ];
 
             $stmtCheckPermiso = $this->db->prepare("SELECT COUNT(*) FROM permisos WHERE codigo_permiso = :codigo");
@@ -139,7 +145,7 @@ class User extends Database
             }
 
             // Asegurar rol_permisos para Trabajador (rol 2) — limitados
-            $trabajadorPermisos = ['DASHBOARD_VIEW', 'INVENTARIO_VIEW', 'VENTAS_ACCESS', 'PLANTAS_VIEW', 'PLANTAS_CREATE', 'PLANTAS_EDIT', 'CLIENTES_VIEW', 'CLIENTES_CREATE', 'CLIENTES_EDIT', 'TAREAS_VIEW', 'ASISTENTE_ACCESS'];
+            $trabajadorPermisos = ['DASHBOARD_VIEW', 'INVENTARIO_VIEW', 'VENTAS_ACCESS', 'VENTAS_CREATE', 'VENTAS_PDF', 'PLANTAS_VIEW', 'PLANTAS_CREATE', 'PLANTAS_EDIT', 'CLIENTES_VIEW', 'CLIENTES_CREATE', 'CLIENTES_EDIT', 'TAREAS_VIEW', 'ASISTENTE_ACCESS'];
             foreach ($trabajadorPermisos as $cod) {
                 if (isset($permMap[$cod])) {
                     $stmtCheckRP->execute([':rol' => 2, ':perm' => $permMap[$cod]]);
