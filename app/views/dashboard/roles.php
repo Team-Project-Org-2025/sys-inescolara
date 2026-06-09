@@ -4,7 +4,7 @@ include_once __DIR__ . '/../common/links.php';
 $modulos = [
     'Dashboard' => ['DASHBOARD_VIEW' => 'Ver'],
     'Inventario' => ['INVENTARIO_VIEW' => 'Ver'],
-    'Ventas' => ['VENTAS_ACCESS' => 'Acceder'],
+    'Ventas' => ['VENTAS_ACCESS' => 'Acceder', 'VENTAS_CREATE' => 'Crear', 'VENTAS_EDIT' => 'Editar', 'VENTAS_DELETE' => 'Anular', 'VENTAS_PDF' => 'PDF'],
     'Plantas' => ['PLANTAS_VIEW' => 'Ver', 'PLANTAS_CREATE' => 'Crear', 'PLANTAS_EDIT' => 'Editar', 'PLANTAS_DELETE' => 'Eliminar'],
     'Proveedores' => ['PROVEEDORES_VIEW' => 'Ver', 'PROVEEDORES_CREATE' => 'Crear', 'PROVEEDORES_EDIT' => 'Editar', 'PROVEEDORES_DELETE' => 'Eliminar'],
     'Insumos' => ['INSUMOS_VIEW' => 'Ver', 'INSUMOS_CREATE' => 'Crear', 'INSUMOS_EDIT' => 'Editar', 'INSUMOS_DELETE' => 'Eliminar'],

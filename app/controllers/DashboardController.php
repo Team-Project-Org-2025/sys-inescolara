@@ -104,6 +104,13 @@ function inventario(): void
 function ventas(): void
 {
     dashboardCheckPermiso('VENTAS_ACCESS');
+
+    require_once ROOT_PATH . 'vendor/autoload.php';
+    $modeloCliente = new \SysInescolara\models\Client();
+    $clientes = $modeloCliente->getAll();
+    $modeloTrabajador = new \SysInescolara\models\Employee();
+    $trabajadores = $modeloTrabajador->getAll();
+
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'ventas.php';
 
