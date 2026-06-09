@@ -102,23 +102,23 @@ const Ventas = {
     // ==================== LOTES ====================
 
     initBuscarLote() {
-        const input = document.getElementById('buscarLote');
-        const resultados = document.getElementById('resultadosLotes');
+        this.buscarInput = document.getElementById('buscarLote');
+        this.buscarResultados = document.getElementById('resultadosLotes');
         let timeout;
 
-        input.addEventListener('input', () => {
+        this.buscarInput.addEventListener('input', () => {
             clearTimeout(timeout);
-            const q = input.value.trim();
+            const q = this.buscarInput.value.trim();
             if (q.length < 2) {
-                resultados.style.display = 'none';
+                this.buscarResultados.style.display = 'none';
                 return;
             }
             timeout = setTimeout(() => this.buscarLotes(q), 300);
         });
 
-        input.addEventListener('blur', () => setTimeout(() => resultados.style.display = 'none', 300));
-        input.addEventListener('focus', () => {
-            if (resultados.children.length > 0) resultados.style.display = 'block';
+        this.buscarInput.addEventListener('blur', () => setTimeout(() => this.buscarResultados.style.display = 'none', 300));
+        this.buscarInput.addEventListener('focus', () => {
+            if (this.buscarResultados.children.length > 0) this.buscarResultados.style.display = 'block';
         });
     },
 
@@ -128,7 +128,7 @@ const Ventas = {
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
             });
             const data = await res.json();
-            const cont = document.getElementById('resultadosLotes');
+            const cont = this.buscarResultados;
             cont.innerHTML = '';
             cont.style.display = 'none';
 
@@ -145,7 +145,7 @@ const Ventas = {
                 item.addEventListener('click', () => {
                     this.agregarProducto(l);
                     cont.style.display = 'none';
-                    input.value = '';
+                    this.buscarInput.value = '';
                 });
                 cont.appendChild(item);
             });
