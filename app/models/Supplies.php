@@ -98,4 +98,22 @@ class Supplies extends Database implements ReadableInterface, DeletableInterface
         $id = $this->db->lastInsertId();
         return $id !== false ? (int) $id : null;
     }
+
+    public function findByNameAndCategory(string $name, string $category): ?array
+    {
+        $stmt = $this->db->prepare("
+            SELECT id_insumo, nombre_insumo, stock_actual
+            FROM insumo
+            WHERE nombre_insumo = :nombre AND categoria = :categoria AND activo = 1
+            LIMIT 1
+        ");
+        $stmt->execute([':nombre' => $name, ':categoria' => $category]);
+        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+    }
+
+    public function increaseStock(int $id, float $quantity): bool
+    {
+        $stmt = $this->db->prepare("UPDATE insumo SET stock_actual = stock_actual + :cantidad WHERE id_insumo = :id");
+        return $stmt->execute([':id' => $id, ':cantidad' => $quantity]);
+    }
 }

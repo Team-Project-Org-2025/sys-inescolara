@@ -2,9 +2,9 @@
 
 require_once __DIR__ . '/controller_helpers.php';
 
-use SysInescolara\models\SeedCollection;
+use SysInescolara\models\SeedCollection;//no lo borre
 use SysInescolara\models\Location;
-use SysInescolara\models\Employee;
+use SysInescolara\models\Employee;//no lo borre
 use SysInescolara\models\Plant;
 use SysInescolara\models\Supplies;
 use SysInescolara\models\UnidadMedida;
@@ -15,7 +15,6 @@ function index(): void
     checkModuleAuth();
     $action = $_GET['action'] ?? '';
     if (isAjaxRequest() && $action !== '') {
-        header('Content-Type: application/json; charset=utf-8');
         try {
             match ($_SERVER['REQUEST_METHOD'] . '_' . $action) {
                 'GET_get_recolecciones'   => recoleccion_getRecoleccionesAjax(),
@@ -32,22 +31,8 @@ function index(): void
         return;
     }
 
-    $locationModel = new Location();
-    $ubicaciones = $locationModel->getAll();
-    $employeeModel = new Employee();
-    $trabajadores = $employeeModel->getAll();
-    $plantModel = new Plant();
-    $plantas = $plantModel->getAll();
-    $unidadMedidaModel = new UnidadMedida();
-    $unidades = $unidadMedidaModel->getAll();
-
-    $view = ROOT_PATH . 'app/views/dashboard/seed-collection.php';
-    if (!is_file($view)) {
-        http_response_code(500);
-        echo 'Vista de recolección no encontrada.';
-        return;
-    }
-    require $view;
+    header('Location: ' . BASE_URL . 'dashboard/seed-collection');
+    exit();
 }
 
 function get_recolecciones(): void { checkModuleAuth(); recoleccion_getRecoleccionesAjax(); }
@@ -60,13 +45,24 @@ function registrar_insumo_ajax(): void { checkModuleAuth(); checkPermisoOrFail('
 function recoleccion_handleAddEdit(string $mode): void
 {
     $model = new SeedCollection();
-    $idTrabajador = (int)($_POST['id_trabajador'] ?? 0);
+    $data = getRequestData();
+
+    $idTrabajador = (int)($data['id_trabajador'] ?? 0);
     if ($idTrabajador <= 0) throw new \Exception('El trabajador es requerido.');
-    $idUbicacion = (int)($_POST['id_ubicacion'] ?? 0);
+    $idUbicacion = (int)($data['id_ubicacion'] ?? 0);
     if ($idUbicacion <= 0) throw new \Exception('La ubicación es requerida.');
-    $fechaAsignacion = trim((string)($_POST['fecha_asignacion'] ?? ''));
-    if ($fechaAsignacion === '') throw new \Exception('La fecha de asignación es requerida.');
-    $observacion = trim((string)($_POST['observacion'] ?? ''));
+
+    $rules = [
+        'fecha_asignacion' => ['type' => 'fecha', 'required' => true],
+    ];
+    $validated = \SysInescolara\helpers\Validation::sanitize($data);
+    $validation = \SysInescolara\helpers\Validation::validate($validated, $rules);
+    if (!$validation['valid']) {
+        throw new \InvalidArgumentException('Errores de validación: ' . implode('; ', $validation['errors']));
+    }
+
+    $fechaAsignacion = $validated['fecha_asignacion'];
+    $observacion = trim((string)($data['observacion'] ?? ''));
     if ($observacion === '') $observacion = null;
 
     if ($mode === 'add') {
@@ -76,7 +72,7 @@ function recoleccion_handleAddEdit(string $mode): void
         jsonResponse(['success' => true, 'message' => 'Recolección registrada correctamente', 'id' => $newId]);
     }
 
-    $id = (int)($_POST['id'] ?? 0);
+    $id = (int)($data['id'] ?? 0);
     if ($id <= 0) throw new \Exception('ID inválido');
     $oldData = $model->getById($id);
     $model->update($id, $idTrabajador, $idUbicacion, $fechaAsignacion, $observacion);
@@ -87,7 +83,8 @@ function recoleccion_handleAddEdit(string $mode): void
 function recoleccion_handleDelete(): void
 {
     $model = new SeedCollection();
-    $id = (int)($_POST['id'] ?? 0);
+    $data = getRequestData();
+    $id = (int)($data['id'] ?? 0);
     if ($id <= 0) throw new \Exception('ID inválido');
     if (!$model->exists($id)) throw new \Exception('No existe la recolección');
 
@@ -101,69 +98,53 @@ function recoleccion_handleDelete(): void
         }
         throw $e;
     }
-    AuditLog::record('DELETE', 'recoleccion_semillas', $id, $oldData, null);
-    jsonResponse(['success' => true, 'message' => 'Recolección eliminada correctamente']);
+    AuditLog::record('DEACTIVATE', 'recoleccion_semillas', $id, $oldData, null);
+    jsonResponse(['success' => true, 'message' => 'Recolección desactivada correctamente']);
 }
 
 function recoleccion_handleCompletar(): void
 {
     $model = new SeedCollection();
-    $id = (int)($_POST['id'] ?? 0);
+    $data = getRequestData();
+    $id = (int)($data['id'] ?? 0);
     if ($id <= 0) throw new \Exception('ID inválido');
 
-    $data = $model->getById($id);
-    if (!$data) throw new \Exception('No existe la recolección');
-    if ($data['estatus'] !== 'Pendiente') throw new \Exception('Solo se pueden completar recolecciones pendientes.');
+    $recoleccion = $model->getById($id);
+    if (!$recoleccion) throw new \Exception('No existe la recolección');
+    if ($recoleccion['estatus'] !== 'Pendiente') throw new \Exception('Solo se pueden completar recolecciones pendientes.');
 
-    $fechaRecoleccion = trim((string)($_POST['fecha_recoleccion'] ?? ''));
+    $fechaRecoleccion = trim((string)($data['fecha_recoleccion'] ?? ''));
     if ($fechaRecoleccion === '') {
         $fechaRecoleccion = date('Y-m-d');
     }
 
     $model->complete($id, $fechaRecoleccion);
-    AuditLog::record('UPDATE', 'recoleccion_semillas', $id, $data, ['estatus' => 'Realizada', 'fecha_recoleccion' => $fechaRecoleccion]);
+    AuditLog::record('UPDATE', 'recoleccion_semillas', $id, $recoleccion, ['estatus' => 'Realizada', 'fecha_recoleccion' => $fechaRecoleccion]);
     jsonResponse(['success' => true, 'message' => 'Recolección completada correctamente']);
 }
 
 function recoleccion_handleRegistrarInsumo(): void
 {
-    $id = (int)($_POST['id'] ?? 0);
+    $data = getRequestData();
+    $id = (int)($data['id'] ?? 0);
     if ($id <= 0) throw new \Exception('ID inválido');
 
     $model = new SeedCollection();
-    $data = $model->getById($id);
-    if (!$data) throw new \Exception('No existe la recolección');
-    if ($data['estatus'] !== 'Realizada') throw new \Exception('Debe completar la recolección antes de registrar los insumos.');
+    $recoleccion = $model->getById($id);
+    if (!$recoleccion) throw new \Exception('No existe la recolección');
+    if ($recoleccion['estatus'] !== 'Realizada') throw new \Exception('Debe completar la recolección antes de registrar los insumos.');
 
-    $itemsJson = trim((string)($_POST['items'] ?? ''));
+    $itemsJson = trim((string)($data['items'] ?? ''));
     if ($itemsJson === '') throw new \Exception('Debe agregar al menos un tipo de semilla.');
 
     $items = json_decode($itemsJson, true);
     if (!is_array($items) || empty($items)) throw new \Exception('Debe agregar al menos un tipo de semilla.');
 
-    $suppliesModel = new Supplies();
-    $createdCount = 0;
-
-    foreach ($items as $item) {
-        $nombreSemilla = trim((string)($item['nombre_semilla'] ?? ''));
-        if ($nombreSemilla === '') continue;
-        $idUnidadMedida = (int)($item['id_unidad_medida'] ?? 0);
-        if ($idUnidadMedida <= 0) continue;
-        $cantidad = floatval($item['cantidad'] ?? 0);
-        if ($cantidad <= 0) continue;
-        $plantaOrigen = trim((string)($item['planta_origen'] ?? ''));
-        if ($plantaOrigen === '') $plantaOrigen = null;
-
-        $ok = $suppliesModel->add($nombreSemilla, $idUnidadMedida, 'Semillas', $cantidad, 0);
-        if (!$ok) continue;
-
-        $model->addDetail($id, $plantaOrigen, $nombreSemilla, $idUnidadMedida, $cantidad);
-        $createdCount++;
-    }
+    $createdCount = $model->registerSeedsWithTransaction($id, $items);
 
     if ($createdCount === 0) throw new \Exception('No se pudo registrar ningún insumo. Verifique los datos.');
 
-    AuditLog::record('UPDATE', 'recoleccion_semillas', $id, $data, ['insumos_registrados' => $createdCount]);
+    AuditLog::record('UPDATE', 'recoleccion_semillas', $id, $recoleccion, ['insumos_registrados' => $createdCount]);
     jsonResponse(['success' => true, 'message' => "$createdCount tipo(s) de semilla registrado(s) correctamente"]);
 }
 
