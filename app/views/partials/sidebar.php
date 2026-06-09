@@ -227,6 +227,13 @@ function hasPermiso(string $codigo): bool
                 <?php if (hasPermiso('ORNATOS_VIEW')): ?>
                 <li>
                     <a href="<?= BASE_URL ?>dashboard/ornatos" class="sidebar-link <?= ($currentPage ?? '') === 'ornatos' ? 'active' : '' ?>">
+                        <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2L9.5 9.5L2 12l7.5 2.5L12 22l2.5-7.5L22 12l-7.5-2.5L12 2z"></path>
+                        </svg>
+                        <span>Ornatos</span>
+                    </a>
+                </li>
+                <?php endif; ?>
                 <?php if (hasPermiso('TRAZABILIDAD_VIEW')): ?>
                 <li>
                     <a href="<?= BASE_URL ?>dashboard/trazabilidad" class="sidebar-link <?= ($currentPage ?? '') === 'trazabilidad' ? 'active' : '' ?>">
@@ -235,10 +242,6 @@ function hasPermiso(string $codigo): bool
                             <path d="M12 14c2.5-2.5 6-3 7.5-1.5s1 5-1.5 7.5"></path>
                             <path d="M12 11c-2.5-2.5-6-3-7.5-1.5s-1 5 1.5 7.5"></path>
                             <circle cx="9" cy="9" r="2"></circle>
-                        </svg>
-                        <span>Ornatos</span>
-                            <path d="M9 12h6"></path>
-                            <path d="M12 9v6"></path>
                         </svg>
                         <span>Monitoreo</span>
                     </a>
