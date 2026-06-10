@@ -66,10 +66,6 @@ function prices_handleEdit(): void
     $fechaCalculo = trim((string)($_POST['fecha_calculo'] ?? ''));
     if ($fechaCalculo === '') $fechaCalculo = date('Y-m-d');
 
-    if ($model->existsByBatch($idLote, $id)) {
-        throw new \Exception('El lote seleccionado ya tiene otro cálculo de precio.');
-    }
-
     $oldData = $model->getById($id);
     $model->update($id, $idLote, 0, $costoTotalInsumo, $porcentajeGanancia, $precioFinalSugerido, $fechaCalculo);
 

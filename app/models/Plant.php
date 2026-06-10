@@ -21,11 +21,14 @@ class Plant extends Database implements ReadableInterface, DeletableInterface
                         p.id_planta AS id, p.nombre_comun, p.nombre_tecnico, p.id_especie AS especie_id, p.imagen, p.activo,
                         e.nombre_especie AS especie_nombre,
                         (SELECT COALESCE(SUM(l2.cantidad_actual), 0) FROM lote l2 WHERE l2.id_planta = p.id_planta AND l2.activo = 1) AS stock_lotes,
-                        c.precio_final_sugerido AS precio_vigente
+                        (SELECT cp.precio_final_sugerido
+                         FROM calculo_precio cp
+                         JOIN lote l ON cp.id_lote = l.id_lote
+                         WHERE l.id_planta = p.id_planta
+                         ORDER BY cp.fecha_calculo DESC
+                         LIMIT 1) AS precio_vigente
                     FROM plantas p
                     LEFT JOIN especie e ON p.id_especie = e.id_especie AND e.activo = 1
-                    LEFT JOIN planta_precio_vigente pv ON p.id_planta = pv.id_planta
-                    LEFT JOIN calculo_precio c ON pv.id_calculo = c.id_calculo
                     WHERE p.activo = 1
                     ORDER BY p.nombre_comun ASC";
             $stmt = $this->db->query($sql);

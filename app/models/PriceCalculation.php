@@ -9,9 +9,16 @@ use PDO;
 
 class PriceCalculation extends Database implements ReadableInterface, DeletableInterface
 {
+    private ?int $_lastInsertId = null;
+
     public function __construct()
     {
         parent::__construct();
+    }
+
+    public function getLastInsertId(): ?int
+    {
+        return $this->_lastInsertId ?? parent::getLastInsertId();
     }
 
     public function getAll(): array
@@ -99,12 +106,6 @@ class PriceCalculation extends Database implements ReadableInterface, DeletableI
         }
     }
 
-    public function getLastInsertId(): ?int
-    {
-        $id = $this->db->lastInsertId();
-        return $id !== false ? (int) $id : null;
-    }
-
     public function add(
         int $idLote,
         float $costoManoObra,
@@ -113,24 +114,36 @@ class PriceCalculation extends Database implements ReadableInterface, DeletableI
         float $precioFinalSugerido,
         string $fechaCalculo
     ): bool {
-        $stmt = $this->db->prepare("
-            INSERT INTO calculo_precio
-                (id_lote, costo_mano_obra, costo_total_insumo,
-                 porcentaje_ganancia, precio_final_sugerido,
-                 fecha_calculo)
-            VALUES
-                (:id_lote, :costo_mano_obra, :costo_total_insumo,
-                 :porcentaje_ganancia, :precio_final_sugerido,
-                 :fecha_calculo)
-        ");
-        return $stmt->execute([
-            ':id_lote' => $idLote,
-            ':costo_mano_obra' => $costoManoObra,
-            ':costo_total_insumo' => $costoTotalInsumo,
-            ':porcentaje_ganancia' => $porcentajeGanancia,
-            ':precio_final_sugerido' => $precioFinalSugerido,
-            ':fecha_calculo' => $fechaCalculo,
-        ]);
+        try {
+            $this->db->beginTransaction();
+
+            $stmt = $this->db->prepare("
+                INSERT INTO calculo_precio
+                    (id_lote, costo_mano_obra, costo_total_insumo,
+                     porcentaje_ganancia, precio_final_sugerido,
+                     fecha_calculo)
+                VALUES
+                    (:id_lote, :costo_mano_obra, :costo_total_insumo,
+                     :porcentaje_ganancia, :precio_final_sugerido,
+                     :fecha_calculo)
+            ");
+            $stmt->execute([
+                ':id_lote' => $idLote,
+                ':costo_mano_obra' => $costoManoObra,
+                ':costo_total_insumo' => $costoTotalInsumo,
+                ':porcentaje_ganancia' => $porcentajeGanancia,
+                ':precio_final_sugerido' => $precioFinalSugerido,
+                ':fecha_calculo' => $fechaCalculo,
+            ]);
+
+            $this->_lastInsertId = (int)$this->db->lastInsertId();
+            $this->db->commit();
+            return true;
+        } catch (\Throwable $e) {
+            if ($this->db->inTransaction()) $this->db->rollBack();
+            error_log('Error en PriceCalculation::add: ' . $e->getMessage());
+            return false;
+        }
     }
 
     public function update(
