@@ -2,17 +2,26 @@
 
 require_once __DIR__ . '/controller_helpers.php';
 
-use SysInescolara\models\DashboardData;
+use SysInescolara\models\Reports;
+use SysInescolara\helpers\PdfHelper;
 
 function index(): void
 {
     reports_checkAuth();
     $action = $_GET['action'] ?? '';
+
+    if ($action === 'generate_pdf') {
+        reports_handleGeneratePdf();
+        return;
+    }
+
     if (isAjaxRequest() && $action !== '') {
         try {
             match ($_SERVER['REQUEST_METHOD'] . '_' . $action) {
-                'GET_get_report' => reports_handleGetReport(),
-                default          => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
+                'GET_get_modules'     => reports_handleGetModules(),
+                'GET_get_filters'     => reports_handleGetFilters(),
+                'GET_get_report_data' => reports_handleGetReportData(),
+                default               => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
             };
         } catch (\Throwable $e) {
             jsonResponse(['success' => false, 'message' => 'Error interno: ' . $e->getMessage()], 500);
@@ -23,51 +32,181 @@ function index(): void
     $view = ROOT_PATH . 'app/views/dashboard/reports.php';
     if (!is_file($view)) {
         http_response_code(500);
-        echo 'Vista de reportes no encontrada.';
+        echo 'Vista de reportes no existe.';
         return;
     }
     require $view;
 }
 
-function get_report(): void
+function get_modules(): void
 {
     reports_checkAuth();
-    reports_handleGetReport();
+    reports_handleGetModules();
 }
 
-function reports_handleGetReport(): void
+function get_filters(): void
 {
-    $reportType = $_GET['type'] ?? '';
-    $validTypes = ['plants_by_species', 'lots_by_status', 'inventory_summary', 'supply_stock', 'recent_sales'];
+    reports_checkAuth();
+    reports_handleGetFilters();
+}
 
-    if (!in_array($reportType, $validTypes, true)) {
-        jsonResponse(['success' => false, 'message' => 'Tipo de reporte inválido'], 400);
+function get_report_data(): void
+{
+    reports_checkAuth();
+    reports_handleGetReportData();
+}
+
+function generate_pdf(): void
+{
+    reports_checkAuth();
+    reports_handleGeneratePdf();
+}
+
+function reports_handleGetModules(): void
+{
+    $reports = new Reports();
+    jsonResponse([
+        'success' => true,
+        'modules' => $reports->getModules(),
+    ]);
+}
+
+function reports_handleGetFilters(): void
+{
+    $module = $_GET['module'] ?? '';
+    if (empty($module)) {
+        jsonResponse(['success' => false, 'message' => 'Módulo no especificado'], 400);
         return;
     }
 
-    $dashboardData = new DashboardData();
-    $data = $dashboardData->getReportData($reportType);
-
-    $labels = [
-        'plants_by_species' => ['Especie', 'Total Plantas'],
-        'lots_by_status' => ['Estado', 'Total Lotes', 'Total Plantas'],
-        'inventory_summary' => ['Nivel de Stock', 'Total Lotes', 'Total Plantas'],
-        'supply_stock' => ['ID', 'Insumo', 'Stock Actual', 'Unidad', 'Costo Unit.'],
-        'recent_sales' => ['ID Venta', 'Cliente', 'Monto Total', 'Fecha'],
-    ];
+    $reports = new Reports();
+    $filters = $reports->getModuleFilters($module);
 
     jsonResponse([
         'success' => true,
-        'data' => $data,
-        'labels' => $labels[$reportType] ?? [],
-        'type' => $reportType,
+        'filters' => $filters,
     ]);
+}
+
+function reports_handleGetReportData(): void
+{
+    $module = $_GET['module'] ?? '';
+    if (empty($module)) {
+        jsonResponse(['success' => false, 'message' => 'Módulo no especificado'], 400);
+        return;
+    }
+
+    $filters = extractReportFilters($_GET);
+
+    $reports = new Reports();
+    $data = $reports->getReportData($module, $filters);
+
+    $keys = !empty($data['rows']) ? array_keys($data['rows'][0]) : [];
+
+    jsonResponse([
+        'success' => true,
+        'columns' => $data['columns'],
+        'keys' => $keys,
+        'rows' => $data['rows'],
+        'chart' => $data['chart'],
+        'module' => $module,
+    ]);
+}
+
+function reports_handleGeneratePdf(): void
+{
+    $module = $_GET['module'] ?? '';
+    if (empty($module)) {
+        http_response_code(400);
+        echo 'Módulo no especificado';
+        exit();
+    }
+
+    $reports = new Reports();
+    $modules = $reports->getModules();
+    $moduleNames = [];
+    foreach ($modules as $m) {
+        $moduleNames[$m['id']] = $m['nombre'];
+    }
+    $moduleName = $moduleNames[$module] ?? $module;
+
+    $filters = extractReportFilters($_GET);
+    $data = $reports->getReportData($module, $filters);
+
+    $filterLabels = [];
+    foreach ($filters as $k => $v) {
+        if ($v !== '' && $v !== null && !str_starts_with($k, '_')) {
+            $filterLabels[] = htmlspecialchars($k) . ': ' . htmlspecialchars((string)$v);
+        }
+    }
+
+    $fechaGeneracion = date('d/m/Y h:i A');
+    $usuario = $_SESSION['nombre_usuario'] ?? 'Usuario';
+
+    ob_start();
+    require ROOT_PATH . 'app/views/dashboard/reports_pdf.php';
+    $html = ob_get_clean();
+
+    try {
+        $pdf = new PdfHelper();
+        $output = $pdf->fromHtml($html);
+        $filename = 'reporte-' . $module . '-' . date('Ymd') . '.pdf';
+
+        header('Content-Type: application/pdf');
+        header('Content-Disposition: inline; filename="' . $filename . '"');
+        header('Content-Length: ' . strlen($output));
+        echo $output;
+        exit();
+    } catch (\Exception $e) {
+        error_log('Error al generar PDF reporte: ' . $e->getMessage());
+        http_response_code(500);
+        echo 'Error al generar el PDF.';
+        exit();
+    }
 }
 
 function reports_checkAuth(): void
 {
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
     if (!isset($_SESSION['user_id'])) {
         header('Location: ' . BASE_URL . 'login');
         exit();
     }
+}
+
+function extractReportFilters(array $params): array
+{
+    $filters = [];
+    $module = $params['module'] ?? '';
+    foreach ($params as $key => $value) {
+        if ($key === 'module' || $key === 'action' || $key === '_' || $key === 'PHPSESSID') {
+            continue;
+        }
+        $filters[$key] = $value;
+    }
+
+    // Module-specific date field mapping for generic time filter
+    $dateFieldMap = [
+        'lotes'         => 'fecha_siembra',
+        'tareas'        => 'fecha_asignacion',
+        'recoleccion'   => 'fecha_asignacion',
+        'ventas'        => 'fecha_venta',
+        'cuentas_cobrar'=> 'fecha_venta',
+        'compras'       => 'fecha_compra',
+        'ornatos'       => 'fecha_venta',
+        'mermas'        => 'fecha_registro',
+    ];
+
+    $field = $dateFieldMap[$module] ?? 'fecha_venta';
+
+    if (isset($params['fecha_desde']) && !isset($filters[$field . '_desde'])) {
+        $filters[$field . '_desde'] = $params['fecha_desde'];
+    }
+    if (isset($params['fecha_hasta']) && !isset($filters[$field . '_hasta'])) {
+        $filters[$field . '_hasta'] = $params['fecha_hasta'];
+    }
+
+    return $filters;
 }

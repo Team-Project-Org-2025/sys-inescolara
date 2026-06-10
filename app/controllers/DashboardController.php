@@ -48,6 +48,9 @@ function index(): void
     $recentActivity = $dashboardData->getRecentActivity(10);
     $lowStockLots = $dashboardData->getLowStockLots(20);
     $lowStockSupplies = $dashboardData->getLowStockSupplies(10);
+    $plantsBySpecies = $dashboardData->getPlantsBySpecies();
+    $inventorySummary = $dashboardData->getInventorySummary();
+    $pendingTasks = $dashboardData->getPendingTasks();
 
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'index.php';

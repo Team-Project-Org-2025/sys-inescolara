@@ -50,7 +50,104 @@ class DashboardData extends Database
             $stats['total_ventas'] = (int) $stmt->fetchColumn();
         } catch (\Throwable $e) { $stats['total_ventas'] = 0; }
 
+        try { $stats['total_ubicaciones'] = (int) $this->db->query("SELECT COUNT(*) FROM ubicacion WHERE activo = 1")->fetchColumn(); } catch (\Throwable $e) { $stats['total_ubicaciones'] = 0; }
+        try { $stats['total_compras'] = (int) $this->db->query("SELECT COUNT(*) FROM compra WHERE activo = 1")->fetchColumn(); } catch (\Throwable $e) { $stats['total_compras'] = 0; }
+        try { $stats['total_ornatos'] = (int) $this->db->query("SELECT COUNT(*) FROM ornatos WHERE activo = 1")->fetchColumn(); } catch (\Throwable $e) { $stats['total_ornatos'] = 0; }
+
+        try {
+            $stmt = $this->db->prepare("SELECT COUNT(*) FROM asignar_tarea WHERE estatus_tarea != 'completada' AND estatus_tarea != 'cancelada'");
+            $stmt->execute();
+            $stats['total_tareas_pendientes'] = (int) $stmt->fetchColumn();
+        } catch (\Throwable $e) { $stats['total_tareas_pendientes'] = 0; }
+
+        try {
+            $stmt = $this->db->query("SELECT COALESCE(SUM(total), 0) FROM venta WHERE activo = 1");
+            $stats['total_ventas_bs'] = (float) $stmt->fetchColumn();
+        } catch (\Throwable $e) { $stats['total_ventas_bs'] = 0; }
+
+        try {
+            $stmt = $this->db->query("SELECT COALESCE(SUM(monto), 0) FROM pago_venta WHERE estado_pago != 'rechazado'");
+            $stats['total_cobrado'] = (float) $stmt->fetchColumn();
+        } catch (\Throwable $e) { $stats['total_cobrado'] = 0; }
+
+        try {
+            $stmt = $this->db->query("SELECT COALESCE(SUM(total), 0) FROM compra WHERE activo = 1");
+            $stats['total_compras_bs'] = (float) $stmt->fetchColumn();
+        } catch (\Throwable $e) { $stats['total_compras_bs'] = 0; }
+
+        try {
+            $stmt = $this->db->query("SELECT COUNT(*) FROM venta WHERE tipo_venta = 'credito' AND estado = 'pendiente' AND activo = 1");
+            $stats['total_cuentas_cobrar'] = (int) $stmt->fetchColumn();
+        } catch (\Throwable $e) { $stats['total_cuentas_cobrar'] = 0; }
+
+        try {
+            $stmt = $this->db->query("SELECT COUNT(*) FROM mermas_historico WHERE activo = 1");
+            $stats['total_mermas'] = (int) $stmt->fetchColumn();
+        } catch (\Throwable $e) { $stats['total_mermas'] = 0; }
+
         return $stats;
+    }
+
+    public function getPlantsBySpecies(): array
+    {
+        try {
+            return $this->db->query("
+                SELECT e.nombre_especie AS label, COUNT(p.id_planta) AS value
+                FROM especie e
+                LEFT JOIN plantas p ON p.id_especie = e.id_especie AND p.activo = 1
+                WHERE e.activo = 1
+                GROUP BY e.id_especie, e.nombre_especie
+                ORDER BY value DESC
+                LIMIT 10
+            ")->fetchAll();
+        } catch (\Throwable $e) {
+            return [];
+        }
+    }
+
+    public function getInventorySummary(): array
+    {
+        try {
+            return $this->db->query("
+                SELECT
+                    CASE
+                        WHEN l.cantidad_actual <= 0 THEN 'Sin stock'
+                        WHEN l.cantidad_actual < 20 THEN 'Bajo'
+                        WHEN l.cantidad_actual < 50 THEN 'Medio'
+                        ELSE 'Alto'
+                    END AS label,
+                    COUNT(*) AS value
+                FROM lote l
+                WHERE l.activo = 1
+                GROUP BY label
+                ORDER BY FIELD(label, 'Alto', 'Medio', 'Bajo', 'Sin stock')
+            ")->fetchAll();
+        } catch (\Throwable $e) {
+            return [];
+        }
+    }
+
+    public function getPendingTasks(): array
+    {
+        try {
+            $stmt = $this->db->prepare("
+                SELECT at.id_asignacion, t.nombre_tarea, tr.nombre_trabajador,
+                       at.fecha_asignacion, at.fecha_cumplimiento, at.estatus_tarea,
+                       l.id_lote
+                FROM asignar_tarea at
+                JOIN tareas t ON at.id_tarea = t.id_tarea AND t.activo = 1
+                LEFT JOIN trabajadores tr ON at.id_trabajador = tr.id_trabajador AND tr.activo = 1
+                LEFT JOIN lote l ON at.id_lote = l.id_lote AND l.activo = 1
+                WHERE at.estatus_tarea NOT IN ('completada','cancelada')
+                ORDER BY at.fecha_cumplimiento ASC
+                LIMIT 6
+            ");
+            $stmt->execute();
+            return $stmt->fetchAll();
+        } catch (\Throwable $e) {
+            error_log('Error en getPendingTasks: ' . $e->getMessage());
+            return [];
+        }
     }
 
     public function getRecentActivity(int $limit = 10): array
