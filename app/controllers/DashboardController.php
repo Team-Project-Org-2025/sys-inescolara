@@ -48,6 +48,9 @@ function index(): void
     $recentActivity = $dashboardData->getRecentActivity(10);
     $lowStockLots = $dashboardData->getLowStockLots(20);
     $lowStockSupplies = $dashboardData->getLowStockSupplies(10);
+    $plantsBySpecies = $dashboardData->getPlantsBySpecies();
+    $inventorySummary = $dashboardData->getInventorySummary();
+    $pendingTasks = $dashboardData->getPendingTasks();
 
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'index.php';
@@ -104,12 +107,42 @@ function inventario(): void
 function ventas(): void
 {
     dashboardCheckPermiso('VENTAS_ACCESS');
+
+    require_once ROOT_PATH . 'vendor/autoload.php';
+    $modeloCliente = new \SysInescolara\models\Client();
+    $clientes = $modeloCliente->getAll();
+    $modeloTrabajador = new \SysInescolara\models\Employee();
+    $trabajadores = $modeloTrabajador->getAll();
+
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'ventas.php';
 
     if (!is_file($view)) {
         http_response_code(500);
         echo 'Vista de ventas no encontrada.';
+        return;
+    }
+
+    require $view;
+}
+
+function cuentas_cobrar(): void
+{
+    dashboardCheckPermiso('CUENTAS_COBRAR_VIEW');
+
+    require_once ROOT_PATH . 'vendor/autoload.php';
+    $employeeModel = new \SysInescolara\models\Employee();
+    $employees = $employeeModel->getAll();
+
+    $permisos = $_SESSION['user_permisos'] ?? [];
+    $canPay = in_array('CUENTAS_COBRAR_PAY', $permisos, true);
+
+    $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
+        . 'dashboard' . DIRECTORY_SEPARATOR . 'cuentas-cobrar.php';
+
+    if (!is_file($view)) {
+        http_response_code(500);
+        echo 'Vista de cuentas por cobrar no encontrada.';
         return;
     }
 
@@ -208,6 +241,30 @@ function supplies(): void
     if (!is_file($view)) {
         http_response_code(500);
         echo 'Vista de suministros no encontrada.';
+        return;
+    }
+
+    require $view;
+}
+
+function compras(): void
+{
+    dashboardCheckPermiso('COMPRAS_VIEW');
+
+    require_once ROOT_PATH . 'vendor/autoload.php';
+    $supplierModel = new \SysInescolara\models\Supplier();
+    $proveedores = $supplierModel->getAll();
+    $supplyModel = new \SysInescolara\models\Supplies();
+    $insumos = $supplyModel->getAll();
+    $locationModel = new \SysInescolara\models\Location();
+    $ubicaciones = $locationModel->getAll();
+
+    $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
+        . 'dashboard' . DIRECTORY_SEPARATOR . 'compras.php';
+
+    if (!is_file($view)) {
+        http_response_code(500);
+        echo 'Vista de compras no encontrada.';
         return;
     }
 
@@ -401,6 +458,25 @@ function backups(): void
 
     require $view;
 }
+function ornatos(): void
+{
+    dashboardCheckPermiso('ORNATOS_VIEW');
+
+    require_once ROOT_PATH . 'vendor/autoload.php';
+    $modeloCliente = new \SysInescolara\models\Client();
+    $clientes = $modeloCliente->getAll();
+    $modeloLote = new \SysInescolara\models\Batch();
+    $lotes = $modeloLote->getAll();
+
+    $vista = ROOT_PATH . 'app/views/dashboard/ornatos.php';
+    if (!is_file($vista)) {
+        http_response_code(500);
+        echo 'Vista de ornatos no encontrada.';
+        return;
+    }
+    require $vista;
+}
+
 function roles(): void
 {
     dashboardCheckPermiso('USUARIOS_MANAGE');
@@ -514,6 +590,27 @@ function seedcollection(): void
     require $view;
 }
 
+function ampliacion(): void
+{
+    dashboardCheckPermiso('AMPLIACION_VIEW');
+
+    require_once ROOT_PATH . 'vendor/autoload.php';
+    $clientModel = new \SysInescolara\models\Client();
+    $clientes = $clientModel->getAll();
+    $employeeModel = new \SysInescolara\models\Employee();
+    $trabajadores = $employeeModel->getAll();
+
+    $view = ROOT_PATH . 'app/views/dashboard/ampliacion.php';
+
+    if (!is_file($view)) {
+        http_response_code(500);
+        echo 'Vista de ampliación no encontrada.';
+        return;
+    }
+
+    require $view;
+}
+
 function trazabilidad(): void
 {
     dashboardCheckPermiso('TRAZABILIDAD_VIEW');
@@ -525,6 +622,44 @@ function trazabilidad(): void
     if (!is_file($view)) {
         http_response_code(500);
         echo 'Vista de trazabilidad no encontrada.';
+        return;
+    }
+
+    require $view;
+}
+
+function mermas(): void
+{
+    dashboardCheckPermiso('MERMAS_VIEW');
+
+    require_once ROOT_PATH . 'vendor/autoload.php';
+
+    $view = ROOT_PATH . 'app/views/dashboard/mermas.php';
+
+    if (!is_file($view)) {
+        http_response_code(500);
+        echo 'Vista de mermas no encontrada.';
+        return;
+    }
+
+    require $view;
+}
+
+function cuentaspagar(): void
+{
+    cuentas_pagar();
+}
+
+function cuentas_pagar(): void
+{
+    dashboardCheckPermiso('CUENTAS_VIEW');
+
+    $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
+        . 'dashboard' . DIRECTORY_SEPARATOR . 'cuentas-pagar.php';
+
+    if (!is_file($view)) {
+        http_response_code(500);
+        echo 'Vista de cuentas por pagar no encontrada.';
         return;
     }
 

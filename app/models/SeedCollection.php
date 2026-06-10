@@ -31,6 +31,7 @@ class SeedCollection extends Database implements ReadableInterface, DeletableInt
                     FROM recoleccion_semillas r
                     LEFT JOIN trabajadores t ON r.id_trabajador = t.id_trabajador
                     LEFT JOIN ubicacion u ON r.id_ubicacion = u.id_ubicacion
+                    WHERE r.activo = 1
                     ORDER BY r.fecha_asignacion DESC, r.id_recoleccion DESC";
             $stmt = $this->db->query($sql);
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
@@ -69,14 +70,21 @@ class SeedCollection extends Database implements ReadableInterface, DeletableInt
 
     public function delete(int $id): bool
     {
-        $stmt = $this->db->prepare("DELETE FROM recoleccion_semillas WHERE id_recoleccion = :id");
+        $stmt = $this->db->prepare("UPDATE recoleccion_semillas SET activo = 0 WHERE id_recoleccion = :id");
+        return $stmt->execute([':id' => $id]);
+    }
+
+    public function restore(int $id): bool
+    {
+        $stmt = $this->db->prepare("UPDATE recoleccion_semillas SET activo = 1 WHERE id_recoleccion = :id");
         return $stmt->execute([':id' => $id]);
     }
 
     public function getLastInsertId(): ?int
     {
         try {
-            return (int)$this->db->lastInsertId();
+            $id = $this->db->lastInsertId();
+            return $id !== false ? (int)$id : null;
         } catch (\Throwable $e) {
             return null;
         }
@@ -135,13 +143,13 @@ class SeedCollection extends Database implements ReadableInterface, DeletableInt
         ]);
     }
 
-    public function addDetail(int $idRecoleccion, ?string $plantaOrigen, string $nombreSemilla, int $idUnidadMedida, float $cantidad): bool
+    public function addDetail(int $idRecoleccion, ?string $plantaOrigen, string $nombreSemilla, int $idUnidadMedida, float $cantidad, ?int $idInsumo = null): bool
     {
         $stmt = $this->db->prepare("
             INSERT INTO recoleccion_semillas_detalle
-                (id_recoleccion, planta_origen, nombre_semilla, id_unidad_medida, cantidad)
+                (id_recoleccion, planta_origen, nombre_semilla, id_unidad_medida, cantidad, id_insumo)
             VALUES
-                (:id_recoleccion, :planta_origen, :nombre_semilla, :id_unidad_medida, :cantidad)
+                (:id_recoleccion, :planta_origen, :nombre_semilla, :id_unidad_medida, :cantidad, :id_insumo)
         ");
         return $stmt->execute([
             ':id_recoleccion'   => $idRecoleccion,
@@ -149,6 +157,7 @@ class SeedCollection extends Database implements ReadableInterface, DeletableInt
             ':nombre_semilla'   => $nombreSemilla,
             ':id_unidad_medida' => $idUnidadMedida,
             ':cantidad'         => $cantidad,
+            ':id_insumo'        => $idInsumo,
         ]);
     }
 
@@ -156,9 +165,12 @@ class SeedCollection extends Database implements ReadableInterface, DeletableInt
     {
         try {
             $stmt = $this->db->prepare("
-                SELECT d.*, u.nombre_unidad_medida, u.simbolo
+                SELECT d.*,
+                       u.nombre_unidad_medida, u.simbolo,
+                       i.nombre_insumo AS insumo_nombre
                 FROM recoleccion_semillas_detalle d
                 LEFT JOIN unidad_medida u ON d.id_unidad_medida = u.id_unidad_medida
+                LEFT JOIN insumo i ON d.id_insumo = i.id_insumo
                 WHERE d.id_recoleccion = :id
                 ORDER BY d.id_recoleccion_detalle ASC
             ");
@@ -178,6 +190,59 @@ class SeedCollection extends Database implements ReadableInterface, DeletableInt
             return (int)$stmt->fetchColumn();
         } catch (\Throwable $e) {
             return 0;
+        }
+    }
+
+    public function registerSeedsWithTransaction(int $idRecoleccion, array $items): int
+    {
+        $suppliesModel = new Supplies();
+        $createdCount = 0;
+
+        try {
+            $this->db->beginTransaction();
+
+            foreach ($items as $item) {
+                $nombreSemilla = trim((string)($item['nombre_semilla'] ?? ''));
+                if ($nombreSemilla === '') continue;
+                $idUnidadMedida = (int)($item['id_unidad_medida'] ?? 0);
+                if ($idUnidadMedida <= 0) continue;
+                $cantidad = floatval($item['cantidad'] ?? 0);
+                if ($cantidad <= 0) continue;
+                $plantaOrigen = trim((string)($item['planta_origen'] ?? ''));
+                if ($plantaOrigen === '') $plantaOrigen = null;
+
+                $existing = $suppliesModel->findByNameAndCategory($nombreSemilla, 'Semillas');
+
+                if ($existing) {
+                    $supplyId = (int)$existing['id_insumo'];
+                    $ok = $suppliesModel->increaseStock($supplyId, $cantidad);
+                } else {
+                    $ok = $suppliesModel->add($nombreSemilla, $idUnidadMedida, 'Semillas', $cantidad, 0);
+                    if (!$ok) continue;
+                    $supplyId = $suppliesModel->getLastInsertId();
+                }
+
+                if (!$ok) continue;
+
+                $ok = $this->addDetail($idRecoleccion, $plantaOrigen, $nombreSemilla, $idUnidadMedida, $cantidad, $supplyId);
+                if (!$ok) continue;
+
+                $createdCount++;
+            }
+
+            if ($createdCount === 0) {
+                $this->db->rollBack();
+                return 0;
+            }
+
+            $this->db->commit();
+            return $createdCount;
+        } catch (\Throwable $e) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            error_log('Error en SeedCollection::registerSeedsWithTransaction: ' . $e->getMessage());
+            throw $e;
         }
     }
 }

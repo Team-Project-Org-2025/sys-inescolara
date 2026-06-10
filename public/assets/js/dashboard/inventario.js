@@ -32,14 +32,25 @@ $(document).ready(function () {
         {
           data: 'tipo',
           render: (data) => {
-            const badges = { Planta: 'success', Insumo: 'primary', Herramienta: 'secondary', Lote: 'info' };
-            return `<span class="badge bg-${badges[data] || 'dark'}">${data}</span>`;
+            const types = { Planta: 'planta', Insumo: 'insumo', Herramienta: 'herramienta' };
+            const cls = types[data] || 'insumo';
+            return `<span class="inv-type-badge inv-type-${cls}">${data}</span>`;
           },
         },
         { data: 'nombre' },
         {
           data: 'stock',
-          render: (data) => data !== null && data !== undefined ? Number(data).toLocaleString() : '<span class="text-muted">—</span>',
+          render: (data, type, row) => {
+            if (data === null || data === undefined) return '<span class="text-muted">—</span>';
+            const num = Number(data);
+            const thresholdLow = 10;
+            const thresholdCritical = 3;
+            let cls = 'normal';
+            let label = 'Normal';
+            if (num <= thresholdCritical) { cls = 'critical'; label = 'Crítico'; }
+            else if (num <= thresholdLow) { cls = 'low'; label = 'Bajo'; }
+            return `<span class="stock-badge stock-badge-${cls}"><span class="stock-dot stock-dot-${cls}"></span>${num.toLocaleString()} <span class="text-muted" style="font-weight:400;font-size:0.7rem;">(${label})</span></span>`;
+          },
         },
         {
           data: 'unidad',
@@ -92,8 +103,10 @@ $(document).ready(function () {
         {
           data: 'tipo_movimiento',
           render: (data) => {
-            const badges = { entrada: 'success', salida: 'danger', venta: 'warning', compra: 'info' };
-            return `<span class="badge bg-${badges[data] || 'dark'}">${data}</span>`;
+            const icons = { entrada: 'fa-arrow-down', salida: 'fa-arrow-up', venta: 'fa-shopping-cart', compra: 'fa-truck' };
+            const icon = icons[data] || 'fa-circle';
+            const cls = data === 'entrada' ? 'move-type-entrada' : 'move-type-salida';
+            return `<span class="move-type ${cls}"><i class="fas ${icon}"></i>${data.charAt(0).toUpperCase() + data.slice(1)}</span>`;
           },
         },
         { data: 'tipo_item' },
@@ -153,8 +166,9 @@ $(document).ready(function () {
         {
           data: 'tipo_ajuste',
           render: (data) => {
-            const badges = { entrada: 'success', salida: 'danger' };
-            return `<span class="badge bg-${badges[data] || 'dark'}">${data}</span>`;
+            const cls = data === 'entrada' ? 'move-type-entrada' : 'move-type-salida';
+            const icon = data === 'entrada' ? 'fa-arrow-down' : 'fa-arrow-up';
+            return `<span class="move-type ${cls}"><i class="fas ${icon}"></i>${data.charAt(0).toUpperCase() + data.slice(1)}</span>`;
           },
         },
         { data: 'cantidad', render: (data) => Number(data).toLocaleString() },

@@ -40,6 +40,9 @@ $scripts_links = '
     <!-- SweetAlert2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    
     <!-- BASE_URL para JavaScript -->
     <script>window.BASE_URL = "' . BASE_URL . '";</script>
     

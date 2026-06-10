@@ -117,6 +117,14 @@
   object-fit: cover;
 }
 
+.sidebar-user-role {
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
 .sidebar-user-initial {
   font-size: 0.9rem;
   font-weight: 600;
@@ -212,6 +220,12 @@
 /* Sección del menú */
 .sidebar-section {
   margin-bottom: 1.5rem;
+  padding-top: 0.25rem;
+}
+
+.sidebar-section + .sidebar-section {
+  border-top: 1px solid #f3f4f6;
+  padding-top: 1rem;
 }
 
 .sidebar-section:last-child {
@@ -220,7 +234,9 @@
 
 /* Título de sección */
 .sidebar-section-title {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   font-size: 0.6875rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -228,6 +244,20 @@
   color: #9ca3af;
   padding: 0.5rem 0.75rem;
   margin-bottom: 0.5rem;
+}
+
+.sidebar-section-title::before {
+  content: '';
+  width: 3px;
+  height: 12px;
+  background-color: #d1d5db;
+  border-radius: 2px;
+  flex-shrink: 0;
+  transition: background-color 0.2s ease;
+}
+
+.sidebar-section:hover .sidebar-section-title::before {
+  background-color: #e5a835;
 }
 
 /* Lista del menú */
@@ -252,26 +282,35 @@
   font-size: 0.875rem;
   font-weight: 500;
   text-decoration: none;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
 }
 
 .sidebar-link:hover {
   color: #1f2937;
   background-color: #f9fafb;
+  transform: translateX(2px);
+}
+
+.sidebar-link:active {
+  transform: translateX(0);
+  background-color: #f3f4f6;
 }
 
 /* Enlace activo */
 .sidebar-link.active {
   color: #1f2937;
-  background-color: #fef9e7;
+  background: linear-gradient(135deg, #fef9e7 0%, #fffbeb 100%);
   font-weight: 600;
   border: 1px solid #fde68a;
-  box-shadow: 0 1px 3px rgba(229, 168, 53, 0.15);
+  box-shadow: 0 1px 4px rgba(229, 168, 53, 0.12);
+  padding-left: 0.75rem;
 }
 
 .sidebar-link.active:hover {
-  background-color: #fef3c7;
+  background: linear-gradient(135deg, #fef3c7 0%, #fef9e7 100%);
+  border-color: #fcd34d;
+  box-shadow: 0 2px 6px rgba(229, 168, 53, 0.18);
 }
 
 /* Indicador sutil de enlace activo (borde izquierdo) */
@@ -285,6 +324,7 @@
   height: 20px;
   background-color: #e5a835;
   border-radius: 0 3px 3px 0;
+  box-shadow: 0 0 6px rgba(229, 168, 53, 0.4);
 }
 
 /* Iconos del menú */
@@ -294,16 +334,18 @@
   flex-shrink: 0;
   stroke-width: 1.8;
   color: #9ca3af;
-  transition: color 0.2s ease;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.2s ease;
 }
 
 .sidebar-link:hover .sidebar-icon {
   color: #6b7280;
+  transform: scale(1.08);
 }
 
 .sidebar-link.active .sidebar-icon {
   color: #e5a835;
   stroke-width: 2.2;
+  transform: scale(1.05);
 }
 
 /* ============================================
