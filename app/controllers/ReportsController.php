@@ -179,6 +179,7 @@ function reports_checkAuth(): void
 function extractReportFilters(array $params): array
 {
     $filters = [];
+    $module = $params['module'] ?? '';
     foreach ($params as $key => $value) {
         if ($key === 'module' || $key === 'action' || $key === '_' || $key === 'PHPSESSID') {
             continue;
@@ -186,11 +187,25 @@ function extractReportFilters(array $params): array
         $filters[$key] = $value;
     }
 
-    if (isset($_GET['fecha_desde']) && !isset($filters['fecha_venta_desde'])) {
-        $filters['fecha_venta_desde'] = $_GET['fecha_desde'];
+    // Module-specific date field mapping for generic time filter
+    $dateFieldMap = [
+        'lotes'         => 'fecha_siembra',
+        'tareas'        => 'fecha_asignacion',
+        'recoleccion'   => 'fecha_asignacion',
+        'ventas'        => 'fecha_venta',
+        'cuentas_cobrar'=> 'fecha_venta',
+        'compras'       => 'fecha_compra',
+        'ornatos'       => 'fecha_venta',
+        'mermas'        => 'fecha_registro',
+    ];
+
+    $field = $dateFieldMap[$module] ?? 'fecha_venta';
+
+    if (isset($params['fecha_desde']) && !isset($filters[$field . '_desde'])) {
+        $filters[$field . '_desde'] = $params['fecha_desde'];
     }
-    if (isset($_GET['fecha_hasta']) && !isset($filters['fecha_venta_hasta'])) {
-        $filters['fecha_venta_hasta'] = $_GET['fecha_hasta'];
+    if (isset($params['fecha_hasta']) && !isset($filters[$field . '_hasta'])) {
+        $filters[$field . '_hasta'] = $params['fecha_hasta'];
     }
 
     return $filters;
