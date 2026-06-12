@@ -163,7 +163,7 @@ class Role extends Database implements ReadableInterface, DeletableInterface
         }
     }
 
-    public function setRolePermissions(int $roleId, array $permisoIds): void
+    private function setRolePermissions(int $roleId, array $permisoIds): void
     {
         try {
             $stmtDel = $this->db->prepare("DELETE FROM rol_permisos WHERE id_rol = :rid");

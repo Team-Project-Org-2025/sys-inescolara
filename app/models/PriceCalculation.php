@@ -281,7 +281,7 @@ class PriceCalculation extends Database implements ReadableInterface, DeletableI
         ];
     }
 
-    public function getCostoInsumosByLote(int $idLote): float
+    private function getCostoInsumosByLote(int $idLote): float
     {
         try {
             $stmt = $this->db->prepare("
