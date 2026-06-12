@@ -5,10 +5,21 @@ namespace SysInescolara\models;
 use SysInescolara\core\Database;
 use SysInescolara\interfaces\ReadableInterface;
 use SysInescolara\interfaces\DeletableInterface;
+use SysInescolara\traits\ValidationTrait;
 use PDO;
 
 class Employee extends Database implements ReadableInterface, DeletableInterface
 {
+    use ValidationTrait;
+
+    protected array $validationRules = [
+        'nombre_trabajador'   => ['type' => 'nombre',  'required' => true],
+        'apellido_trabajador' => ['type' => 'nombre',  'required' => false],
+        'cedula_trabajador'   => ['type' => 'cedula',  'required' => false],
+        'telefono_trabajador' => ['type' => 'telefono','required' => false],
+        'cargo'               => ['type' => 'cargo',   'required' => false],
+    ];
+
     public function __construct()
     {
         parent::__construct();
@@ -63,6 +74,13 @@ class Employee extends Database implements ReadableInterface, DeletableInterface
 
     public function add(string $nombreTrabajador, ?string $apellidoTrabajador = null, ?string $cedulaTrabajador = null, ?string $telefonoTrabajador = null, ?string $cargo = null, bool $activo = true)
     {
+        $this->validateData([
+            'nombre_trabajador' => $nombreTrabajador,
+            'apellido_trabajador' => $apellidoTrabajador,
+            'cedula_trabajador' => $cedulaTrabajador,
+            'telefono_trabajador' => $telefonoTrabajador,
+            'cargo' => $cargo,
+        ]);
         $stmt = $this->db->prepare("INSERT INTO trabajadores (nombre_trabajador, apellido_trabajador, cedula_trabajador, telefono_trabajador, cargo, activo) VALUES (:nombre_trabajador, :apellido_trabajador, :cedula_trabajador, :telefono_trabajador, :cargo, :activo)");
         return $stmt->execute([
             ':nombre_trabajador' => $nombreTrabajador,
@@ -76,6 +94,13 @@ class Employee extends Database implements ReadableInterface, DeletableInterface
 
     public function update(int $id, string $nombreTrabajador, ?string $apellidoTrabajador = null, ?string $cedulaTrabajador = null, ?string $telefonoTrabajador = null, ?string $cargo = null, bool $activo = true)
     {
+        $this->validateData([
+            'nombre_trabajador' => $nombreTrabajador,
+            'apellido_trabajador' => $apellidoTrabajador,
+            'cedula_trabajador' => $cedulaTrabajador,
+            'telefono_trabajador' => $telefonoTrabajador,
+            'cargo' => $cargo,
+        ]);
         if (!$this->exists($id)) {
             throw new \Exception("No existe el trabajador con ID: $id");
         }

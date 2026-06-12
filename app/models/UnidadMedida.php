@@ -5,10 +5,18 @@ namespace SysInescolara\models;
 use SysInescolara\core\Database;
 use SysInescolara\interfaces\ReadableInterface;
 use SysInescolara\interfaces\DeletableInterface;
+use SysInescolara\traits\ValidationTrait;
 use PDO;
 
 class UnidadMedida extends Database implements ReadableInterface, DeletableInterface
 {
+    use ValidationTrait;
+
+    protected array $validationRules = [
+        'nombre'  => ['type' => 'nombre', 'required' => true],
+        'simbolo' => ['type' => null,     'required' => false],
+    ];
+
     public function __construct()
     {
         parent::__construct();
@@ -42,6 +50,10 @@ class UnidadMedida extends Database implements ReadableInterface, DeletableInter
 
     public function add(string $nombre, ?string $simbolo = null): bool
     {
+        $this->validateData([
+            'nombre' => $nombre,
+            'simbolo' => $simbolo,
+        ]);
         $stmt = $this->db->prepare("INSERT INTO unidad_medida (nombre_unidad_medida, simbolo) VALUES (:nombre, :simbolo)");
         return $stmt->execute([
             ':nombre' => trim($nombre),
@@ -51,6 +63,10 @@ class UnidadMedida extends Database implements ReadableInterface, DeletableInter
 
     public function update(int $id, string $nombre, ?string $simbolo = null): bool
     {
+        $this->validateData([
+            'nombre' => $nombre,
+            'simbolo' => $simbolo,
+        ]);
         if (!$this->exists($id)) {
             throw new \Exception("No existe la unidad de medida con ID: $id");
         }

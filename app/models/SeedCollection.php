@@ -5,10 +5,20 @@ namespace SysInescolara\models;
 use SysInescolara\core\Database;
 use SysInescolara\interfaces\ReadableInterface;
 use SysInescolara\interfaces\DeletableInterface;
+use SysInescolara\traits\ValidationTrait;
 use PDO;
 
 class SeedCollection extends Database implements ReadableInterface, DeletableInterface
 {
+    use ValidationTrait;
+
+    protected array $validationRules = [
+        'id_trabajador'   => ['type' => null, 'required' => true],
+        'id_ubicacion'    => ['type' => null, 'required' => true],
+        'fecha_asignacion'=> ['type' => null, 'required' => true],
+        'observacion'     => ['type' => null, 'required' => false],
+    ];
+
     public function __construct()
     {
         parent::__construct();
@@ -92,6 +102,12 @@ class SeedCollection extends Database implements ReadableInterface, DeletableInt
 
     public function add(int $idTrabajador, int $idUbicacion, string $fechaAsignacion, ?string $observacion = null): bool
     {
+        $this->validateData([
+            'id_trabajador' => $idTrabajador,
+            'id_ubicacion' => $idUbicacion,
+            'fecha_asignacion' => $fechaAsignacion,
+            'observacion' => $observacion,
+        ]);
         $stmt = $this->db->prepare("
             INSERT INTO recoleccion_semillas (id_trabajador, id_ubicacion, fecha_asignacion, estatus, observacion)
             VALUES (:id_trabajador, :id_ubicacion, :fecha_asignacion, 'Pendiente', :observacion)
@@ -106,6 +122,12 @@ class SeedCollection extends Database implements ReadableInterface, DeletableInt
 
     public function update(int $id, int $idTrabajador, int $idUbicacion, string $fechaAsignacion, ?string $observacion = null): bool
     {
+        $this->validateData([
+            'id_trabajador' => $idTrabajador,
+            'id_ubicacion' => $idUbicacion,
+            'fecha_asignacion' => $fechaAsignacion,
+            'observacion' => $observacion,
+        ]);
         if (!$this->exists($id)) {
             throw new \Exception('No existe la recolección solicitada para modificar.');
         }

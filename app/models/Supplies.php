@@ -5,11 +5,22 @@ namespace SysInescolara\models;
 use SysInescolara\core\Database;
 use SysInescolara\interfaces\ReadableInterface;
 use SysInescolara\interfaces\DeletableInterface;
+use SysInescolara\traits\ValidationTrait;
 use PDO;
 use Exception;
 
 class Supplies extends Database implements ReadableInterface, DeletableInterface
 {
+    use ValidationTrait;
+
+    protected array $validationRules = [
+        'nombre'            => ['type' => 'nombreProducto', 'required' => true],
+        'id_unidad_medida'  => ['type' => null,            'required' => true],
+        'categoria'         => ['type' => null,            'required' => false],
+        'stock'             => ['type' => 'cantidad',      'required' => false],
+        'costo'             => ['type' => 'precio',        'required' => false],
+    ];
+
     public function __construct()
     {
         parent::__construct();
@@ -46,6 +57,13 @@ class Supplies extends Database implements ReadableInterface, DeletableInterface
     }
 
     public function add($nombre, $id_unidad_medida, $categoria = null, $stock = 0, $costo = 0) {
+        $this->validateData([
+            'nombre' => $nombre,
+            'id_unidad_medida' => $id_unidad_medida,
+            'categoria' => $categoria,
+            'stock' => $stock,
+            'costo' => $costo,
+        ]);
         $stmt = $this->db->prepare("
             INSERT INTO insumo (nombre_insumo, id_unidad_medida, categoria, stock_actual, costo_unitario_actual)
             VALUES (:nombre, :id_unidad_medida, :categoria, :stock, :costo)
@@ -60,6 +78,13 @@ class Supplies extends Database implements ReadableInterface, DeletableInterface
     }
 
     public function update($id, $nombre, $id_unidad_medida, $categoria = null, $stock = 0, $costo = 0) {
+        $this->validateData([
+            'nombre' => $nombre,
+            'id_unidad_medida' => $id_unidad_medida,
+            'categoria' => $categoria,
+            'stock' => $stock,
+            'costo' => $costo,
+        ]);
         if (!$this->exists($id)) {
             throw new Exception("No existe el insumo solicitado para modificar.");
         }

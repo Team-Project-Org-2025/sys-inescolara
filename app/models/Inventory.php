@@ -3,10 +3,22 @@
 namespace SysInescolara\models;
 
 use SysInescolara\core\Database;
+use SysInescolara\traits\ValidationTrait;
 use PDO;
 
 class Inventory extends Database
 {
+    use ValidationTrait;
+
+    protected array $validationRules = [
+        'id_insumo'    => ['type' => null,      'required' => true],
+        'id_trabajador'=> ['type' => null,      'required' => true],
+        'tipo_ajuste'  => ['type' => null,      'required' => true],
+        'cantidad'     => ['type' => 'cantidad','required' => true],
+        'motivo'       => ['type' => null,      'required' => true],
+        'fecha'        => ['type' => null,      'required' => true],
+    ];
+
     public function __construct()
     {
         parent::__construct();
@@ -202,6 +214,14 @@ class Inventory extends Database
 
     public function addAdjustment(int $idInsumo, int $idTrabajador, string $tipoAjuste, float $cantidad, string $motivo, string $fecha): bool
     {
+        $this->validateData([
+            'id_insumo' => $idInsumo,
+            'id_trabajador' => $idTrabajador,
+            'tipo_ajuste' => $tipoAjuste,
+            'cantidad' => $cantidad,
+            'motivo' => $motivo,
+            'fecha' => $fecha,
+        ]);
         try {
             $stmt = $this->db->prepare("
                 INSERT INTO ajuste_inventario (id_insumo, id_trabajador, tipo_ajuste, cantidad, motivo, fecha_ajuste)

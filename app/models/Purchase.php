@@ -5,10 +5,24 @@ namespace SysInescolara\models;
 use SysInescolara\core\Database;
 use SysInescolara\interfaces\ReadableInterface;
 use SysInescolara\interfaces\DeletableInterface;
+use SysInescolara\traits\ValidationTrait;
 use PDO;
 
 class Purchase extends Database implements ReadableInterface, DeletableInterface
 {
+    use ValidationTrait;
+
+    protected array $validationRules = [
+        'id_proveedor'       => ['type' => null,   'required' => true],
+        'fecha_compra'       => ['type' => null,   'required' => true],
+        'tipo_comprobante'   => ['type' => null,   'required' => true],
+        'numero_comprobante' => ['type' => null,   'required' => false],
+        'subtotal'           => ['type' => 'precio','required' => true],
+        'iva'                => ['type' => 'precio','required' => true],
+        'total'              => ['type' => 'precio','required' => true],
+        'observacion'        => ['type' => null,   'required' => false],
+    ];
+
     public function __construct()
     {
         parent::__construct();
@@ -148,6 +162,16 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
         float $total,
         ?string $observacion
     ): bool {
+        $this->validateData([
+            'id_proveedor' => $idProveedor,
+            'fecha_compra' => $fechaCompra,
+            'tipo_comprobante' => $tipoComprobante,
+            'numero_comprobante' => $numeroComprobante,
+            'subtotal' => $subtotal,
+            'iva' => $iva,
+            'total' => $total,
+            'observacion' => $observacion,
+        ]);
         $stmt = $this->db->prepare("
             INSERT INTO compra
                 (id_proveedor, fecha_compra, tipo_comprobante, numero_comprobante,
@@ -179,6 +203,16 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
         float $total,
         ?string $observacion
     ): bool {
+        $this->validateData([
+            'id_proveedor' => $idProveedor,
+            'fecha_compra' => $fechaCompra,
+            'tipo_comprobante' => $tipoComprobante,
+            'numero_comprobante' => $numeroComprobante,
+            'subtotal' => $subtotal,
+            'iva' => $iva,
+            'total' => $total,
+            'observacion' => $observacion,
+        ]);
         if (!$this->existe($id)) {
             throw new \Exception('No existe la compra solicitada para modificar.');
         }

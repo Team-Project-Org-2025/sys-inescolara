@@ -52,16 +52,10 @@ function recoleccion_handleAddEdit(string $mode): void
     $idUbicacion = (int)($data['id_ubicacion'] ?? 0);
     if ($idUbicacion <= 0) throw new \Exception('La ubicación es requerida.');
 
-    $rules = [
-        'fecha_asignacion' => ['type' => 'fecha', 'required' => true],
-    ];
-    $validated = \SysInescolara\helpers\Validation::sanitize($data);
-    $validation = \SysInescolara\helpers\Validation::validate($validated, $rules);
-    if (!$validation['valid']) {
-        throw new \InvalidArgumentException('Errores de validación: ' . implode('; ', $validation['errors']));
-    }
-
-    $fechaAsignacion = $validated['fecha_asignacion'];
+    $fechaAsignacion = trim((string)($data['fecha_asignacion'] ?? ''));
+    if ($fechaAsignacion === '') throw new \Exception('La fecha de asignación es requerida.');
+    $d = \DateTime::createFromFormat('Y-m-d', $fechaAsignacion);
+    if (!$d || $d->format('Y-m-d') !== $fechaAsignacion) throw new \InvalidArgumentException('Formato de fecha inválido');
     $observacion = trim((string)($data['observacion'] ?? ''));
     if ($observacion === '') $observacion = null;
 

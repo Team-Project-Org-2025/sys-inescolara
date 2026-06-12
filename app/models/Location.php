@@ -5,10 +5,19 @@ namespace SysInescolara\models;
 use SysInescolara\core\Database;
 use SysInescolara\interfaces\ReadableInterface;
 use SysInescolara\interfaces\DeletableInterface;
+use SysInescolara\traits\ValidationTrait;
 use PDO;
 
 class Location extends Database implements ReadableInterface, DeletableInterface
 {
+    use ValidationTrait;
+
+    protected array $validationRules = [
+        'nombre_ubicacion' => ['type' => 'nombre', 'required' => true],
+        'descripcion'      => ['type' => null,     'required' => false],
+        'zona'             => ['type' => 'nombre', 'required' => false],
+    ];
+
     public function __construct()
     {
         parent::__construct();
@@ -97,6 +106,11 @@ class Location extends Database implements ReadableInterface, DeletableInterface
 
     public function add(string $nombreUbicacion, ?string $descripcion = null, ?string $zona = null): bool
     {
+        $this->validateData([
+            'nombre_ubicacion' => $nombreUbicacion,
+            'descripcion' => $descripcion,
+            'zona' => $zona,
+        ]);
         try {
             $stmt = $this->db->prepare("INSERT INTO ubicacion (nombre_ubicacion, descripcion, zona) VALUES (:nombre_ubicacion, :descripcion, :zona)");
             return $stmt->execute([
@@ -112,6 +126,11 @@ class Location extends Database implements ReadableInterface, DeletableInterface
 
     public function update(int $id, string $nombreUbicacion, ?string $descripcion = null, ?string $zona = null): bool
     {
+        $this->validateData([
+            'nombre_ubicacion' => $nombreUbicacion,
+            'descripcion' => $descripcion,
+            'zona' => $zona,
+        ]);
         try {
             if (!$this->exists($id)) {
                 throw new \Exception("No existe la ubicación con ID: $id");
