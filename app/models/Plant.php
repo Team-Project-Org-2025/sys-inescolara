@@ -5,10 +5,20 @@ namespace SysInescolara\models;
 use SysInescolara\core\Database;
 use SysInescolara\interfaces\ReadableInterface;
 use SysInescolara\interfaces\DeletableInterface;
+use SysInescolara\traits\ValidationTrait;
 use PDO;
 
 class Plant extends Database implements ReadableInterface, DeletableInterface
 {
+    use ValidationTrait;
+
+    protected array $validationRules = [
+        'nombre_comun'   => ['type' => 'nombre',  'required' => true],
+        'nombre_tecnico' => ['type' => 'nombre',  'required' => false],
+        'id_especie'     => ['type' => null,      'required' => true],
+        'cantidad_total' => ['type' => 'cantidad','required' => false],
+    ];
+
     public function __construct()
     {
         parent::__construct();
@@ -79,6 +89,12 @@ class Plant extends Database implements ReadableInterface, DeletableInterface
 
     public function add(string $nombreComun, ?string $nombreTecnico = null, ?int $especieId = null, ?string $imagen = null)
     {
+        $this->validateData([
+            'nombre_comun' => $nombreComun,
+            'nombre_tecnico' => $nombreTecnico,
+            'id_especie' => $especieId,
+            'imagen' => $imagen,
+        ]);
         $stmt = $this->db->prepare("INSERT INTO plantas (nombre_comun, nombre_tecnico, id_especie, imagen) VALUES (:nombre_comun, :nombre_tecnico, :id_especie, :imagen)");
         return $stmt->execute([
             ':nombre_comun' => $nombreComun,
@@ -90,6 +106,12 @@ class Plant extends Database implements ReadableInterface, DeletableInterface
 
     public function update(int $id, string $nombreComun, ?string $nombreTecnico = null, ?int $especieId = null, ?string $imagen = null)
     {
+        $this->validateData([
+            'nombre_comun' => $nombreComun,
+            'nombre_tecnico' => $nombreTecnico,
+            'id_especie' => $especieId,
+            'imagen' => $imagen,
+        ]);
         if (!$this->exists($id)) {
             throw new \Exception("No existe la planta con ID: $id");
         }

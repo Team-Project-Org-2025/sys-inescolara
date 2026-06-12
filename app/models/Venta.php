@@ -5,10 +5,21 @@ namespace SysInescolara\models;
 use SysInescolara\core\Database;
 use SysInescolara\interfaces\ReadableInterface;
 use SysInescolara\interfaces\DeletableInterface;
+use SysInescolara\traits\ValidationTrait;
 use PDO;
 
 class Venta extends Database implements ReadableInterface, DeletableInterface
 {
+    use ValidationTrait;
+
+    protected array $validationRules = [
+        'id_cliente'    => ['type' => null, 'required' => false],
+        'id_trabajador' => ['type' => null, 'required' => true],
+        'tipo_venta'    => ['type' => null, 'required' => false],
+        'fecha_venta'   => ['type' => null, 'required' => false],
+        'observaciones' => ['type' => null, 'required' => false],
+    ];
+
     private const IVA_PORCENTAJE = 16.00;
     private const IVA_MULTIPLICADOR = 1.16;
 
@@ -192,6 +203,13 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
 
     public function agregar(array $datos): int
     {
+        $this->validateData([
+            'id_cliente'    => $datos['id_cliente'] ?? null,
+            'id_trabajador' => $datos['id_trabajador'] ?? null,
+            'tipo_venta'    => $datos['tipo_venta'] ?? null,
+            'fecha_venta'   => $datos['fecha_venta'] ?? null,
+            'observaciones' => $datos['observaciones'] ?? null,
+        ]);
         try {
             $this->db->beginTransaction();
 

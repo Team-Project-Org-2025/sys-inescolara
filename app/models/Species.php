@@ -5,10 +5,18 @@ namespace SysInescolara\models;
 use SysInescolara\core\Database;
 use SysInescolara\interfaces\ReadableInterface;
 use SysInescolara\interfaces\DeletableInterface;
+use SysInescolara\traits\ValidationTrait;
 use PDO;
 
 class Species extends Database implements ReadableInterface, DeletableInterface
 {
+    use ValidationTrait;
+
+    protected array $validationRules = [
+        'nombre_especie' => ['type' => 'nombre', 'required' => true],
+        'descripcion'    => ['type' => null,     'required' => false],
+    ];
+
     public function __construct()
     {
         parent::__construct();
@@ -63,6 +71,10 @@ class Species extends Database implements ReadableInterface, DeletableInterface
 
     public function add(string $nombreEspecie, ?string $descripcion = null)
     {
+        $this->validateData([
+            'nombre_especie' => $nombreEspecie,
+            'descripcion' => $descripcion,
+        ]);
         $stmt = $this->db->prepare("INSERT INTO especie (nombre_especie, descripcion) VALUES (:nombre_especie, :descripcion)");
         return $stmt->execute([
             ':nombre_especie' => $nombreEspecie,
@@ -72,6 +84,10 @@ class Species extends Database implements ReadableInterface, DeletableInterface
 
     public function update(int $id, string $nombreEspecie, ?string $descripcion = null)
     {
+        $this->validateData([
+            'nombre_especie' => $nombreEspecie,
+            'descripcion' => $descripcion,
+        ]);
         if (!$this->exists($id)) {
             throw new \Exception("No existe la especie con ID: $id");
         }

@@ -5,10 +5,20 @@ namespace SysInescolara\models;
 use SysInescolara\core\Database;
 use SysInescolara\interfaces\ReadableInterface;
 use SysInescolara\interfaces\DeletableInterface;
+use SysInescolara\traits\ValidationTrait;
 use PDO;
 
 class Supplier extends Database implements ReadableInterface, DeletableInterface
 {
+    use ValidationTrait;
+
+    protected array $validationRules = [
+        'nombre_proveedor'   => ['type' => 'nombre',   'required' => true],
+        'rif_proveedor'      => ['type' => 'rif',       'required' => false],
+        'contacto_vendedor'  => ['type' => 'nombre',    'required' => false],
+        'telefono_proveedor' => ['type' => 'telefono',  'required' => false],
+    ];
+
     public function __construct()
     {
         parent::__construct();
@@ -104,6 +114,12 @@ class Supplier extends Database implements ReadableInterface, DeletableInterface
 
     public function add(string $nombreProveedor, ?string $rifProveedor = null, ?string $contactoVendedor = null, ?string $telefonoProveedor = null)
     {
+        $this->validateData([
+            'nombre_proveedor' => $nombreProveedor,
+            'rif_proveedor' => $rifProveedor,
+            'contacto_vendedor' => $contactoVendedor,
+            'telefono_proveedor' => $telefonoProveedor,
+        ]);
         $stmt = $this->db->prepare("INSERT INTO proveedores (nombre_proveedor, rif_proveedor, contacto_vendedor, telefono_proveedor) VALUES (:nombre_proveedor, :rif_proveedor, :contacto_vendedor, :telefono_proveedor)");
         return $stmt->execute([
             ':nombre_proveedor' => $nombreProveedor,
@@ -115,6 +131,12 @@ class Supplier extends Database implements ReadableInterface, DeletableInterface
 
     public function update(int $id, string $nombreProveedor, ?string $rifProveedor = null, ?string $contactoVendedor = null, ?string $telefonoProveedor = null)
     {
+        $this->validateData([
+            'nombre_proveedor' => $nombreProveedor,
+            'rif_proveedor' => $rifProveedor,
+            'contacto_vendedor' => $contactoVendedor,
+            'telefono_proveedor' => $telefonoProveedor,
+        ]);
         if (!$this->exists($id)) {
             throw new \Exception("No existe el proveedor con ID: $id");
         }

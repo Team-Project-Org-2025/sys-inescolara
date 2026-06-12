@@ -69,16 +69,3 @@ function getRequestData(): array
     return $_POST;
 }
 
-function validateAndSanitize(array $rules): array
-{
-    $data = getRequestData();
-    $sanitized = \SysInescolara\helpers\Validation::sanitize($data);
-    $validation = \SysInescolara\helpers\Validation::validate($sanitized, $rules);
-
-    if (!$validation['valid']) {
-        $errors = implode('; ', $validation['errors']);
-        throw new \InvalidArgumentException("Errores de validación: $errors");
-    }
-
-    return $sanitized;
-}

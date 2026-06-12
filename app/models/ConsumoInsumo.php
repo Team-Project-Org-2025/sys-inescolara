@@ -4,10 +4,21 @@ namespace SysInescolara\models;
 
 use SysInescolara\core\Database;
 use SysInescolara\interfaces\ReadableInterface;
+use SysInescolara\traits\ValidationTrait;
 use PDO;
 
 class ConsumoInsumo extends Database implements ReadableInterface
 {
+    use ValidationTrait;
+
+    protected array $validationRules = [
+        'id_asignacion' => ['type' => null,      'required' => true],
+        'id_insumo'     => ['type' => null,      'required' => true],
+        'cantidad_usada'=> ['type' => 'cantidad','required' => true],
+        'costo_unitario'=> ['type' => 'precio',  'required' => true],
+        'fecha_consumo' => ['type' => null,      'required' => true],
+    ];
+
     public function __construct()
     {
         parent::__construct();
@@ -53,6 +64,13 @@ class ConsumoInsumo extends Database implements ReadableInterface
 
     public function add(array $data): bool
     {
+        $this->validateData([
+            'id_asignacion' => $data['id_asignacion'] ?? null,
+            'id_insumo'     => $data['id_insumo'] ?? null,
+            'cantidad_usada'=> $data['cantidad_usada'] ?? null,
+            'costo_unitario'=> $data['costo_unitario'] ?? null,
+            'fecha_consumo' => $data['fecha_consumo'] ?? null,
+        ]);
         $stmt = $this->db->prepare("
             INSERT INTO consumo_insumos (id_asignacion, id_insumo, cantidad_usada, costo_unitario, fecha_consumo)
             VALUES (:id_asignacion, :id_insumo, :cantidad_usada, :costo_unitario, :fecha_consumo)

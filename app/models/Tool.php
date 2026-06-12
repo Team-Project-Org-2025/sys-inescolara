@@ -5,10 +5,22 @@ namespace SysInescolara\models;
 use SysInescolara\core\Database;
 use SysInescolara\interfaces\ReadableInterface;
 use SysInescolara\interfaces\DeletableInterface;
+use SysInescolara\traits\ValidationTrait;
 use PDO;
 
 class Tool extends Database implements ReadableInterface, DeletableInterface
 {
+    use ValidationTrait;
+
+    protected array $validationRules = [
+        'nombre'                    => ['type' => 'nombreProducto', 'required' => true],
+        'tipo'                      => ['type' => null,            'required' => false],
+        'estado'                    => ['type' => null,            'required' => false],
+        'fecha_adquisicion'         => ['type' => null,            'required' => false],
+        'fecha_ultimo_mantenimiento'=> ['type' => null,            'required' => false],
+        'observacion'               => ['type' => null,            'required' => false],
+    ];
+
     public function __construct()
     {
         parent::__construct();
@@ -57,6 +69,14 @@ class Tool extends Database implements ReadableInterface, DeletableInterface
 
     public function add(string $nombre, ?string $tipo = null, string $estado = 'disponible', ?string $fechaAdquisicion = null, ?string $fechaUltimoMantenimiento = null, ?string $observacion = null): bool
     {
+        $this->validateData([
+            'nombre' => $nombre,
+            'tipo' => $tipo,
+            'estado' => $estado,
+            'fecha_adquisicion' => $fechaAdquisicion,
+            'fecha_ultimo_mantenimiento' => $fechaUltimoMantenimiento,
+            'observacion' => $observacion,
+        ]);
         $stmt = $this->db->prepare("
             INSERT INTO herramienta (nombre_herramienta, tipo, estado, fecha_adquisicion, fecha_ultimo_mantenimiento, observacion)
             VALUES (:nombre, :tipo, :estado, :fecha_adquisicion, :fecha_ultimo_mantenimiento, :observacion)
@@ -73,6 +93,14 @@ class Tool extends Database implements ReadableInterface, DeletableInterface
 
     public function update(int $id, string $nombre, ?string $tipo = null, string $estado = 'disponible', ?string $fechaAdquisicion = null, ?string $fechaUltimoMantenimiento = null, ?string $observacion = null): bool
     {
+        $this->validateData([
+            'nombre' => $nombre,
+            'tipo' => $tipo,
+            'estado' => $estado,
+            'fecha_adquisicion' => $fechaAdquisicion,
+            'fecha_ultimo_mantenimiento' => $fechaUltimoMantenimiento,
+            'observacion' => $observacion,
+        ]);
         if (!$this->exists($id)) {
             throw new \Exception('No existe la herramienta solicitada para modificar.');
         }

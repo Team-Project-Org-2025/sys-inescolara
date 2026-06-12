@@ -4,10 +4,21 @@ namespace SysInescolara\models;
 
 use SysInescolara\core\Database;
 use SysInescolara\interfaces\ReadableInterface;
+use SysInescolara\traits\ValidationTrait;
 use PDO;
 
 class AsignarTarea extends Database implements ReadableInterface
 {
+    use ValidationTrait;
+
+    protected array $validationRules = [
+        'id_trabajador'   => ['type' => null, 'required' => true],
+        'id_tarea'        => ['type' => null, 'required' => true],
+        'id_lote'         => ['type' => null, 'required' => true],
+        'fecha_asignacion'=> ['type' => null, 'required' => true],
+        'estatus_tarea'   => ['type' => null, 'required' => false],
+    ];
+
     public function __construct()
     {
         parent::__construct();
@@ -49,6 +60,13 @@ class AsignarTarea extends Database implements ReadableInterface
 
     public function add(array $data): bool
     {
+        $this->validateData([
+            'id_trabajador'   => $data['id_trabajador'] ?? null,
+            'id_tarea'        => $data['id_tarea'] ?? null,
+            'id_lote'         => $data['id_lote'] ?? null,
+            'fecha_asignacion'=> $data['fecha_asignacion'] ?? null,
+            'estatus_tarea'   => $data['estatus_tarea'] ?? null,
+        ]);
         $stmt = $this->db->prepare("
             INSERT INTO asignar_tarea (id_trabajador, id_tarea, id_lote, fecha_asignacion, estatus_tarea)
             VALUES (:id_trabajador, :id_tarea, :id_lote, :fecha_asignacion, :estatus_tarea)

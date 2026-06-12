@@ -5,10 +5,22 @@ namespace SysInescolara\models;
 use SysInescolara\core\Database;
 use SysInescolara\interfaces\ReadableInterface;
 use SysInescolara\interfaces\DeletableInterface;
+use SysInescolara\traits\ValidationTrait;
 use PDO;
 
 class PriceCalculation extends Database implements ReadableInterface, DeletableInterface
 {
+    use ValidationTrait;
+
+    protected array $validationRules = [
+        'id_lote'              => ['type' => null,   'required' => true],
+        'costo_mano_obra'      => ['type' => 'precio','required' => true],
+        'costo_total_insumo'   => ['type' => 'precio','required' => true],
+        'porcentaje_ganancia'  => ['type' => 'precio','required' => true],
+        'precio_final_sugerido'=> ['type' => 'precio','required' => true],
+        'fecha_calculo'        => ['type' => null,   'required' => true],
+    ];
+
     private ?int $_lastInsertId = null;
 
     public function __construct()
@@ -114,6 +126,14 @@ class PriceCalculation extends Database implements ReadableInterface, DeletableI
         float $precioFinalSugerido,
         string $fechaCalculo
     ): bool {
+        $this->validateData([
+            'id_lote' => $idLote,
+            'costo_mano_obra' => $costoManoObra,
+            'costo_total_insumo' => $costoTotalInsumo,
+            'porcentaje_ganancia' => $porcentajeGanancia,
+            'precio_final_sugerido' => $precioFinalSugerido,
+            'fecha_calculo' => $fechaCalculo,
+        ]);
         try {
             $this->db->beginTransaction();
 
@@ -155,6 +175,14 @@ class PriceCalculation extends Database implements ReadableInterface, DeletableI
         float $precioFinalSugerido,
         string $fechaCalculo
     ): bool {
+        $this->validateData([
+            'id_lote' => $idLote,
+            'costo_mano_obra' => $costoManoObra,
+            'costo_total_insumo' => $costoTotalInsumo,
+            'porcentaje_ganancia' => $porcentajeGanancia,
+            'precio_final_sugerido' => $precioFinalSugerido,
+            'fecha_calculo' => $fechaCalculo,
+        ]);
         if (!$this->exists($id)) {
             throw new \Exception('No existe el cálculo de precio solicitado para modificar.');
         }

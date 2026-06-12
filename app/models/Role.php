@@ -5,10 +5,18 @@ namespace SysInescolara\models;
 use SysInescolara\core\Database;
 use SysInescolara\interfaces\ReadableInterface;
 use SysInescolara\interfaces\DeletableInterface;
+use SysInescolara\traits\ValidationTrait;
 use PDO;
 
 class Role extends Database implements ReadableInterface, DeletableInterface
 {
+    use ValidationTrait;
+
+    protected array $validationRules = [
+        'nombre_rol'  => ['type' => 'nombre', 'required' => true],
+        'descripcion' => ['type' => null,     'required' => false],
+    ];
+
     public function __construct()
     {
         parent::__construct('security');
@@ -96,6 +104,10 @@ class Role extends Database implements ReadableInterface, DeletableInterface
 
     public function add(string $nombreRol, ?string $descripcion = null, array $permisoIds = []): bool
     {
+        $this->validateData([
+            'nombre_rol' => $nombreRol,
+            'descripcion' => $descripcion,
+        ]);
         try {
             $this->db->beginTransaction();
 
@@ -118,6 +130,10 @@ class Role extends Database implements ReadableInterface, DeletableInterface
 
     public function update(int $id, string $nombreRol, ?string $descripcion = null, array $permisoIds = []): bool
     {
+        $this->validateData([
+            'nombre_rol' => $nombreRol,
+            'descripcion' => $descripcion,
+        ]);
         try {
             $this->db->beginTransaction();
 

@@ -5,10 +5,18 @@ namespace SysInescolara\models;
 use SysInescolara\core\Database;
 use SysInescolara\interfaces\ReadableInterface;
 use SysInescolara\interfaces\DeletableInterface;
+use SysInescolara\traits\ValidationTrait;
 use PDO;
 
 class Task extends Database implements ReadableInterface, DeletableInterface
 {
+    use ValidationTrait;
+
+    protected array $validationRules = [
+        'nombre_tarea' => ['type' => 'nombre', 'required' => true],
+        'descripcion'  => ['type' => null,     'required' => false],
+    ];
+
     public function __construct()
     {
         parent::__construct();
@@ -66,6 +74,10 @@ class Task extends Database implements ReadableInterface, DeletableInterface
 
     public function add(string $nombre, ?string $descripcion = null): bool
     {
+        $this->validateData([
+            'nombre_tarea' => $nombre,
+            'descripcion' => $descripcion,
+        ]);
         $stmt = $this->db->prepare("INSERT INTO tareas (nombre_tarea, descripcion) VALUES (:nombre, :descripcion)");
         return $stmt->execute([
             ':nombre' => $nombre,
@@ -75,6 +87,10 @@ class Task extends Database implements ReadableInterface, DeletableInterface
 
     public function update(int $id, string $nombre, ?string $descripcion = null): bool
     {
+        $this->validateData([
+            'nombre_tarea' => $nombre,
+            'descripcion' => $descripcion,
+        ]);
         if (!$this->exists($id)) {
             throw new \Exception("No existe la tarea con ID: $id");
         }
