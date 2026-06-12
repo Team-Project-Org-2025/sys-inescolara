@@ -5,10 +5,22 @@ namespace SysInescolara\models;
 use SysInescolara\core\Database;
 use SysInescolara\interfaces\ReadableInterface;
 use SysInescolara\interfaces\DeletableInterface;
+use SysInescolara\traits\ValidationTrait;
 use PDO;
 
 class Ornato extends Database implements ReadableInterface, DeletableInterface
 {
+    use ValidationTrait;
+
+    protected array $validationRules = [
+        'id_cliente'  => ['type' => null,   'required' => false],
+        'tipo_ornato' => ['type' => null,   'required' => false],
+        'descripcion' => ['type' => null,   'required' => false],
+        'ubicacion'   => ['type' => null,   'required' => false],
+        'monto_total' => ['type' => 'precio','required' => false],
+        'fecha'       => ['type' => null,   'required' => true],
+    ];
+
     public function __construct()
     {
         parent::__construct();
@@ -102,6 +114,14 @@ class Ornato extends Database implements ReadableInterface, DeletableInterface
 
     public function agregar(array $datos): bool
     {
+        $this->validateData([
+            'id_cliente'  => $datos['id_cliente'] ?? null,
+            'tipo_ornato' => $datos['tipo_ornato'] ?? null,
+            'descripcion' => $datos['descripcion'] ?? null,
+            'ubicacion'   => $datos['ubicacion'] ?? null,
+            'monto_total' => $datos['monto_total'] ?? null,
+            'fecha'       => $datos['fecha'] ?? null,
+        ]);
         try {
             $stmt = $this->db->prepare("INSERT INTO ornatos
                 (id_cliente, tipo_ornato, descripcion, ubicacion, monto_total, fecha)
@@ -149,6 +169,14 @@ class Ornato extends Database implements ReadableInterface, DeletableInterface
 
     public function actualizar(int $id, array $datos): bool
     {
+        $this->validateData([
+            'id_cliente'  => $datos['id_cliente'] ?? null,
+            'tipo_ornato' => $datos['tipo_ornato'] ?? null,
+            'descripcion' => $datos['descripcion'] ?? null,
+            'ubicacion'   => $datos['ubicacion'] ?? null,
+            'monto_total' => $datos['monto_total'] ?? null,
+            'fecha'       => $datos['fecha'] ?? null,
+        ]);
         try {
             if (!$this->exists($id)) {
                 throw new \Exception("No existe el ornato con ID: $id");

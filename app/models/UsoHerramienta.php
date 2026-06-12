@@ -4,10 +4,21 @@ namespace SysInescolara\models;
 
 use SysInescolara\core\Database;
 use SysInescolara\interfaces\ReadableInterface;
+use SysInescolara\traits\ValidationTrait;
 use PDO;
 
 class UsoHerramienta extends Database implements ReadableInterface
 {
+    use ValidationTrait;
+
+    protected array $validationRules = [
+        'id_asignacion'              => ['type' => null, 'required' => true],
+        'id_herramienta'             => ['type' => null, 'required' => true],
+        'fecha_uso'                  => ['type' => null, 'required' => true],
+        'observacion'                => ['type' => null, 'required' => false],
+        'estado_herramienta_post_uso'=> ['type' => null, 'required' => false],
+    ];
+
     public function __construct()
     {
         parent::__construct();
@@ -54,6 +65,13 @@ class UsoHerramienta extends Database implements ReadableInterface
 
     public function add(array $data): bool
     {
+        $this->validateData([
+            'id_asignacion'              => $data['id_asignacion'] ?? null,
+            'id_herramienta'             => $data['id_herramienta'] ?? null,
+            'fecha_uso'                  => $data['fecha_uso'] ?? null,
+            'observacion'                => $data['observacion'] ?? null,
+            'estado_herramienta_post_uso'=> $data['estado_herramienta_post_uso'] ?? null,
+        ]);
         $stmt = $this->db->prepare("
             INSERT INTO uso_herramienta (id_asignacion, id_herramienta, fecha_uso, observacion, estado_herramienta_post_uso)
             VALUES (:id_asignacion, :id_herramienta, :fecha_uso, :observacion, :estado_herramienta_post_uso)

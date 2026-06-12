@@ -5,10 +5,21 @@ namespace SysInescolara\models;
 use SysInescolara\core\Database;
 use SysInescolara\interfaces\ReadableInterface;
 use SysInescolara\interfaces\DeletableInterface;
+use SysInescolara\traits\ValidationTrait;
 use PDO;
 
 class Trazabilidad extends Database implements ReadableInterface, DeletableInterface
 {
+    use ValidationTrait;
+
+    protected array $validationRules = [
+        'id_lote'       => ['type' => null,      'required' => true],
+        'cantidad'      => ['type' => 'cantidad','required' => true],
+        'estado_salud'  => ['type' => null,      'required' => true],
+        'fecha_registro'=> ['type' => null,      'required' => true],
+        'observacion'   => ['type' => null,      'required' => false],
+    ];
+
     public function __construct()
     {
         parent::__construct();
@@ -90,6 +101,13 @@ class Trazabilidad extends Database implements ReadableInterface, DeletableInter
 
     public function add(int $idLote, int $cantidad, string $estadoSalud, string $fechaRegistro, ?string $observacion = null): bool
     {
+        $this->validateData([
+            'id_lote' => $idLote,
+            'cantidad' => $cantidad,
+            'estado_salud' => $estadoSalud,
+            'fecha_registro' => $fechaRegistro,
+            'observacion' => $observacion,
+        ]);
         $stmt = $this->db->prepare("
             INSERT INTO trazabilidad (id_lote, cantidad, estado_salud, fecha_registro, observacion)
             VALUES (:id_lote, :cantidad, :estado_salud, :fecha_registro, :observacion)
@@ -105,6 +123,13 @@ class Trazabilidad extends Database implements ReadableInterface, DeletableInter
 
     public function update(int $id, int $idLote, int $cantidad, string $estadoSalud, string $fechaRegistro, ?string $observacion = null): bool
     {
+        $this->validateData([
+            'id_lote' => $idLote,
+            'cantidad' => $cantidad,
+            'estado_salud' => $estadoSalud,
+            'fecha_registro' => $fechaRegistro,
+            'observacion' => $observacion,
+        ]);
         if (!$this->exists($id)) {
             throw new \Exception("No existe el registro de trazabilidad con ID: $id");
         }

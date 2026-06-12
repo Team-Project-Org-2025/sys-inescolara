@@ -2,7 +2,6 @@
 
 require_once __DIR__ . '/controller_helpers.php';
 
-use SysInescolara\helpers\Validation;
 use SysInescolara\models\User;
 use SysInescolara\models\AuditLog;
 
@@ -45,20 +44,20 @@ function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('USUARIOS_M
 
 function users_validateUserData(array $data, string $mode): void
 {
-    $rules = [
-        'nombre_usuario' => ['type' => null, 'required' => true],
-        'password'       => ['type' => 'password', 'required' => $mode === 'add'],
-        'rol_id'         => ['type' => null, 'required' => true],
-        'correo_electronico' => ['type' => null, 'required' => false],
-    ];
-    $validation = Validation::validate($data, $rules);
-    if (!$validation['valid']) {
-        throw new \Exception(implode(', ', $validation['errors']));
+    $errors = [];
+    if (empty($data['nombre_usuario'])) $errors[] = 'El nombre de usuario es requerido';
+    if ($mode === 'add' && empty($data['password'])) $errors[] = 'La contraseña es requerida';
+    if (!empty($data['password'])) {
+        if (!preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&._-])[A-Za-z\d@$!%*?&._-]{8,30}$/', $data['password'])) {
+            $errors[] = 'La contraseña debe tener 8-30 caracteres, mayúsculas, minúsculas, números y símbolos';
+        }
     }
+    if (empty($data['rol_id'])) $errors[] = 'El rol es requerido';
     $email = trim((string)($data['correo_electronico'] ?? ''));
     if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        throw new \Exception('El formato del correo electrónico no es válido.');
+        $errors[] = 'El formato del correo electrónico no es válido.';
     }
+    if (!empty($errors)) throw new \Exception(implode(', ', $errors));
 }
 
 function users_handleAddEdit(string $mode): void

@@ -5,10 +5,25 @@ namespace SysInescolara\models;
 use SysInescolara\core\Database;
 use SysInescolara\interfaces\ReadableInterface;
 use SysInescolara\interfaces\DeletableInterface;
+use SysInescolara\traits\ValidationTrait;
 use PDO;
 
 class Batch extends Database implements ReadableInterface, DeletableInterface
 {
+    use ValidationTrait;
+
+    protected array $validationRules = [
+        'id_planta'       => ['type' => null,      'required' => true],
+        'id_ubicacion'    => ['type' => null,      'required' => true],
+        'fecha_siembra'   => ['type' => null,      'required' => true],
+        'cantidad_inicial'=> ['type' => 'cantidad','required' => true],
+        'cantidad_actual' => ['type' => 'cantidad','required' => true],
+        'estado'          => ['type' => null,      'required' => false],
+        'categoria'       => ['type' => null,      'required' => false],
+        'origen'          => ['type' => null,      'required' => false],
+        'observacion'     => ['type' => null,      'required' => false],
+    ];
+
     public function __construct()
     {
         parent::__construct();
@@ -83,6 +98,17 @@ class Batch extends Database implements ReadableInterface, DeletableInterface
 
     public function add($id_planta, $id_ubicacion, $fecha_siembra, $cantidad_inicial, $cantidad_actual, $estado = 'Activo', $categoria = null, $origen = 'Siembra', $observacion = null, $imagen = null)
     {
+        $this->validateData([
+            'id_planta' => $id_planta,
+            'id_ubicacion' => $id_ubicacion,
+            'fecha_siembra' => $fecha_siembra,
+            'cantidad_inicial' => $cantidad_inicial,
+            'cantidad_actual' => $cantidad_actual,
+            'estado' => $estado,
+            'categoria' => $categoria,
+            'origen' => $origen,
+            'observacion' => $observacion,
+        ]);
         $stmt = $this->db->prepare("INSERT INTO lote (id_planta, id_ubicacion, fecha_siembra, cantidad_inicial, cantidad_actual, estado, categoria, origen, observacion, imagen) VALUES (:id_planta, :id_ubicacion, :fecha_siembra, :cantidad_inicial, :cantidad_actual, :estado, :categoria, :origen, :observacion, :imagen)");
         return $stmt->execute([
             ':id_planta' => $id_planta,
@@ -100,6 +126,17 @@ class Batch extends Database implements ReadableInterface, DeletableInterface
 
     public function update($id, $id_planta, $id_ubicacion, $fecha_siembra, $cantidad_inicial, $cantidad_actual, $estado = 'Activo', $categoria = null, $origen = 'Siembra', $observacion = null, $imagen = null)
     {
+        $this->validateData([
+            'id_planta' => $id_planta,
+            'id_ubicacion' => $id_ubicacion,
+            'fecha_siembra' => $fecha_siembra,
+            'cantidad_inicial' => $cantidad_inicial,
+            'cantidad_actual' => $cantidad_actual,
+            'estado' => $estado,
+            'categoria' => $categoria,
+            'origen' => $origen,
+            'observacion' => $observacion,
+        ]);
         if (!$this->exists($id)) {
             throw new \Exception("No existe el lote con ID: $id");
         }

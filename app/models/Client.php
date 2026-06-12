@@ -5,10 +5,18 @@ namespace SysInescolara\models;
 use SysInescolara\core\Database;
 use SysInescolara\interfaces\ReadableInterface;
 use SysInescolara\interfaces\DeletableInterface;
+use SysInescolara\traits\ValidationTrait;
 use PDO;
 
 class Client extends Database implements ReadableInterface, DeletableInterface
 {
+    use ValidationTrait;
+
+    protected array $validationRules = [
+        'nombre_cliente'   => ['type' => 'nombre', 'required' => true],
+        'contacto_cliente' => ['type' => null,     'required' => false],
+    ];
+
     public function __construct()
     {
         parent::__construct();
@@ -91,6 +99,10 @@ class Client extends Database implements ReadableInterface, DeletableInterface
 
     public function add(string $nombreCliente, ?string $contactoCliente = null)
     {
+        $this->validateData([
+            'nombre_cliente' => $nombreCliente,
+            'contacto_cliente' => $contactoCliente,
+        ]);
         $stmt = $this->db->prepare("INSERT INTO cliente (nombre_cliente, contacto_cliente) VALUES (:nombre_cliente, :contacto_cliente)");
         return $stmt->execute([
             ':nombre_cliente' => $nombreCliente,
@@ -100,6 +112,10 @@ class Client extends Database implements ReadableInterface, DeletableInterface
 
     public function update(int $id, string $nombreCliente, ?string $contactoCliente = null)
     {
+        $this->validateData([
+            'nombre_cliente' => $nombreCliente,
+            'contacto_cliente' => $contactoCliente,
+        ]);
         if (!$this->exists($id)) {
             throw new \Exception("No existe el cliente con ID: $id");
         }

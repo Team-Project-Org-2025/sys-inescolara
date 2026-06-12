@@ -3,11 +3,21 @@
 namespace SysInescolara\models;
 
 use SysInescolara\core\Database;
+use SysInescolara\traits\ValidationTrait;
 use PDO;
 use Exception;
 
 class User extends Database
 {
+    use ValidationTrait;
+
+    protected array $validationRules = [
+        'nombre_usuario'    => ['type' => null,  'required' => true],
+        'id_rol'            => ['type' => null,  'required' => true],
+        'correo_electronico'=> ['type' => 'email','required' => false],
+        'avatar'            => ['type' => null,  'required' => false],
+    ];
+
 
     public function __construct()
     {
@@ -333,6 +343,12 @@ class User extends Database
 
     public function add(string $nombreUsuario, string $password, int $rolId, ?string $correoElectronico = null, ?string $avatar = null)
     {
+        $this->validateData([
+            'nombre_usuario' => $nombreUsuario,
+            'id_rol' => $rolId,
+            'correo_electronico' => $correoElectronico,
+            'avatar' => $avatar,
+        ]);
         if ($this->userExists(null, $nombreUsuario)) {
             throw new Exception("Ya existe un usuario con este nombre de usuario.");
         }
@@ -360,6 +376,12 @@ class User extends Database
 
     public function update(int $id, string $nombreUsuario, int $rolId, ?string $correoElectronico = null, ?string $password = null, ?string $avatar = null)
     {
+        $this->validateData([
+            'nombre_usuario' => $nombreUsuario,
+            'id_rol' => $rolId,
+            'correo_electronico' => $correoElectronico,
+            'avatar' => $avatar,
+        ]);
         if (!$this->userExists($id)) {
             throw new Exception("No existe el usuario con ID: $id");
         }

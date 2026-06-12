@@ -5,10 +5,20 @@ namespace SysInescolara\models;
 use SysInescolara\core\Database;
 use SysInescolara\interfaces\ReadableInterface;
 use SysInescolara\interfaces\DeletableInterface;
+use SysInescolara\traits\ValidationTrait;
 use PDO;
 
 class CuentaPagar extends Database implements ReadableInterface, DeletableInterface
 {
+    use ValidationTrait;
+
+    protected array $validationRules = [
+        'id_compra'       => ['type' => null,   'required' => true],
+        'monto_total'     => ['type' => 'precio','required' => true],
+        'fecha_vencimiento'=> ['type' => null,   'required' => false],
+        'observacion'     => ['type' => null,   'required' => false],
+    ];
+
     public function __construct()
     {
         parent::__construct();
@@ -173,6 +183,12 @@ class CuentaPagar extends Database implements ReadableInterface, DeletableInterf
 
     public function crear(int $idCompra, float $montoTotal, ?string $fechaVencimiento = null, ?string $observacion = null): bool
     {
+        $this->validateData([
+            'id_compra' => $idCompra,
+            'monto_total' => $montoTotal,
+            'fecha_vencimiento' => $fechaVencimiento,
+            'observacion' => $observacion,
+        ]);
         $stmt = $this->db->prepare("
             INSERT INTO cuentas_pagar (id_compra, monto_total, saldo_pendiente, fecha_vencimiento, observacion)
             VALUES (:id_compra, :monto_total, :saldo_pendiente, :fecha_vencimiento, :observacion)
