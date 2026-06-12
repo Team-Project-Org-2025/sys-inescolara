@@ -188,7 +188,7 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
         }
     }
 
-    public function generarReferencia(): string
+    private function generarReferencia(): string
     {
         try {
             $fecha = date('Ymd');

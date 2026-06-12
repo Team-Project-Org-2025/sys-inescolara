@@ -156,20 +156,15 @@ class Batch extends Database implements ReadableInterface, DeletableInterface
         ]);
     }
 
-    public function deductStock(int $id, int $cantidad): bool
+    protected function deductStock(int $id, int $cantidad): bool
     {
         $stmt = $this->db->prepare("UPDATE lote SET cantidad_actual = GREATEST(0, cantidad_actual - :cantidad) WHERE id_lote = :id AND cantidad_actual >= :cantidad2");
         return $stmt->execute([':cantidad' => $cantidad, ':id' => $id, ':cantidad2' => $cantidad]);
     }
 
-    public function restoreStock(int $id, int $cantidad): bool
+    protected function restoreStock(int $id, int $cantidad): bool
     {
         $stmt = $this->db->prepare("UPDATE lote SET cantidad_actual = cantidad_actual + :cantidad WHERE id_lote = :id");
         return $stmt->execute([':cantidad' => $cantidad, ':id' => $id]);
-    }
-
-    public function getDb()
-    {
-        return $this->db;
     }
 }

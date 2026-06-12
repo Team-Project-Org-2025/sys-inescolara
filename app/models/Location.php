@@ -58,7 +58,7 @@ class Location extends Database implements ReadableInterface, DeletableInterface
         }
     }
 
-    public function hasAssociatedLots(int $id): bool
+    private function hasAssociatedLots(int $id): bool
     {
         try {
             $stmt = $this->db->prepare("SELECT COUNT(*) FROM lote WHERE id_ubicacion = :id AND activo = 1");

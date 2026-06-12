@@ -292,21 +292,21 @@ class CuentaCobrar extends Database
         }
     }
 
-    public function iniciarTransaccion(): void
+    protected function iniciarTransaccion(): void
     {
         if (!$this->db->inTransaction()) {
             $this->db->beginTransaction();
         }
     }
 
-    public function confirmarTransaccion(): void
+    protected function confirmarTransaccion(): void
     {
         if ($this->db->inTransaction()) {
             $this->db->commit();
         }
     }
 
-    public function revertirTransaccion(): void
+    protected function revertirTransaccion(): void
     {
         if ($this->db->inTransaction()) {
             $this->db->rollBack();
