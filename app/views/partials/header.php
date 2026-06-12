@@ -16,9 +16,9 @@
         <nav class="site-nav">
             <a href="<?= BASE_URL ?>" class="<?= ($currentPage ?? '') === 'home' ? 'active' : '' ?>">Inicio</a>
             <a href="<?= BASE_URL ?>catalogo" class="<?= ($currentPage ?? '') === 'catalogo' ? 'active' : '' ?>">Catálogo</a>
-            <a href="<?= BASE_URL ?>servicios">Servicios</a>
-            <a href="<?= BASE_URL ?>nosotros">Nosotros</a>
-            <a href="<?= BASE_URL ?>contacto">Contacto</a>
+            <a href="<?= BASE_URL ?>servicios" class="<?= ($currentPage ?? '') === 'servicios' ? 'active' : '' ?>">Servicios</a>
+            <a href="<?= BASE_URL ?>nosotros" class="<?= ($currentPage ?? '') === 'nosotros' ? 'active' : '' ?>">Nosotros</a>
+            <a href="<?= BASE_URL ?>contacto" class="<?= ($currentPage ?? '') === 'contacto' ? 'active' : '' ?>">Contacto</a>
             <a href="<?= BASE_URL ?>login" class="btn btn-primary">Acceso Personal</a>
         </nav>
 

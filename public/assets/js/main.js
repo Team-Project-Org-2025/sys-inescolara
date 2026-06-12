@@ -775,6 +775,26 @@ function initPasswordToggle() {
 // INITIALIZATION
 // ============================================
 
+// ============================================
+// SCROLL REVEAL
+// ============================================
+
+function initScrollReveal() {
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    },
+    { threshold: 0.15, rootMargin: '0px 0px -50px 0px' }
+  );
+
+  document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
+}
+
 document.addEventListener('DOMContentLoaded', function () {
   // Initialize based on current page
   const path = window.location.pathname;
@@ -792,4 +812,5 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   initPasswordToggle();
+  initScrollReveal();
 });
