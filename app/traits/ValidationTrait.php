@@ -4,7 +4,6 @@ namespace SysInescolara\traits;
 
 trait ValidationTrait
 {
-    protected array $validationRules = [];
 
     private static array $patterns = [
         'nombre'          => '/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]{2,100}$/',
