@@ -172,7 +172,7 @@ class Ampliacion extends Database implements ReadableInterface
         return $sp->getAll();
     }
 
-    public function createPlant(string $nombreComun, ?string $nombreTecnico, int $idEspecie): int
+    private function createPlant(string $nombreComun, ?string $nombreTecnico, int $idEspecie): int
     {
         $stmt = $this->db->prepare("INSERT INTO plantas (nombre_comun, nombre_tecnico, id_especie, activo) VALUES (:nombre, :tecnico, :especie, 1)");
         $stmt->execute([

@@ -187,27 +187,27 @@ class Merma extends Database implements ReadableInterface, DeletableInterface
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 
-    public function deductQuarantineStock(int $idTrazabilidad, int $cantidad): bool
+    private function deductQuarantineStock(int $idTrazabilidad, int $cantidad): bool
     {
         $stmt = $this->db->prepare("UPDATE trazabilidad SET cantidad = GREATEST(0, cantidad - :cantidad) WHERE id_trazabilidad = :id AND cantidad >= :check");
         return $stmt->execute([':cantidad' => $cantidad, ':id' => $idTrazabilidad, ':check' => $cantidad]);
     }
 
-    public function beginTransaction(): void
+    protected function beginTransaction(): void
     {
         if (!$this->db->inTransaction()) {
             $this->db->beginTransaction();
         }
     }
 
-    public function commit(): void
+    protected function commit(): void
     {
         if ($this->db->inTransaction()) {
             $this->db->commit();
         }
     }
 
-    public function rollback(): void
+    protected function rollback(): void
     {
         if ($this->db->inTransaction()) {
             $this->db->rollBack();

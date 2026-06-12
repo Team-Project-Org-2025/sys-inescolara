@@ -56,17 +56,17 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
     //  Transacciones
     // ============================================================
 
-    public function iniciarTransaccion(): bool
+    protected function iniciarTransaccion(): bool
     {
         return $this->db->beginTransaction();
     }
 
-    public function confirmarTransaccion(): bool
+    protected function confirmarTransaccion(): bool
     {
         return $this->db->commit();
     }
 
-    public function revertirTransaccion(): bool
+    protected function revertirTransaccion(): bool
     {
         return $this->db->rollBack();
     }

@@ -52,17 +52,17 @@ class CuentaPagar extends Database implements ReadableInterface, DeletableInterf
     //  Transacciones
     // ============================================================
 
-    public function iniciarTransaccion(): bool
+    protected function iniciarTransaccion(): bool
     {
         return $this->db->beginTransaction();
     }
 
-    public function confirmarTransaccion(): bool
+    protected function confirmarTransaccion(): bool
     {
         return $this->db->commit();
     }
 
-    public function revertirTransaccion(): bool
+    protected function revertirTransaccion(): bool
     {
         return $this->db->rollBack();
     }
@@ -202,7 +202,7 @@ class CuentaPagar extends Database implements ReadableInterface, DeletableInterf
         ]);
     }
 
-    public function actualizarSaldo(int $idCuentaPagar): bool
+    private function actualizarSaldo(int $idCuentaPagar): bool
     {
         $stmt = $this->db->prepare("
             UPDATE cuentas_pagar cp
@@ -230,7 +230,7 @@ class CuentaPagar extends Database implements ReadableInterface, DeletableInterf
         return $stmt2->execute([':id_cuenta_pagar' => $idCuentaPagar]);
     }
 
-    public function actualizarEstadoCompra(int $idCompra): void
+    private function actualizarEstadoCompra(int $idCompra): void
     {
         $stmt = $this->db->prepare("
             UPDATE compra c
