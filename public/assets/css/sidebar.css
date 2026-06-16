@@ -427,3 +427,344 @@
     margin-left: 260px;
   }
 }
+
+
+    /* Brand Colors - from INECOLARA logo */
+    :root {
+        --color-primary: #e5a835;
+        --color-primary-dark: #c48f2a;
+        --color-primary-light: #f5c85c;
+        --color-secondary: #2e7d32;
+        --color-secondary-dark: #1b5e20;
+        --color-secondary-light: #4caf50;
+
+        /* Neutrals */
+        --color-white: #ffffff;
+        --color-gray-50: #fafafa;
+        --color-gray-100: #f5f5f5;
+        --color-gray-200: #eeeeee;
+        --color-gray-300: #e0e0e0;
+        --color-gray-400: #bdbdbd;
+        --color-gray-500: #9e9e9e;
+        --color-gray-600: #757575;
+        --color-gray-700: #616161;
+        --color-gray-800: #424242;
+        --color-gray-900: #212121;
+        --color-black: #1a1a1a;
+
+        /* Semantic Colors */
+        --color-success: #2e7d32;
+        --color-warning: #f59e0b;
+        --color-error: #dc2626;
+        --color-info: #0ea5e9;
+
+        /* Sidebar Specific */
+        --sidebar-bg: #f8f9fa;
+        --header-bg: var(--color-secondary);
+        --header-text: var(--color-white);
+        --text-primary: var(--color-gray-800);
+        --text-secondary: var(--color-gray-600);
+        --text-muted: var(--color-gray-500);
+        --border-color: var(--color-gray-200);
+        
+        /* Yellow Hover States for Buttons */
+        --hover-bg: rgba(229, 168, 53, 0.12);
+        --hover-bg-solid: #fef3e2;
+        --hover-text: var(--color-primary-dark);
+        --active-bg: rgba(229, 168, 53, 0.20);
+        --active-text: var(--color-primary-dark);
+        --active-border: var(--color-primary);
+        --active-shadow: rgba(229, 168, 53, 0.25);
+        
+        --logout-color: var(--color-error);
+        --logout-hover: #b91c1c;
+        --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+        --shadow-md: 0 4px 6px rgba(0,0,0,0.07);
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    .sidebar {
+        background-color: var(--sidebar-bg);
+        width: 280px;
+        height: 100vh;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        box-shadow: 2px 0 10px rgba(0,0,0,0.08);
+    }
+
+    .sidebar::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .sidebar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb {
+        background: var(--color-gray-300);
+        border-radius: 3px;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb:hover {
+        background: var(--color-gray-400);
+    }
+
+    /* HEADER PROFESIONAL - VERDE */
+    .sidebar-header {
+        background: var(--header-bg);
+        padding: 1.25rem 1.25rem 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: var(--shadow-md);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .sidebar-logo {
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+        gap: 0.75rem;
+    }
+
+    .sidebar-logo-img {
+        width: 40px;
+        height: 40px;
+        object-fit: contain;
+    }
+
+    .sidebar-logo-text {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .sidebar-logo-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        line-height: 1.2;
+        color: var(--color-white);
+    }
+
+    .sidebar-close {
+        background: rgba(255,255,255,0.15);
+        border: none;
+        color: var(--color-white);
+        cursor: pointer;
+        padding: 0.5rem;
+        border-radius: 0.5rem;
+        display: none;
+        transition: var(--transition);
+    }
+
+    .sidebar-close:hover {
+        background: rgba(255,255,255,0.25);
+        transform: rotate(90deg);
+    }
+
+    /* NAVEGACIÓN */
+    .sidebar-nav {
+        flex-grow: 1;
+        padding: 1rem 0.75rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    /* BOTONES DE GRUPO PROFESIONALES - HOVER AMARILLO */
+    .nav-group {
+        margin-bottom: 0.25rem;
+    }
+
+    .nav-group-btn {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.875rem 1rem;
+        background: transparent;
+        border: none;
+        border-radius: 0.625rem;
+        cursor: pointer;
+        color: var(--text-primary);
+        font-size: 0.9375rem;
+        font-weight: 600;
+        transition: var(--transition);
+        text-align: left;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .nav-group-btn::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background: var(--color-primary);
+        transform: scaleY(0);
+        transition: transform 0.3s ease;
+    }
+
+    .nav-group-btn:hover {
+        background: var(--hover-bg-solid);
+        color: var(--hover-text);
+        transform: translateX(4px);
+    }
+
+    .nav-group-btn:hover::before {
+        transform: scaleY(1);
+    }
+
+    .nav-group-btn span {
+        flex: 1;
+    }
+
+    .chevron {
+        width: 1.25rem;
+        height: 1.25rem;
+        color: var(--text-muted);
+        transition: var(--transition);
+        flex-shrink: 0;
+    }
+
+    .nav-group-btn:hover .chevron {
+        color: var(--color-primary);
+    }
+
+    .chevron.rotate {
+        transform: rotate(180deg);
+        color: var(--color-primary);
+    }
+
+    /* SUBMENÚ PROFESIONAL */
+    .submenu-wrapper {
+        display: grid;
+        grid-template-rows: 0fr;
+        transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .submenu-wrapper.show {
+        grid-template-rows: 1fr;
+    }
+
+    .submenu-inner {
+        overflow: hidden;
+        list-style: none;
+        padding: 0.5rem 0 0.5rem 0.5rem;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    /* ENLACES INDIVIDUALES PROFESIONALES - HOVER AMARILLO */
+    .nav-link {
+        display: flex;
+        align-items: center;
+        gap: 0.875rem;
+        padding: 0.75rem 1rem;
+        border-radius: 0.5rem;
+        text-decoration: none;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: var(--transition);
+        position: relative;
+        border-left: 3px solid transparent;
+    }
+
+    .nav-icon {
+        width: 1.25rem;
+        height: 1.25rem;
+        stroke-width: 2;
+        color: var(--text-muted);
+        transition: var(--transition);
+        flex-shrink: 0;
+    }
+
+    .nav-link:hover {
+        background: var(--hover-bg);
+        color: var(--hover-text);
+        border-left-color: var(--color-primary);
+        transform: translateX(4px);
+    }
+
+    .nav-link:hover .nav-icon {
+        color: var(--color-primary);
+        transform: scale(1.1);
+    }
+
+    /* ESTADO ACTIVO - AMARILLO */
+    .nav-link.active {
+        background: var(--active-bg);
+        color: var(--active-text);
+        font-weight: 600;
+        border-left-color: var(--active-border);
+        box-shadow: 0 2px 4px var(--active-shadow);
+    }
+
+    .nav-link.active .nav-icon {
+        color: var(--color-primary);
+    }
+
+    /* FOOTER PROFESIONAL */
+    .sidebar-footer {
+        padding: 1rem 0.75rem;
+        border-top: 1px solid var(--border-color);
+        background: var(--color-white);
+    }
+
+    .logout-link {
+        display: flex;
+        align-items: center;
+        gap: 0.875rem;
+        padding: 0.875rem 1rem;
+        border-radius: 0.5rem;
+        text-decoration: none;
+        color: var(--logout-color);
+        font-size: 0.9375rem;
+        font-weight: 600;
+        transition: var(--transition);
+    }
+
+    .logout-link:hover {
+        background: #fef2f2;
+        color: var(--logout-hover);
+        transform: translateX(4px);
+    }
+
+    .logout-link .nav-icon {
+        color: inherit;
+        width: 1.25rem;
+        height: 1.25rem;
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+        .sidebar {
+            position: fixed;
+            left: -100%;
+            z-index: 1000;
+            transition: left 0.3s ease;
+        }
+        
+        .sidebar.open {
+            left: 0;
+        }
+        
+        .sidebar-close {
+            display: block;
+        }
+    }

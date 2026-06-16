@@ -2510,7 +2510,7 @@ div.dataTables_wrapper .dt-buttons .btn {
 .dashboard-header {
   background-color: var(--bg-primary);
   border-bottom: 1px solid var(--color-gray-200);
-  padding: var(--space-4) var(--space-6);
+  padding: var(--space-6) var(5);
   display: flex;
   align-items: center;
   justify-content: space-between;
