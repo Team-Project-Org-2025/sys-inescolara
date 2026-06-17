@@ -6,7 +6,6 @@ function hasPermiso(string $codigo): bool
     return in_array($codigo, $permisos, true);
 }
 
-// Determinar la ruta activa para abrir el menú correspondiente
 $current = $currentPage ?? '';
 
 $isPlanta = in_array($current, ['plants', 'species', 'locations']);
@@ -16,10 +15,25 @@ $isServicios = in_array($current, ['ornatos', 'ampliacion', 'suppliers']);
 $isTarea = in_array($current, ['tasks', 'employees', 'seed-collection']);
 $isConfiguracion = in_array($current, ['usuarios', 'roles', 'auditlog', 'backups']);
 
+$showInventario = hasPermiso('PLANTAS_VIEW') || hasPermiso('UBICACIONES_VIEW')
+    || hasPermiso('INVENTARIO_VIEW') || hasPermiso('TRAZABILIDAD_VIEW')
+    || hasPermiso('INSUMOS_VIEW') || hasPermiso('HERRAMIENTAS_VIEW')
+    || hasPermiso('UNIDADES_MEDIDA_VIEW') || hasPermiso('MERMAS_VIEW');
+
+$showComercial = hasPermiso('VENTAS_ACCESS') || hasPermiso('PRECIOS_VIEW')
+    || hasPermiso('CLIENTES_VIEW') || hasPermiso('CUENTAS_COBRAR_VIEW')
+    || hasPermiso('CUENTAS_VIEW') || hasPermiso('COMPRAS_VIEW')
+    || hasPermiso('ORNATOS_VIEW') || hasPermiso('AMPLIACION_VIEW')
+    || hasPermiso('PROVEEDORES_VIEW');
+
+$showOperaciones = hasPermiso('TRABAJADORES_VIEW') || hasPermiso('TAREAS_VIEW')
+    || hasPermiso('RECOLECCION_VIEW');
+
+$showHerramientas = hasPermiso('ASISTENTE_ACCESS') || hasPermiso('DASHBOARD_VIEW');
+
+$showSistema = hasPermiso('USUARIOS_MANAGE');
+
 ?>
-
-
-
 <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
         <a href="<?= BASE_URL ?>dashboard" class="sidebar-logo">
@@ -37,7 +51,7 @@ $isConfiguracion = in_array($current, ['usuarios', 'roles', 'auditlog', 'backups
     </div>
 
     <nav class="sidebar-nav">
-        
+
         <a href="<?= BASE_URL ?>dashboard" class="nav-link <?= $current === 'dashboard' ? 'active' : '' ?>">
             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
@@ -46,9 +60,15 @@ $isConfiguracion = in_array($current, ['usuarios', 'roles', 'auditlog', 'backups
             <span>Inicio</span>
         </a>
 
+        <hr class="sidebar-divider">
+
+        <?php if ($showInventario): ?>
+        <div class="sidebar-section-label">INVENTARIO</div>
+
         <?php if (hasPermiso('PLANTAS_VIEW') || hasPermiso('UBICACIONES_VIEW')): ?>
         <div class="nav-group">
-            <button class="nav-group-btn">
+            <button class="nav-group-btn <?= $isPlanta ? 'open-bg' : '' ?>">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-9"></path><path d="M12 13c2.5-2.5 6-3 7.5-1.5s1 5-1.5 7.5"></path><path d="M12 10c-2.5-2.5-6-3-7.5-1.5s-1 5 1.5 7.5"></path></svg>
                 <span>Gestionar Planta</span>
                 <svg class="chevron <?= $isPlanta ? 'rotate' : '' ?>" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
             </button>
@@ -85,7 +105,8 @@ $isConfiguracion = in_array($current, ['usuarios', 'roles', 'auditlog', 'backups
 
         <?php if (hasPermiso('INVENTARIO_VIEW') || hasPermiso('PLANTAS_VIEW') || hasPermiso('TRAZABILIDAD_VIEW') || hasPermiso('INSUMOS_VIEW') || hasPermiso('HERRAMIENTAS_VIEW') || hasPermiso('UNIDADES_MEDIDA_VIEW') || hasPermiso('MERMAS_VIEW')): ?>
         <div class="nav-group">
-            <button class="nav-group-btn">
+            <button class="nav-group-btn <?= $isActivos ? 'open-bg' : '' ?>">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
                 <span>Gestionar Activos</span>
                 <svg class="chevron <?= $isActivos ? 'rotate' : '' ?>" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
             </button>
@@ -151,10 +172,15 @@ $isConfiguracion = in_array($current, ['usuarios', 'roles', 'auditlog', 'backups
             </div>
         </div>
         <?php endif; ?>
+        <?php endif; ?>
+
+        <?php if ($showComercial): ?>
+        <div class="sidebar-section-label">COMERCIAL</div>
 
         <?php if (hasPermiso('VENTAS_ACCESS') || hasPermiso('PRECIOS_VIEW') || hasPermiso('CLIENTES_VIEW') || hasPermiso('CUENTAS_COBRAR_VIEW') || hasPermiso('CUENTAS_VIEW') || hasPermiso('COMPRAS_VIEW')): ?>
         <div class="nav-group">
-            <button class="nav-group-btn">
+            <button class="nav-group-btn <?= $isVenta ? 'open-bg' : '' ?>">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
                 <span>Gestionar Venta</span>
                 <svg class="chevron <?= $isVenta ? 'rotate' : '' ?>" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
             </button>
@@ -215,7 +241,8 @@ $isConfiguracion = in_array($current, ['usuarios', 'roles', 'auditlog', 'backups
 
         <?php if (hasPermiso('ORNATOS_VIEW') || hasPermiso('AMPLIACION_VIEW') || hasPermiso('PROVEEDORES_VIEW')): ?>
         <div class="nav-group">
-            <button class="nav-group-btn">
+            <button class="nav-group-btn <?= $isServicios ? 'open-bg' : '' ?>">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L9.5 9.5L2 12l7.5 2.5L12 22l2.5-7.5L22 12l-7.5-2.5L12 2z"></path></svg>
                 <span>Gestionar Servicios</span>
                 <svg class="chevron <?= $isServicios ? 'rotate' : '' ?>" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
             </button>
@@ -249,10 +276,15 @@ $isConfiguracion = in_array($current, ['usuarios', 'roles', 'auditlog', 'backups
             </div>
         </div>
         <?php endif; ?>
+        <?php endif; ?>
+
+        <?php if ($showOperaciones): ?>
+        <div class="sidebar-section-label">OPERACIONES</div>
 
         <?php if (hasPermiso('TRABAJADORES_VIEW') || hasPermiso('TAREAS_VIEW') || hasPermiso('RECOLECCION_VIEW')): ?>
         <div class="nav-group">
-            <button class="nav-group-btn">
+            <button class="nav-group-btn <?= $isTarea ? 'open-bg' : '' ?>">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
                 <span>Gestionar Tarea</span>
                 <svg class="chevron <?= $isTarea ? 'rotate' : '' ?>" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
             </button>
@@ -286,6 +318,10 @@ $isConfiguracion = in_array($current, ['usuarios', 'roles', 'auditlog', 'backups
             </div>
         </div>
         <?php endif; ?>
+        <?php endif; ?>
+
+        <?php if ($showHerramientas): ?>
+        <div class="sidebar-section-label">HERRAMIENTAS</div>
 
         <?php if (hasPermiso('ASISTENTE_ACCESS')): ?>
         <a href="<?= BASE_URL ?>dashboard/asistente" class="nav-link <?= $current === 'asistente' ? 'active' : '' ?>">
@@ -300,10 +336,14 @@ $isConfiguracion = in_array($current, ['usuarios', 'roles', 'auditlog', 'backups
             <span>Reportes</span>
         </a>
         <?php endif; ?>
+        <?php endif; ?>
 
-        <?php if (hasPermiso('USUARIOS_MANAGE')): ?>
+        <?php if ($showSistema): ?>
+        <div class="sidebar-section-label">SISTEMA</div>
+
         <div class="nav-group">
-            <button class="nav-group-btn">
+            <button class="nav-group-btn <?= $isConfiguracion ? 'open-bg' : '' ?>">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
                 <span>Gestionar Configuracion</span>
                 <svg class="chevron <?= $isConfiguracion ? 'rotate' : '' ?>" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
             </button>
@@ -351,21 +391,3 @@ $isConfiguracion = in_array($current, ['usuarios', 'roles', 'auditlog', 'backups
         </a>
     </div>
 </aside>
-
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-    const groupButtons = document.querySelectorAll('.nav-group-btn');
-
-    groupButtons.forEach(btn => {
-        btn.addEventListener('click', function() {
-            const submenu = this.nextElementSibling;
-            const chevron = this.querySelector('.chevron');
-
-            // Abrir/Cerrar el menú con animación fluida
-            submenu.classList.toggle('show');
-            // Girar el chevron de la derecha
-            chevron.classList.toggle('rotate');
-        });
-    });
-});
-</script>
