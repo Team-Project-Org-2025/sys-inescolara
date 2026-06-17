@@ -13,7 +13,6 @@
                 <line x1="3" y1="18" x2="21" y2="18"></line>
             </svg>
         </button>
-        <h1 class="dashboard-page-title"><?= htmlspecialchars($title ?? 'Dashboard') ?></h1>
     </div>
 
     <div class="dashboard-header-right">
