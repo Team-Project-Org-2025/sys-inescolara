@@ -193,21 +193,21 @@ class Merma extends Database implements ReadableInterface, DeletableInterface
         return $stmt->execute([':cantidad' => $cantidad, ':id' => $idTrazabilidad, ':check' => $cantidad]);
     }
 
-    protected function beginTransaction(): void
+    public function beginTransaction(): void
     {
         if (!$this->db->inTransaction()) {
             $this->db->beginTransaction();
         }
     }
 
-    protected function commit(): void
+    public function commit(): void
     {
         if ($this->db->inTransaction()) {
             $this->db->commit();
         }
     }
 
-    protected function rollback(): void
+    public function rollback(): void
     {
         if ($this->db->inTransaction()) {
             $this->db->rollBack();
