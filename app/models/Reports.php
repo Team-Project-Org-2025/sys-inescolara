@@ -80,7 +80,7 @@ class Reports extends Database
     private function filterSelectFromQuery(string $field, string $label, string $sql, string $valueCol, string $textCol, string $prependLabel = 'Todos'): array
     {
         try {
-            $stmt = $this->db->query($sql);
+            $stmt = $this->db()->query($sql);
             $rows = $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
         } catch (\Throwable $e) {
             $rows = [];
@@ -106,7 +106,7 @@ class Reports extends Database
     {
         $estadoOptions = [['value' => '', 'label' => 'Todos']];
         try {
-            $stmt = $this->db->query("SELECT DISTINCT estado FROM lote WHERE activo = 1 ORDER BY estado ASC");
+            $stmt = $this->db()->query("SELECT DISTINCT estado FROM lote WHERE activo = 1 ORDER BY estado ASC");
             foreach ($stmt ? $stmt->fetchAll(PDO::FETCH_COLUMN) : [] as $e) {
                 $estadoOptions[] = ['value' => $e, 'label' => $e];
             }
@@ -114,7 +114,7 @@ class Reports extends Database
 
         $catOptions = [['value' => '', 'label' => 'Todas']];
         try {
-            $stmt = $this->db->query("SELECT DISTINCT categoria FROM lote WHERE activo = 1 AND categoria IS NOT NULL AND categoria != '' ORDER BY categoria ASC");
+            $stmt = $this->db()->query("SELECT DISTINCT categoria FROM lote WHERE activo = 1 AND categoria IS NOT NULL AND categoria != '' ORDER BY categoria ASC");
             foreach ($stmt ? $stmt->fetchAll(PDO::FETCH_COLUMN) : [] as $c) {
                 $catOptions[] = ['value' => $c, 'label' => $c];
             }
@@ -138,7 +138,7 @@ class Reports extends Database
     {
         $catOptions = [['value' => '', 'label' => 'Todas']];
         try {
-            $stmt = $this->db->query("SELECT DISTINCT categoria FROM insumo WHERE activo = 1 AND categoria IS NOT NULL AND categoria != '' ORDER BY categoria ASC");
+            $stmt = $this->db()->query("SELECT DISTINCT categoria FROM insumo WHERE activo = 1 AND categoria IS NOT NULL AND categoria != '' ORDER BY categoria ASC");
             foreach ($stmt ? $stmt->fetchAll(PDO::FETCH_COLUMN) : [] as $c) {
                 $catOptions[] = ['value' => $c, 'label' => $c];
             }
@@ -169,7 +169,7 @@ class Reports extends Database
     {
         $cargoOptions = [['value' => '', 'label' => 'Todos']];
         try {
-            $stmt = $this->db->query("SELECT DISTINCT cargo FROM trabajadores WHERE activo = 1 AND cargo IS NOT NULL AND cargo != '' ORDER BY cargo ASC");
+            $stmt = $this->db()->query("SELECT DISTINCT cargo FROM trabajadores WHERE activo = 1 AND cargo IS NOT NULL AND cargo != '' ORDER BY cargo ASC");
             foreach ($stmt ? $stmt->fetchAll(PDO::FETCH_COLUMN) : [] as $c) {
                 $cargoOptions[] = ['value' => $c, 'label' => $c];
             }
@@ -242,7 +242,7 @@ class Reports extends Database
     {
         $tipoOptions = [['value' => '', 'label' => 'Todos']];
         try {
-            $stmt = $this->db->query("SELECT DISTINCT tipo FROM herramienta WHERE activo = 1 AND tipo IS NOT NULL AND tipo != '' ORDER BY tipo ASC");
+            $stmt = $this->db()->query("SELECT DISTINCT tipo FROM herramienta WHERE activo = 1 AND tipo IS NOT NULL AND tipo != '' ORDER BY tipo ASC");
             foreach ($stmt ? $stmt->fetchAll(PDO::FETCH_COLUMN) : [] as $t) {
                 $tipoOptions[] = ['value' => $t, 'label' => $t];
             }
@@ -407,7 +407,7 @@ class Reports extends Database
                     LEFT JOIN especie e ON p.id_especie = e.id_especie AND e.activo = 1
                     $where
                     ORDER BY p.nombre_comun ASC";
-            $stmt = $this->db->prepare($sql);
+            $stmt = $this->db()->prepare($sql);
             $stmt->execute($params);
             $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -454,7 +454,7 @@ class Reports extends Database
                     LEFT JOIN ubicacion u ON l.id_ubicacion = u.id_ubicacion AND u.activo = 1
                     $where
                     ORDER BY l.fecha_siembra DESC";
-            $stmt = $this->db->prepare($sql);
+            $stmt = $this->db()->prepare($sql);
             $stmt->execute($params);
             $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -503,7 +503,7 @@ class Reports extends Database
                     LEFT JOIN unidad_medida u ON i.id_unidad_medida = u.id_unidad_medida AND u.activo = 1
                     $where
                     ORDER BY i.nombre_insumo ASC";
-            $stmt = $this->db->prepare($sql);
+            $stmt = $this->db()->prepare($sql);
             $stmt->execute($params);
             $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -530,7 +530,7 @@ class Reports extends Database
         $where = $this->buildWhere($conds, $params);
 
         try {
-            $stmt = $this->db->prepare("SELECT id_proveedor, nombre_proveedor, rif_proveedor, contacto_vendedor, telefono_proveedor FROM proveedores $where ORDER BY nombre_proveedor ASC");
+            $stmt = $this->db()->prepare("SELECT id_proveedor, nombre_proveedor, rif_proveedor, contacto_vendedor, telefono_proveedor FROM proveedores $where ORDER BY nombre_proveedor ASC");
             $stmt->execute($params);
             $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -563,7 +563,7 @@ class Reports extends Database
         $where = $this->buildWhere($conds, $params);
 
         try {
-            $stmt = $this->db->prepare("SELECT id_cliente, nombre_cliente, contacto_cliente FROM cliente $where ORDER BY nombre_cliente ASC");
+            $stmt = $this->db()->prepare("SELECT id_cliente, nombre_cliente, contacto_cliente FROM cliente $where ORDER BY nombre_cliente ASC");
             $stmt->execute($params);
             $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -588,7 +588,7 @@ class Reports extends Database
         try {
             $sql = "SELECT id_trabajador, nombre_trabajador, apellido_trabajador, cedula_trabajador, telefono_trabajador, cargo
                     FROM trabajadores $where ORDER BY nombre_trabajador ASC";
-            $stmt = $this->db->prepare($sql);
+            $stmt = $this->db()->prepare($sql);
             $stmt->execute($params);
             $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -634,7 +634,7 @@ class Reports extends Database
                     LEFT JOIN plantas p ON l.id_planta = p.id_planta
                     $where
                     ORDER BY a.fecha_asignacion DESC";
-            $stmt = $this->db->prepare($sql);
+            $stmt = $this->db()->prepare($sql);
             $stmt->execute($params);
             $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -681,7 +681,7 @@ class Reports extends Database
                     LEFT JOIN trabajadores t ON v.id_trabajador = t.id_trabajador AND t.activo = 1
                     $where
                     ORDER BY v.fecha_venta DESC LIMIT 500";
-            $stmt = $this->db->prepare($sql);
+            $stmt = $this->db()->prepare($sql);
             $stmt->execute($params);
             $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -723,7 +723,7 @@ class Reports extends Database
                     LEFT JOIN proveedores p ON c.id_proveedor = p.id_proveedor
                     $where
                     ORDER BY c.fecha_compra DESC LIMIT 500";
-            $stmt = $this->db->prepare($sql);
+            $stmt = $this->db()->prepare($sql);
             $stmt->execute($params);
             $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -763,7 +763,7 @@ class Reports extends Database
                     FROM herramienta h
                     $where
                     ORDER BY h.nombre_herramienta ASC";
-            $stmt = $this->db->prepare($sql);
+            $stmt = $this->db()->prepare($sql);
             $stmt->execute($params);
             $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -803,7 +803,7 @@ class Reports extends Database
                     $where
                     GROUP BY e.id_especie, e.nombre_especie, e.descripcion
                     ORDER BY total_plantas DESC";
-            $stmt = $this->db->prepare($sql);
+            $stmt = $this->db()->prepare($sql);
             $stmt->execute($params);
             $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -849,7 +849,7 @@ class Reports extends Database
                     GROUP BY nivel_stock
                     $having
                     ORDER BY FIELD(nivel_stock, 'Alto', 'Medio', 'Bajo', 'Sin stock')";
-            $stmt = $this->db->prepare($sql);
+            $stmt = $this->db()->prepare($sql);
             $stmt->execute($params);
             $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -889,7 +889,7 @@ class Reports extends Database
                     LEFT JOIN ubicacion u ON r.id_ubicacion = u.id_ubicacion
                     $where
                     ORDER BY r.fecha_asignacion DESC";
-            $stmt = $this->db->prepare($sql);
+            $stmt = $this->db()->prepare($sql);
             $stmt->execute($params);
             $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -922,7 +922,7 @@ class Reports extends Database
         $where = $this->buildWhere($conds, $params);
 
         try {
-            $stmt = $this->db->prepare("SELECT id_ubicacion, nombre_ubicacion, descripcion, zona FROM ubicacion $where ORDER BY nombre_ubicacion ASC");
+            $stmt = $this->db()->prepare("SELECT id_ubicacion, nombre_ubicacion, descripcion, zona FROM ubicacion $where ORDER BY nombre_ubicacion ASC");
             $stmt->execute($params);
             $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -944,7 +944,7 @@ class Reports extends Database
         $where = $this->buildWhere($conds, $params);
 
         try {
-            $stmt = $this->db->prepare("SELECT id_unidad_medida, nombre_unidad_medida, simbolo FROM unidad_medida $where ORDER BY nombre_unidad_medida ASC");
+            $stmt = $this->db()->prepare("SELECT id_unidad_medida, nombre_unidad_medida, simbolo FROM unidad_medida $where ORDER BY nombre_unidad_medida ASC");
             $stmt->execute($params);
             $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -976,7 +976,7 @@ class Reports extends Database
                     LEFT JOIN proveedores p ON c.id_proveedor = p.id_proveedor
                     $where
                     ORDER BY cp.created_at DESC";
-            $stmt = $this->db->prepare($sql);
+            $stmt = $this->db()->prepare($sql);
             $stmt->execute($params);
             $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -1019,7 +1019,7 @@ class Reports extends Database
             }
             $sql .= " ORDER BY c.fecha_calculo DESC";
 
-            $stmt = $this->db->prepare($sql);
+            $stmt = $this->db()->prepare($sql);
             $stmt->execute($params);
             $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -1074,7 +1074,7 @@ class Reports extends Database
             }
             $sql .= $having . " ORDER BY v.fecha_vencimiento ASC";
 
-            $stmt = $this->db->prepare($sql);
+            $stmt = $this->db()->prepare($sql);
             $stmt->execute($params);
             $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 

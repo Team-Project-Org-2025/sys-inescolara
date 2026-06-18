@@ -31,8 +31,7 @@ function index(): void
     $employeeModel = new Employee();
     $employees = $employeeModel->getAll();
 
-    $permisos = $_SESSION['user_permisos'] ?? [];
-    $showAdjustBtn = in_array('INVENTARIO_ADJUST', $permisos, true);
+    $showAdjustBtn = \SysInescolara\helpers\Auth::hasPermiso('INVENTARIO_ADJUST');
 
     $view = ROOT_PATH . 'app/views/dashboard/inventario.php';
     if (!is_file($view)) {

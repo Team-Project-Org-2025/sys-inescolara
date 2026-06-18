@@ -141,7 +141,7 @@ function reports_handleGeneratePdf(): void
     }
 
     $fechaGeneracion = date('d/m/Y h:i A');
-    $usuario = $_SESSION['nombre_usuario'] ?? 'Usuario';
+    $usuario = \SysInescolara\helpers\Auth::name();
 
     ob_start();
     require ROOT_PATH . 'app/views/dashboard/reports_pdf.php';
@@ -170,7 +170,7 @@ function reports_checkAuth(): void
     if (session_status() === PHP_SESSION_NONE) {
         session_start();
     }
-    if (!isset($_SESSION['user_id'])) {
+    if (!\SysInescolara\helpers\Auth::check()) {
         header('Location: ' . BASE_URL . 'login');
         exit();
     }

@@ -27,7 +27,7 @@ class Location extends Database implements ReadableInterface, DeletableInterface
     {
         try {
             $sql = "SELECT id_ubicacion AS id, nombre_ubicacion, descripcion, zona, activo FROM ubicacion WHERE activo = 1 ORDER BY nombre_ubicacion ASC";
-            $stmt = $this->db->query($sql);
+            $stmt = $this->db()->query($sql);
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
         } catch (\Throwable $e) {
             error_log('Error al obtener ubicaciones: ' . $e->getMessage());
@@ -38,7 +38,7 @@ class Location extends Database implements ReadableInterface, DeletableInterface
     public function getById(int $id): ?array
     {
         try {
-            $stmt = $this->db->prepare("SELECT id_ubicacion AS id, nombre_ubicacion, descripcion, zona FROM ubicacion WHERE id_ubicacion = :id");
+            $stmt = $this->db()->prepare("SELECT id_ubicacion AS id, nombre_ubicacion, descripcion, zona FROM ubicacion WHERE id_ubicacion = :id");
             $stmt->execute([':id' => $id]);
             return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
         } catch (\Throwable $e) {
@@ -50,7 +50,7 @@ class Location extends Database implements ReadableInterface, DeletableInterface
     public function exists(int $id): bool
     {
         try {
-            $stmt = $this->db->prepare("SELECT COUNT(*) FROM ubicacion WHERE id_ubicacion = :id");
+            $stmt = $this->db()->prepare("SELECT COUNT(*) FROM ubicacion WHERE id_ubicacion = :id");
             $stmt->execute([':id' => $id]);
             return $stmt->fetchColumn() > 0;
         } catch (\Throwable $e) {
@@ -61,7 +61,7 @@ class Location extends Database implements ReadableInterface, DeletableInterface
     private function hasAssociatedLots(int $id): bool
     {
         try {
-            $stmt = $this->db->prepare("SELECT COUNT(*) FROM lote WHERE id_ubicacion = :id AND activo = 1");
+            $stmt = $this->db()->prepare("SELECT COUNT(*) FROM lote WHERE id_ubicacion = :id AND activo = 1");
             $stmt->execute([':id' => $id]);
             return $stmt->fetchColumn() > 0;
         } catch (\Throwable $e) {
@@ -76,7 +76,7 @@ class Location extends Database implements ReadableInterface, DeletableInterface
             if ($this->hasAssociatedLots($id)) {
                 throw new \Exception("No se puede desactivar la ubicación: Existen lotes vinculados en el inventario activo.");
             }
-            $stmt = $this->db->prepare("UPDATE ubicacion SET activo = 0 WHERE id_ubicacion = :id");
+            $stmt = $this->db()->prepare("UPDATE ubicacion SET activo = 0 WHERE id_ubicacion = :id");
             return $stmt->execute([':id' => $id]);
         } catch (\Throwable $e) {
             error_log('Error al desactivar ubicación: ' . $e->getMessage());
@@ -87,7 +87,7 @@ class Location extends Database implements ReadableInterface, DeletableInterface
     public function restore(int $id): bool
     {
         try {
-            $stmt = $this->db->prepare("UPDATE ubicacion SET activo = 1 WHERE id_ubicacion = :id");
+            $stmt = $this->db()->prepare("UPDATE ubicacion SET activo = 1 WHERE id_ubicacion = :id");
             return $stmt->execute([':id' => $id]);
         } catch (\Throwable $e) {
             error_log('Error al restaurar ubicación: ' . $e->getMessage());
@@ -98,7 +98,7 @@ class Location extends Database implements ReadableInterface, DeletableInterface
     public function getLastInsertId(): ?int
     {
         try {
-            return (int)$this->db->lastInsertId();
+            return (int)$this->db()->lastInsertId();
         } catch (\Throwable $e) {
             return null;
         }
@@ -112,7 +112,7 @@ class Location extends Database implements ReadableInterface, DeletableInterface
             'zona' => $zona,
         ]);
         try {
-            $stmt = $this->db->prepare("INSERT INTO ubicacion (nombre_ubicacion, descripcion, zona) VALUES (:nombre_ubicacion, :descripcion, :zona)");
+            $stmt = $this->db()->prepare("INSERT INTO ubicacion (nombre_ubicacion, descripcion, zona) VALUES (:nombre_ubicacion, :descripcion, :zona)");
             return $stmt->execute([
                 ':nombre_ubicacion' => trim($nombreUbicacion),
                 ':descripcion' => $descripcion,
@@ -135,7 +135,7 @@ class Location extends Database implements ReadableInterface, DeletableInterface
             if (!$this->exists($id)) {
                 throw new \Exception("No existe la ubicación con ID: $id");
             }
-            $stmt = $this->db->prepare("UPDATE ubicacion SET nombre_ubicacion = :nombre_ubicacion, descripcion = :descripcion, zona = :zona WHERE id_ubicacion = :id");
+            $stmt = $this->db()->prepare("UPDATE ubicacion SET nombre_ubicacion = :nombre_ubicacion, descripcion = :descripcion, zona = :zona WHERE id_ubicacion = :id");
             return $stmt->execute([
                 ':id' => $id,
                 ':nombre_ubicacion' => trim($nombreUbicacion),

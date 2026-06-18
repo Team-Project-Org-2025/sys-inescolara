@@ -47,7 +47,7 @@ class PriceCalculation extends Database implements ReadableInterface, DeletableI
                     LEFT JOIN lote l ON c.id_lote = l.id_lote
                     LEFT JOIN plantas p ON l.id_planta = p.id_planta
                     ORDER BY c.fecha_calculo DESC, c.id_calculo DESC";
-            $stmt = $this->db->query($sql);
+            $stmt = $this->db()->query($sql);
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
         } catch (\Throwable $e) {
             error_log('Error en PriceCalculation::getAll: ' . $e->getMessage());
@@ -58,7 +58,7 @@ class PriceCalculation extends Database implements ReadableInterface, DeletableI
     public function getById(int $id): ?array
     {
         try {
-            $stmt = $this->db->prepare("
+            $stmt = $this->db()->prepare("
                 SELECT c.*, l.cantidad_actual, p.nombre_comun AS planta_nombre, p.id_planta
                 FROM calculo_precio c
                 LEFT JOIN lote l ON c.id_lote = l.id_lote
@@ -76,7 +76,7 @@ class PriceCalculation extends Database implements ReadableInterface, DeletableI
 
     public function exists(int $id): bool
     {
-        $stmt = $this->db->prepare("SELECT COUNT(*) FROM calculo_precio WHERE id_calculo = :id");
+        $stmt = $this->db()->prepare("SELECT COUNT(*) FROM calculo_precio WHERE id_calculo = :id");
         $stmt->execute([':id' => $id]);
         return $stmt->fetchColumn() > 0;
     }
@@ -84,12 +84,12 @@ class PriceCalculation extends Database implements ReadableInterface, DeletableI
     public function delete(int $id): bool
     {
         try {
-            $this->db->beginTransaction();
-            $stmt = $this->db->prepare("DELETE FROM calculo_precio WHERE id_calculo = :id");
+            $this->db()->beginTransaction();
+            $stmt = $this->db()->prepare("DELETE FROM calculo_precio WHERE id_calculo = :id");
             $stmt->execute([':id' => $id]);
-            return $this->db->commit();
+            return $this->db()->commit();
         } catch (\Throwable $e) {
-            $this->db->rollBack();
+            $this->db()->rollBack();
             error_log('Error en PriceCalculation::delete: ' . $e->getMessage());
             return false;
         }
@@ -103,7 +103,7 @@ class PriceCalculation extends Database implements ReadableInterface, DeletableI
             $sql .= " AND id_calculo != :exclude_id";
             $params[':exclude_id'] = $excludeId;
         }
-        $stmt = $this->db->prepare($sql);
+        $stmt = $this->db()->prepare($sql);
         $stmt->execute($params);
         return $stmt->fetchColumn() > 0;
     }
@@ -111,7 +111,7 @@ class PriceCalculation extends Database implements ReadableInterface, DeletableI
     public function getBatchIdsWithPrices(): array
     {
         try {
-            $stmt = $this->db->query("SELECT DISTINCT id_lote FROM calculo_precio");
+            $stmt = $this->db()->query("SELECT DISTINCT id_lote FROM calculo_precio");
             return $stmt ? $stmt->fetchAll(PDO::FETCH_COLUMN) : [];
         } catch (\Throwable $e) {
             return [];
@@ -135,9 +135,9 @@ class PriceCalculation extends Database implements ReadableInterface, DeletableI
             'fecha_calculo' => $fechaCalculo,
         ]);
         try {
-            $this->db->beginTransaction();
+            $this->db()->beginTransaction();
 
-            $stmt = $this->db->prepare("
+            $stmt = $this->db()->prepare("
                 INSERT INTO calculo_precio
                     (id_lote, costo_mano_obra, costo_total_insumo,
                      porcentaje_ganancia, precio_final_sugerido,
@@ -156,11 +156,11 @@ class PriceCalculation extends Database implements ReadableInterface, DeletableI
                 ':fecha_calculo' => $fechaCalculo,
             ]);
 
-            $this->_lastInsertId = (int)$this->db->lastInsertId();
-            $this->db->commit();
+            $this->_lastInsertId = (int)$this->db()->lastInsertId();
+            $this->db()->commit();
             return true;
         } catch (\Throwable $e) {
-            if ($this->db->inTransaction()) $this->db->rollBack();
+            if ($this->db()->inTransaction()) $this->db()->rollBack();
             error_log('Error en PriceCalculation::add: ' . $e->getMessage());
             return false;
         }
@@ -186,7 +186,7 @@ class PriceCalculation extends Database implements ReadableInterface, DeletableI
         if (!$this->exists($id)) {
             throw new \Exception('No existe el cálculo de precio solicitado para modificar.');
         }
-        $stmt = $this->db->prepare("
+        $stmt = $this->db()->prepare("
             UPDATE calculo_precio
             SET id_lote = :id_lote,
                 costo_mano_obra = :costo_mano_obra,
@@ -233,7 +233,7 @@ class PriceCalculation extends Database implements ReadableInterface, DeletableI
                 $params[':categoria'] = $categoria;
             }
             $sql .= " ORDER BY l.fecha_siembra DESC";
-            $stmt = $this->db->prepare($sql);
+            $stmt = $this->db()->prepare($sql);
             $stmt->execute($params);
             $lotes = $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
 
@@ -284,7 +284,7 @@ class PriceCalculation extends Database implements ReadableInterface, DeletableI
     private function getCostoInsumosByLote(int $idLote): float
     {
         try {
-            $stmt = $this->db->prepare("
+            $stmt = $this->db()->prepare("
                 SELECT COALESCE(SUM(ci.cantidad_usada * ci.costo_unitario), 0)
                 FROM consumo_insumos ci
                 JOIN asignar_tarea a ON ci.id_asignacion = a.id_asignacion

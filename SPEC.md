@@ -30,7 +30,8 @@ Control de inventario, ventas, producción, lotes, insumos, trabajadores, tareas
 
 ### Modelos
 - Namespace: `SysInescolara\models`
-- Extienden `SysInescolara\core\Database` (que extiende PDO)
+- Extienden `SysInescolara\core\Database` (composición con PDO, no herencia)
+- Acceso a BD vía `$this->db()->prepare()` (getter protegido que retorna `PDO`)
 - Conexiones: `'default'` → `sysinescolara`, `'security'` → `SysInescolara-Seguridad`
 - Ubicación: `app/models/`
 
@@ -73,7 +74,8 @@ Tablas: usuarios, roles, permisos, rol_permisos, usuario_permisos, auditoria_log
 ## Autenticación
 - Login por `nombre_usuario` o `correo_electronico`
 - Sesión con `session_regenerate_id(true)` post-login
-- Permisos en `$_SESSION['user_permisos']`
+- Acceso a sesión únicamente vía `SysInescolara\helpers\Auth` (clase estática)
+- Métodos Auth: `id()`, `name()`, `email()`, `avatar()`, `roleId()`, `permisos()`, `check()`, `isAdmin()`, `hasPermiso()`, `set()`, `setField()`, `attempt()`, `logout()`
 - Recuperación de contraseña vía token + email (SMTP pendiente de configurar)
 
 ## Convenciones
@@ -109,6 +111,15 @@ Tablas: usuarios, roles, permisos, rol_permisos, usuario_permisos, auditoria_log
 - **scripts/ folder eliminated:** todas las migraciones fragmentadas removidas
 - **sysinescolara_definitiva.sql creado:** esquema completo con 5 tablas eliminadas, FKs reales en compra_detalle, columnas nuevas (fecha_recepcion, activo, id_insumo)
 
+### Refactor de Encapsulamiento (rama `feature/refactor-encapsulamiento`)
+- **Database.php:** `abstract class Database` ya no extiende PDO. Usa composición con `private PDO $pdo` + getter protegido `db(): PDO`. Métodos `beginTransaction()`, `commit()`, `rollback()` como públicos con verificación `inTransaction()`. Elimina fuga de métodos públicos de PDO a los modelos.
+- **32 modelos:** `$this->db->` → `$this->db()->`. Los 3 modelos con transacciones duplicadas (`Inventory`, `Merma`, `Trazabilidad`) ahora heredan de `Database`.
+- **app/helpers/Auth.php:** Clase estática que centraliza TODO el acceso a `$_SESSION['user_*']`. 0 referencias a `$_SESSION['user_*']` fuera de Auth.php después de migrar 50 archivos.
+- **Controladores migrados (8):** `LoginController`, `UserController`, `DashboardController`, `Cuentas_cobrarController`, `InventarioController`, `MermasController`, `NotificationsController`, `ReportsController`
+- **Helpers migrados (2):** `controller_helpers.php` (`checkModuleAuth`, `checkPermisoOrFail`), `sidebar.php` (`hasPermiso`)
+- **Vistas migradas (7):** `ampliacion.php`, `seed-collection.php`, `trazabilidad.php`, `reports.php`, `index.php`, `usuarios.php`, `dashboard-header.php`
+- **AuditLog.php:** `record()` migrado a `Auth::check()` + `Auth::id()`
+
 ### Pendiente (Fases 3‑6 del PLAN_MEJORAS)
 - **Fase 3 — MÓDULO VENTAS / POS:** tablas (venta, detalle_venta, crédito, cuentas_cobrar, pago_venta), flujo POS, PDF, ventas crédito/contado
 - **Fase 4 — MÓDULO COMPRAS:** migración compra_detalle a FKs reales, fecha_recepcion, validación duplicados, actualizaciones automáticas
@@ -122,6 +133,7 @@ Tablas: usuarios, roles, permisos, rol_permisos, usuario_permisos, auditoria_log
 ### Específicos
 - `app/controllers/controller_helpers.php` — centraliza validación y helper functions
 - `app/helpers/Validation.php` — helper de validación centralizado (Fase 1.1)
+- `app/helpers/Auth.php` — clase estática para acceso a sesión (Refactor Encapsulamiento)
 - `public/assets/js/utils/validation.js` — validation helper del lado del cliente (Fase 1.2)
 - `app/controllers/FrontController.php` — router de patrón MVC, patrones de rutas predefinidas
 - `app/models/Plant.php`, `DashboardData.php`, `PriceCalculation.php`, `PurchasesController.php` — fixes de la FASE 2 (Linux case‑sensitive, planta_precio_vigente removal, lastInsertId, duplicate batch validation)
@@ -135,8 +147,9 @@ Tablas: usuarios, roles, permisos, rol_permisos, usuario_permisos, auditoria_log
 ## Decisiones de Arquitectura
 
 ### Patrón General
-- **Controladores como funciones:** Cada módulo usa una función global por acción (`function index() { ... }`) en vez de clases. Elimina overhead de DI y reduce indirection.
-- **Modelos no entidad pura:** Extienden `SysInescolara\core\Database` (PDO) con 6 métodos CRUD (`getAll`, `getById`, `save`, `update`, `delete`, `exists`). Eliminan necesidad de ORM externo.
+- **Controladores como funciones:** Cada módulo usa una función global por acción (`function index() { ... }`) en vez de clases. Elimina overhead de DI y reduce indirection. El acceso a sesión se hace exclusivamente vía `Auth::*()`.
+- **Database con composición:** `Database` ya no extiende `PDO`. Usa composición (`private PDO $pdo`) y expone getter protegido `db(): PDO`. Esto evita que los modelos hereden métodos públicos de PDO (como `quote()`, `getAttribute()`) que no deberían estar expuestos.
+- **Modelos no entidad pura:** Extienden `SysInescolara\core\Database` (composición con PDO, no herencia). Acceden a PDO vía `$this->db()->`. Tienen 6 métodos CRUD (`getAll`, `getById`, `save`, `update`, `delete`, `exists`). Eliminan necesidad de ORM externo.
 - **Vista mínima:** HTML + DataTables + Bootstrap modales (sin frameworks de componente). Mantiene rendimiento ligero y máximo control sobre UI.
 - **JavaScript modular:** ES Modules (`import`, `export`) con helper centralizado (`ajax-handler.js`, `validation.js`). Evita código duplicado entre módulos.
 
@@ -146,7 +159,7 @@ Tablas: usuarios, roles, permisos, rol_permisos, usuario_permisos, auditoria_log
 - **FKs reales vs polimórficas:** `compra_detalle` migró de `tipo_item`+`id_item` a `id_insumo`/`id_herramienta`/`id_planta` separados con FKs reales. Más eficiente, más fácil de indexar y consulta.
 
 ### Patterns de Código
-- **Transacción consistente:** Operaciones multi‑tabla envuelven inserciones/actualizaciones en transacciones atómicas (`PDO::beginTransaction()` + `commit()`). Implementado en `Task.assignTaskWithConsumptions` + `Tool.recordUsageWithStateUpdate`.
+- **Transacción consistente:** Operaciones multi‑tabla envuelven inserciones/actualizaciones en transacciones atómicas (`beginTransaction()` + `commit()` de Database). Implementado en `Task.assignTaskWithConsumptions` + `Tool.recordUsageWithStateUpdate`.
 - **Validation centralizado:** Regex por tipo de campo (`cedula`, `rif`, `telefono`, `email`, `nombre`, `precio`, `codigo`, `fecha`, `direccion`). Aplica sanitización + validación en `validateAndSanitize()`.
 - **Ajuste automático de esquemas:** `bootstrapDefaults()` en cada modelo migra automáticamente las columnas de la tabla al primer acceso. Sin necesidad de migraciones manuales.
 

@@ -30,9 +30,9 @@ class User extends Database
         try {
             // Migración: agregar columna avatar si no existe
             try {
-                $stmt = $this->db->query("SHOW COLUMNS FROM usuarios LIKE 'avatar'");
+                $stmt = $this->db()->query("SHOW COLUMNS FROM usuarios LIKE 'avatar'");
                 if (!$stmt->fetch()) {
-                    $this->db->exec("ALTER TABLE usuarios ADD COLUMN avatar VARCHAR(255) DEFAULT NULL AFTER correo_electronico");
+                    $this->db()->exec("ALTER TABLE usuarios ADD COLUMN avatar VARCHAR(255) DEFAULT NULL AFTER correo_electronico");
                 }
             } catch (\Throwable $e) {
                 error_log('Error al migrar columna avatar: ' . $e->getMessage());
@@ -40,7 +40,7 @@ class User extends Database
 
             // Migración: tabla usuario_permisos para permisos individuales por usuario
             try {
-                $this->db->exec("CREATE TABLE IF NOT EXISTS usuario_permisos (
+                $this->db()->exec("CREATE TABLE IF NOT EXISTS usuario_permisos (
                     id_usuario INT NOT NULL,
                     id_permiso INT NOT NULL,
                     PRIMARY KEY (id_usuario, id_permiso),
@@ -52,14 +52,14 @@ class User extends Database
             }
 
             // Asegurar roles
-            $adminExists = (int)$this->db->query("SELECT COUNT(*) FROM roles WHERE id_rol = 1")->fetchColumn();
+            $adminExists = (int)$this->db()->query("SELECT COUNT(*) FROM roles WHERE id_rol = 1")->fetchColumn();
             if (!$adminExists) {
-                $this->db->exec("INSERT INTO roles (id_rol, nombre_rol, descripcion_rol) VALUES (1, 'Administrador', 'Acceso total al sistema')");
+                $this->db()->exec("INSERT INTO roles (id_rol, nombre_rol, descripcion_rol) VALUES (1, 'Administrador', 'Acceso total al sistema')");
             }
 
-            $trabajadorExists = (int)$this->db->query("SELECT COUNT(*) FROM roles WHERE id_rol = 2")->fetchColumn();
+            $trabajadorExists = (int)$this->db()->query("SELECT COUNT(*) FROM roles WHERE id_rol = 2")->fetchColumn();
             if (!$trabajadorExists) {
-                $this->db->exec("INSERT IGNORE INTO roles (id_rol, nombre_rol, descripcion_rol) VALUES (2, 'Trabajador', 'Acceso a inventario, plantas, clientes y ventas')");
+                $this->db()->exec("INSERT IGNORE INTO roles (id_rol, nombre_rol, descripcion_rol) VALUES (2, 'Trabajador', 'Acceso a inventario, plantas, clientes y ventas')");
             }
 
             // Asegurar permisos
@@ -128,8 +128,8 @@ class User extends Database
                 ['codigo' => 'CUENTAS_COBRAR_PAY', 'desc' => 'Registrar pagos de cuentas por cobrar'],
             ];
 
-            $stmtCheckPermiso = $this->db->prepare("SELECT COUNT(*) FROM permisos WHERE codigo_permiso = :codigo");
-            $stmtInsertPermiso = $this->db->prepare("INSERT IGNORE INTO permisos (codigo_permiso, descripcion_permiso) VALUES (:codigo, :descripcion)");
+            $stmtCheckPermiso = $this->db()->prepare("SELECT COUNT(*) FROM permisos WHERE codigo_permiso = :codigo");
+            $stmtInsertPermiso = $this->db()->prepare("INSERT IGNORE INTO permisos (codigo_permiso, descripcion_permiso) VALUES (:codigo, :descripcion)");
             foreach ($permisos as $p) {
                 $stmtCheckPermiso->execute([':codigo' => $p['codigo']]);
                 if ((int)$stmtCheckPermiso->fetchColumn() === 0) {
@@ -138,15 +138,15 @@ class User extends Database
             }
 
             // Mapa permisos -> id
-            $allPermisos = $this->db->query("SELECT id_permiso, codigo_permiso FROM permisos")->fetchAll(PDO::FETCH_ASSOC);
+            $allPermisos = $this->db()->query("SELECT id_permiso, codigo_permiso FROM permisos")->fetchAll(PDO::FETCH_ASSOC);
             $permMap = [];
             foreach ($allPermisos as $p) {
                 $permMap[$p['codigo_permiso']] = $p['id_permiso'];
             }
 
             // Asegurar rol_permisos para Administrador (rol 1) — todos
-            $stmtCheckRP = $this->db->prepare("SELECT COUNT(*) FROM rol_permisos WHERE id_rol = :rol AND id_permiso = :perm");
-            $stmtInsertRP = $this->db->prepare("INSERT IGNORE INTO rol_permisos (id_rol, id_permiso) VALUES (:rol, :perm)");
+            $stmtCheckRP = $this->db()->prepare("SELECT COUNT(*) FROM rol_permisos WHERE id_rol = :rol AND id_permiso = :perm");
+            $stmtInsertRP = $this->db()->prepare("INSERT IGNORE INTO rol_permisos (id_rol, id_permiso) VALUES (:rol, :perm)");
             foreach ($permMap as $pid) {
                 $stmtCheckRP->execute([':rol' => 1, ':perm' => $pid]);
                 if ((int)$stmtCheckRP->fetchColumn() === 0) {
@@ -166,10 +166,10 @@ class User extends Database
             }
 
             // Asegurar usuario admin por defecto si no existe
-            $usersCount = (int)$this->db->query("SELECT COUNT(*) FROM usuarios")->fetchColumn();
+            $usersCount = (int)$this->db()->query("SELECT COUNT(*) FROM usuarios")->fetchColumn();
             if ($usersCount === 0) {
                 $hash = password_hash('Admin123!', PASSWORD_DEFAULT);
-                $stmt = $this->db->prepare("
+                $stmt = $this->db()->prepare("
                     INSERT INTO usuarios
                     (id_usuario, nombre_usuario, password_hash, correo_electronico, id_rol, id_trabajador_ref, estatus, intentos_fallidos, ultimo_acceso, created_at)
                     VALUES
@@ -198,7 +198,7 @@ class User extends Database
     public function getLastInsertId(): ?int
     {
         try {
-            return (int)$this->db->lastInsertId();
+            return (int)$this->db()->lastInsertId();
         } catch (\Throwable $e) {
             return null;
         }
@@ -208,7 +208,7 @@ class User extends Database
     {
         try {
             $sql = "SELECT id_usuario, nombre_usuario, avatar, password_hash, id_rol, correo_electronico, estatus FROM usuarios WHERE nombre_usuario = :nombre_usuario OR correo_electronico = :correo_electronico";
-            $stmt = $this->db->prepare($sql);
+            $stmt = $this->db()->prepare($sql);
             $stmt->execute([
                 ':nombre_usuario' => $identificador,
                 ':correo_electronico' => $identificador,
@@ -235,7 +235,7 @@ class User extends Database
     public function verifyPassword(int $id, string $password): bool
     {
         try {
-            $stmt = $this->db->prepare("SELECT password_hash FROM usuarios WHERE id_usuario = :id");
+            $stmt = $this->db()->prepare("SELECT password_hash FROM usuarios WHERE id_usuario = :id");
             $stmt->execute([':id' => $id]);
             $row = $stmt->fetch(\PDO::FETCH_ASSOC);
             if (!$row) {
@@ -251,7 +251,7 @@ class User extends Database
     public function getUserByEmail(string $email): ?array
     {
         try {
-            $stmt = $this->db->prepare("SELECT id_usuario, nombre_usuario, correo_electronico, avatar, id_rol, estatus FROM usuarios WHERE correo_electronico = :email LIMIT 1");
+            $stmt = $this->db()->prepare("SELECT id_usuario, nombre_usuario, correo_electronico, avatar, id_rol, estatus FROM usuarios WHERE correo_electronico = :email LIMIT 1");
             $stmt->execute([':email' => $email]);
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
             return $user ? $this->normalizeUserRow($user) : null;
@@ -268,7 +268,7 @@ class User extends Database
             if ($hash === false) {
                 throw new Exception("Error al hashear la contraseña");
             }
-            $stmt = $this->db->prepare("UPDATE usuarios SET password_hash = :hash WHERE id_usuario = :id");
+            $stmt = $this->db()->prepare("UPDATE usuarios SET password_hash = :hash WHERE id_usuario = :id");
             return $stmt->execute([':hash' => $hash, ':id' => $userId]);
         } catch (\Throwable $e) {
             error_log("Error en updatePassword: " . $e->getMessage());
@@ -280,7 +280,7 @@ class User extends Database
     {
         try {
             $newHash = password_hash($plainPassword, PASSWORD_DEFAULT);
-            $stmt = $this->db->prepare("UPDATE usuarios SET password_hash = :hash WHERE id_usuario = :id");
+            $stmt = $this->db()->prepare("UPDATE usuarios SET password_hash = :hash WHERE id_usuario = :id");
             $stmt->execute([':hash' => $newHash, ':id' => $userId]);
         } catch (\Throwable $e) {
             error_log("Error actualizando hash: " . $e->getMessage());
@@ -290,7 +290,7 @@ class User extends Database
     public function getAll()
     {
         try {
-            $stmt = $this->db->query("
+            $stmt = $this->db()->query("
                 SELECT u.id_usuario, u.nombre_usuario, u.avatar, u.id_rol, r.nombre_rol, u.correo_electronico, u.estatus 
                 FROM usuarios u
                 LEFT JOIN roles r ON r.id_rol = u.id_rol
@@ -312,10 +312,10 @@ class User extends Database
     {
         try {
             if ($id !== null) {
-                $stmt = $this->db->prepare("SELECT COUNT(*) FROM usuarios WHERE id_usuario = :id");
+                $stmt = $this->db()->prepare("SELECT COUNT(*) FROM usuarios WHERE id_usuario = :id");
                 $stmt->execute([':id' => $id]);
             } elseif ($nombreUsuario !== null) {
-                $stmt = $this->db->prepare("SELECT COUNT(*) FROM usuarios WHERE nombre_usuario = :nombre_usuario");
+                $stmt = $this->db()->prepare("SELECT COUNT(*) FROM usuarios WHERE nombre_usuario = :nombre_usuario");
                 $stmt->execute([':nombre_usuario' => $nombreUsuario]);
             } else {
                 return false;
@@ -331,7 +331,7 @@ class User extends Database
     public function getById(int $id)
     {
         try {
-            $stmt = $this->db->prepare("SELECT id_usuario, nombre_usuario, avatar, id_rol, correo_electronico, estatus FROM usuarios WHERE id_usuario = :id");
+            $stmt = $this->db()->prepare("SELECT id_usuario, nombre_usuario, avatar, id_rol, correo_electronico, estatus FROM usuarios WHERE id_usuario = :id");
             $stmt->execute([':id' => $id]);
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
             return $user ? $this->normalizeUserRow($user) : null;
@@ -359,7 +359,7 @@ class User extends Database
             throw new Exception("Error al hashear la contraseña");
         }
 
-        $stmt = $this->db->prepare("
+        $stmt = $this->db()->prepare("
             INSERT INTO usuarios (nombre_usuario, password_hash, id_rol, correo_electronico, avatar)
             VALUES (:nombre_usuario, :password_hash, :id_rol, :correo_electronico, :avatar)
         ");
@@ -410,7 +410,7 @@ class User extends Database
 
         $sql .= " WHERE id_usuario = :id";
 
-        $stmt = $this->db->prepare($sql);
+        $stmt = $this->db()->prepare($sql);
         return $stmt->execute($params);
     }
 
@@ -418,7 +418,7 @@ class User extends Database
     public function delete(int $id)
     {
         try {
-            $stmt = $this->db->prepare("DELETE FROM usuarios WHERE id_usuario = :id");
+            $stmt = $this->db()->prepare("DELETE FROM usuarios WHERE id_usuario = :id");
             return $stmt->execute([':id' => $id]);
         } catch (\Throwable $e) {
             error_log("Error en delete: " . $e->getMessage());
@@ -453,7 +453,7 @@ class User extends Database
             $params[':avatar'] = $avatar;
 
             $sql .= " WHERE id_usuario = :id";
-            $stmt = $this->db->prepare($sql);
+            $stmt = $this->db()->prepare($sql);
             return $stmt->execute($params);
         } catch (\Throwable $e) {
             error_log("Error en updateProfile: " . $e->getMessage());
@@ -464,7 +464,7 @@ class User extends Database
     public function getRoles(): array
     {
         try {
-            $stmt = $this->db->query("SELECT id_rol, nombre_rol, descripcion_rol FROM roles ORDER BY id_rol ASC");
+            $stmt = $this->db()->query("SELECT id_rol, nombre_rol, descripcion_rol FROM roles ORDER BY id_rol ASC");
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (\Throwable $e) {
             error_log("Error al obtener roles: " . $e->getMessage());
@@ -475,7 +475,7 @@ class User extends Database
     public function getAllPermissions(): array
     {
         try {
-            $stmt = $this->db->query("SELECT id_permiso, codigo_permiso, descripcion_permiso FROM permisos ORDER BY codigo_permiso ASC");
+            $stmt = $this->db()->query("SELECT id_permiso, codigo_permiso, descripcion_permiso FROM permisos ORDER BY codigo_permiso ASC");
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (\Throwable $e) {
             error_log("Error al obtener todos los permisos: " . $e->getMessage());
@@ -486,7 +486,7 @@ class User extends Database
     public function getUserPermissions(int $userId): array
     {
         try {
-            $stmt = $this->db->prepare("SELECT id_permiso FROM usuario_permisos WHERE id_usuario = :uid");
+            $stmt = $this->db()->prepare("SELECT id_permiso FROM usuario_permisos WHERE id_usuario = :uid");
             $stmt->execute([':uid' => $userId]);
             return array_column($stmt->fetchAll(PDO::FETCH_ASSOC), 'id_permiso');
         } catch (\Throwable $e) {
@@ -498,18 +498,18 @@ class User extends Database
     public function setUserPermissions(int $userId, array $permisoIds): void
     {
         try {
-            $this->db->beginTransaction();
-            $stmtDel = $this->db->prepare("DELETE FROM usuario_permisos WHERE id_usuario = :uid");
+            $this->db()->beginTransaction();
+            $stmtDel = $this->db()->prepare("DELETE FROM usuario_permisos WHERE id_usuario = :uid");
             $stmtDel->execute([':uid' => $userId]);
             if (!empty($permisoIds)) {
-                $stmtIns = $this->db->prepare("INSERT INTO usuario_permisos (id_usuario, id_permiso) VALUES (:uid, :pid)");
+                $stmtIns = $this->db()->prepare("INSERT INTO usuario_permisos (id_usuario, id_permiso) VALUES (:uid, :pid)");
                 foreach ($permisoIds as $pid) {
                     $stmtIns->execute([':uid' => $userId, ':pid' => (int)$pid]);
                 }
             }
-            $this->db->commit();
+            $this->db()->commit();
         } catch (\Throwable $e) {
-            $this->db->rollBack();
+            $this->db()->rollBack();
             error_log("Error al guardar permisos de usuario: " . $e->getMessage());
         }
     }
@@ -517,7 +517,7 @@ class User extends Database
     public function getRolePermissions(int $rolId, ?int $userId = null): array
     {
         try {
-            $stmt = $this->db->prepare("
+            $stmt = $this->db()->prepare("
                 SELECT p.codigo_permiso
                 FROM rol_permisos rp
                 JOIN permisos p ON p.id_permiso = rp.id_permiso
@@ -531,7 +531,7 @@ class User extends Database
                 $userPermIds = $this->getUserPermissions($userId);
                 if (!empty($userPermIds)) {
                     $placeholders = implode(',', array_fill(0, count($userPermIds), '?'));
-                    $stmt2 = $this->db->prepare("SELECT codigo_permiso FROM permisos WHERE id_permiso IN ($placeholders)");
+                    $stmt2 = $this->db()->prepare("SELECT codigo_permiso FROM permisos WHERE id_permiso IN ($placeholders)");
                     $stmt2->execute(array_map('intval', $userPermIds));
                     $userPermisos = array_column($stmt2->fetchAll(PDO::FETCH_ASSOC), 'codigo_permiso');
                     $permisos = array_unique(array_merge($permisos, $userPermisos));

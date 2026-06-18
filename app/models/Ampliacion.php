@@ -30,7 +30,7 @@ class Ampliacion extends Database implements ReadableInterface
                     LEFT JOIN trabajadores t ON mp.id_trabajador_gestor = t.id_trabajador
                     WHERE mp.activo = 1
                     ORDER BY mp.fecha_movimiento DESC, mp.id_movimiento_planta DESC";
-            $stmt = $this->db->query($sql);
+            $stmt = $this->db()->query($sql);
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
         } catch (\Throwable $e) {
             error_log('Error en Ampliacion::getAll: ' . $e->getMessage());
@@ -41,7 +41,7 @@ class Ampliacion extends Database implements ReadableInterface
     public function getById(int $id): ?array
     {
         try {
-            $stmt = $this->db->prepare("
+            $stmt = $this->db()->prepare("
                 SELECT mp.*,
                        CONCAT(t.nombre_trabajador, ' ', t.apellido_trabajador) AS gestor_nombre,
                        COALESCE(c.nombre_cliente, '—') AS cliente_nombre
@@ -64,7 +64,7 @@ class Ampliacion extends Database implements ReadableInterface
 
     public function exists(int $id): bool
     {
-        $stmt = $this->db->prepare("SELECT COUNT(*) FROM movimiento_planta WHERE id_movimiento_planta = :id");
+        $stmt = $this->db()->prepare("SELECT COUNT(*) FROM movimiento_planta WHERE id_movimiento_planta = :id");
         $stmt->execute([':id' => $id]);
         return $stmt->fetchColumn() > 0;
     }
@@ -72,15 +72,15 @@ class Ampliacion extends Database implements ReadableInterface
     public function delete(int $id): bool
     {
         try {
-            $this->db->beginTransaction();
-            $stmt1 = $this->db->prepare("UPDATE movimiento_planta SET activo = 0 WHERE id_movimiento_planta = :id");
+            $this->db()->beginTransaction();
+            $stmt1 = $this->db()->prepare("UPDATE movimiento_planta SET activo = 0 WHERE id_movimiento_planta = :id");
             $stmt1->execute([':id' => $id]);
-            $stmt2 = $this->db->prepare("UPDATE movimiento_planta_detalle SET activo = 0 WHERE id_movimiento_planta = :id");
+            $stmt2 = $this->db()->prepare("UPDATE movimiento_planta_detalle SET activo = 0 WHERE id_movimiento_planta = :id");
             $stmt2->execute([':id' => $id]);
-            $this->db->commit();
+            $this->db()->commit();
             return true;
         } catch (\Throwable $e) {
-            if ($this->db->inTransaction()) $this->db->rollBack();
+            if ($this->db()->inTransaction()) $this->db()->rollBack();
             error_log('Error en Ampliacion::delete: ' . $e->getMessage());
             return false;
         }
@@ -89,15 +89,15 @@ class Ampliacion extends Database implements ReadableInterface
     public function restore(int $id): bool
     {
         try {
-            $this->db->beginTransaction();
-            $stmt1 = $this->db->prepare("UPDATE movimiento_planta SET activo = 1 WHERE id_movimiento_planta = :id");
+            $this->db()->beginTransaction();
+            $stmt1 = $this->db()->prepare("UPDATE movimiento_planta SET activo = 1 WHERE id_movimiento_planta = :id");
             $stmt1->execute([':id' => $id]);
-            $stmt2 = $this->db->prepare("UPDATE movimiento_planta_detalle SET activo = 1 WHERE id_movimiento_planta = :id");
+            $stmt2 = $this->db()->prepare("UPDATE movimiento_planta_detalle SET activo = 1 WHERE id_movimiento_planta = :id");
             $stmt2->execute([':id' => $id]);
-            $this->db->commit();
+            $this->db()->commit();
             return true;
         } catch (\Throwable $e) {
-            if ($this->db->inTransaction()) $this->db->rollBack();
+            if ($this->db()->inTransaction()) $this->db()->rollBack();
             error_log('Error en Ampliacion::restore: ' . $e->getMessage());
             return false;
         }
@@ -106,7 +106,7 @@ class Ampliacion extends Database implements ReadableInterface
     public function getDetails(int $id): array
     {
         try {
-            $stmt = $this->db->prepare("
+            $stmt = $this->db()->prepare("
                 SELECT d.*,
                        l.cantidad_actual AS lote_stock_actual,
                        p.nombre_comun AS planta_nombre,
@@ -141,7 +141,7 @@ class Ampliacion extends Database implements ReadableInterface
                     LEFT JOIN ubicacion u ON l.id_ubicacion = u.id_ubicacion AND u.activo = 1
                     WHERE l.activo = 1 AND l.cantidad_actual > 0
                     ORDER BY p.nombre_comun ASC, l.id_lote ASC";
-            $stmt = $this->db->query($sql);
+            $stmt = $this->db()->query($sql);
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
         } catch (\Throwable $e) {
             error_log('Error en Ampliacion::getAvailableLots: ' . $e->getMessage());
@@ -152,7 +152,7 @@ class Ampliacion extends Database implements ReadableInterface
     public function getPlants(): array
     {
         try {
-            $stmt = $this->db->query("SELECT id_planta AS id, nombre_comun, nombre_tecnico FROM plantas WHERE activo = 1 ORDER BY nombre_comun ASC");
+            $stmt = $this->db()->query("SELECT id_planta AS id, nombre_comun, nombre_tecnico FROM plantas WHERE activo = 1 ORDER BY nombre_comun ASC");
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
         } catch (\Throwable $e) {
             error_log('Error en Ampliacion::getPlants: ' . $e->getMessage());
@@ -174,19 +174,19 @@ class Ampliacion extends Database implements ReadableInterface
 
     private function createPlant(string $nombreComun, ?string $nombreTecnico, int $idEspecie): int
     {
-        $stmt = $this->db->prepare("INSERT INTO plantas (nombre_comun, nombre_tecnico, id_especie, activo) VALUES (:nombre, :tecnico, :especie, 1)");
+        $stmt = $this->db()->prepare("INSERT INTO plantas (nombre_comun, nombre_tecnico, id_especie, activo) VALUES (:nombre, :tecnico, :especie, 1)");
         $stmt->execute([
             ':nombre'  => $nombreComun,
             ':tecnico' => $nombreTecnico ?: null,
             ':especie' => $idEspecie,
         ]);
-        return (int)$this->db->lastInsertId();
+        return (int)$this->db()->lastInsertId();
     }
 
     public function getLastInsertId(): ?int
     {
         try {
-            $id = $this->db->lastInsertId();
+            $id = $this->db()->lastInsertId();
             return $id !== false ? (int)$id : null;
         } catch (\Throwable $e) {
             return null;
@@ -209,9 +209,9 @@ class Ampliacion extends Database implements ReadableInterface
         }
 
         try {
-            $this->db->beginTransaction();
+            $this->db()->beginTransaction();
 
-            $stmt = $this->db->prepare("
+            $stmt = $this->db()->prepare("
                 INSERT INTO movimiento_planta (tipo_movimiento, id_cliente, id_trabajador_gestor, fecha_movimiento, observacion)
                 VALUES ('intercambio', :id_cliente, :id_trabajador, :fecha, :observacion)
             ");
@@ -221,23 +221,23 @@ class Ampliacion extends Database implements ReadableInterface
                 ':fecha' => $fecha,
                 ':observacion' => $observacion,
             ]);
-            $movimientoId = (int)$this->db->lastInsertId();
+            $movimientoId = (int)$this->db()->lastInsertId();
 
-            $stmtDetail = $this->db->prepare("
+            $stmtDetail = $this->db()->prepare("
                 INSERT INTO movimiento_planta_detalle (id_movimiento_planta, id_lote, tipo, cantidad, precio_unitario, sub_total)
                 VALUES (:id_mov, :id_lote, :tipo, :cantidad, NULL, NULL)
             ");
 
-            $stmtUpdateLot = $this->db->prepare("UPDATE lote SET cantidad_actual = GREATEST(0, cantidad_actual - :cantidad) WHERE id_lote = :id AND cantidad_actual >= :cantidad2");
+            $stmtUpdateLot = $this->db()->prepare("UPDATE lote SET cantidad_actual = GREATEST(0, cantidad_actual - :cantidad) WHERE id_lote = :id AND cantidad_actual >= :cantidad2");
 
-            $stmtFindLot = $this->db->prepare("SELECT id_lote FROM lote WHERE id_planta = :id_planta AND id_ubicacion = :id_ubicacion AND activo = 1 LIMIT 1");
+            $stmtFindLot = $this->db()->prepare("SELECT id_lote FROM lote WHERE id_planta = :id_planta AND id_ubicacion = :id_ubicacion AND activo = 1 LIMIT 1");
 
-            $stmtCreateLot = $this->db->prepare("
+            $stmtCreateLot = $this->db()->prepare("
                 INSERT INTO lote (id_planta, id_ubicacion, fecha_siembra, cantidad_inicial, cantidad_actual, estado, origen, observacion)
                 VALUES (:id_planta, :id_ubicacion, :fecha, :cantidad_ini, :cantidad_act, 'Activo', 'Intercambio', :observacion)
             ");
 
-            $stmtIncreaseLot = $this->db->prepare("UPDATE lote SET cantidad_actual = cantidad_actual + :cantidad WHERE id_lote = :id");
+            $stmtIncreaseLot = $this->db()->prepare("UPDATE lote SET cantidad_actual = cantidad_actual + :cantidad WHERE id_lote = :id");
 
             $itemCount = 0;
 
@@ -300,7 +300,7 @@ class Ampliacion extends Database implements ReadableInterface
                         ':cantidad_act' => $cantidad,
                         ':observacion' => $observacion,
                     ]);
-                    $idLote = (int)$this->db->lastInsertId();
+                    $idLote = (int)$this->db()->lastInsertId();
                 }
 
                 $stmtDetail->execute([
@@ -313,14 +313,14 @@ class Ampliacion extends Database implements ReadableInterface
             }
 
             if ($itemCount === 0) {
-                $this->db->rollBack();
+                $this->db()->rollBack();
                 throw new \Exception('No se registró ningún item. Verifique los datos.');
             }
 
-            $this->db->commit();
+            $this->db()->commit();
             return $movimientoId;
         } catch (\Throwable $e) {
-            if ($this->db->inTransaction()) $this->db->rollBack();
+            if ($this->db()->inTransaction()) $this->db()->rollBack();
             error_log('Error en Ampliacion::registerExchange: ' . $e->getMessage());
             throw $e;
         }

@@ -1,5 +1,5 @@
 <?php
-$permisos = $_SESSION['user_permisos'] ?? [];
+$permisos = \SysInescolara\helpers\Auth::permisos();
 include_once __DIR__ . '/../common/links.php';
 ?>
 <!DOCTYPE html>

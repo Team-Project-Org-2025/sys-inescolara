@@ -33,20 +33,20 @@ class UsoHerramienta extends Database implements ReadableInterface
                 LEFT JOIN asignar_tarea a ON u.id_asignacion = a.id_asignacion
                 LEFT JOIN tareas t ON a.id_tarea = t.id_tarea
                 ORDER BY u.fecha_uso DESC";
-        $stmt = $this->db->query($sql);
+        $stmt = $this->db()->query($sql);
         return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
     }
 
     public function getById(int $id): ?array
     {
-        $stmt = $this->db->prepare("SELECT * FROM uso_herramienta WHERE id_uso = :id");
+        $stmt = $this->db()->prepare("SELECT * FROM uso_herramienta WHERE id_uso = :id");
         $stmt->execute([':id' => $id]);
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 
     public function exists(int $id): bool
     {
-        $stmt = $this->db->prepare("SELECT COUNT(*) FROM uso_herramienta WHERE id_uso = :id");
+        $stmt = $this->db()->prepare("SELECT COUNT(*) FROM uso_herramienta WHERE id_uso = :id");
         $stmt->execute([':id' => $id]);
         return $stmt->fetchColumn() > 0;
     }
@@ -58,7 +58,7 @@ class UsoHerramienta extends Database implements ReadableInterface
                 LEFT JOIN herramienta h ON u.id_herramienta = h.id_herramienta
                 WHERE u.id_asignacion = :id_asignacion
                 ORDER BY u.fecha_uso DESC";
-        $stmt = $this->db->prepare($sql);
+        $stmt = $this->db()->prepare($sql);
         $stmt->execute([':id_asignacion' => $asignacionId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -72,7 +72,7 @@ class UsoHerramienta extends Database implements ReadableInterface
             'observacion'                => $data['observacion'] ?? null,
             'estado_herramienta_post_uso'=> $data['estado_herramienta_post_uso'] ?? null,
         ]);
-        $stmt = $this->db->prepare("
+        $stmt = $this->db()->prepare("
             INSERT INTO uso_herramienta (id_asignacion, id_herramienta, fecha_uso, observacion, estado_herramienta_post_uso)
             VALUES (:id_asignacion, :id_herramienta, :fecha_uso, :observacion, :estado_herramienta_post_uso)
         ");
@@ -87,7 +87,7 @@ class UsoHerramienta extends Database implements ReadableInterface
 
     public function delete(int $id): bool
     {
-        $stmt = $this->db->prepare("DELETE FROM uso_herramienta WHERE id_uso = :id");
+        $stmt = $this->db()->prepare("DELETE FROM uso_herramienta WHERE id_uso = :id");
         return $stmt->execute([':id' => $id]);
     }
 }

@@ -30,8 +30,7 @@ function index(): void
     $employeeModel = new Employee();
     $employees = $employeeModel->getAll();
 
-    $permisos = $_SESSION['user_permisos'] ?? [];
-    $canPay = in_array('CUENTAS_COBRAR_PAY', $permisos, true);
+    $canPay = \SysInescolara\helpers\Auth::hasPermiso('CUENTAS_COBRAR_PAY');
 
     $view = ROOT_PATH . 'app/views/dashboard/cuentas-cobrar.php';
     if (!is_file($view)) {

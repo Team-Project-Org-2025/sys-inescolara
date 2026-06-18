@@ -58,17 +58,17 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
 
     protected function iniciarTransaccion(): bool
     {
-        return $this->db->beginTransaction();
+        return $this->db()->beginTransaction();
     }
 
     protected function confirmarTransaccion(): bool
     {
-        return $this->db->commit();
+        return $this->db()->commit();
     }
 
     protected function revertirTransaccion(): bool
     {
-        return $this->db->rollBack();
+        return $this->db()->rollBack();
     }
 
     // ============================================================
@@ -89,7 +89,7 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
                     LEFT JOIN proveedores p ON c.id_proveedor = p.id_proveedor
                     WHERE c.activo = 1
                     ORDER BY c.fecha_compra DESC, c.id_compra DESC";
-            $stmt = $this->db->query($sql);
+            $stmt = $this->db()->query($sql);
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
         } catch (\Throwable $e) {
             error_log('Error en Purchase::obtenerTodas: ' . $e->getMessage());
@@ -100,7 +100,7 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
     public function obtenerPorId(int $id): ?array
     {
         try {
-            $stmt = $this->db->prepare("
+            $stmt = $this->db()->prepare("
                 SELECT c.*, p.nombre_proveedor AS proveedor_nombre, p.rif_proveedor
                 FROM compra c
                 LEFT JOIN proveedores p ON c.id_proveedor = p.id_proveedor
@@ -117,7 +117,7 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
     public function obtenerDetalles(int $idCompra): array
     {
         try {
-            $stmt = $this->db->prepare("
+            $stmt = $this->db()->prepare("
                 SELECT
                     d.id_detalle, d.tipo_item, d.id_item, d.cantidad, d.costo_unitario, d.subtotal,
                     d.categoria_lote, d.id_ubicacion,
@@ -143,7 +143,7 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
 
     public function existe(int $id): bool
     {
-        $stmt = $this->db->prepare("SELECT COUNT(*) FROM compra WHERE id_compra = :id AND activo = 1");
+        $stmt = $this->db()->prepare("SELECT COUNT(*) FROM compra WHERE id_compra = :id AND activo = 1");
         $stmt->execute([':id' => $id]);
         return $stmt->fetchColumn() > 0;
     }
@@ -172,7 +172,7 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
             'total' => $total,
             'observacion' => $observacion,
         ]);
-        $stmt = $this->db->prepare("
+        $stmt = $this->db()->prepare("
             INSERT INTO compra
                 (id_proveedor, fecha_compra, tipo_comprobante, numero_comprobante,
                  subtotal, iva, total, observacion)
@@ -216,7 +216,7 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
         if (!$this->existe($id)) {
             throw new \Exception('No existe la compra solicitada para modificar.');
         }
-        $stmt = $this->db->prepare("
+        $stmt = $this->db()->prepare("
             UPDATE compra
             SET id_proveedor = :id_proveedor,
                 fecha_compra = :fecha_compra,
@@ -243,13 +243,13 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
 
     public function eliminar(int $id): bool
     {
-        $stmt = $this->db->prepare("UPDATE compra SET activo = 0 WHERE id_compra = :id");
+        $stmt = $this->db()->prepare("UPDATE compra SET activo = 0 WHERE id_compra = :id");
         return $stmt->execute([':id' => $id]);
     }
 
     public function restaurar(int $id): bool
     {
-        $stmt = $this->db->prepare("UPDATE compra SET activo = 1 WHERE id_compra = :id");
+        $stmt = $this->db()->prepare("UPDATE compra SET activo = 1 WHERE id_compra = :id");
         return $stmt->execute([':id' => $id]);
     }
 
@@ -259,7 +259,7 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
 
     public function agregarDetalle(int $idCompra, string $tipoItem, int $idItem, float $cantidad, float $costoUnitario, float $subtotal, ?string $categoriaLote = null, ?int $idUbicacion = null): bool
     {
-        $stmt = $this->db->prepare("
+        $stmt = $this->db()->prepare("
             INSERT INTO compra_detalle (id_compra, tipo_item, id_item, cantidad, costo_unitario, subtotal, categoria_lote, id_ubicacion)
             VALUES (:id_compra, :tipo_item, :id_item, :cantidad, :costo_unitario, :subtotal, :categoria_lote, :id_ubicacion)
         ");
@@ -277,7 +277,7 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
 
     public function eliminarDetalles(int $idCompra): bool
     {
-        $stmt = $this->db->prepare("UPDATE compra_detalle SET activo = 0 WHERE id_compra = :id_compra");
+        $stmt = $this->db()->prepare("UPDATE compra_detalle SET activo = 0 WHERE id_compra = :id_compra");
         return $stmt->execute([':id_compra' => $idCompra]);
     }
 
@@ -294,7 +294,7 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
         if (!$compra) {
             throw new \Exception('No existe la compra.');
         }
-        $stmt = $this->db->prepare("UPDATE compra SET estado = :estado WHERE id_compra = :id AND activo = 1");
+        $stmt = $this->db()->prepare("UPDATE compra SET estado = :estado WHERE id_compra = :id AND activo = 1");
         return $stmt->execute([':estado' => $estado, ':id' => $id]);
     }
 
@@ -307,7 +307,7 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
         if ($compra['estado'] !== 'pendiente') {
             throw new \Exception('Solo se pueden recibir compras pendientes.');
         }
-        $stmt = $this->db->prepare("UPDATE compra SET estado = 'recibida', fecha_recepcion = CURDATE() WHERE id_compra = :id AND activo = 1");
+        $stmt = $this->db()->prepare("UPDATE compra SET estado = 'recibida', fecha_recepcion = CURDATE() WHERE id_compra = :id AND activo = 1");
         return $stmt->execute([':id' => $id]);
     }
 
@@ -345,7 +345,7 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
             // Procesar cada detalle según su tipo
             foreach ($detalles as $d) {
                 if ($d['tipo_item'] === 'insumo') {
-                    $stmt = $this->db->prepare("
+                    $stmt = $this->db()->prepare("
                         UPDATE insumo
                         SET stock_actual = stock_actual + :cantidad,
                             costo_unitario_actual = :costo_unitario
@@ -360,7 +360,7 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
                 }
 
                 if ($d['tipo_item'] === 'herramienta') {
-                    $stmt = $this->db->prepare("
+                    $stmt = $this->db()->prepare("
                         UPDATE herramienta
                         SET estado = 'disponible',
                             fecha_adquisicion = COALESCE(fecha_adquisicion, CURDATE())
@@ -376,7 +376,7 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
                 $totalPlantas = (int)$g['cantidad'];
                 $costoUnitario = $totalPlantas > 0 ? round($g['costo_total'] / $totalPlantas, 2) : 0;
 
-                $stmt = $this->db->prepare("
+                $stmt = $this->db()->prepare("
                     INSERT INTO lote
                         (id_planta, id_ubicacion, fecha_siembra, cantidad_inicial, cantidad_actual,
                          estado, categoria, origen, costo_unitario, observacion)
@@ -393,9 +393,9 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
                     ':costo_unitario'  => $costoUnitario,
                     ':observacion'     => 'Ingresado por compra #' . $idCompra,
                 ]);
-                $loteId = $this->db->lastInsertId();
+                $loteId = $this->db()->lastInsertId();
 
-                $stmt2 = $this->db->prepare("UPDATE plantas SET cantidad_total = cantidad_total + :cantidad WHERE id_planta = :id_planta");
+                $stmt2 = $this->db()->prepare("UPDATE plantas SET cantidad_total = cantidad_total + :cantidad WHERE id_planta = :id_planta");
                 $stmt2->execute([':cantidad' => $totalPlantas, ':id_planta' => $g['id_item']]);
 
                 $resultados[] = ['tipo' => 'planta', 'id' => $g['id_item'], 'lote_id' => $loteId, 'nombre' => $g['nombre'], 'cantidad' => $totalPlantas, 'costo_unitario' => $costoUnitario];
@@ -412,7 +412,7 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
 
     public function obtenerUltimoId(): ?int
     {
-        $id = $this->db->lastInsertId();
+        $id = $this->db()->lastInsertId();
         return $id !== false ? (int) $id : null;
     }
 }

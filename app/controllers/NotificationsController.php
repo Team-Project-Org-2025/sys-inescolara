@@ -8,7 +8,7 @@ function get_unread(): void
 {
     try {
         $notifModel = new Notification();
-        $userId = (int)($_SESSION['user_id'] ?? 0);
+        $userId = \SysInescolara\helpers\Auth::id();
         if (!$userId) {
             jsonResponse(['success' => false, 'count' => 0]);
         }
@@ -24,7 +24,7 @@ function mark_read(): void
 {
     try {
         $id = (int)($_POST['id'] ?? 0);
-        $userId = (int)($_SESSION['user_id'] ?? 0);
+        $userId = \SysInescolara\helpers\Auth::id();
         if (!$id || !$userId) {
             jsonResponse(['success' => false, 'message' => 'ID inválido']);
         }
@@ -39,7 +39,7 @@ function mark_read(): void
 function mark_all_read(): void
 {
     try {
-        $userId = (int)($_SESSION['user_id'] ?? 0);
+        $userId = \SysInescolara\helpers\Auth::id();
         if (!$userId) {
             jsonResponse(['success' => false]);
         }
@@ -55,7 +55,7 @@ function delete_notification(): void
 {
     try {
         $id = (int)($_POST['id'] ?? 0);
-        $userId = (int)($_SESSION['user_id'] ?? 0);
+        $userId = \SysInescolara\helpers\Auth::id();
         if (!$id || !$userId) {
             jsonResponse(['success' => false, 'message' => 'ID inválido']);
         }
