@@ -15,7 +15,7 @@ class CuentaCobrar extends Database
     public function obtenerTodos(int $start = 0, int $length = 10, string $search = '', string $estadoFilter = ''): array
     {
         try {
-            $this->db->exec("SET NAMES 'utf8mb4' COLLATE 'utf8mb4_unicode_ci'");
+            $this->db()->exec("SET NAMES 'utf8mb4' COLLATE 'utf8mb4_unicode_ci'");
 
             $where = "v.activo = 1 AND v.tipo_venta = 'credito'";
             $params = [];
@@ -75,12 +75,12 @@ class CuentaCobrar extends Database
             ";
 
             $countSql = "SELECT COUNT(*) FROM ({$sql}) AS sub";
-            $countStmt = $this->db->prepare($countSql);
+            $countStmt = $this->db()->prepare($countSql);
             $countStmt->execute($params);
             $totalFiltered = (int)$countStmt->fetchColumn();
 
             $sql .= " LIMIT :lim OFFSET :off";
-            $stmt = $this->db->prepare($sql);
+            $stmt = $this->db()->prepare($sql);
             foreach ($params as $key => $val) {
                 $stmt->bindValue($key, $val);
             }
@@ -90,7 +90,7 @@ class CuentaCobrar extends Database
             $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             $totalSql = "SELECT COUNT(*) FROM venta WHERE activo = 1 AND tipo_venta = 'credito'";
-            $totalRecords = (int)$this->db->query($totalSql)->fetchColumn();
+            $totalRecords = (int)$this->db()->query($totalSql)->fetchColumn();
 
             return [
                 'data' => $data,
@@ -106,9 +106,9 @@ class CuentaCobrar extends Database
     public function obtenerPorId(int $id): ?array
     {
         try {
-            $this->db->exec("SET NAMES 'utf8mb4' COLLATE 'utf8mb4_unicode_ci'");
+            $this->db()->exec("SET NAMES 'utf8mb4' COLLATE 'utf8mb4_unicode_ci'");
 
-            $stmt = $this->db->prepare("
+            $stmt = $this->db()->prepare("
                 SELECT
                     v.*,
                     c.nombre_cliente,
@@ -140,7 +140,7 @@ class CuentaCobrar extends Database
                 return null;
             }
 
-            $stmtDet = $this->db->prepare("
+            $stmtDet = $this->db()->prepare("
                 SELECT
                     dv.*,
                     CONCAT(COALESCE(p.nombre_comun, p.nombre_tecnico), ' (Lote #', dv.id_lote, ')') AS producto
@@ -164,8 +164,8 @@ class CuentaCobrar extends Database
     public function obtenerPagos(int $idVenta): array
     {
         try {
-            $this->db->exec("SET NAMES 'utf8mb4' COLLATE 'utf8mb4_unicode_ci'");
-            $stmt = $this->db->prepare("
+            $this->db()->exec("SET NAMES 'utf8mb4' COLLATE 'utf8mb4_unicode_ci'");
+            $stmt = $this->db()->prepare("
                 SELECT
                     p.*,
                     CONCAT(t.nombre_trabajador, ' ', t.apellido_trabajador) AS cobrador
@@ -185,7 +185,7 @@ class CuentaCobrar extends Database
     public function registrarPago(int $idVenta, float $monto, string $metodo, ?string $referencia, string $fechaPago, ?string $banco, int $idTrabajador, ?string $observaciones): int
     {
         try {
-            $stmt = $this->db->prepare("
+            $stmt = $this->db()->prepare("
                 INSERT INTO pago_venta (id_venta, metodo, monto, referencia, fecha_pago, banco, id_trabajador, observaciones)
                 VALUES (:id_venta, :metodo, :monto, :referencia, :fecha_pago, :banco, :id_trabajador, :observaciones)
             ");
@@ -199,7 +199,7 @@ class CuentaCobrar extends Database
                 ':id_trabajador' => $idTrabajador,
                 ':observaciones' => $observaciones,
             ]);
-            return (int)$this->db->lastInsertId();
+            return (int)$this->db()->lastInsertId();
         } catch (\Throwable $e) {
             error_log('Error en CuentaCobrar::registrarPago: ' . $e->getMessage());
             throw $e;
@@ -209,7 +209,7 @@ class CuentaCobrar extends Database
     public function obtenerEstadisticas(): array
     {
         try {
-            $this->db->exec("SET NAMES 'utf8mb4' COLLATE 'utf8mb4_unicode_ci'");
+            $this->db()->exec("SET NAMES 'utf8mb4' COLLATE 'utf8mb4_unicode_ci'");
 
             $sql = "
                 SELECT
@@ -253,10 +253,10 @@ class CuentaCobrar extends Database
                 WHERE v.activo = 1 AND v.tipo_venta = 'credito'
             ";
 
-            $stmt = $this->db->query($sql);
+            $stmt = $this->db()->query($sql);
             $stats = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            $stmtPagosMes = $this->db->query("
+            $stmtPagosMes = $this->db()->query("
                 SELECT COALESCE(SUM(monto), 0) AS cobrado_mes
                 FROM pago_venta
                 WHERE estado_pago != 'rechazado'
@@ -284,7 +284,7 @@ class CuentaCobrar extends Database
     public function obtenerClientes(): array
     {
         try {
-            $stmt = $this->db->query("SELECT id_cliente, nombre_cliente, contacto_cliente AS contacto FROM cliente WHERE activo = 1 ORDER BY nombre_cliente ASC");
+            $stmt = $this->db()->query("SELECT id_cliente, nombre_cliente, contacto_cliente AS contacto FROM cliente WHERE activo = 1 ORDER BY nombre_cliente ASC");
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (\Throwable $e) {
             error_log('Error en CuentaCobrar::obtenerClientes: ' . $e->getMessage());
@@ -292,24 +292,24 @@ class CuentaCobrar extends Database
         }
     }
 
-    protected function iniciarTransaccion(): void
+    public function iniciarTransaccion(): void
     {
-        if (!$this->db->inTransaction()) {
-            $this->db->beginTransaction();
+        if (!$this->db()->inTransaction()) {
+            $this->db()->beginTransaction();
         }
     }
 
-    protected function confirmarTransaccion(): void
+    public function confirmarTransaccion(): void
     {
-        if ($this->db->inTransaction()) {
-            $this->db->commit();
+        if ($this->db()->inTransaction()) {
+            $this->db()->commit();
         }
     }
 
-    protected function revertirTransaccion(): void
+    public function revertirTransaccion(): void
     {
-        if ($this->db->inTransaction()) {
-            $this->db->rollBack();
+        if ($this->db()->inTransaction()) {
+            $this->db()->rollBack();
         }
     }
 }

@@ -31,7 +31,7 @@ function checkModuleAuth(): void
     if (session_status() === PHP_SESSION_NONE) {
         session_start();
     }
-    if (!isset($_SESSION['user_id'])) {
+    if (!\SysInescolara\helpers\Auth::check()) {
         if (isAjaxRequest()) {
             jsonResponse([
                 'success' => false,
@@ -46,8 +46,7 @@ function checkModuleAuth(): void
 
 function checkPermisoOrFail(string $codigo): void
 {
-    $permisos = $_SESSION['user_permisos'] ?? [];
-    if (!in_array($codigo, $permisos, true)) {
+    if (!\SysInescolara\helpers\Auth::hasPermiso($codigo)) {
         jsonResponse(['success' => false, 'message' => 'No tienes permiso para realizar esta acción.'], 403);
     }
 }

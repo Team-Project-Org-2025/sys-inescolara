@@ -29,7 +29,7 @@ class Role extends Database implements ReadableInterface, DeletableInterface
                            (SELECT COUNT(*) FROM rol_permisos rp WHERE rp.id_rol = r.id_rol) AS total_permisos
                     FROM roles r
                     ORDER BY r.id_rol ASC";
-            $stmt = $this->db->query($sql);
+            $stmt = $this->db()->query($sql);
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
         } catch (\Throwable $e) {
             error_log('Error al obtener roles: ' . $e->getMessage());
@@ -40,7 +40,7 @@ class Role extends Database implements ReadableInterface, DeletableInterface
     public function getById(int $id): ?array
     {
         try {
-            $stmt = $this->db->prepare("SELECT id_rol AS id, nombre_rol, descripcion_rol FROM roles WHERE id_rol = :id");
+            $stmt = $this->db()->prepare("SELECT id_rol AS id, nombre_rol, descripcion_rol FROM roles WHERE id_rol = :id");
             $stmt->execute([':id' => $id]);
             return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
         } catch (\Throwable $e) {
@@ -52,7 +52,7 @@ class Role extends Database implements ReadableInterface, DeletableInterface
     public function exists(int $id): bool
     {
         try {
-            $stmt = $this->db->prepare("SELECT COUNT(*) FROM roles WHERE id_rol = :id");
+            $stmt = $this->db()->prepare("SELECT COUNT(*) FROM roles WHERE id_rol = :id");
             $stmt->execute([':id' => $id]);
             return $stmt->fetchColumn() > 0;
         } catch (\Throwable $e) {
@@ -69,7 +69,7 @@ class Role extends Database implements ReadableInterface, DeletableInterface
                 $sql .= " AND id_rol != :exclude";
                 $params[':exclude'] = $excludeId;
             }
-            $stmt = $this->db->prepare($sql);
+            $stmt = $this->db()->prepare($sql);
             $stmt->execute($params);
             return $stmt->fetchColumn() > 0;
         } catch (\Throwable $e) {
@@ -80,12 +80,12 @@ class Role extends Database implements ReadableInterface, DeletableInterface
     public function delete(int $id): bool
     {
         try {
-            $stmtCheck = $this->db->prepare("SELECT COUNT(*) FROM usuarios WHERE id_rol = :id");
+            $stmtCheck = $this->db()->prepare("SELECT COUNT(*) FROM usuarios WHERE id_rol = :id");
             $stmtCheck->execute([':id' => $id]);
             if ($stmtCheck->fetchColumn() > 0) {
                 throw new \Exception('No se puede eliminar el rol: hay usuarios asignados a él.');
             }
-            $stmt = $this->db->prepare("DELETE FROM roles WHERE id_rol = :id");
+            $stmt = $this->db()->prepare("DELETE FROM roles WHERE id_rol = :id");
             return $stmt->execute([':id' => $id]);
         } catch (\Throwable $e) {
             error_log('Error al eliminar rol: ' . $e->getMessage());
@@ -96,7 +96,7 @@ class Role extends Database implements ReadableInterface, DeletableInterface
     public function getLastInsertId(): ?int
     {
         try {
-            return (int)$this->db->lastInsertId();
+            return (int)$this->db()->lastInsertId();
         } catch (\Throwable $e) {
             return null;
         }
@@ -109,20 +109,20 @@ class Role extends Database implements ReadableInterface, DeletableInterface
             'descripcion' => $descripcion,
         ]);
         try {
-            $this->db->beginTransaction();
+            $this->db()->beginTransaction();
 
-            $stmt = $this->db->prepare("INSERT INTO roles (nombre_rol, descripcion_rol) VALUES (:nombre, :descripcion)");
+            $stmt = $this->db()->prepare("INSERT INTO roles (nombre_rol, descripcion_rol) VALUES (:nombre, :descripcion)");
             $stmt->execute([':nombre' => $nombreRol, ':descripcion' => $descripcion]);
-            $newId = (int)$this->db->lastInsertId();
+            $newId = (int)$this->db()->lastInsertId();
 
             if (!empty($permisoIds)) {
                 $this->setRolePermissions($newId, $permisoIds);
             }
 
-            $this->db->commit();
+            $this->db()->commit();
             return true;
         } catch (\Throwable $e) {
-            $this->db->rollBack();
+            $this->db()->rollBack();
             error_log('Error al crear rol: ' . $e->getMessage());
             return false;
         }
@@ -135,17 +135,17 @@ class Role extends Database implements ReadableInterface, DeletableInterface
             'descripcion' => $descripcion,
         ]);
         try {
-            $this->db->beginTransaction();
+            $this->db()->beginTransaction();
 
-            $stmt = $this->db->prepare("UPDATE roles SET nombre_rol = :nombre, descripcion_rol = :descripcion WHERE id_rol = :id");
+            $stmt = $this->db()->prepare("UPDATE roles SET nombre_rol = :nombre, descripcion_rol = :descripcion WHERE id_rol = :id");
             $stmt->execute([':nombre' => $nombreRol, ':descripcion' => $descripcion, ':id' => $id]);
 
             $this->setRolePermissions($id, $permisoIds);
 
-            $this->db->commit();
+            $this->db()->commit();
             return true;
         } catch (\Throwable $e) {
-            $this->db->rollBack();
+            $this->db()->rollBack();
             error_log('Error al actualizar rol: ' . $e->getMessage());
             return false;
         }
@@ -154,7 +154,7 @@ class Role extends Database implements ReadableInterface, DeletableInterface
     public function getRolePermissions(int $roleId): array
     {
         try {
-            $stmt = $this->db->prepare("SELECT id_permiso FROM rol_permisos WHERE id_rol = :rid");
+            $stmt = $this->db()->prepare("SELECT id_permiso FROM rol_permisos WHERE id_rol = :rid");
             $stmt->execute([':rid' => $roleId]);
             return array_column($stmt->fetchAll(PDO::FETCH_ASSOC), 'id_permiso');
         } catch (\Throwable $e) {
@@ -166,11 +166,11 @@ class Role extends Database implements ReadableInterface, DeletableInterface
     private function setRolePermissions(int $roleId, array $permisoIds): void
     {
         try {
-            $stmtDel = $this->db->prepare("DELETE FROM rol_permisos WHERE id_rol = :rid");
+            $stmtDel = $this->db()->prepare("DELETE FROM rol_permisos WHERE id_rol = :rid");
             $stmtDel->execute([':rid' => $roleId]);
 
             if (!empty($permisoIds)) {
-                $stmtIns = $this->db->prepare("INSERT INTO rol_permisos (id_rol, id_permiso) VALUES (:rid, :pid)");
+                $stmtIns = $this->db()->prepare("INSERT INTO rol_permisos (id_rol, id_permiso) VALUES (:rid, :pid)");
                 foreach ($permisoIds as $pid) {
                     $stmtIns->execute([':rid' => $roleId, ':pid' => (int)$pid]);
                 }
@@ -184,7 +184,7 @@ class Role extends Database implements ReadableInterface, DeletableInterface
     public function getAllPermissions(): array
     {
         try {
-            $stmt = $this->db->query("SELECT id_permiso, codigo_permiso, descripcion_permiso FROM permisos ORDER BY codigo_permiso ASC");
+            $stmt = $this->db()->query("SELECT id_permiso, codigo_permiso, descripcion_permiso FROM permisos ORDER BY codigo_permiso ASC");
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (\Throwable $e) {
             error_log('Error al obtener permisos: ' . $e->getMessage());

@@ -10,7 +10,7 @@ function dashboardCheckAuth(): void
         session_start();
     }
 
-    if (!isset($_SESSION['user_id'])) {
+    if (!\SysInescolara\helpers\Auth::check()) {
         header('Location: ' . BASE_URL . 'login');
         exit();
     }
@@ -18,14 +18,13 @@ function dashboardCheckAuth(): void
     // Recargar permisos del usuario desde la BD (para reflejar cambios en tiempo real)
     require_once ROOT_PATH . 'vendor/autoload.php';
     $userModel = new \SysInescolara\models\User();
-    $_SESSION['user_permisos'] = $userModel->getRolePermissions((int)($_SESSION['user_rol_id'] ?? 0), (int)($_SESSION['user_id'] ?? 0));
+    \SysInescolara\helpers\Auth::setField('user_permisos', $userModel->getRolePermissions(\SysInescolara\helpers\Auth::roleId(), \SysInescolara\helpers\Auth::id()));
 }
 
 function dashboardCheckPermiso(string $codigo): void
 {
     dashboardCheckAuth();
-    $permisos = $_SESSION['user_permisos'] ?? [];
-    if (!in_array($codigo, $permisos, true)) {
+    if (!\SysInescolara\helpers\Auth::hasPermiso($codigo)) {
         http_response_code(403);
         echo '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Acceso denegado</title>';
         echo '<link rel="icon" type="image/x-icon" href="' . BASE_URL . 'public/assets/images/favicon.ico">';
@@ -89,8 +88,7 @@ function inventario(): void
     $employeeModel = new \SysInescolara\models\Employee();
     $employees = $employeeModel->getAll();
 
-    $permisos = $_SESSION['user_permisos'] ?? [];
-    $showAdjustBtn = in_array('INVENTARIO_ADJUST', $permisos, true);
+    $showAdjustBtn = \SysInescolara\helpers\Auth::hasPermiso('INVENTARIO_ADJUST');
 
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'inventario.php';
@@ -134,8 +132,7 @@ function cuentas_cobrar(): void
     $employeeModel = new \SysInescolara\models\Employee();
     $employees = $employeeModel->getAll();
 
-    $permisos = $_SESSION['user_permisos'] ?? [];
-    $canPay = in_array('CUENTAS_COBRAR_PAY', $permisos, true);
+    $canPay = \SysInescolara\helpers\Auth::hasPermiso('CUENTAS_COBRAR_PAY');
 
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'cuentas-cobrar.php';
@@ -371,7 +368,7 @@ function perfil(): void
     dashboardCheckAuth();
     require_once ROOT_PATH . 'vendor/autoload.php';
     $userModel = new \SysInescolara\models\User();
-    $userId = (int)($_SESSION['user_id'] ?? 0);
+    $userId = \SysInescolara\helpers\Auth::id();
     $user = $userModel->getById($userId);
 
     if (!$user) {
@@ -418,9 +415,9 @@ function perfil(): void
             if (!$error) {
                 $ok = $userModel->updateProfile($userId, $nombre, $email ?: null, $password ?: null, $avatar);
                 if ($ok) {
-                    $_SESSION['user_nombre'] = $nombre;
-                    $_SESSION['user_email'] = $email;
-                    $_SESSION['user_avatar'] = $avatar;
+                    \SysInescolara\helpers\Auth::setField('user_nombre', $nombre);
+                    \SysInescolara\helpers\Auth::setField('user_email', $email);
+                    \SysInescolara\helpers\Auth::setField('user_avatar', $avatar);
                     $user['nombre_usuario'] = $nombre;
                     $user['correo_electronico'] = $email;
                     $user['avatar'] = $avatar;

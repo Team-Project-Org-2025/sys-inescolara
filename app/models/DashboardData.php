@@ -36,52 +36,52 @@ class DashboardData extends Database
     {
         $stats = [];
 
-        try { $stats['total_especies'] = (int) $this->db->query("SELECT COUNT(*) FROM especie WHERE activo = 1")->fetchColumn(); } catch (\Throwable $e) { $stats['total_especies'] = 0; }
-        try { $stats['total_plantas'] = (int) $this->db->query("SELECT COUNT(*) FROM plantas WHERE activo = 1")->fetchColumn(); } catch (\Throwable $e) { $stats['total_plantas'] = 0; }
-        try { $stats['total_clientes'] = (int) $this->db->query("SELECT COUNT(*) FROM cliente WHERE activo = 1")->fetchColumn(); } catch (\Throwable $e) { $stats['total_clientes'] = 0; }
-        try { $stats['total_proveedores'] = (int) $this->db->query("SELECT COUNT(*) FROM proveedores WHERE activo = 1")->fetchColumn(); } catch (\Throwable $e) { $stats['total_proveedores'] = 0; }
-        try { $stats['total_trabajadores'] = (int) $this->db->query("SELECT COUNT(*) FROM trabajadores WHERE activo = 1")->fetchColumn(); } catch (\Throwable $e) { $stats['total_trabajadores'] = 0; }
-        try { $stats['total_lotes'] = (int) $this->db->query("SELECT COUNT(*) FROM lote WHERE activo = 1")->fetchColumn(); } catch (\Throwable $e) { $stats['total_lotes'] = 0; }
-        try { $stats['total_insumos'] = (int) $this->db->query("SELECT COUNT(*) FROM insumo WHERE activo = 1")->fetchColumn(); } catch (\Throwable $e) { $stats['total_insumos'] = 0; }
-        try { $stats['total_herramientas'] = (int) $this->db->query("SELECT COUNT(*) FROM herramienta WHERE activo = 1")->fetchColumn(); } catch (\Throwable $e) { $stats['total_herramientas'] = 0; }
-        try { $stats['total_precios_vigentes'] = (int) $this->db->query("SELECT COUNT(*) FROM calculo_precio")->fetchColumn(); } catch (\Throwable $e) { $stats['total_precios_vigentes'] = 0; }
+        try { $stats['total_especies'] = (int) $this->db()->query("SELECT COUNT(*) FROM especie WHERE activo = 1")->fetchColumn(); } catch (\Throwable $e) { $stats['total_especies'] = 0; }
+        try { $stats['total_plantas'] = (int) $this->db()->query("SELECT COUNT(*) FROM plantas WHERE activo = 1")->fetchColumn(); } catch (\Throwable $e) { $stats['total_plantas'] = 0; }
+        try { $stats['total_clientes'] = (int) $this->db()->query("SELECT COUNT(*) FROM cliente WHERE activo = 1")->fetchColumn(); } catch (\Throwable $e) { $stats['total_clientes'] = 0; }
+        try { $stats['total_proveedores'] = (int) $this->db()->query("SELECT COUNT(*) FROM proveedores WHERE activo = 1")->fetchColumn(); } catch (\Throwable $e) { $stats['total_proveedores'] = 0; }
+        try { $stats['total_trabajadores'] = (int) $this->db()->query("SELECT COUNT(*) FROM trabajadores WHERE activo = 1")->fetchColumn(); } catch (\Throwable $e) { $stats['total_trabajadores'] = 0; }
+        try { $stats['total_lotes'] = (int) $this->db()->query("SELECT COUNT(*) FROM lote WHERE activo = 1")->fetchColumn(); } catch (\Throwable $e) { $stats['total_lotes'] = 0; }
+        try { $stats['total_insumos'] = (int) $this->db()->query("SELECT COUNT(*) FROM insumo WHERE activo = 1")->fetchColumn(); } catch (\Throwable $e) { $stats['total_insumos'] = 0; }
+        try { $stats['total_herramientas'] = (int) $this->db()->query("SELECT COUNT(*) FROM herramienta WHERE activo = 1")->fetchColumn(); } catch (\Throwable $e) { $stats['total_herramientas'] = 0; }
+        try { $stats['total_precios_vigentes'] = (int) $this->db()->query("SELECT COUNT(*) FROM calculo_precio")->fetchColumn(); } catch (\Throwable $e) { $stats['total_precios_vigentes'] = 0; }
         try {
-            $stmt = $this->db->query("SELECT COUNT(*) FROM movimiento_planta WHERE tipo_movimiento = 'Venta'");
+            $stmt = $this->db()->query("SELECT COUNT(*) FROM movimiento_planta WHERE tipo_movimiento = 'Venta'");
             $stats['total_ventas'] = (int) $stmt->fetchColumn();
         } catch (\Throwable $e) { $stats['total_ventas'] = 0; }
 
-        try { $stats['total_ubicaciones'] = (int) $this->db->query("SELECT COUNT(*) FROM ubicacion WHERE activo = 1")->fetchColumn(); } catch (\Throwable $e) { $stats['total_ubicaciones'] = 0; }
-        try { $stats['total_compras'] = (int) $this->db->query("SELECT COUNT(*) FROM compra WHERE activo = 1")->fetchColumn(); } catch (\Throwable $e) { $stats['total_compras'] = 0; }
-        try { $stats['total_ornatos'] = (int) $this->db->query("SELECT COUNT(*) FROM ornatos WHERE activo = 1")->fetchColumn(); } catch (\Throwable $e) { $stats['total_ornatos'] = 0; }
+        try { $stats['total_ubicaciones'] = (int) $this->db()->query("SELECT COUNT(*) FROM ubicacion WHERE activo = 1")->fetchColumn(); } catch (\Throwable $e) { $stats['total_ubicaciones'] = 0; }
+        try { $stats['total_compras'] = (int) $this->db()->query("SELECT COUNT(*) FROM compra WHERE activo = 1")->fetchColumn(); } catch (\Throwable $e) { $stats['total_compras'] = 0; }
+        try { $stats['total_ornatos'] = (int) $this->db()->query("SELECT COUNT(*) FROM ornatos WHERE activo = 1")->fetchColumn(); } catch (\Throwable $e) { $stats['total_ornatos'] = 0; }
 
         try {
-            $stmt = $this->db->prepare("SELECT COUNT(*) FROM asignar_tarea WHERE estatus_tarea != 'completada' AND estatus_tarea != 'cancelada'");
+            $stmt = $this->db()->prepare("SELECT COUNT(*) FROM asignar_tarea WHERE estatus_tarea != 'completada' AND estatus_tarea != 'cancelada'");
             $stmt->execute();
             $stats['total_tareas_pendientes'] = (int) $stmt->fetchColumn();
         } catch (\Throwable $e) { $stats['total_tareas_pendientes'] = 0; }
 
         try {
-            $stmt = $this->db->query("SELECT COALESCE(SUM(total), 0) FROM venta WHERE activo = 1");
+            $stmt = $this->db()->query("SELECT COALESCE(SUM(total), 0) FROM venta WHERE activo = 1");
             $stats['total_ventas_bs'] = (float) $stmt->fetchColumn();
         } catch (\Throwable $e) { $stats['total_ventas_bs'] = 0; }
 
         try {
-            $stmt = $this->db->query("SELECT COALESCE(SUM(monto), 0) FROM pago_venta WHERE estado_pago != 'rechazado'");
+            $stmt = $this->db()->query("SELECT COALESCE(SUM(monto), 0) FROM pago_venta WHERE estado_pago != 'rechazado'");
             $stats['total_cobrado'] = (float) $stmt->fetchColumn();
         } catch (\Throwable $e) { $stats['total_cobrado'] = 0; }
 
         try {
-            $stmt = $this->db->query("SELECT COALESCE(SUM(total), 0) FROM compra WHERE activo = 1");
+            $stmt = $this->db()->query("SELECT COALESCE(SUM(total), 0) FROM compra WHERE activo = 1");
             $stats['total_compras_bs'] = (float) $stmt->fetchColumn();
         } catch (\Throwable $e) { $stats['total_compras_bs'] = 0; }
 
         try {
-            $stmt = $this->db->query("SELECT COUNT(*) FROM venta WHERE tipo_venta = 'credito' AND estado = 'pendiente' AND activo = 1");
+            $stmt = $this->db()->query("SELECT COUNT(*) FROM venta WHERE tipo_venta = 'credito' AND estado = 'pendiente' AND activo = 1");
             $stats['total_cuentas_cobrar'] = (int) $stmt->fetchColumn();
         } catch (\Throwable $e) { $stats['total_cuentas_cobrar'] = 0; }
 
         try {
-            $stmt = $this->db->query("SELECT COUNT(*) FROM mermas_historico WHERE activo = 1");
+            $stmt = $this->db()->query("SELECT COUNT(*) FROM mermas_historico WHERE activo = 1");
             $stats['total_mermas'] = (int) $stmt->fetchColumn();
         } catch (\Throwable $e) { $stats['total_mermas'] = 0; }
 
@@ -91,7 +91,7 @@ class DashboardData extends Database
     public function getPlantsBySpecies(): array
     {
         try {
-            return $this->db->query("
+            return $this->db()->query("
                 SELECT e.nombre_especie AS label, COUNT(p.id_planta) AS value
                 FROM especie e
                 LEFT JOIN plantas p ON p.id_especie = e.id_especie AND p.activo = 1
@@ -108,7 +108,7 @@ class DashboardData extends Database
     public function getInventorySummary(): array
     {
         try {
-            return $this->db->query("
+            return $this->db()->query("
                 SELECT
                     CASE
                         WHEN l.cantidad_actual <= 0 THEN 'Sin stock'
@@ -130,7 +130,7 @@ class DashboardData extends Database
     public function getPendingTasks(): array
     {
         try {
-            $stmt = $this->db->prepare("
+            $stmt = $this->db()->prepare("
                 SELECT at.id_asignacion, t.nombre_tarea, tr.nombre_trabajador,
                        at.fecha_asignacion, at.fecha_cumplimiento, at.estatus_tarea,
                        l.id_lote
@@ -172,7 +172,7 @@ class DashboardData extends Database
     public function getLowStockLots(int $threshold = 20): array
     {
         try {
-            $stmt = $this->db->prepare("
+            $stmt = $this->db()->prepare("
                 SELECT l.id_lote, l.cantidad_actual, l.estado, p.nombre_comun AS planta_nombre
                 FROM lote l
                 LEFT JOIN plantas p ON l.id_planta = p.id_planta AND p.activo = 1
@@ -192,7 +192,7 @@ class DashboardData extends Database
     public function getLowStockSupplies(int $threshold = 10): array
     {
         try {
-            $stmt = $this->db->prepare("
+            $stmt = $this->db()->prepare("
                 SELECT i.id_insumo, i.nombre_insumo, i.stock_actual, u.nombre_unidad_medida AS unidad_medida
                 FROM insumo i
                 LEFT JOIN unidad_medida u ON i.id_unidad_medida = u.id_unidad_medida AND u.activo = 1
@@ -230,7 +230,7 @@ class DashboardData extends Database
     private function reportPlantsBySpecies(): array
     {
         try {
-            return $this->db->query("
+            return $this->db()->query("
                 SELECT e.nombre_especie AS especie, COUNT(p.id_planta) AS total_plantas
                 FROM especie e
                 LEFT JOIN plantas p ON p.id_especie = e.id_especie AND p.activo = 1
@@ -247,7 +247,7 @@ class DashboardData extends Database
     private function reportLotsByStatus(): array
     {
         try {
-            return $this->db->query("
+            return $this->db()->query("
                 SELECT l.estado, COUNT(*) AS total_lotes, SUM(l.cantidad_actual) AS total_plantas
                 FROM lote l
                 WHERE l.activo = 1
@@ -263,7 +263,7 @@ class DashboardData extends Database
     private function reportInventorySummary(): array
     {
         try {
-            return $this->db->query("
+            return $this->db()->query("
                 SELECT 
                     CASE 
                         WHEN l.cantidad_actual <= 0 THEN 'Sin stock'
@@ -287,7 +287,7 @@ class DashboardData extends Database
     private function reportSupplyStock(): array
     {
         try {
-            return $this->db->query("
+            return $this->db()->query("
                 SELECT i.id_insumo, i.nombre_insumo, i.stock_actual, u.nombre_unidad_medida AS unidad_medida, i.costo_unitario_actual
                 FROM insumo i
                 LEFT JOIN unidad_medida u ON i.id_unidad_medida = u.id_unidad_medida AND u.activo = 1
@@ -303,7 +303,7 @@ class DashboardData extends Database
     private function reportRecentSales(): array
     {
         try {
-            return $this->db->query("
+            return $this->db()->query("
                 SELECT mp.id_movimiento_planta, c.nombre_cliente, mpd.sub_total AS monto_total, mp.fecha_movimiento AS fecha_venta
                 FROM movimiento_planta mp
                 LEFT JOIN cliente c ON mp.id_cliente = c.id_cliente AND c.activo = 1

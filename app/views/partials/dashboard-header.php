@@ -22,7 +22,7 @@
                     <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
                     <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                 </svg>
-                <span class="notification-badge" id="notifBadge" data-user-id="<?= (int)($_SESSION['user_id'] ?? 0) ?>">0</span>
+                <span class="notification-badge" id="notifBadge" data-user-id="<?= \SysInescolara\helpers\Auth::id() ?>">0</span>
             </button>
             <div class="notif-dropdown" id="notifDropdown">
                 <div class="notif-dropdown-header">
@@ -35,8 +35,8 @@
         </div>
 
         <?php
-        $dhAvatar = $_SESSION['user_avatar'] ?? null;
-        $dhName = $_SESSION['user_nombre'] ?? 'U';
+        $dhAvatar = \SysInescolara\helpers\Auth::avatar();
+        $dhName = \SysInescolara\helpers\Auth::name();
         ?>
         <div class="sidebar-user" id="userDropdownBtn" style="cursor:pointer;position:relative;">
             <div class="sidebar-user-avatar">
@@ -48,7 +48,7 @@
             </div>
             <div class="sidebar-user-info">
                 <span class="sidebar-user-name"><?= htmlspecialchars($dhName) ?></span>
-                <span class="sidebar-user-role"><?= $_SESSION['user_rol_id'] == 1 ? 'Administrador' : 'Trabajador' ?></span>
+                <span class="sidebar-user-role"><?= \SysInescolara\helpers\Auth::isAdmin() ? 'Administrador' : 'Trabajador' ?></span>
             </div>
             <svg class="dropdown-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
                 <polyline points="6 9 12 15 18 9"></polyline>

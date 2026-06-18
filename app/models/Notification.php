@@ -15,7 +15,7 @@ class Notification extends Database
     public function getUnreadCount(int $userId): int
     {
         try {
-            $stmt = $this->db->prepare("SELECT COUNT(*) FROM notificaciones WHERE id_usuario = :id AND leida = 0");
+            $stmt = $this->db()->prepare("SELECT COUNT(*) FROM notificaciones WHERE id_usuario = :id AND leida = 0");
             $stmt->execute([':id' => $userId]);
             return (int) $stmt->fetchColumn();
         } catch (\Throwable $e) {
@@ -27,7 +27,7 @@ class Notification extends Database
     public function getRecent(int $userId, int $limit = 8): array
     {
         try {
-            $stmt = $this->db->prepare("
+            $stmt = $this->db()->prepare("
                 SELECT id_notificacion, titulo, mensaje, tipo, leida, link, fecha_creacion
                 FROM notificaciones
                 WHERE id_usuario = :id AND leida = 0
@@ -48,7 +48,7 @@ class Notification extends Database
     {
         try {
             $offset = ($page - 1) * $perPage;
-            $stmt = $this->db->prepare("
+            $stmt = $this->db()->prepare("
                 SELECT SQL_CALC_FOUND_ROWS id_notificacion, titulo, mensaje, tipo, leida, link, fecha_creacion
                 FROM notificaciones
                 WHERE id_usuario = :id
@@ -60,7 +60,7 @@ class Notification extends Database
             $stmt->bindValue(':perPage', $perPage, PDO::PARAM_INT);
             $stmt->execute();
             $rows = $stmt->fetchAll();
-            $total = (int) $this->db->query("SELECT FOUND_ROWS()")->fetchColumn();
+            $total = (int) $this->db()->query("SELECT FOUND_ROWS()")->fetchColumn();
             return ['data' => $rows, 'total' => $total, 'page' => $page, 'perPage' => $perPage];
         } catch (\Throwable $e) {
             error_log('Error al obtener todas las notificaciones: ' . $e->getMessage());
@@ -71,7 +71,7 @@ class Notification extends Database
     public function markAsRead(int $notificationId, int $userId): bool
     {
         try {
-            $stmt = $this->db->prepare("UPDATE notificaciones SET leida = 1 WHERE id_notificacion = :id AND id_usuario = :uid");
+            $stmt = $this->db()->prepare("UPDATE notificaciones SET leida = 1 WHERE id_notificacion = :id AND id_usuario = :uid");
             return $stmt->execute([':id' => $notificationId, ':uid' => $userId]);
         } catch (\Throwable $e) {
             error_log('Error al marcar notificación como leída: ' . $e->getMessage());
@@ -82,7 +82,7 @@ class Notification extends Database
     public function markAllAsRead(int $userId): bool
     {
         try {
-            $stmt = $this->db->prepare("UPDATE notificaciones SET leida = 1 WHERE id_usuario = :uid AND leida = 0");
+            $stmt = $this->db()->prepare("UPDATE notificaciones SET leida = 1 WHERE id_usuario = :uid AND leida = 0");
             return $stmt->execute([':uid' => $userId]);
         } catch (\Throwable $e) {
             error_log('Error al marcar todas como leídas: ' . $e->getMessage());
@@ -93,7 +93,7 @@ class Notification extends Database
     public function create(int $userId, string $titulo, ?string $mensaje = null, string $tipo = 'info', ?string $link = null): bool
     {
         try {
-            $stmt = $this->db->prepare("
+            $stmt = $this->db()->prepare("
                 INSERT INTO notificaciones (id_usuario, titulo, mensaje, tipo, link)
                 VALUES (:uid, :titulo, :mensaje, :tipo, :link)
             ");
@@ -113,7 +113,7 @@ class Notification extends Database
     public function delete(int $notificationId, int $userId): bool
     {
         try {
-            $stmt = $this->db->prepare("DELETE FROM notificaciones WHERE id_notificacion = :id AND id_usuario = :uid");
+            $stmt = $this->db()->prepare("DELETE FROM notificaciones WHERE id_notificacion = :id AND id_usuario = :uid");
             return $stmt->execute([':id' => $notificationId, ':uid' => $userId]);
         } catch (\Throwable $e) {
             error_log('Error al eliminar notificación: ' . $e->getMessage());

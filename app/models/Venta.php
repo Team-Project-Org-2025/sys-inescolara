@@ -54,7 +54,7 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
                     LEFT JOIN trabajadores t ON v.id_trabajador = t.id_trabajador AND t.activo = 1
                     WHERE v.activo = 1
                     ORDER BY v.fecha_venta DESC, v.id_venta DESC";
-            $stmt = $this->db->prepare($sql);
+            $stmt = $this->db()->prepare($sql);
             $stmt->execute([':iva_mult' => self::IVA_MULTIPLICADOR]);
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
         } catch (\Throwable $e) {
@@ -77,7 +77,7 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
                     LEFT JOIN cliente c ON v.id_cliente = c.id_cliente
                     LEFT JOIN trabajadores t ON v.id_trabajador = t.id_trabajador
                     WHERE v.id_venta = :id";
-            $stmt = $this->db->prepare($sql);
+            $stmt = $this->db()->prepare($sql);
             $stmt->execute([':id' => $id]);
             return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
         } catch (\Throwable $e) {
@@ -107,7 +107,7 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
     public function exists(int $id): bool
     {
         try {
-            $stmt = $this->db->prepare("SELECT COUNT(*) FROM venta WHERE id_venta = :id");
+            $stmt = $this->db()->prepare("SELECT COUNT(*) FROM venta WHERE id_venta = :id");
             $stmt->execute([':id' => $id]);
             return $stmt->fetchColumn() > 0;
         } catch (\Throwable $e) {
@@ -124,14 +124,14 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
     public function cancelar(int $id): bool
     {
         try {
-            $this->db->beginTransaction();
+            $this->db()->beginTransaction();
 
             $detalles = $this->obtenerDetalles($id);
             if (empty($detalles)) {
                 throw new \Exception('No se encontraron detalles para esta venta.');
             }
 
-            $stmtStock = $this->db->prepare("UPDATE lote SET cantidad_actual = cantidad_actual + :cantidad, estado = IF(cantidad_actual + :cantidad2 > 0, 'Activo', estado) WHERE id_lote = :id_lote");
+            $stmtStock = $this->db()->prepare("UPDATE lote SET cantidad_actual = cantidad_actual + :cantidad, estado = IF(cantidad_actual + :cantidad2 > 0, 'Activo', estado) WHERE id_lote = :id_lote");
             foreach ($detalles as $det) {
                 $stmtStock->execute([
                     ':cantidad' => (int)$det['cantidad'],
@@ -140,13 +140,13 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
                 ]);
             }
 
-            $stmt = $this->db->prepare("UPDATE venta SET activo = 0, estado = 'cancelada', updated_at = NOW() WHERE id_venta = :id");
+            $stmt = $this->db()->prepare("UPDATE venta SET activo = 0, estado = 'cancelada', updated_at = NOW() WHERE id_venta = :id");
             $stmt->execute([':id' => $id]);
 
-            $this->db->commit();
+            $this->db()->commit();
             return true;
         } catch (\Throwable $e) {
-            $this->db->rollBack();
+            $this->db()->rollBack();
             error_log('Error al cancelar venta: ' . $e->getMessage());
             return false;
         }
@@ -155,13 +155,13 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
     public function restore(int $id): bool
     {
         try {
-            $this->db->beginTransaction();
+            $this->db()->beginTransaction();
 
-            $stmt = $this->db->prepare("UPDATE venta SET activo = 1, estado = 'completada', updated_at = NOW() WHERE id_venta = :id");
+            $stmt = $this->db()->prepare("UPDATE venta SET activo = 1, estado = 'completada', updated_at = NOW() WHERE id_venta = :id");
             $stmt->execute([':id' => $id]);
 
             $detalles = $this->obtenerDetalles($id);
-            $stmtStock = $this->db->prepare("UPDATE lote SET cantidad_actual = cantidad_actual - :cantidad WHERE id_lote = :id_lote");
+            $stmtStock = $this->db()->prepare("UPDATE lote SET cantidad_actual = cantidad_actual - :cantidad WHERE id_lote = :id_lote");
             foreach ($detalles as $det) {
                 $stmtStock->execute([
                     ':cantidad' => (int)$det['cantidad'],
@@ -169,10 +169,10 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
                 ]);
             }
 
-            $this->db->commit();
+            $this->db()->commit();
             return true;
         } catch (\Throwable $e) {
-            $this->db->rollBack();
+            $this->db()->rollBack();
             error_log('Error al restaurar venta: ' . $e->getMessage());
             return false;
         }
@@ -181,7 +181,7 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
     public function obtenerUltimoId(): ?int
     {
         try {
-            $stmt = $this->db->query("SELECT MAX(id_venta) FROM venta");
+            $stmt = $this->db()->query("SELECT MAX(id_venta) FROM venta");
             return (int)$stmt->fetchColumn();
         } catch (\Throwable $e) {
             return null;
@@ -192,7 +192,7 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
     {
         try {
             $fecha = date('Ymd');
-            $stmt = $this->db->prepare("SELECT MAX(CAST(SUBSTRING_INDEX(referencia, '-', -1) AS UNSIGNED)) FROM venta WHERE referencia LIKE :patron");
+            $stmt = $this->db()->prepare("SELECT MAX(CAST(SUBSTRING_INDEX(referencia, '-', -1) AS UNSIGNED)) FROM venta WHERE referencia LIKE :patron");
             $stmt->execute([':patron' => "VEN-{$fecha}-%"]);
             $maxNum = (int)$stmt->fetchColumn();
             return sprintf('VEN-%s-%03d', $fecha, $maxNum + 1);
@@ -211,7 +211,7 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
             'observaciones' => $datos['observaciones'] ?? null,
         ]);
         try {
-            $this->db->beginTransaction();
+            $this->db()->beginTransaction();
 
             $referencia = $this->generarReferencia();
 
@@ -222,7 +222,7 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
                 $fechaVencimiento = date('Y-m-d', strtotime($fechaBase . ' +30 days'));
             }
 
-            $stmt = $this->db->prepare("INSERT INTO venta
+            $stmt = $this->db()->prepare("INSERT INTO venta
                 (referencia, id_cliente, id_trabajador, tipo_venta, estado, iva_porcentaje, fecha_venta, fecha_vencimiento, observaciones)
                 VALUES (:referencia, :id_cliente, :id_trabajador, :tipo_venta, :estado, :iva_porcentaje, :fecha_venta, :fecha_vencimiento, :observaciones)");
 
@@ -238,7 +238,7 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
                 ':observaciones'    => $datos['observaciones'] ?? null,
             ]);
 
-            $ventaId = (int)$this->db->lastInsertId();
+            $ventaId = (int)$this->db()->lastInsertId();
 
             $this->agregarDetalles($ventaId, $datos['productos']);
 
@@ -246,10 +246,10 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
                 $this->agregarPagos($ventaId, $datos['pagos'], $datos['tipo_venta'] ?? 'contado');
             }
 
-            $this->db->commit();
+            $this->db()->commit();
             return $ventaId;
         } catch (\Throwable $e) {
-            $this->db->rollBack();
+            $this->db()->rollBack();
             error_log('Error al agregar venta: ' . $e->getMessage());
             throw $e;
         }
@@ -257,11 +257,11 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
 
     private function agregarDetalles(int $idVenta, array $productos): void
     {
-        $stmtDet = $this->db->prepare("INSERT INTO detalle_venta
+        $stmtDet = $this->db()->prepare("INSERT INTO detalle_venta
             (id_venta, id_lote, cantidad, precio_unitario)
             VALUES (:id_venta, :id_lote, :cantidad, :precio_unitario)");
 
-        $stmtStock = $this->db->prepare("UPDATE lote SET
+        $stmtStock = $this->db()->prepare("UPDATE lote SET
             cantidad_actual = cantidad_actual - :cantidad,
             estado = IF(cantidad_actual - :cantidad2 <= 0, 'Agotado', estado)
             WHERE id_lote = :id_lote");
@@ -270,7 +270,7 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
             $idLote = (int)($item['id_lote'] ?? 0);
             $cantidad = (int)($item['cantidad'] ?? 0);
 
-            $stmtCheck = $this->db->prepare("SELECT cantidad_actual FROM lote WHERE id_lote = :id_lote AND activo = 1");
+            $stmtCheck = $this->db()->prepare("SELECT cantidad_actual FROM lote WHERE id_lote = :id_lote AND activo = 1");
             $stmtCheck->execute([':id_lote' => $idLote]);
             $lote = $stmtCheck->fetch(PDO::FETCH_ASSOC);
 
@@ -306,7 +306,7 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
         }
 
         $totalPagos = 0;
-        $stmtPago = $this->db->prepare("INSERT INTO pago_venta
+        $stmtPago = $this->db()->prepare("INSERT INTO pago_venta
             (id_venta, metodo, monto, referencia)
             VALUES (:id_venta, :metodo, :monto, :referencia)");
 
@@ -330,7 +330,7 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
     public function obtenerDetalles(int $idVenta): array
     {
         try {
-            $stmt = $this->db->prepare("SELECT
+            $stmt = $this->db()->prepare("SELECT
                                             dv.id_detalle_venta,
                                             dv.id_venta,
                                             dv.id_lote,
@@ -357,7 +357,7 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
     public function obtenerPagos(int $idVenta): array
     {
         try {
-            $stmt = $this->db->prepare("SELECT * FROM pago_venta WHERE id_venta = :id_venta ORDER BY created_at ASC");
+            $stmt = $this->db()->prepare("SELECT * FROM pago_venta WHERE id_venta = :id_venta ORDER BY created_at ASC");
             $stmt->execute([':id_venta' => $idVenta]);
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
         } catch (\Throwable $e) {
@@ -369,7 +369,7 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
     public function obtenerLotesDisponibles(string $query): array
     {
         try {
-            $stmt = $this->db->prepare("SELECT
+            $stmt = $this->db()->prepare("SELECT
                                             l.id_lote,
                                             l.cantidad_actual,
                                             l.estado,
@@ -397,7 +397,7 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
     public function buscarClientes(string $query): array
     {
         try {
-            $stmt = $this->db->prepare("SELECT
+            $stmt = $this->db()->prepare("SELECT
                                             id_cliente,
                                             nombre_cliente,
                                             contacto_cliente
@@ -418,7 +418,7 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
     public function obtenerTrabajadoresActivos(): array
     {
         try {
-            $stmt = $this->db->query("SELECT id_trabajador, nombre_trabajador, apellido_trabajador, cedula_trabajador FROM trabajadores WHERE activo = 1 ORDER BY nombre_trabajador ASC");
+            $stmt = $this->db()->query("SELECT id_trabajador, nombre_trabajador, apellido_trabajador, cedula_trabajador FROM trabajadores WHERE activo = 1 ORDER BY nombre_trabajador ASC");
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
         } catch (\Throwable $e) {
             error_log('Error al obtener trabajadores: ' . $e->getMessage());

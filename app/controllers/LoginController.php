@@ -44,7 +44,7 @@ function checkAuth()
         session_start();
     }
 
-    if (!isset($_SESSION['user_id'])) {
+    if (!\SysInescolara\helpers\Auth::check()) {
         if (isAjaxRequest()) {
             jsonResponse(['success' => false, 'message' => 'No autorizado', 'redirect' => BASE_URL . 'login'], 401);
         }
@@ -56,7 +56,7 @@ function checkAuth()
 
 function show()
 {
-    if (isset($_SESSION['user_id'])) {
+    if (\SysInescolara\helpers\Auth::check()) {
         header('Location: ' . BASE_URL . 'dashboard');
         exit();
     }
@@ -121,12 +121,14 @@ function login()
     if ($user) {
         session_regenerate_id(true);
         $userId = $user['id'] ?? null;
-        $_SESSION['user_id'] = $userId;
-        $_SESSION['user_nombre'] = $user['nombre_usuario'] ?? null;
-        $_SESSION['user_email'] = $user['correo_electronico'] ?? null;
-        $_SESSION['user_avatar'] = $user['avatar'] ?? null;
-        $_SESSION['user_rol_id'] = $user['rol_id'] ?? null;
-        $_SESSION['user_permisos'] = $userModel->getRolePermissions((int)($user['rol_id'] ?? 0), (int)($user['id'] ?? 0));
+        \SysInescolara\helpers\Auth::set([
+            'user_id' => $userId,
+            'user_nombre' => $user['nombre_usuario'] ?? null,
+            'user_email' => $user['correo_electronico'] ?? null,
+            'user_avatar' => $user['avatar'] ?? null,
+            'user_rol_id' => $user['rol_id'] ?? null,
+            'user_permisos' => $userModel->getRolePermissions((int)($user['rol_id'] ?? 0), (int)($user['id'] ?? 0)),
+        ]);
 
         AuditLog::record('LOGIN', 'usuarios', $userId, null, [
             'nombre_usuario' => $user['nombre_usuario'] ?? null,
@@ -160,13 +162,12 @@ function logout()
         session_start();
     }
 
-    $userId = (int)($_SESSION['user_id'] ?? 0);
+    $userId = \SysInescolara\helpers\Auth::id();
     if ($userId > 0) {
         AuditLog::record('LOGOUT', 'usuarios', $userId, null, null);
     }
 
-    session_unset();
-    session_destroy();
+    \SysInescolara\helpers\Auth::logout();
 
     header('Location: ' . BASE_URL . 'login');
     exit();
@@ -185,13 +186,12 @@ function logout_ajax()
         session_start();
     }
 
-    $userId = (int)($_SESSION['user_id'] ?? 0);
+    $userId = \SysInescolara\helpers\Auth::id();
     if ($userId > 0) {
         AuditLog::record('LOGOUT', 'usuarios', $userId, null, null);
     }
 
-    session_unset();
-    session_destroy();
+    \SysInescolara\helpers\Auth::logout();
 
     jsonResponse([
         'success' => true,
@@ -207,14 +207,12 @@ function check_session()
         exit();
     }
 
-    $active = isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
-
     jsonResponse([
-        'active' => $active,
-        'user_id' => $_SESSION['user_id'] ?? null,
-        'user_email' => $_SESSION['user_email'] ?? null,
-        'user_nombre' => $_SESSION['user_nombre'] ?? null,
-        'user_avatar' => $_SESSION['user_avatar'] ?? null,
-        'user_rol_id' => $_SESSION['user_rol_id'] ?? null
+        'active' => \SysInescolara\helpers\Auth::check(),
+        'user_id' => \SysInescolara\helpers\Auth::id(),
+        'user_email' => \SysInescolara\helpers\Auth::email(),
+        'user_nombre' => \SysInescolara\helpers\Auth::name(),
+        'user_avatar' => \SysInescolara\helpers\Auth::avatar(),
+        'user_rol_id' => \SysInescolara\helpers\Auth::roleId()
     ]);
 }

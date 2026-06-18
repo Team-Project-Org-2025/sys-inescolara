@@ -54,17 +54,17 @@ class CuentaPagar extends Database implements ReadableInterface, DeletableInterf
 
     protected function iniciarTransaccion(): bool
     {
-        return $this->db->beginTransaction();
+        return $this->db()->beginTransaction();
     }
 
     protected function confirmarTransaccion(): bool
     {
-        return $this->db->commit();
+        return $this->db()->commit();
     }
 
     protected function revertirTransaccion(): bool
     {
-        return $this->db->rollBack();
+        return $this->db()->rollBack();
     }
 
     // ============================================================
@@ -86,7 +86,7 @@ class CuentaPagar extends Database implements ReadableInterface, DeletableInterf
                     LEFT JOIN proveedores p ON c.id_proveedor = p.id_proveedor
                     WHERE cp.activo = 1
                     ORDER BY cp.created_at DESC";
-            $stmt = $this->db->query($sql);
+            $stmt = $this->db()->query($sql);
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
         } catch (\Throwable $e) {
             error_log('Error en CuentaPagar::obtenerTodas: ' . $e->getMessage());
@@ -97,7 +97,7 @@ class CuentaPagar extends Database implements ReadableInterface, DeletableInterf
     public function obtenerPorId(int $id): ?array
     {
         try {
-            $stmt = $this->db->prepare("
+            $stmt = $this->db()->prepare("
                 SELECT cp.*, c.fecha_compra, c.total AS compra_total,
                        p.nombre_proveedor, p.rif_proveedor
                 FROM cuentas_pagar cp
@@ -116,7 +116,7 @@ class CuentaPagar extends Database implements ReadableInterface, DeletableInterf
     public function obtenerPorCompra(int $idCompra): ?array
     {
         try {
-            $stmt = $this->db->prepare("
+            $stmt = $this->db()->prepare("
                 SELECT cp.*
                 FROM cuentas_pagar cp
                 WHERE cp.id_compra = :id_compra AND cp.activo = 1
@@ -133,7 +133,7 @@ class CuentaPagar extends Database implements ReadableInterface, DeletableInterf
 
     public function existe(int $id): bool
     {
-        $stmt = $this->db->prepare("SELECT COUNT(*) FROM cuentas_pagar WHERE id_cuenta_pagar = :id AND activo = 1");
+        $stmt = $this->db()->prepare("SELECT COUNT(*) FROM cuentas_pagar WHERE id_cuenta_pagar = :id AND activo = 1");
         $stmt->execute([':id' => $id]);
         return $stmt->fetchColumn() > 0;
     }
@@ -141,7 +141,7 @@ class CuentaPagar extends Database implements ReadableInterface, DeletableInterf
     public function obtenerPagos(int $idCuentaPagar): array
     {
         try {
-            $stmt = $this->db->prepare("
+            $stmt = $this->db()->prepare("
                 SELECT *
                 FROM pago_compra
                 WHERE id_cuenta_pagar = :id_cuenta_pagar AND activo = 1
@@ -161,19 +161,19 @@ class CuentaPagar extends Database implements ReadableInterface, DeletableInterf
 
     public function eliminar(int $id): bool
     {
-        $stmt = $this->db->prepare("UPDATE cuentas_pagar SET activo = 0 WHERE id_cuenta_pagar = :id");
+        $stmt = $this->db()->prepare("UPDATE cuentas_pagar SET activo = 0 WHERE id_cuenta_pagar = :id");
         return $stmt->execute([':id' => $id]);
     }
 
     public function restaurar(int $id): bool
     {
-        $stmt = $this->db->prepare("UPDATE cuentas_pagar SET activo = 1 WHERE id_cuenta_pagar = :id");
+        $stmt = $this->db()->prepare("UPDATE cuentas_pagar SET activo = 1 WHERE id_cuenta_pagar = :id");
         return $stmt->execute([':id' => $id]);
     }
 
     public function obtenerUltimoId(): ?int
     {
-        $id = $this->db->lastInsertId();
+        $id = $this->db()->lastInsertId();
         return $id !== false ? (int) $id : null;
     }
 
@@ -189,7 +189,7 @@ class CuentaPagar extends Database implements ReadableInterface, DeletableInterf
             'fecha_vencimiento' => $fechaVencimiento,
             'observacion' => $observacion,
         ]);
-        $stmt = $this->db->prepare("
+        $stmt = $this->db()->prepare("
             INSERT INTO cuentas_pagar (id_compra, monto_total, saldo_pendiente, fecha_vencimiento, observacion)
             VALUES (:id_compra, :monto_total, :saldo_pendiente, :fecha_vencimiento, :observacion)
         ");
@@ -204,7 +204,7 @@ class CuentaPagar extends Database implements ReadableInterface, DeletableInterf
 
     private function actualizarSaldo(int $idCuentaPagar): bool
     {
-        $stmt = $this->db->prepare("
+        $stmt = $this->db()->prepare("
             UPDATE cuentas_pagar cp
             SET cp.saldo_pendiente = cp.monto_total - (
                 SELECT COALESCE(SUM(pg.monto), 0)
@@ -218,7 +218,7 @@ class CuentaPagar extends Database implements ReadableInterface, DeletableInterf
         $stmt->execute([':id_cuenta_pagar' => $idCuentaPagar]);
 
         // Actualizar estado según saldo
-        $stmt2 = $this->db->prepare("
+        $stmt2 = $this->db()->prepare("
             UPDATE cuentas_pagar cp
             SET cp.estado = CASE
                 WHEN cp.saldo_pendiente <= 0 THEN 'pagada'
@@ -232,7 +232,7 @@ class CuentaPagar extends Database implements ReadableInterface, DeletableInterf
 
     private function actualizarEstadoCompra(int $idCompra): void
     {
-        $stmt = $this->db->prepare("
+        $stmt = $this->db()->prepare("
             UPDATE compra c
             SET c.estado = CASE
                 WHEN (
@@ -269,7 +269,7 @@ class CuentaPagar extends Database implements ReadableInterface, DeletableInterf
 
         $this->iniciarTransaccion();
         try {
-            $stmt = $this->db->prepare("
+            $stmt = $this->db()->prepare("
                 INSERT INTO pago_compra (id_cuenta_pagar, monto, tipo_pago, referencia, fecha_pago, observacion)
                 VALUES (:id_cuenta_pagar, :monto, :tipo_pago, :referencia, :fecha_pago, :observacion)
             ");
@@ -295,11 +295,11 @@ class CuentaPagar extends Database implements ReadableInterface, DeletableInterf
 
     public function anularPago(int $idPagoCompra): bool
     {
-        $stmt = $this->db->prepare("UPDATE pago_compra SET estado = 'anulado', activo = 0 WHERE id_pago_compra = :id_pago_compra AND activo = 1");
+        $stmt = $this->db()->prepare("UPDATE pago_compra SET estado = 'anulado', activo = 0 WHERE id_pago_compra = :id_pago_compra AND activo = 1");
         $stmt->execute([':id_pago_compra' => $idPagoCompra]);
 
         // Obtener cuenta asociada
-        $stmt2 = $this->db->prepare("SELECT id_cuenta_pagar FROM pago_compra WHERE id_pago_compra = :id_pago_compra");
+        $stmt2 = $this->db()->prepare("SELECT id_cuenta_pagar FROM pago_compra WHERE id_pago_compra = :id_pago_compra");
         $stmt2->execute([':id_pago_compra' => $idPagoCompra]);
         $row = $stmt2->fetch(PDO::FETCH_ASSOC);
 

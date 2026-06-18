@@ -29,7 +29,7 @@ class Employee extends Database implements ReadableInterface, DeletableInterface
     {
         try {
             $sql = "SELECT id_trabajador AS id, nombre_trabajador, apellido_trabajador, cedula_trabajador, telefono_trabajador, cargo, activo FROM trabajadores WHERE activo = 1 ORDER BY nombre_trabajador ASC";
-            $stmt = $this->db->query($sql);
+            $stmt = $this->db()->query($sql);
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
         } catch (\Throwable $e) {
             error_log('Error al obtener trabajadores: ' . $e->getMessage());
@@ -39,34 +39,34 @@ class Employee extends Database implements ReadableInterface, DeletableInterface
 
     public function getById(int $id): ?array
     {
-        $stmt = $this->db->prepare("SELECT * FROM trabajadores WHERE id_trabajador = :id");
+        $stmt = $this->db()->prepare("SELECT * FROM trabajadores WHERE id_trabajador = :id");
         $stmt->execute([':id' => $id]);
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 
     public function exists(int $id): bool
     {
-        $stmt = $this->db->prepare("SELECT COUNT(*) FROM trabajadores WHERE id_trabajador = :id");
+        $stmt = $this->db()->prepare("SELECT COUNT(*) FROM trabajadores WHERE id_trabajador = :id");
         $stmt->execute([':id' => $id]);
         return $stmt->fetchColumn() > 0;
     }
 
     public function delete(int $id): bool
     {
-        $stmt = $this->db->prepare("UPDATE trabajadores SET activo = 0 WHERE id_trabajador = :id");
+        $stmt = $this->db()->prepare("UPDATE trabajadores SET activo = 0 WHERE id_trabajador = :id");
         return $stmt->execute([':id' => $id]);
     }
 
     public function restore(int $id): bool
     {
-        $stmt = $this->db->prepare("UPDATE trabajadores SET activo = 1 WHERE id_trabajador = :id");
+        $stmt = $this->db()->prepare("UPDATE trabajadores SET activo = 1 WHERE id_trabajador = :id");
         return $stmt->execute([':id' => $id]);
     }
 
     public function getLastInsertId(): ?int
     {
         try {
-            return (int)$this->db->lastInsertId();
+            return (int)$this->db()->lastInsertId();
         } catch (\Throwable $e) {
             return null;
         }
@@ -81,7 +81,7 @@ class Employee extends Database implements ReadableInterface, DeletableInterface
             'telefono_trabajador' => $telefonoTrabajador,
             'cargo' => $cargo,
         ]);
-        $stmt = $this->db->prepare("INSERT INTO trabajadores (nombre_trabajador, apellido_trabajador, cedula_trabajador, telefono_trabajador, cargo, activo) VALUES (:nombre_trabajador, :apellido_trabajador, :cedula_trabajador, :telefono_trabajador, :cargo, :activo)");
+        $stmt = $this->db()->prepare("INSERT INTO trabajadores (nombre_trabajador, apellido_trabajador, cedula_trabajador, telefono_trabajador, cargo, activo) VALUES (:nombre_trabajador, :apellido_trabajador, :cedula_trabajador, :telefono_trabajador, :cargo, :activo)");
         return $stmt->execute([
             ':nombre_trabajador' => $nombreTrabajador,
             ':apellido_trabajador' => $apellidoTrabajador,
@@ -104,7 +104,7 @@ class Employee extends Database implements ReadableInterface, DeletableInterface
         if (!$this->exists($id)) {
             throw new \Exception("No existe el trabajador con ID: $id");
         }
-        $stmt = $this->db->prepare("UPDATE trabajadores SET nombre_trabajador = :nombre_trabajador, apellido_trabajador = :apellido_trabajador, cedula_trabajador = :cedula_trabajador, telefono_trabajador = :telefono_trabajador, cargo = :cargo, activo = :activo WHERE id_trabajador = :id");
+        $stmt = $this->db()->prepare("UPDATE trabajadores SET nombre_trabajador = :nombre_trabajador, apellido_trabajador = :apellido_trabajador, cedula_trabajador = :cedula_trabajador, telefono_trabajador = :telefono_trabajador, cargo = :cargo, activo = :activo WHERE id_trabajador = :id");
         return $stmt->execute([
             ':id' => $id,
             ':nombre_trabajador' => $nombreTrabajador,

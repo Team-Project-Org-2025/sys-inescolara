@@ -222,8 +222,8 @@ function renderPermisosChecklist(array $modulos, array $codigoToId): void
 
     <script src="<?= BASE_URL ?>public/assets/js/dashboard/notifications.js"></script>
     <?= $scripts_links ?>
-    <input type="hidden" id="currentUserId" value="<?= (int)($_SESSION['user_id'] ?? 0) ?>">
-    <input type="hidden" id="currentUserRole" value="<?= (int)($_SESSION['user_rol_id'] ?? 0) ?>">
+    <input type="hidden" id="currentUserId" value="<?= \SysInescolara\helpers\Auth::id() ?>">
+    <input type="hidden" id="currentUserRole" value="<?= \SysInescolara\helpers\Auth::roleId() ?>">
     <script type="module" src="<?= BASE_URL ?>public/assets/js/dashboard/usuarios.js"></script>
 </body>
 </html>

@@ -29,7 +29,7 @@ class Tool extends Database implements ReadableInterface, DeletableInterface
     public function getAll(): array
     {
         try {
-            $stmt = $this->db->query("
+            $stmt = $this->db()->query("
                 SELECT id_herramienta AS id, nombre_herramienta, tipo, estado,
                        fecha_adquisicion, fecha_ultimo_mantenimiento, observacion, activo
                 FROM herramienta
@@ -46,7 +46,7 @@ class Tool extends Database implements ReadableInterface, DeletableInterface
     public function getById(int $id): ?array
     {
         try {
-            $stmt = $this->db->prepare("
+            $stmt = $this->db()->prepare("
                 SELECT id_herramienta AS id, nombre_herramienta, tipo, estado,
                        fecha_adquisicion, fecha_ultimo_mantenimiento, observacion
                 FROM herramienta
@@ -62,7 +62,7 @@ class Tool extends Database implements ReadableInterface, DeletableInterface
 
     public function exists(int $id): bool
     {
-        $stmt = $this->db->prepare("SELECT COUNT(*) FROM herramienta WHERE id_herramienta = :id");
+        $stmt = $this->db()->prepare("SELECT COUNT(*) FROM herramienta WHERE id_herramienta = :id");
         $stmt->execute([':id' => $id]);
         return $stmt->fetchColumn() > 0;
     }
@@ -77,7 +77,7 @@ class Tool extends Database implements ReadableInterface, DeletableInterface
             'fecha_ultimo_mantenimiento' => $fechaUltimoMantenimiento,
             'observacion' => $observacion,
         ]);
-        $stmt = $this->db->prepare("
+        $stmt = $this->db()->prepare("
             INSERT INTO herramienta (nombre_herramienta, tipo, estado, fecha_adquisicion, fecha_ultimo_mantenimiento, observacion)
             VALUES (:nombre, :tipo, :estado, :fecha_adquisicion, :fecha_ultimo_mantenimiento, :observacion)
         ");
@@ -104,7 +104,7 @@ class Tool extends Database implements ReadableInterface, DeletableInterface
         if (!$this->exists($id)) {
             throw new \Exception('No existe la herramienta solicitada para modificar.');
         }
-        $stmt = $this->db->prepare("
+        $stmt = $this->db()->prepare("
             UPDATE herramienta
             SET nombre_herramienta = :nombre,
                 tipo = :tipo,
@@ -127,19 +127,19 @@ class Tool extends Database implements ReadableInterface, DeletableInterface
 
     public function delete(int $id): bool
     {
-        $stmt = $this->db->prepare("UPDATE herramienta SET activo = 0 WHERE id_herramienta = :id");
+        $stmt = $this->db()->prepare("UPDATE herramienta SET activo = 0 WHERE id_herramienta = :id");
         return $stmt->execute([':id' => $id]);
     }
 
     public function restore(int $id): bool
     {
-        $stmt = $this->db->prepare("UPDATE herramienta SET activo = 1 WHERE id_herramienta = :id");
+        $stmt = $this->db()->prepare("UPDATE herramienta SET activo = 1 WHERE id_herramienta = :id");
         return $stmt->execute([':id' => $id]);
     }
 
     public function getLastInsertId(): ?int
     {
-        $id = $this->db->lastInsertId();
+        $id = $this->db()->lastInsertId();
         return $id !== false ? (int) $id : null;
     }
 
@@ -147,9 +147,9 @@ class Tool extends Database implements ReadableInterface, DeletableInterface
 
     public function recordUsageWithStateUpdate(array $usageData): int
     {
-        $this->db->beginTransaction();
+        $this->db()->beginTransaction();
         try {
-            $stmt = $this->db->prepare("
+            $stmt = $this->db()->prepare("
                 INSERT INTO uso_herramienta (id_asignacion, id_herramienta, fecha_uso, observacion, estado_herramienta_post_uso)
                 VALUES (:id_asignacion, :id_herramienta, :fecha_uso, :observacion, :estado_herramienta_post_uso)
             ");
@@ -160,18 +160,18 @@ class Tool extends Database implements ReadableInterface, DeletableInterface
                 ':observacion'              => $usageData['observacion'] ?? null,
                 ':estado_herramienta_post_uso' => $usageData['estado_herramienta_post_uso'] ?? 'ok',
             ]);
-            $usoId = (int)$this->db->lastInsertId();
+            $usoId = (int)$this->db()->lastInsertId();
 
-            $stmt = $this->db->prepare("UPDATE herramienta SET estado = :estado WHERE id_herramienta = :id");
+            $stmt = $this->db()->prepare("UPDATE herramienta SET estado = :estado WHERE id_herramienta = :id");
             $stmt->execute([
                 ':estado' => $usageData['estado_herramienta_post_uso'] ?? 'ok',
                 ':id'     => $usageData['id_herramienta'],
             ]);
 
-            $this->db->commit();
+            $this->db()->commit();
             return $usoId;
         } catch (\Exception $e) {
-            $this->db->rollBack();
+            $this->db()->rollBack();
             throw $e;
         }
     }
@@ -184,7 +184,7 @@ class Tool extends Database implements ReadableInterface, DeletableInterface
                 LEFT JOIN tareas t ON a.id_tarea = t.id_tarea
                 WHERE u.id_herramienta = :id_herramienta
                 ORDER BY u.fecha_uso DESC";
-        $stmt = $this->db->prepare($sql);
+        $stmt = $this->db()->prepare($sql);
         $stmt->execute([':id_herramienta' => $herramientaId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }

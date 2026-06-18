@@ -60,7 +60,7 @@ function mermas_handleAdd(): void
     $fechaMerma = trim((string)($_POST['fecha_merma'] ?? ''));
     if ($fechaMerma === '') throw new \Exception('La fecha de merma es requerida.');
 
-    $idUsuario = (int)($_SESSION['user_id'] ?? 0);
+    $idUsuario = \SysInescolara\helpers\Auth::id();
     if ($idUsuario <= 0) throw new \Exception('Usuario no autenticado.');
 
     $newId = $model->registerLoss($idTrazabilidad, $cantidad, $motivo, $descripcion, $fechaMerma, $idUsuario);

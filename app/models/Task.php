@@ -29,7 +29,7 @@ class Task extends Database implements ReadableInterface, DeletableInterface
                     FROM tareas
                     WHERE activo = 1
                     ORDER BY id_tarea DESC";
-            $stmt = $this->db->query($sql);
+            $stmt = $this->db()->query($sql);
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
         } catch (\Throwable $e) {
             error_log('Error al obtener tareas: ' . $e->getMessage());
@@ -39,34 +39,34 @@ class Task extends Database implements ReadableInterface, DeletableInterface
 
     public function getById(int $id): ?array
     {
-        $stmt = $this->db->prepare("SELECT id_tarea AS id, nombre_tarea, descripcion FROM tareas WHERE id_tarea = :id");
+        $stmt = $this->db()->prepare("SELECT id_tarea AS id, nombre_tarea, descripcion FROM tareas WHERE id_tarea = :id");
         $stmt->execute([':id' => $id]);
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 
     public function exists(int $id): bool
     {
-        $stmt = $this->db->prepare("SELECT COUNT(*) FROM tareas WHERE id_tarea = :id");
+        $stmt = $this->db()->prepare("SELECT COUNT(*) FROM tareas WHERE id_tarea = :id");
         $stmt->execute([':id' => $id]);
         return $stmt->fetchColumn() > 0;
     }
 
     public function delete(int $id): bool
     {
-        $stmt = $this->db->prepare("UPDATE tareas SET activo = 0 WHERE id_tarea = :id");
+        $stmt = $this->db()->prepare("UPDATE tareas SET activo = 0 WHERE id_tarea = :id");
         return $stmt->execute([':id' => $id]);
     }
 
     public function restore(int $id): bool
     {
-        $stmt = $this->db->prepare("UPDATE tareas SET activo = 1 WHERE id_tarea = :id");
+        $stmt = $this->db()->prepare("UPDATE tareas SET activo = 1 WHERE id_tarea = :id");
         return $stmt->execute([':id' => $id]);
     }
 
     public function getLastInsertId(): ?int
     {
         try {
-            return (int)$this->db->lastInsertId();
+            return (int)$this->db()->lastInsertId();
         } catch (\Throwable $e) {
             return null;
         }
@@ -78,7 +78,7 @@ class Task extends Database implements ReadableInterface, DeletableInterface
             'nombre_tarea' => $nombre,
             'descripcion' => $descripcion,
         ]);
-        $stmt = $this->db->prepare("INSERT INTO tareas (nombre_tarea, descripcion) VALUES (:nombre, :descripcion)");
+        $stmt = $this->db()->prepare("INSERT INTO tareas (nombre_tarea, descripcion) VALUES (:nombre, :descripcion)");
         return $stmt->execute([
             ':nombre' => $nombre,
             ':descripcion' => $descripcion
@@ -94,7 +94,7 @@ class Task extends Database implements ReadableInterface, DeletableInterface
         if (!$this->exists($id)) {
             throw new \Exception("No existe la tarea con ID: $id");
         }
-        $stmt = $this->db->prepare("UPDATE tareas SET nombre_tarea = :nombre, descripcion = :descripcion WHERE id_tarea = :id");
+        $stmt = $this->db()->prepare("UPDATE tareas SET nombre_tarea = :nombre, descripcion = :descripcion WHERE id_tarea = :id");
         return $stmt->execute([
             ':id' => $id,
             ':nombre' => $nombre,
@@ -106,18 +106,18 @@ class Task extends Database implements ReadableInterface, DeletableInterface
 
     public function assignTaskWithConsumptions(array $assignmentData, array $consumptions): int
     {
-        $this->db->beginTransaction();
+        $this->db()->beginTransaction();
         try {
-            $stmt = $this->db->prepare("
+            $stmt = $this->db()->prepare("
                 INSERT INTO tareas (nombre_tarea, descripcion) VALUES (:nombre, :descripcion)
             ");
             $stmt->execute([
                 ':nombre'      => $assignmentData['nombre_tarea'],
                 ':descripcion' => $assignmentData['descripcion'] ?? null,
             ]);
-            $newTaskId = (int)$this->db->lastInsertId();
+            $newTaskId = (int)$this->db()->lastInsertId();
 
-            $stmt = $this->db->prepare("
+            $stmt = $this->db()->prepare("
                 INSERT INTO asignar_tarea (id_trabajador, id_tarea, id_lote, fecha_asignacion, estatus_tarea)
                 VALUES (:id_trabajador, :id_tarea, :id_lote, :fecha_asignacion, :estatus_tarea)
             ");
@@ -128,10 +128,10 @@ class Task extends Database implements ReadableInterface, DeletableInterface
                 ':fecha_asignacion' => $assignmentData['fecha_asignacion'],
                 ':estatus_tarea'    => $assignmentData['estatus_tarea'] ?? 'pendiente',
             ]);
-            $asignacionId = (int)$this->db->lastInsertId();
+            $asignacionId = (int)$this->db()->lastInsertId();
 
             foreach ($consumptions as $consumo) {
-                $stmt = $this->db->prepare("
+                $stmt = $this->db()->prepare("
                     INSERT INTO consumo_insumos (id_asignacion, id_insumo, cantidad_usada, costo_unitario, stock_actual, fecha_consumo)
                     VALUES (:id_asignacion, :id_insumo, :cantidad_usada, :costo_unitario, :stock_actual, :fecha_consumo)
                 ");
@@ -144,7 +144,7 @@ class Task extends Database implements ReadableInterface, DeletableInterface
                     ':fecha_consumo'  => $consumo['fecha_consumo'],
                 ]);
 
-                $stmt = $this->db->prepare("
+                $stmt = $this->db()->prepare("
                     UPDATE insumo
                     SET stock_actual = GREATEST(0, stock_actual - :cantidad)
                     WHERE id_insumo = :id_insumo
@@ -155,19 +155,19 @@ class Task extends Database implements ReadableInterface, DeletableInterface
                 ]);
             }
 
-            $this->db->commit();
+            $this->db()->commit();
             return $asignacionId;
         } catch (\Exception $e) {
-            $this->db->rollBack();
+            $this->db()->rollBack();
             throw $e;
         }
     }
 
     public function completeAssignment(int $id, string $fechaCumplimiento): void
     {
-        $this->db->beginTransaction();
+        $this->db()->beginTransaction();
         try {
-            $stmt = $this->db->prepare("
+            $stmt = $this->db()->prepare("
                 UPDATE asignar_tarea
                 SET estatus_tarea = 'completada', fecha_cumplimiento = :fecha
                 WHERE id_asignacion = :id
@@ -176,16 +176,16 @@ class Task extends Database implements ReadableInterface, DeletableInterface
                 ':id'    => $id,
                 ':fecha' => $fechaCumplimiento,
             ]);
-            $this->db->commit();
+            $this->db()->commit();
         } catch (\Exception $e) {
-            $this->db->rollBack();
+            $this->db()->rollBack();
             throw $e;
         }
     }
 
     public function cancelAssignment(int $id): void
     {
-        $stmt = $this->db->prepare("UPDATE asignar_tarea SET estatus_tarea = 'cancelada' WHERE id_asignacion = :id");
+        $stmt = $this->db()->prepare("UPDATE asignar_tarea SET estatus_tarea = 'cancelada' WHERE id_asignacion = :id");
         $stmt->execute([':id' => $id]);
     }
 
@@ -198,7 +198,7 @@ class Task extends Database implements ReadableInterface, DeletableInterface
                 LEFT JOIN trabajadores tr ON a.id_trabajador = tr.id_trabajador
                 LEFT JOIN lote l ON a.id_lote = l.id_lote
                 ORDER BY a.fecha_asignacion DESC";
-        $stmt = $this->db->query($sql);
+        $stmt = $this->db()->query($sql);
         return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
     }
 
@@ -211,7 +211,7 @@ class Task extends Database implements ReadableInterface, DeletableInterface
                 LEFT JOIN trabajadores tr ON a.id_trabajador = tr.id_trabajador
                 LEFT JOIN lote l ON a.id_lote = l.id_lote
                 WHERE a.id_asignacion = :id";
-        $stmt = $this->db->prepare($sql);
+        $stmt = $this->db()->prepare($sql);
         $stmt->execute([':id' => $id]);
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
@@ -224,17 +224,17 @@ class Task extends Database implements ReadableInterface, DeletableInterface
                 LEFT JOIN unidad_medida u ON i.id_unidad_medida = u.id_unidad_medida
                 WHERE c.id_asignacion = :id_asignacion
                 ORDER BY c.fecha_consumo DESC";
-        $stmt = $this->db->prepare($sql);
+        $stmt = $this->db()->prepare($sql);
         $stmt->execute([':id_asignacion' => $asignacionId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function updateToolEstados(int $asignacionId, array $toolEstados): void
     {
-        $this->db->beginTransaction();
+        $this->db()->beginTransaction();
         try {
-            $stmtUso = $this->db->prepare("UPDATE uso_herramienta SET estado_herramienta_post_uso = :estado WHERE id_uso = :id_uso AND id_asignacion = :id_asignacion");
-            $stmtHerramienta = $this->db->prepare("UPDATE herramienta SET estado = :estado WHERE id_herramienta = (SELECT id_herramienta FROM uso_herramienta WHERE id_uso = :id_uso)");
+            $stmtUso = $this->db()->prepare("UPDATE uso_herramienta SET estado_herramienta_post_uso = :estado WHERE id_uso = :id_uso AND id_asignacion = :id_asignacion");
+            $stmtHerramienta = $this->db()->prepare("UPDATE herramienta SET estado = :estado WHERE id_herramienta = (SELECT id_herramienta FROM uso_herramienta WHERE id_uso = :id_uso)");
             foreach ($toolEstados as $te) {
                 $idUso = (int)($te['id_uso'] ?? 0);
                 $estado = $te['estado'] ?? 'ok';
@@ -242,9 +242,9 @@ class Task extends Database implements ReadableInterface, DeletableInterface
                 $stmtUso->execute([':estado' => $estado, ':id_uso' => $idUso, ':id_asignacion' => $asignacionId]);
                 $stmtHerramienta->execute([':estado' => $estado, ':id_uso' => $idUso]);
             }
-            $this->db->commit();
+            $this->db()->commit();
         } catch (\Exception $e) {
-            $this->db->rollBack();
+            $this->db()->rollBack();
             throw $e;
         }
     }
@@ -256,7 +256,7 @@ class Task extends Database implements ReadableInterface, DeletableInterface
                 LEFT JOIN herramienta h ON u.id_herramienta = h.id_herramienta
                 WHERE u.id_asignacion = :id_asignacion
                 ORDER BY u.fecha_uso DESC";
-        $stmt = $this->db->prepare($sql);
+        $stmt = $this->db()->prepare($sql);
         $stmt->execute([':id_asignacion' => $asignacionId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }

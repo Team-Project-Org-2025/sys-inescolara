@@ -92,7 +92,7 @@ class Plant extends Database implements ReadableInterface, DeletableInterface
             if ($this->id === null) {
                 $sql = "INSERT INTO plantas (nombre_comun, nombre_tecnico, id_especie, imagen, cantidad_total, activo) 
                         VALUES (:nombre_comun, :nombre_tecnico, :id_especie, :imagen, :cantidad_total, :activo)";
-                $stmt = $this->db->prepare($sql);
+                $stmt = $this->db()->prepare($sql);
                 $success = $stmt->execute([
                     ':nombre_comun'   => $this->nombreComun,
                     ':nombre_tecnico' => $this->nombreTecnico,
@@ -103,14 +103,14 @@ class Plant extends Database implements ReadableInterface, DeletableInterface
                 ]);
                 
                 if ($success) {
-                    $this->id = (int) $this->db->lastInsertId();
+                    $this->id = (int) $this->db()->lastInsertId();
                 }
                 return $success;
             } else {
                 $sql = "UPDATE plantas SET nombre_comun = :nombre_comun, nombre_tecnico = :nombre_tecnico, 
                         id_especie = :id_especie, imagen = :imagen, cantidad_total = :cantidad_total 
                         WHERE id_planta = :id";
-                $stmt = $this->db->prepare($sql);
+                $stmt = $this->db()->prepare($sql);
                 return $stmt->execute([
                     ':id'             => $this->id,
                     ':nombre_comun'   => $this->nombreComun,
@@ -128,7 +128,7 @@ class Plant extends Database implements ReadableInterface, DeletableInterface
 
     public function loadById(int $id): bool
     {
-        $stmt = $this->db->prepare("SELECT * FROM plantas WHERE id_planta = :id");
+        $stmt = $this->db()->prepare("SELECT * FROM plantas WHERE id_planta = :id");
         $stmt->execute([':id' => $id]);
         $data = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -154,7 +154,7 @@ class Plant extends Database implements ReadableInterface, DeletableInterface
                 FROM plantas p
                 LEFT JOIN especie e ON p.id_especie = e.id_especie AND e.activo = 1
                 WHERE p.id_planta = :id";
-        $stmt = $this->db->prepare($sql);
+        $stmt = $this->db()->prepare($sql);
         $stmt->execute([':id' => $id]);
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
@@ -177,7 +177,7 @@ class Plant extends Database implements ReadableInterface, DeletableInterface
                     LEFT JOIN especie e ON p.id_especie = e.id_especie AND e.activo = 1
                     WHERE p.activo = 1
                     ORDER BY p.nombre_comun ASC";
-            $stmt = $this->db->query($sql);
+            $stmt = $this->db()->query($sql);
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
         } catch (Throwable $e) {
             error_log('Error al obtener plantas: ' . $e->getMessage());
@@ -187,20 +187,20 @@ class Plant extends Database implements ReadableInterface, DeletableInterface
 
     public function exists(int $id): bool
     {
-        $stmt = $this->db->prepare("SELECT COUNT(*) FROM plantas WHERE id_planta = :id");
+        $stmt = $this->db()->prepare("SELECT COUNT(*) FROM plantas WHERE id_planta = :id");
         $stmt->execute([':id' => $id]);
         return (int) $stmt->fetchColumn() > 0;
     }
 
     public function delete(int $id): bool
     {
-        $stmt = $this->db->prepare("UPDATE plantas SET activo = 0 WHERE id_planta = :id");
+        $stmt = $this->db()->prepare("UPDATE plantas SET activo = 0 WHERE id_planta = :id");
         return $stmt->execute([':id' => $id]);
     }
 
     public function restore(int $id): bool
     {
-        $stmt = $this->db->prepare("UPDATE plantas SET activo = 1 WHERE id_planta = :id");
+        $stmt = $this->db()->prepare("UPDATE plantas SET activo = 1 WHERE id_planta = :id");
         return $stmt->execute([':id' => $id]);
     }
 }

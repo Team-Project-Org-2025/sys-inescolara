@@ -2,8 +2,7 @@
 
 function hasPermiso(string $codigo): bool
 {
-    $permisos = $_SESSION['user_permisos'] ?? [];
-    return in_array($codigo, $permisos, true);
+    return \SysInescolara\helpers\Auth::hasPermiso($codigo);
 }
 
 $current = $currentPage ?? '';
