@@ -145,7 +145,6 @@ include_once __DIR__ . '/../common/links.php';
                                     <option value="Crecimiento">Crecimiento</option>
                                     <option value="Floración">Floración</option>
                                     <option value="Cosechado">Cosechado</option>
-                                    <option value="Muerto">Muerto</option>
                                 </select>
                             </div>
                             <div class="col-4 mb-3">
@@ -243,7 +242,6 @@ include_once __DIR__ . '/../common/links.php';
                                     <option value="Crecimiento">Crecimiento</option>
                                     <option value="Floración">Floración</option>
                                     <option value="Cosechado">Cosechado</option>
-                                    <option value="Muerto">Muerto</option>
                                 </select>
                             </div>
                             <div class="col-4 mb-3">
