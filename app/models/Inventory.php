@@ -191,21 +191,21 @@ class Inventory extends Database
         }
     }
 
-    protected function beginTransaction(): void
+    public function beginTransaction(): void
     {
         if (!$this->db->inTransaction()) {
             $this->db->beginTransaction();
         }
     }
 
-    protected function commit(): void
+    public function commit(): void
     {
         if ($this->db->inTransaction()) {
             $this->db->commit();
         }
     }
 
-    protected function rollback(): void
+    public function rollback(): void
     {
         if ($this->db->inTransaction()) {
             $this->db->rollBack();
