@@ -59,7 +59,7 @@ $(document).ready(function () {
             const hasOld = data.valor_anterior && data.valor_anterior !== 'null';
             const hasNew = data.valor_nuevo && data.valor_nuevo !== 'null';
             if (!hasOld && !hasNew) return '—';
-            return `<button class="btn btn-sm btn-outline-info btn-detail" data-id="${data.id_log}"><i class="fas fa-eye"></i> Ver</button>`;
+            return `<button class="btn btn-sm btn-outline-info btn-detail"><i class="fas fa-eye"></i> Ver</button>`;
           },
         },
       ],
@@ -88,9 +88,7 @@ $(document).ready(function () {
 
   // Ver detalle
   $(document).on('click', '.btn-detail', function () {
-    const id = $(this).data('id');
-    const tableData = auditlogTable.rows().data().toArray();
-    const row = tableData.find((r) => r.id_log == id);
+    const row = auditlogTable.row($(this).closest('tr')).data();
     if (!row) return;
 
     let html = '';
