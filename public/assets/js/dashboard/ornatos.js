@@ -39,23 +39,14 @@ function inicializarTabla()
             {
                 data: null,
                 orderable: false,
-                render: (data) => {
+                render: () => {
                     const d = Ayuda.escapeHtml;
                     return `
                         <div class="d-flex gap-1">
-                            <button class="btn btn-sm btn-outline-primary btn-editar"
-                                data-id="${d(data.id_ornato)}"
-                                data-id_cliente="${d(data.id_cliente)}"
-                                data-tipo_ornato="${d(data.tipo_ornato)}"
-                                data-descripcion="${d(data.descripcion || '')}"
-                                data-ubicacion="${d(data.ubicacion || '')}"
-                                data-fecha="${d(data.fecha)}"
-                                data-monto_total="${d(data.monto_total)}">
+                            <button class="btn btn-sm btn-outline-primary btn-editar">
                                 <i class="fas fa-edit"></i> Editar
                             </button>
-                            <button class="btn btn-sm btn-outline-danger btn-eliminar"
-                                data-id="${d(data.id_ornato)}"
-                                data-cliente="${d(data.nombre_cliente || '')}">
+                            <button class="btn btn-sm btn-outline-danger btn-eliminar">
                                 <i class="fas fa-trash"></i> Eliminar
                             </button>
                         </div>
@@ -87,8 +78,8 @@ function configurarEventos()
     });
 
     $(document).on('click', '.btn-editar', function () {
-        const $btn = $(this);
-        abrirModalParaEditar($btn.data());
+        const row = tablaOrnatos.row($(this).closest('tr')).data();
+        abrirModalParaEditar(row);
     });
 
     // Submit del formulario
@@ -99,8 +90,9 @@ function configurarEventos()
 
     // Eliminar
     $(document).on('click', '.btn-eliminar', function () {
-        const id = $(this).data('id');
-        const cliente = $(this).data('cliente') || `#${id}`;
+        const row = tablaOrnatos.row($(this).closest('tr')).data();
+        const id = row.id_ornato;
+        const cliente = row.nombre_cliente || `#${id}`;
 
         Ayuda.confirmDialog(
             '¿Eliminar ornato?',
@@ -179,22 +171,22 @@ function abrirModalParaAgregar()
     $('#modalOrnato').modal({ focus: false }).modal('show');
 }
 
-function abrirModalParaEditar(datos)
+function abrirModalParaEditar(row)
 {
     editando = true;
     $('#tituloModal').text('Editar Ornato');
-    $('#inputId').val(datos.id);
-    $('#inputCliente').val(datos.id_cliente);
-    $('#inputTipo').val(datos.tipo_ornato);
-    $('#inputFecha').val(datos.fecha);
-    $('#inputUbicacion').val(datos.ubicacion || '');
-    $('#inputDescripcion').val(datos.descripcion || '');
-    $('#inputMontoTotal').val(Ayuda.formatCurrency(datos.monto_total));
-    $('#inputMontoTotalHidden').val(datos.monto_total);
+    $('#inputId').val(row.id_ornato);
+    $('#inputCliente').val(row.id_cliente);
+    $('#inputTipo').val(row.tipo_ornato);
+    $('#inputFecha').val(row.fecha);
+    $('#inputUbicacion').val(row.ubicacion || '');
+    $('#inputDescripcion').val(row.descripcion || '');
+    $('#inputMontoTotal').val(Ayuda.formatCurrency(row.monto_total));
+    $('#inputMontoTotalHidden').val(row.monto_total);
 
     // Cargar detalles vía AJAX
     $('#cuerpoDetalle').empty();
-    Ajax.get(`${urlBase}?accion=detalles&id=${datos.id}`)
+    Ajax.get(`${urlBase}?accion=detalles&id=${row.id_ornato}`)
         .then((respuesta) => {
             if (respuesta.success && respuesta.detalles && respuesta.detalles.length > 0) {
                 respuesta.detalles.forEach((item) => {

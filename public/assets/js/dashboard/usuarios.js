@@ -45,22 +45,13 @@ $(document).ready(function () {
           orderable: false,
           render: (data) => {
             const isSuper = data.id == 1;
-            const permisos = data.permisos ? data.permisos.join(',') : '';
             return `
               <div class="d-flex gap-1">
-                <button class="btn btn-sm btn-outline-primary btn-edit" 
-                        data-id="${Helpers.escapeHtml(data.id)}"
-                        data-nombre_usuario="${Helpers.escapeHtml(data.nombre_usuario)}"
-                        data-correo_electronico="${Helpers.escapeHtml(data.correo_electronico || '')}"
-                        data-rol_id="${Helpers.escapeHtml(data.rol_id)}"
-                        data-avatar="${Helpers.escapeHtml(data.avatar || '')}"
-                        data-permisos="${Helpers.escapeHtml(permisos)}">
+                <button class="btn btn-sm btn-outline-primary btn-edit">
                     <i class="fas fa-edit"></i> Editar
                 </button>
                 ${isSuper ? '' : `
-                <button class="btn btn-sm btn-outline-danger btn-delete"
-                        data-id="${Helpers.escapeHtml(data.id)}"
-                        data-nombre_usuario="${Helpers.escapeHtml(data.nombre_usuario)}">
+                <button class="btn btn-sm btn-outline-danger btn-delete">
                     <i class="fas fa-trash"></i> Eliminar
                 </button>`}
               </div>
@@ -150,17 +141,15 @@ $(document).ready(function () {
       });
   });
 
-  //Editar usuario
   $(document).on('click', '.btn-edit', function () {
-    const $btn = $(this);
+    const row = usersTable.row($(this).closest('tr')).data();
 
-    // Cerrar cualquier otro modal abierto primero
     const $addModal = $('#addUserModal');
     if ($addModal.hasClass('show')) {
       $addModal.modal('hide');
     }
 
-    const userId = parseInt($btn.data('id'), 10);
+    const userId = parseInt(row.id, 10);
     const isSuper = userId === 1;
     const currentUserId = parseInt($('#currentUserId').val(), 10);
     const currentUserRole = parseInt($('#currentUserRole').val(), 10);
@@ -168,21 +157,19 @@ $(document).ready(function () {
     const isAdmin = currentUserRole === 1;
 
     $('#editUserIdHidden').val(userId);
-    $('#editUserName').val($btn.data('nombre_usuario'));
-    $('#editUserEmail').val($btn.data('correo_electronico'));
-    $('#editUserRole').val($btn.data('rol_id')).prop('disabled', false).css('pointerEvents', isSuper ? 'none' : '').toggleClass('readonly-look', isSuper);
+    $('#editUserName').val(row.nombre_usuario);
+    $('#editUserEmail').val(row.correo_electronico);
+    $('#editUserRole').val(row.rol_id).prop('disabled', false).css('pointerEvents', isSuper ? 'none' : '').toggleClass('readonly-look', isSuper);
     $('#editUserPassword').val('');
     $('#editCurrentPassword').val('');
     $('#editUserRoleNote').toggle(isSuper);
 
-    // Mostrar checklist de permisos según el rol
-    var roleId = parseInt($btn.data('rol_id'));
+    var roleId = parseInt(row.rol_id);
     togglePermisosChecklist(isSuper ? 1 : roleId, $('#editPermisosChecklist'));
     $('#editUserRole').off('change.permisos').on('change.permisos', function () {
       togglePermisosChecklist(parseInt($(this).val()), $('#editPermisosChecklist'));
     });
 
-    // Mostrar campo de contraseña actual si edita su propia cuenta O es administrador
     const $currentPwGroup = $('#currentPasswordGroup');
     const $currentPwHelp = $('#currentPasswordHelp');
     if (isOwnAccount || isAdmin) {
@@ -198,8 +185,7 @@ $(document).ready(function () {
       $('#editUserPassword').attr('placeholder', 'Contraseña (dejar en blanco para no cambiar)');
     }
 
-    // Mostrar preview del avatar actual
-    const avatar = $btn.data('avatar');
+    const avatar = row.avatar;
     const $preview = $('#editAvatarPreview');
     if (avatar) {
       $preview.show().find('img').attr('src', `${window.BASE_URL || '/'}${avatar}`);
@@ -207,9 +193,7 @@ $(document).ready(function () {
       $preview.hide();
     }
 
-    // Marcar permisos del usuario
-    const permisosStr = $btn.data('permisos') || '';
-    const userPermisos = permisosStr ? permisosStr.split(',').map(Number) : [];
+    const userPermisos = row.permisos || [];
     $('#permisosChecklist input[type="checkbox"]').each(function () {
       $(this).prop('checked', userPermisos.indexOf(parseInt($(this).val())) !== -1);
     });
@@ -273,10 +257,10 @@ $(document).ready(function () {
       });
   });
 
-  //Eliminar usuario — requiere contraseña actual del administrador
   $(document).on('click', '.btn-delete', function () {
-    const id = $(this).data('id');
-    const nombre = $(this).data('nombre_usuario');
+    const row = usersTable.row($(this).closest('tr')).data();
+    const id = row.id;
+    const nombre = row.nombre_usuario;
 
     Swal.fire({
       title: '¿Eliminar usuario?',

@@ -35,15 +35,10 @@ $(document).ready(function () {
           render: (data) => {
             return `
               <div class="d-flex gap-1">
-                <button class="btn btn-sm btn-outline-primary btn-edit"
-                        data-id="${Helpers.escapeHtml(data.id)}"
-                        data-nombre_cliente="${Helpers.escapeHtml(data.nombre_cliente)}"
-                        data-contacto_cliente="${Helpers.escapeHtml(data.contacto_cliente || '')}">
+                <button class="btn btn-sm btn-outline-primary btn-edit">
                     <i class="fas fa-edit"></i> Editar
                 </button>
-                <button class="btn btn-sm btn-outline-danger btn-delete"
-                        data-id="${Helpers.escapeHtml(data.id)}"
-                        data-nombre_cliente="${Helpers.escapeHtml(data.nombre_cliente)}">
+                <button class="btn btn-sm btn-outline-danger btn-delete">
                     <i class="fas fa-trash"></i> Eliminar
                 </button>
               </div>
@@ -118,15 +113,16 @@ $(document).ready(function () {
   // Editar cliente
   $(document).on('click', '.btn-edit', function () {
     const $btn = $(this);
+    const row = clientsTable.row($btn.closest('tr')).data();
 
     const $addModal = $('#addClientModal');
     if ($addModal.hasClass('show')) {
       $addModal.modal('hide');
     }
 
-    $('#editClientId').val($btn.data('id'));
-    $('#editClientName').val($btn.data('nombre_cliente'));
-    $('#editClientContacto').val($btn.data('contacto_cliente'));
+    $('#editClientId').val(row.id);
+    $('#editClientName').val(row.nombre_cliente);
+    $('#editClientContacto').val(row.contacto_cliente);
 
     $('#editClientModal').modal({ focus: false }).modal('show');
   });
@@ -166,8 +162,9 @@ $(document).ready(function () {
 
   // Eliminar cliente
   $(document).on('click', '.btn-delete', function () {
-    const id = $(this).data('id');
-    const nombre = $(this).data('nombre_cliente');
+    const row = clientsTable.row($(this).closest('tr')).data();
+    const id = row.id;
+    const nombre = row.nombre_cliente;
 
     Helpers.confirmDialog(
       '¿Eliminar cliente?',

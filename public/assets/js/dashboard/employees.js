@@ -50,22 +50,13 @@ $(document).ready(function () {
         {
           data: null,
           orderable: false,
-          render: (data) => {
+          render: () => {
             return `
               <div class="d-flex gap-1">
-                <button class="btn btn-sm btn-outline-primary btn-edit"
-                        data-id="${Helpers.escapeHtml(data.id)}"
-                        data-nombre_trabajador="${Helpers.escapeHtml(data.nombre_trabajador)}"
-                        data-apellido_trabajador="${Helpers.escapeHtml(data.apellido_trabajador || '')}"
-                        data-cedula_trabajador="${Helpers.escapeHtml(data.cedula_trabajador || '')}"
-                        data-telefono_trabajador="${Helpers.escapeHtml(data.telefono_trabajador || '')}"
-                        data-cargo="${Helpers.escapeHtml(data.cargo || '')}"
-                        data-activo="${data.activo ? '1' : '0'}">
+                <button class="btn btn-sm btn-outline-primary btn-edit">
                     <i class="fas fa-edit"></i> Editar
                 </button>
-                <button class="btn btn-sm btn-outline-danger btn-delete"
-                        data-id="${Helpers.escapeHtml(data.id)}"
-                        data-nombre_trabajador="${Helpers.escapeHtml(data.nombre_trabajador)}">
+                <button class="btn btn-sm btn-outline-danger btn-delete">
                     <i class="fas fa-trash"></i> Eliminar
                 </button>
               </div>
@@ -139,20 +130,20 @@ $(document).ready(function () {
 
   // Editar empleado
   $(document).on('click', '.btn-edit', function () {
-    const $btn = $(this);
+    const row = employeesTable.row($(this).closest('tr')).data();
 
     const $addModal = $('#addEmployeeModal');
     if ($addModal.hasClass('show')) {
       $addModal.modal('hide');
     }
 
-    $('#editEmployeeId').val($btn.data('id'));
-    $('#editEmployeeName').val($btn.data('nombre_trabajador'));
-    $('#editEmployeeApellido').val($btn.data('apellido_trabajador'));
-    $('#editEmployeeCedula').val($btn.data('cedula_trabajador'));
-    $('#editEmployeeTelefono').val($btn.data('telefono_trabajador'));
-    $('#editEmployeeCargo').val($btn.data('cargo'));
-    $('#editEmployeeActivo').prop('checked', $btn.data('activo') == '1');
+    $('#editEmployeeId').val(row.id);
+    $('#editEmployeeName').val(row.nombre_trabajador);
+    $('#editEmployeeApellido').val(row.apellido_trabajador);
+    $('#editEmployeeCedula').val(row.cedula_trabajador);
+    $('#editEmployeeTelefono').val(row.telefono_trabajador);
+    $('#editEmployeeCargo').val(row.cargo);
+    $('#editEmployeeActivo').prop('checked', !!row.activo);
 
     $('#editEmployeeModal').modal({ focus: false }).modal('show');
   });
@@ -187,8 +178,9 @@ $(document).ready(function () {
 
   // Eliminar empleado
   $(document).on('click', '.btn-delete', function () {
-    const id = $(this).data('id');
-    const nombre = $(this).data('nombre_trabajador');
+    const row = employeesTable.row($(this).closest('tr')).data();
+    const id = row.id;
+    const nombre = row.nombre_trabajador;
 
     Helpers.confirmDialog(
       '¿Eliminar trabajador?',

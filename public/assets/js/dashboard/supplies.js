@@ -46,21 +46,13 @@ $(document).ready(function () {
         {
           data: null,
           orderable: false,
-          render: (data) => {
+          render: () => {
             return `
               <div class="d-flex gap-1">
-                <button class="btn btn-sm btn-outline-primary btn-edit"
-                        data-id="${Helpers.escapeHtml(data.id_insumo)}"
-                        data-nombre_insumo="${Helpers.escapeHtml(data.nombre_insumo)}"
-                        data-id_unidad_medida="${Helpers.escapeHtml(data.id_unidad_medida)}"
-                        data-categoria="${Helpers.escapeHtml(data.categoria || '')}"
-                        data-stock_actual="${Helpers.escapeHtml(data.stock_actual)}"
-                        data-costo_unitario_actual="${Helpers.escapeHtml(data.costo_unitario_actual)}">
+                <button class="btn btn-sm btn-outline-primary btn-edit">
                     <i class="fas fa-edit"></i> Editar
                 </button>
-                <button class="btn btn-sm btn-outline-danger btn-delete"
-                        data-id="${Helpers.escapeHtml(data.id_insumo)}"
-                        data-nombre_insumo="${Helpers.escapeHtml(data.nombre_insumo)}">
+                <button class="btn btn-sm btn-outline-danger btn-delete">
                     <i class="fas fa-trash"></i> Eliminar
                 </button>
               </div>
@@ -131,7 +123,7 @@ $(document).ready(function () {
 
   // Abrir Modal Editar Insumo
   $(document).on('click', '.btn-edit', function () {
-    const $btn = $(this);
+    const row = suppliesTable.row($(this).closest('tr')).data();
 
     const $addModal = $('#addSupplyModal');
     if ($addModal.hasClass('show')) {
@@ -139,12 +131,12 @@ $(document).ready(function () {
     }
 
     // Mapeo exacto a los inputs del Modal de Edición
-    $('#editSupplyId').val($btn.data('id'));
-    $('#editSupplyName').val($btn.data('nombre_insumo'));
-    $('#editSupplyUnit').val($btn.data('id_unidad_medida'));
-    $('#editSupplyCat').val($btn.data('categoria'));
-    $('#editSupplyStock').val($btn.data('stock_actual'));
-    $('#editSupplyCost').val($btn.data('costo_unitario_actual'));
+    $('#editSupplyId').val(row.id_insumo);
+    $('#editSupplyName').val(row.nombre_insumo);
+    $('#editSupplyUnit').val(row.id_unidad_medida);
+    $('#editSupplyCat').val(row.categoria);
+    $('#editSupplyStock').val(row.stock_actual);
+    $('#editSupplyCost').val(row.costo_unitario_actual);
 
     $('#editSupplyModal').modal({ focus: false }).modal('show');
   });
@@ -181,8 +173,9 @@ $(document).ready(function () {
 
   // Eliminar Insumo
   $(document).on('click', '.btn-delete', function () {
-    const id = $(this).data('id');
-    const nombre = $(this).data('nombre_insumo');
+    const row = suppliesTable.row($(this).closest('tr')).data();
+    const id = row.id_insumo;
+    const nombre = row.nombre_insumo;
 
     Helpers.confirmDialog(
       '¿Eliminar insumo?',

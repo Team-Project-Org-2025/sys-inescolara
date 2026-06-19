@@ -58,22 +58,13 @@ $(document).ready(function () {
         {
           data: null,
           orderable: false,
-          render: (data) => {
+          render: () => {
             return `
               <div class="d-flex gap-1">
-                <button class="btn btn-sm btn-outline-primary btn-edit"
-                        data-id="${Helpers.escapeHtml(data.id)}"
-                        data-nombre_herramienta="${Helpers.escapeHtml(data.nombre_herramienta)}"
-                        data-tipo="${Helpers.escapeHtml(data.tipo || '')}"
-                        data-estado="${Helpers.escapeHtml(data.estado)}"
-                        data-fecha_adquisicion="${Helpers.escapeHtml(data.fecha_adquisicion || '')}"
-                        data-fecha_ultimo_mantenimiento="${Helpers.escapeHtml(data.fecha_ultimo_mantenimiento || '')}"
-                        data-observacion="${Helpers.escapeHtml(data.observacion || '')}">
+                <button class="btn btn-sm btn-outline-primary btn-edit">
                     <i class="fas fa-edit"></i> Editar
                 </button>
-                <button class="btn btn-sm btn-outline-danger btn-delete"
-                        data-id="${Helpers.escapeHtml(data.id)}"
-                        data-nombre="${Helpers.escapeHtml(data.nombre_herramienta || '')}">
+                <button class="btn btn-sm btn-outline-danger btn-delete">
                     <i class="fas fa-trash"></i> Eliminar
                 </button>
               </div>
@@ -145,20 +136,20 @@ $(document).ready(function () {
   });
 
   $(document).on('click', '.btn-edit', function () {
-    const $btn = $(this);
+    const row = toolsTable.row($(this).closest('tr')).data();
 
     const $addModal = $('#addToolModal');
     if ($addModal.hasClass('show')) {
       $addModal.modal('hide');
     }
 
-    $('#editToolId').val($btn.data('id'));
-    $('#editToolName').val($btn.data('nombre_herramienta'));
-    $('#editToolType').val($btn.data('tipo'));
-    $('#editToolStatus').val($btn.data('estado'));
-    $('#editToolAcqDate').val($btn.data('fecha_adquisicion'));
-    $('#editToolMaintDate').val($btn.data('fecha_ultimo_mantenimiento'));
-    $('#editToolObs').val($btn.data('observacion'));
+    $('#editToolId').val(row.id);
+    $('#editToolName').val(row.nombre_herramienta);
+    $('#editToolType').val(row.tipo);
+    $('#editToolStatus').val(row.estado);
+    $('#editToolAcqDate').val(row.fecha_adquisicion);
+    $('#editToolMaintDate').val(row.fecha_ultimo_mantenimiento);
+    $('#editToolObs').val(row.observacion);
 
     $('#editToolModal').modal({ focus: false }).modal('show');
   });
@@ -197,8 +188,9 @@ $(document).ready(function () {
   });
 
   $(document).on('click', '.btn-delete', function () {
-    const id = $(this).data('id');
-    const nombre = $(this).data('nombre');
+    const row = toolsTable.row($(this).closest('tr')).data();
+    const id = row.id;
+    const nombre = row.nombre_herramienta;
 
     Helpers.confirmDialog(
       '¿Eliminar herramienta?',

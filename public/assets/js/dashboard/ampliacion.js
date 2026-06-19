@@ -63,15 +63,13 @@ $(document).ready(function () {
         {
           data: null,
           orderable: false,
-          render: (data) => {
+          render: () => {
             return `
               <div class="d-flex gap-1">
-                <button class="btn btn-sm btn-outline-info btn-view"
-                        data-id="${Helpers.escapeHtml(data.id)}">
+                <button class="btn btn-sm btn-outline-info btn-view">
                   <i class="fas fa-eye"></i> Ver
                 </button>
-                <button class="btn btn-sm btn-outline-danger btn-delete"
-                        data-id="${Helpers.escapeHtml(data.id)}">
+                <button class="btn btn-sm btn-outline-danger btn-delete">
                   <i class="fas fa-trash"></i> Eliminar
                 </button>
               </div>
@@ -270,7 +268,7 @@ $(document).ready(function () {
   });
 
   $(document).on('click', '.btn-delete', function () {
-    const id = $(this).data('id');
+    const id = ampliacionTable.row($(this).closest('tr')).data().id;
     Helpers.confirmDialog(
       '¿Eliminar ampliación?',
       '¿Deseas eliminar esta ampliación de especies?',
@@ -293,7 +291,7 @@ $(document).ready(function () {
   });
 
   $(document).on('click', '.btn-view', function () {
-    const id = $(this).data('id');
+    const id = ampliacionTable.row($(this).closest('tr')).data().id;
     $('#detalleModal').modal({ focus: false }).modal('show');
     $('#detalleModalBody').html(`
       <div class="text-center py-4">
