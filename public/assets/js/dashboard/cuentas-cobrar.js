@@ -7,7 +7,7 @@ $(document).ready(function () {
   let tablaCuentas = null;
 
   const reglasPago = {
-    monto: 'cantidad',
+    monto: 'precio',
     metodo: 'select',
     fecha_pago: 'fechaFuturaCheck'
   };
@@ -28,7 +28,7 @@ $(document).ready(function () {
         {
           data: 'referencia',
           render: (data, type, row) => type === 'display'
-            ? `<a href="#" class="ver-detalle"><strong>${data}</strong></a>\`
+            ? `<a href="#" class="ver-detalle"><strong>${data}</strong></a>`
             : data
         },
         { data: 'nombre_cliente' },

@@ -130,6 +130,14 @@ function cc_registrarPagoAjax(): void
         throw new \Exception('Metodo de pago invalido.');
     }
     if ($fechaPago === '') throw new \Exception('La fecha de pago es requerida.');
+    $d = \DateTime::createFromFormat('Y-m-d', $fechaPago);
+    if (!$d || $d->format('Y-m-d') !== $fechaPago) {
+        throw new \InvalidArgumentException('Formato de fecha de pago inválido.');
+    }
+    $todayStr = (new \DateTime('today'))->format('Y-m-d');
+    if ($fechaPago > $todayStr) {
+        throw new \InvalidArgumentException('La fecha de pago no puede ser posterior al día de hoy.');
+    }
 
     if (in_array($metodo, ['transferencia', 'pago_movil'], true)) {
         if ($referencia === '') throw new \Exception('La referencia es requerida para transferencias y pago movil.');
@@ -152,23 +160,21 @@ function cc_registrarPagoAjax(): void
         );
 
         $model->confirmarTransaccion();
-    } catch (\Exception $e) {
+
+        AuditLog::record('CREATE', 'pago_venta', $newId, null, [
+            'id_venta' => $idVenta,
+            'monto' => $monto,
+            'metodo' => $metodo,
+            'fecha_pago' => $fechaPago,
+        ]);
+
+        jsonResponse([
+            'success' => true,
+            'message' => 'Pago registrado correctamente',
+            'id' => $newId,
+        ]);
+    } catch (\Throwable $e) {
         $model->revertirTransaccion();
         throw $e;
     }
-
-    AuditLog::record('CREATE', 'pago_venta', $newId, null, [
-        'id_venta' => $idVenta,
-        'monto' => $monto,
-        'metodo' => $metodo,
-        'referencia' => $referencia,
-        'fecha_pago' => $fechaPago,
-        'banco' => $banco,
-        'id_trabajador' => $idTrabajador,
-    ]);
-
-    jsonResponse([
-        'success' => true,
-        'message' => 'Pago registrado correctamente.',
-    ]);
 }
