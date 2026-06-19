@@ -28,7 +28,7 @@ class PasswordReset extends Database
             INDEX `idx_expira` (`expira_en`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
 
-        $this->db->exec($sql);
+        $this->db()->exec($sql);
     }
 
     public function createToken(int $usuarioId, string $correo): string
@@ -38,7 +38,7 @@ class PasswordReset extends Database
 
         $this->deleteExpiredTokens();
 
-        $stmt = $this->db->prepare(
+        $stmt = $this->db()->prepare(
             "INSERT INTO password_resets (usuario_id, token, correo, expira_en)
              VALUES (:uid, :token, :correo, :expira)"
         );
@@ -54,7 +54,7 @@ class PasswordReset extends Database
 
     public function validateToken(string $token): ?array
     {
-        $stmt = $this->db->prepare(
+        $stmt = $this->db()->prepare(
             "SELECT * FROM password_resets
              WHERE token = :token
                AND usado = 0
@@ -69,12 +69,12 @@ class PasswordReset extends Database
 
     public function markAsUsed(string $token): void
     {
-        $stmt = $this->db->prepare("UPDATE password_resets SET usado = 1 WHERE token = :token");
+        $stmt = $this->db()->prepare("UPDATE password_resets SET usado = 1 WHERE token = :token");
         $stmt->execute([':token' => $token]);
     }
 
     public function deleteExpiredTokens(): void
     {
-        $this->db->exec("DELETE FROM password_resets WHERE expira_en <= NOW() OR usado = 1");
+        $this->db()->exec("DELETE FROM password_resets WHERE expira_en <= NOW() OR usado = 1");
     }
 }

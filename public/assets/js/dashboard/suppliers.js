@@ -43,20 +43,13 @@ $(document).ready(function () {
         {
           data: null,
           orderable: false,
-          render: (data) => {
+          render: () => {
             return `
               <div class="d-flex gap-1">
-                <button class="btn btn-sm btn-outline-primary btn-edit"
-                        data-id="${Helpers.escapeHtml(data.id)}"
-                        data-nombre_proveedor="${Helpers.escapeHtml(data.nombre_proveedor)}"
-                        data-rif_proveedor="${Helpers.escapeHtml(data.rif_proveedor || '')}"
-                        data-contacto_vendedor="${Helpers.escapeHtml(data.contacto_vendedor || '')}"
-                        data-telefono_proveedor="${Helpers.escapeHtml(data.telefono_proveedor || '')}">
+                <button class="btn btn-sm btn-outline-primary btn-edit">
                     <i class="fas fa-edit"></i> Editar
                 </button>
-                <button class="btn btn-sm btn-outline-danger btn-delete"
-                        data-id="${Helpers.escapeHtml(data.id)}"
-                        data-nombre_proveedor="${Helpers.escapeHtml(data.nombre_proveedor)}">
+                <button class="btn btn-sm btn-outline-danger btn-delete">
                     <i class="fas fa-trash"></i> Eliminar
                 </button>
               </div>
@@ -138,20 +131,21 @@ $(document).ready(function () {
   // Editar proveedor
   $(document).on('click', '.btn-edit', function () {
     const $btn = $(this);
+    const row = suppliersTable.row($btn.closest('tr')).data();
 
     const $addModal = $('#addSupplierModal');
     if ($addModal.hasClass('show')) {
       $addModal.modal('hide');
     }
 
-    const rifFull = $btn.data('rif_proveedor') || '';
+    const rifFull = row.rif_proveedor || '';
     const rifParts = rifFull.split('-');
-    $('#editSupplierId').val($btn.data('id'));
-    $('#editSupplierName').val($btn.data('nombre_proveedor'));
+    $('#editSupplierId').val(row.id);
+    $('#editSupplierName').val(row.nombre_proveedor);
     $('#editRifTipo').val(rifParts.length > 1 ? rifParts[0] : '');
     $('#editRifNumero').val(rifParts.length > 1 ? rifParts.slice(1).join('-') : rifFull);
-    $('#editSupplierContacto').val($btn.data('contacto_vendedor'));
-    $('#editSupplierTelefono').val($btn.data('telefono_proveedor'));
+    $('#editSupplierContacto').val(row.contacto_vendedor);
+    $('#editSupplierTelefono').val(row.telefono_proveedor);
 
     $('#editSupplierModal').modal({ focus: false }).modal('show');
   });
@@ -186,8 +180,9 @@ $(document).ready(function () {
 
   // Eliminar proveedor
   $(document).on('click', '.btn-delete', function () {
-    const id = $(this).data('id');
-    const nombre = $(this).data('nombre_proveedor');
+    const row = suppliersTable.row($(this).closest('tr')).data();
+    const id = row.id;
+    const nombre = row.nombre_proveedor;
 
     Helpers.confirmDialog(
       '¿Eliminar proveedor?',

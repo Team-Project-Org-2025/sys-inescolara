@@ -97,26 +97,13 @@ $(document).ready(function () {
         {
           data: null,
           orderable: false,
-          render: (data) => {
+          render: () => {
             return `
               <div class="d-flex gap-1">
-                <button class="btn btn-sm btn-outline-primary btn-edit"
-                        data-id="${Helpers.escapeHtml(data.id)}"
-                        data-id_planta="${Helpers.escapeHtml(data.id_planta)}"
-                        data-id_ubicacion="${Helpers.escapeHtml(data.id_ubicacion)}"
-                        data-fecha_siembra="${Helpers.escapeHtml(data.fecha_siembra || '')}"
-                        data-cantidad_inicial="${Helpers.escapeHtml(data.cantidad_inicial)}"
-                        data-cantidad_actual="${Helpers.escapeHtml(data.cantidad_actual)}"
-                        data-estado="${Helpers.escapeHtml(data.estado || '')}"
-                        data-categoria="${Helpers.escapeHtml(data.categoria || '')}"
-                        data-origen="${Helpers.escapeHtml(data.origen || '')}"
-                        data-observacion="${Helpers.escapeHtml(data.observacion || '')}"
-                        data-imagen="${Helpers.escapeHtml(data.imagen || '')}">
+                <button class="btn btn-sm btn-outline-primary btn-edit">
                     <i class="fas fa-edit"></i>
                 </button>
-                <button class="btn btn-sm btn-outline-danger btn-delete"
-                        data-id="${Helpers.escapeHtml(data.id)}"
-                        data-nombre="${Helpers.escapeHtml(data.planta_nombre || '')}">
+                <button class="btn btn-sm btn-outline-danger btn-delete">
                     <i class="fas fa-trash"></i>
                 </button>
               </div>
@@ -200,25 +187,25 @@ $(document).ready(function () {
   });
 
   $(document).on('click', '.btn-edit', function () {
-    const $btn = $(this);
+    const row = batchesTable.row($(this).closest('tr')).data();
 
     const $addModal = $('#addBatchModal');
     if ($addModal.hasClass('show')) {
       $addModal.modal('hide');
     }
 
-    $('#editBatchId').val($btn.data('id'));
-    $('#editBatchPlant').val($btn.data('id_planta'));
-    $('#editBatchLocation').val($btn.data('id_ubicacion'));
-    $('#editBatchDate').val($btn.data('fecha_siembra'));
-    $('#editBatchQtyInit').val($btn.data('cantidad_inicial'));
-    $('#editBatchQtyCurr').val($btn.data('cantidad_actual'));
-    $('#editBatchStatus').val($btn.data('estado'));
-    $('#editBatchCategoria').val($btn.data('categoria') || '');
-    $('#editBatchOrigen').val($btn.data('origen'));
-    $('#editBatchObs').val($btn.data('observacion'));
+    $('#editBatchId').val(row.id);
+    $('#editBatchPlant').val(row.id_planta);
+    $('#editBatchLocation').val(row.id_ubicacion);
+    $('#editBatchDate').val(row.fecha_siembra);
+    $('#editBatchQtyInit').val(row.cantidad_inicial);
+    $('#editBatchQtyCurr').val(row.cantidad_actual);
+    $('#editBatchStatus').val(row.estado);
+    $('#editBatchCategoria').val(row.categoria || '');
+    $('#editBatchOrigen').val(row.origen);
+    $('#editBatchObs').val(row.observacion);
 
-    const imagen = $btn.data('imagen');
+    const imagen = row.imagen;
     const $currentImg = $('#editImageCurrent');
     if (imagen) {
       $currentImg.show().find('img').attr('src', `${window.BASE_URL || '/'}${imagen}`);
@@ -263,8 +250,9 @@ $(document).ready(function () {
   });
 
   $(document).on('click', '.btn-delete', function () {
-    const id = $(this).data('id');
-    const nombre = $(this).data('nombre');
+    const row = batchesTable.row($(this).closest('tr')).data();
+    const id = row.id;
+    const nombre = row.planta_nombre;
 
     Helpers.confirmDialog(
       '¿Eliminar lote?',

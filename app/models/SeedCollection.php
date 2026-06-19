@@ -43,7 +43,7 @@ class SeedCollection extends Database implements ReadableInterface, DeletableInt
                     LEFT JOIN ubicacion u ON r.id_ubicacion = u.id_ubicacion
                     WHERE r.activo = 1
                     ORDER BY r.fecha_asignacion DESC, r.id_recoleccion DESC";
-            $stmt = $this->db->query($sql);
+            $stmt = $this->db()->query($sql);
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
         } catch (\Throwable $e) {
             error_log('Error en SeedCollection::getAll: ' . $e->getMessage());
@@ -54,7 +54,7 @@ class SeedCollection extends Database implements ReadableInterface, DeletableInt
     public function getById(int $id): ?array
     {
         try {
-            $stmt = $this->db->prepare("
+            $stmt = $this->db()->prepare("
                 SELECT r.*,
                        CONCAT(t.nombre_trabajador, ' ', t.apellido_trabajador) AS trabajador_nombre,
                        u.nombre_ubicacion
@@ -73,27 +73,27 @@ class SeedCollection extends Database implements ReadableInterface, DeletableInt
 
     public function exists(int $id): bool
     {
-        $stmt = $this->db->prepare("SELECT COUNT(*) FROM recoleccion_semillas WHERE id_recoleccion = :id");
+        $stmt = $this->db()->prepare("SELECT COUNT(*) FROM recoleccion_semillas WHERE id_recoleccion = :id");
         $stmt->execute([':id' => $id]);
         return $stmt->fetchColumn() > 0;
     }
 
     public function delete(int $id): bool
     {
-        $stmt = $this->db->prepare("UPDATE recoleccion_semillas SET activo = 0 WHERE id_recoleccion = :id");
+        $stmt = $this->db()->prepare("UPDATE recoleccion_semillas SET activo = 0 WHERE id_recoleccion = :id");
         return $stmt->execute([':id' => $id]);
     }
 
     public function restore(int $id): bool
     {
-        $stmt = $this->db->prepare("UPDATE recoleccion_semillas SET activo = 1 WHERE id_recoleccion = :id");
+        $stmt = $this->db()->prepare("UPDATE recoleccion_semillas SET activo = 1 WHERE id_recoleccion = :id");
         return $stmt->execute([':id' => $id]);
     }
 
     public function getLastInsertId(): ?int
     {
         try {
-            $id = $this->db->lastInsertId();
+            $id = $this->db()->lastInsertId();
             return $id !== false ? (int)$id : null;
         } catch (\Throwable $e) {
             return null;
@@ -108,7 +108,7 @@ class SeedCollection extends Database implements ReadableInterface, DeletableInt
             'fecha_asignacion' => $fechaAsignacion,
             'observacion' => $observacion,
         ]);
-        $stmt = $this->db->prepare("
+        $stmt = $this->db()->prepare("
             INSERT INTO recoleccion_semillas (id_trabajador, id_ubicacion, fecha_asignacion, estatus, observacion)
             VALUES (:id_trabajador, :id_ubicacion, :fecha_asignacion, 'Pendiente', :observacion)
         ");
@@ -131,7 +131,7 @@ class SeedCollection extends Database implements ReadableInterface, DeletableInt
         if (!$this->exists($id)) {
             throw new \Exception('No existe la recolección solicitada para modificar.');
         }
-        $stmt = $this->db->prepare("
+        $stmt = $this->db()->prepare("
             UPDATE recoleccion_semillas
             SET id_trabajador = :id_trabajador,
                 id_ubicacion = :id_ubicacion,
@@ -153,7 +153,7 @@ class SeedCollection extends Database implements ReadableInterface, DeletableInt
         if (!$this->exists($id)) {
             throw new \Exception('No existe la recolección solicitada.');
         }
-        $stmt = $this->db->prepare("
+        $stmt = $this->db()->prepare("
             UPDATE recoleccion_semillas
             SET estatus = 'Realizada',
                 fecha_recoleccion = :fecha_recoleccion
@@ -167,7 +167,7 @@ class SeedCollection extends Database implements ReadableInterface, DeletableInt
 
     public function addDetail(int $idRecoleccion, ?string $plantaOrigen, string $nombreSemilla, int $idUnidadMedida, float $cantidad, ?int $idInsumo = null): bool
     {
-        $stmt = $this->db->prepare("
+        $stmt = $this->db()->prepare("
             INSERT INTO recoleccion_semillas_detalle
                 (id_recoleccion, planta_origen, nombre_semilla, id_unidad_medida, cantidad, id_insumo)
             VALUES
@@ -186,7 +186,7 @@ class SeedCollection extends Database implements ReadableInterface, DeletableInt
     public function getDetails(int $idRecoleccion): array
     {
         try {
-            $stmt = $this->db->prepare("
+            $stmt = $this->db()->prepare("
                 SELECT d.*,
                        u.nombre_unidad_medida, u.simbolo,
                        i.nombre_insumo AS insumo_nombre
@@ -207,7 +207,7 @@ class SeedCollection extends Database implements ReadableInterface, DeletableInt
     public function getDetailsCount(int $idRecoleccion): int
     {
         try {
-            $stmt = $this->db->prepare("SELECT COUNT(*) FROM recoleccion_semillas_detalle WHERE id_recoleccion = :id");
+            $stmt = $this->db()->prepare("SELECT COUNT(*) FROM recoleccion_semillas_detalle WHERE id_recoleccion = :id");
             $stmt->execute([':id' => $idRecoleccion]);
             return (int)$stmt->fetchColumn();
         } catch (\Throwable $e) {
@@ -221,7 +221,7 @@ class SeedCollection extends Database implements ReadableInterface, DeletableInt
         $createdCount = 0;
 
         try {
-            $this->db->beginTransaction();
+            $this->db()->beginTransaction();
 
             foreach ($items as $item) {
                 $nombreSemilla = trim((string)($item['nombre_semilla'] ?? ''));
@@ -253,15 +253,15 @@ class SeedCollection extends Database implements ReadableInterface, DeletableInt
             }
 
             if ($createdCount === 0) {
-                $this->db->rollBack();
+                $this->db()->rollBack();
                 return 0;
             }
 
-            $this->db->commit();
+            $this->db()->commit();
             return $createdCount;
         } catch (\Throwable $e) {
-            if ($this->db->inTransaction()) {
-                $this->db->rollBack();
+            if ($this->db()->inTransaction()) {
+                $this->db()->rollBack();
             }
             error_log('Error en SeedCollection::registerSeedsWithTransaction: ' . $e->getMessage());
             throw $e;

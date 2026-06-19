@@ -46,7 +46,7 @@ class Batch extends Database implements ReadableInterface, DeletableInterface
                     LEFT JOIN calculo_precio c ON l.id_lote = c.id_lote
                     WHERE l.activo = 1
                     ORDER BY l.fecha_siembra DESC";
-            $stmt = $this->db->query($sql);
+            $stmt = $this->db()->query($sql);
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
         } catch (\Throwable $e) {
             error_log('Error al obtener lote: ' . $e->getMessage());
@@ -56,14 +56,14 @@ class Batch extends Database implements ReadableInterface, DeletableInterface
 
     public function exists(int $id): bool
     {
-        $stmt = $this->db->prepare("SELECT COUNT(*) FROM lote WHERE id_lote = :id");
+        $stmt = $this->db()->prepare("SELECT COUNT(*) FROM lote WHERE id_lote = :id");
         $stmt->execute([':id' => $id]);
         return $stmt->fetchColumn() > 0;
     }
 
     public function getById(int $id): ?array
     {
-        $stmt = $this->db->prepare("SELECT
+        $stmt = $this->db()->prepare("SELECT
                                         l.*,
                                         p.nombre_comun AS planta_nombre,
                                         e.nombre_especie AS especie_nombre
@@ -77,20 +77,20 @@ class Batch extends Database implements ReadableInterface, DeletableInterface
 
     public function delete(int $id): bool
     {
-        $stmt = $this->db->prepare("UPDATE lote SET activo = 0 WHERE id_lote = :id");
+        $stmt = $this->db()->prepare("UPDATE lote SET activo = 0 WHERE id_lote = :id");
         return $stmt->execute([':id' => $id]);
     }
 
     public function restore(int $id): bool
     {
-        $stmt = $this->db->prepare("UPDATE lote SET activo = 1 WHERE id_lote = :id");
+        $stmt = $this->db()->prepare("UPDATE lote SET activo = 1 WHERE id_lote = :id");
         return $stmt->execute([':id' => $id]);
     }
 
     public function getLastInsertId(): ?int
     {
         try {
-            return (int)$this->db->lastInsertId();
+            return (int)$this->db()->lastInsertId();
         } catch (\Throwable $e) {
             return null;
         }
@@ -109,7 +109,7 @@ class Batch extends Database implements ReadableInterface, DeletableInterface
             'origen' => $origen,
             'observacion' => $observacion,
         ]);
-        $stmt = $this->db->prepare("INSERT INTO lote (id_planta, id_ubicacion, fecha_siembra, cantidad_inicial, cantidad_actual, estado, categoria, origen, observacion, imagen) VALUES (:id_planta, :id_ubicacion, :fecha_siembra, :cantidad_inicial, :cantidad_actual, :estado, :categoria, :origen, :observacion, :imagen)");
+        $stmt = $this->db()->prepare("INSERT INTO lote (id_planta, id_ubicacion, fecha_siembra, cantidad_inicial, cantidad_actual, estado, categoria, origen, observacion, imagen) VALUES (:id_planta, :id_ubicacion, :fecha_siembra, :cantidad_inicial, :cantidad_actual, :estado, :categoria, :origen, :observacion, :imagen)");
         return $stmt->execute([
             ':id_planta' => $id_planta,
             ':id_ubicacion' => $id_ubicacion,
@@ -140,7 +140,7 @@ class Batch extends Database implements ReadableInterface, DeletableInterface
         if (!$this->exists($id)) {
             throw new \Exception("No existe el lote con ID: $id");
         }
-        $stmt = $this->db->prepare("UPDATE lote SET id_planta = :id_planta, id_ubicacion = :id_ubicacion, fecha_siembra = :fecha_siembra, cantidad_inicial = :cantidad_inicial, cantidad_actual = :cantidad_actual, estado = :estado, categoria = :categoria, origen = :origen, observacion = :observacion, imagen = :imagen WHERE id_lote = :id");
+        $stmt = $this->db()->prepare("UPDATE lote SET id_planta = :id_planta, id_ubicacion = :id_ubicacion, fecha_siembra = :fecha_siembra, cantidad_inicial = :cantidad_inicial, cantidad_actual = :cantidad_actual, estado = :estado, categoria = :categoria, origen = :origen, observacion = :observacion, imagen = :imagen WHERE id_lote = :id");
         return $stmt->execute([
             ':id' => $id,
             ':id_planta' => $id_planta,
@@ -158,13 +158,13 @@ class Batch extends Database implements ReadableInterface, DeletableInterface
 
     protected function deductStock(int $id, int $cantidad): bool
     {
-        $stmt = $this->db->prepare("UPDATE lote SET cantidad_actual = GREATEST(0, cantidad_actual - :cantidad) WHERE id_lote = :id AND cantidad_actual >= :cantidad2");
+        $stmt = $this->db()->prepare("UPDATE lote SET cantidad_actual = GREATEST(0, cantidad_actual - :cantidad) WHERE id_lote = :id AND cantidad_actual >= :cantidad2");
         return $stmt->execute([':cantidad' => $cantidad, ':id' => $id, ':cantidad2' => $cantidad]);
     }
 
     protected function restoreStock(int $id, int $cantidad): bool
     {
-        $stmt = $this->db->prepare("UPDATE lote SET cantidad_actual = cantidad_actual + :cantidad WHERE id_lote = :id");
+        $stmt = $this->db()->prepare("UPDATE lote SET cantidad_actual = cantidad_actual + :cantidad WHERE id_lote = :id");
         return $stmt->execute([':cantidad' => $cantidad, ':id' => $id]);
     }
 }

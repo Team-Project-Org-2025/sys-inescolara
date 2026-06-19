@@ -27,7 +27,7 @@ class Inventory extends Database
     public function getConsolidated(): array
     {
         try {
-            $this->db->exec("SET NAMES 'utf8mb4' COLLATE 'utf8mb4_unicode_ci'");
+            $this->db()->exec("SET NAMES 'utf8mb4' COLLATE 'utf8mb4_unicode_ci'");
             $sql = "
                 SELECT id, nombre, tipo, stock, unidad, ubicacion, precio, item_id FROM (
                     -- Plantas
@@ -101,7 +101,7 @@ class Inventory extends Database
                 ) AS inv
                 ORDER BY tipo, nombre
             ";
-            $stmt = $this->db->query($sql);
+            $stmt = $this->db()->query($sql);
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
         } catch (\Throwable $e) {
             error_log('Error en Inventory::getConsolidated: ' . $e->getMessage());
@@ -112,7 +112,7 @@ class Inventory extends Database
     public function getMovements(): array
     {
         try {
-            $this->db->exec("SET NAMES 'utf8mb4' COLLATE 'utf8mb4_unicode_ci'");
+            $this->db()->exec("SET NAMES 'utf8mb4' COLLATE 'utf8mb4_unicode_ci'");
             $sql = "
                 SELECT id, tipo_movimiento, tipo_item, cliente, gestor, fecha, observacion, detalle FROM (
 
@@ -156,7 +156,7 @@ class Inventory extends Database
                 ORDER BY fecha DESC
                 LIMIT 500
             ";
-            $stmt = $this->db->query($sql);
+            $stmt = $this->db()->query($sql);
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
         } catch (\Throwable $e) {
             error_log('Error en Inventory::getMovements: ' . $e->getMessage());
@@ -167,7 +167,7 @@ class Inventory extends Database
     public function getAdjustments(): array
     {
         try {
-            $this->db->exec("SET NAMES 'utf8mb4' COLLATE 'utf8mb4_unicode_ci'");
+            $this->db()->exec("SET NAMES 'utf8mb4' COLLATE 'utf8mb4_unicode_ci'");
             $sql = "
                 SELECT
                     a.id_ajuste,
@@ -183,32 +183,11 @@ class Inventory extends Database
                 ORDER BY a.fecha_ajuste DESC
                 LIMIT 200
             ";
-            $stmt = $this->db->query($sql);
+            $stmt = $this->db()->query($sql);
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
         } catch (\Throwable $e) {
             error_log('Error en Inventory::getAdjustments: ' . $e->getMessage());
             return [];
-        }
-    }
-
-    protected function beginTransaction(): void
-    {
-        if (!$this->db->inTransaction()) {
-            $this->db->beginTransaction();
-        }
-    }
-
-    protected function commit(): void
-    {
-        if ($this->db->inTransaction()) {
-            $this->db->commit();
-        }
-    }
-
-    protected function rollback(): void
-    {
-        if ($this->db->inTransaction()) {
-            $this->db->rollBack();
         }
     }
 
@@ -223,7 +202,7 @@ class Inventory extends Database
             'fecha' => $fecha,
         ]);
         try {
-            $stmt = $this->db->prepare("
+            $stmt = $this->db()->prepare("
                 INSERT INTO ajuste_inventario (id_insumo, id_trabajador, tipo_ajuste, cantidad, motivo, fecha_ajuste)
                 VALUES (:id_insumo, :id_trabajador, :tipo_ajuste, :cantidad, :motivo, :fecha)
             ");
@@ -244,7 +223,7 @@ class Inventory extends Database
     public function updateSupplyStock(int $idInsumo, float $cantidad, string $tipoAjuste): bool
     {
         try {
-            $stmt = $this->db->prepare("
+            $stmt = $this->db()->prepare("
                 UPDATE insumo
                 SET stock_actual = GREATEST(0, stock_actual + :cantidad * CASE WHEN :tipo = 'entrada' THEN 1 ELSE -1 END)
                 WHERE id_insumo = :id
@@ -263,7 +242,7 @@ class Inventory extends Database
     public function getLastInsertId(): ?int
     {
         try {
-            return (int)$this->db->lastInsertId();
+            return (int)$this->db()->lastInsertId();
         } catch (\Throwable $e) {
             return null;
         }

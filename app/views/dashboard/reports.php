@@ -2,7 +2,7 @@
 
 include_once __DIR__ . '/../common/links.php';
 
-$userName = $_SESSION['user_nombre'] ?? 'Usuario';
+$userName = \SysInescolara\helpers\Auth::name();
 ?>
 <!DOCTYPE html>
 <html lang="es">

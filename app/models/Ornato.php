@@ -44,7 +44,7 @@ class Ornato extends Database implements ReadableInterface, DeletableInterface
                     LEFT JOIN cliente c ON o.id_cliente = c.id_cliente AND c.activo = 1
                     WHERE o.activo = 1
                     ORDER BY o.fecha DESC, o.id_ornato DESC";
-            $stmt = $this->db->query($sql);
+            $stmt = $this->db()->query($sql);
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
         } catch (\Throwable $e) {
             error_log('Error al obtener ornatos: ' . $e->getMessage());
@@ -55,7 +55,7 @@ class Ornato extends Database implements ReadableInterface, DeletableInterface
     public function getById(int $id): ?array
     {
         try {
-            $stmt = $this->db->prepare("SELECT
+            $stmt = $this->db()->prepare("SELECT
                                             o.*,
                                             c.nombre_cliente
                                         FROM ornatos o
@@ -72,7 +72,7 @@ class Ornato extends Database implements ReadableInterface, DeletableInterface
     public function exists(int $id): bool
     {
         try {
-            $stmt = $this->db->prepare("SELECT COUNT(*) FROM ornatos WHERE id_ornato = :id");
+            $stmt = $this->db()->prepare("SELECT COUNT(*) FROM ornatos WHERE id_ornato = :id");
             $stmt->execute([':id' => $id]);
             return $stmt->fetchColumn() > 0;
         } catch (\Throwable $e) {
@@ -84,7 +84,7 @@ class Ornato extends Database implements ReadableInterface, DeletableInterface
     public function delete(int $id): bool
     {
         try {
-            $stmt = $this->db->prepare("UPDATE ornatos SET activo = 0 WHERE id_ornato = :id");
+            $stmt = $this->db()->prepare("UPDATE ornatos SET activo = 0 WHERE id_ornato = :id");
             return $stmt->execute([':id' => $id]);
         } catch (\Throwable $e) {
             error_log('Error al eliminar ornato: ' . $e->getMessage());
@@ -95,7 +95,7 @@ class Ornato extends Database implements ReadableInterface, DeletableInterface
     public function restore(int $id): bool
     {
         try {
-            $stmt = $this->db->prepare("UPDATE ornatos SET activo = 1 WHERE id_ornato = :id");
+            $stmt = $this->db()->prepare("UPDATE ornatos SET activo = 1 WHERE id_ornato = :id");
             return $stmt->execute([':id' => $id]);
         } catch (\Throwable $e) {
             error_log('Error al restaurar ornato: ' . $e->getMessage());
@@ -106,7 +106,7 @@ class Ornato extends Database implements ReadableInterface, DeletableInterface
     public function obtenerUltimoId(): ?int
     {
         try {
-            return (int)$this->db->lastInsertId();
+            return (int)$this->db()->lastInsertId();
         } catch (\Throwable $e) {
             return null;
         }
@@ -123,7 +123,7 @@ class Ornato extends Database implements ReadableInterface, DeletableInterface
             'fecha'       => $datos['fecha'] ?? null,
         ]);
         try {
-            $stmt = $this->db->prepare("INSERT INTO ornatos
+            $stmt = $this->db()->prepare("INSERT INTO ornatos
                 (id_cliente, tipo_ornato, descripcion, ubicacion, monto_total, fecha)
                 VALUES (:id_cliente, :tipo_ornato, :descripcion, :ubicacion, :monto_total, :fecha)");
             return $stmt->execute([
@@ -143,8 +143,8 @@ class Ornato extends Database implements ReadableInterface, DeletableInterface
     public function agregarDetalles(int $idOrnato, array $items): bool
     {
         try {
-            $this->db->beginTransaction();
-            $stmt = $this->db->prepare("INSERT INTO detalle_ornatos
+            $this->db()->beginTransaction();
+            $stmt = $this->db()->prepare("INSERT INTO detalle_ornatos
                 (id_ornato, id_lote, cantidad, precio_unitario, sub_total)
                 VALUES (:id_ornato, :id_lote, :cantidad, :precio_unitario, :sub_total)");
 
@@ -158,10 +158,10 @@ class Ornato extends Database implements ReadableInterface, DeletableInterface
                 ]);
             }
 
-            $this->db->commit();
+            $this->db()->commit();
             return true;
         } catch (\Throwable $e) {
-            $this->db->rollBack();
+            $this->db()->rollBack();
             error_log('Error al agregar detalles de ornato: ' . $e->getMessage());
             return false;
         }
@@ -181,7 +181,7 @@ class Ornato extends Database implements ReadableInterface, DeletableInterface
             if (!$this->exists($id)) {
                 throw new \Exception("No existe el ornato con ID: $id");
             }
-            $stmt = $this->db->prepare("UPDATE ornatos SET
+            $stmt = $this->db()->prepare("UPDATE ornatos SET
                 id_cliente  = :id_cliente,
                 tipo_ornato = :tipo_ornato,
                 descripcion = :descripcion,
@@ -207,12 +207,12 @@ class Ornato extends Database implements ReadableInterface, DeletableInterface
     public function actualizarDetalles(int $idOrnato, array $items): bool
     {
         try {
-            $this->db->beginTransaction();
+            $this->db()->beginTransaction();
 
-            $stmtDelete = $this->db->prepare("DELETE FROM detalle_ornatos WHERE id_ornato = :id_ornato");
+            $stmtDelete = $this->db()->prepare("DELETE FROM detalle_ornatos WHERE id_ornato = :id_ornato");
             $stmtDelete->execute([':id_ornato' => $idOrnato]);
 
-            $stmtInsert = $this->db->prepare("INSERT INTO detalle_ornatos
+            $stmtInsert = $this->db()->prepare("INSERT INTO detalle_ornatos
                 (id_ornato, id_lote, cantidad, precio_unitario, sub_total)
                 VALUES (:id_ornato, :id_lote, :cantidad, :precio_unitario, :sub_total)");
 
@@ -226,10 +226,10 @@ class Ornato extends Database implements ReadableInterface, DeletableInterface
                 ]);
             }
 
-            $this->db->commit();
+            $this->db()->commit();
             return true;
         } catch (\Throwable $e) {
-            $this->db->rollBack();
+            $this->db()->rollBack();
             error_log('Error al actualizar detalles de ornato: ' . $e->getMessage());
             return false;
         }
@@ -238,7 +238,7 @@ class Ornato extends Database implements ReadableInterface, DeletableInterface
     public function obtenerDetalles(int $idOrnato): array
     {
         try {
-            $stmt = $this->db->prepare("SELECT
+            $stmt = $this->db()->prepare("SELECT
                                             d.id_detalle_ornato,
                                             d.id_ornato,
                                             d.id_lote,

@@ -47,12 +47,12 @@ function initAssignmentsTable() {
                 render: (d) => {
                     const id = d.id_asignacion;
                     const est = d.estatus_tarea;
-                    let btnVer = `<button class="btn btn-sm btn-outline-info btn-view-assign" data-id="${id}" title="Ver detalle"><i class="fas fa-eye"></i></button>`;
+                    let btnVer = `<button class="btn btn-sm btn-outline-info btn-view-assign" title="Ver detalle"><i class="fas fa-eye"></i></button>`;
                     let btnCompletar = '';
                     let btnCancelar = '';
                     if (est === 'pendiente') {
-                        btnCompletar = `<button class="btn btn-sm btn-outline-success btn-complete-assign" data-id="${id}" title="Completar"><i class="fas fa-check"></i></button>`;
-                        btnCancelar = `<button class="btn btn-sm btn-outline-danger btn-cancel-assign" data-id="${id}" title="Cancelar"><i class="fas fa-times"></i></button>`;
+                        btnCompletar = `<button class="btn btn-sm btn-outline-success btn-complete-assign" title="Completar"><i class="fas fa-check"></i></button>`;
+                        btnCancelar = `<button class="btn btn-sm btn-outline-danger btn-cancel-assign" title="Cancelar"><i class="fas fa-times"></i></button>`;
                     }
                     return `<div class="d-flex gap-1">${btnVer}${btnCompletar}${btnCancelar}</div>`;
                 },
@@ -283,7 +283,8 @@ $('#assignTaskModal').on('hidden.bs.modal', function () {
 //  COMPLETE ASSIGNMENT
 // ============================================================
 $(document).on('click', '.btn-complete-assign', function () {
-    const id = $(this).data('id');
+    const row = assignmentsTable.row($(this).closest('tr')).data();
+    const id = row.id_asignacion;
     $('#completeAssignId').val(id);
     $('#completeAssignForm input[name="fecha_cumplimiento"]').val(DATA.hoy || new Date().toISOString().split('T')[0]);
 
@@ -362,7 +363,8 @@ $('#completeAssignModal').on('hidden.bs.modal', function () {
 //  CANCEL ASSIGNMENT
 // ============================================================
 $(document).on('click', '.btn-cancel-assign', function () {
-    const id = $(this).data('id');
+    const row = assignmentsTable.row($(this).closest('tr')).data();
+    const id = row.id_asignacion;
     Helpers.confirmDialog(
         '¿Cancelar asignación?',
         '¿Estás seguro de cancelar esta asignación?',
@@ -386,7 +388,8 @@ $(document).on('click', '.btn-cancel-assign', function () {
 //  VIEW ASSIGNMENT DETAIL
 // ============================================================
 $(document).on('click', '.btn-view-assign', function () {
-    const id = $(this).data('id');
+    const row = assignmentsTable.row($(this).closest('tr')).data();
+    const id = row ? row.id_asignacion : 0;
     if (!id) return;
     $('#detailAssignBody').html('<div class="text-center py-4"><div class="spinner-border" role="status"></div> Cargando...</div>');
     $('#detailAssignModal').modal({ focus: false }).modal('show');

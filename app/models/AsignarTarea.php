@@ -33,7 +33,7 @@ class AsignarTarea extends Database implements ReadableInterface
                 LEFT JOIN trabajadores tr ON a.id_trabajador = tr.id_trabajador
                 LEFT JOIN lote l ON a.id_lote = l.id_lote
                 ORDER BY a.fecha_asignacion DESC";
-        $stmt = $this->db->query($sql);
+        $stmt = $this->db()->query($sql);
         return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
     }
 
@@ -46,14 +46,14 @@ class AsignarTarea extends Database implements ReadableInterface
                 LEFT JOIN trabajadores tr ON a.id_trabajador = tr.id_trabajador
                 LEFT JOIN lote l ON a.id_lote = l.id_lote
                 WHERE a.id_asignacion = :id";
-        $stmt = $this->db->prepare($sql);
+        $stmt = $this->db()->prepare($sql);
         $stmt->execute([':id' => $id]);
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 
     public function exists(int $id): bool
     {
-        $stmt = $this->db->prepare("SELECT COUNT(*) FROM asignar_tarea WHERE id_asignacion = :id");
+        $stmt = $this->db()->prepare("SELECT COUNT(*) FROM asignar_tarea WHERE id_asignacion = :id");
         $stmt->execute([':id' => $id]);
         return $stmt->fetchColumn() > 0;
     }
@@ -67,7 +67,7 @@ class AsignarTarea extends Database implements ReadableInterface
             'fecha_asignacion'=> $data['fecha_asignacion'] ?? null,
             'estatus_tarea'   => $data['estatus_tarea'] ?? null,
         ]);
-        $stmt = $this->db->prepare("
+        $stmt = $this->db()->prepare("
             INSERT INTO asignar_tarea (id_trabajador, id_tarea, id_lote, fecha_asignacion, estatus_tarea)
             VALUES (:id_trabajador, :id_tarea, :id_lote, :fecha_asignacion, :estatus_tarea)
         ");
@@ -83,7 +83,7 @@ class AsignarTarea extends Database implements ReadableInterface
     public function complete(int $id, ?string $fechaCumplimiento = null, ?float $horasDedicadas = null): bool
     {
         $sql = "UPDATE asignar_tarea SET estatus_tarea = 'completada', fecha_cumplimiento = :fecha, horas_dedicadas = :horas WHERE id_asignacion = :id";
-        $stmt = $this->db->prepare($sql);
+        $stmt = $this->db()->prepare($sql);
         return $stmt->execute([
             ':id'    => $id,
             ':fecha' => $fechaCumplimiento,
@@ -93,14 +93,14 @@ class AsignarTarea extends Database implements ReadableInterface
 
     public function cancel(int $id): bool
     {
-        $stmt = $this->db->prepare("UPDATE asignar_tarea SET estatus_tarea = 'cancelada' WHERE id_asignacion = :id");
+        $stmt = $this->db()->prepare("UPDATE asignar_tarea SET estatus_tarea = 'cancelada' WHERE id_asignacion = :id");
         return $stmt->execute([':id' => $id]);
     }
 
     public function getLastInsertId(): ?int
     {
         try {
-            return (int)$this->db->lastInsertId();
+            return (int)$this->db()->lastInsertId();
         } catch (\Throwable $e) {
             return null;
         }

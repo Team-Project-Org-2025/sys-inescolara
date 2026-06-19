@@ -13,9 +13,9 @@ $inventorySummary = $inventorySummary ?? [];
 $totalAlerts = count($lowStockLots) + count($lowStockSupplies);
 $totalProd = ($stats['total_plantas'] ?? 0) + ($stats['total_especies'] ?? 0) + ($stats['total_lotes'] ?? 0);
 
-$userName = $_SESSION['user_nombre'] ?? 'Usuario';
+$userName = \SysInescolara\helpers\Auth::name();
 $userInitial = strtoupper(substr($userName, 0, 1));
-$userAvatar = $_SESSION['user_avatar'] ?? null;
+$userAvatar = \SysInescolara\helpers\Auth::avatar();
 ?>
 <!DOCTYPE html>
 <html lang="es">

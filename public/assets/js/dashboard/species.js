@@ -32,18 +32,13 @@ $(document).ready(function () {
         {
           data: null,
           orderable: false,
-          render: (data) => {
+          render: () => {
             return `
               <div class="d-flex gap-1">
-                <button class="btn btn-sm btn-outline-primary btn-edit"
-                        data-id="${Helpers.escapeHtml(data.id)}"
-                        data-nombre_especie="${Helpers.escapeHtml(data.nombre_especie)}"
-                        data-descripcion="${Helpers.escapeHtml(data.descripcion || '')}">
+                <button class="btn btn-sm btn-outline-primary btn-edit">
                     <i class="fas fa-edit"></i> Editar
                 </button>
-                <button class="btn btn-sm btn-outline-danger btn-delete"
-                        data-id="${Helpers.escapeHtml(data.id)}"
-                        data-nombre_especie="${Helpers.escapeHtml(data.nombre_especie)}">
+                <button class="btn btn-sm btn-outline-danger btn-delete">
                     <i class="fas fa-trash"></i> Eliminar
                 </button>
               </div>
@@ -117,16 +112,16 @@ $(document).ready(function () {
 
   // Editar especie
   $(document).on('click', '.btn-edit', function () {
-    const $btn = $(this);
+    const row = speciesTable.row($(this).closest('tr')).data();
 
     const $addModal = $('#addSpeciesModal');
     if ($addModal.hasClass('show')) {
       $addModal.modal('hide');
     }
 
-    $('#editSpeciesId').val($btn.data('id'));
-    $('#editSpeciesName').val($btn.data('nombre_especie'));
-    $('#editSpeciesDescripcion').val($btn.data('descripcion'));
+    $('#editSpeciesId').val(row.id);
+    $('#editSpeciesName').val(row.nombre_especie);
+    $('#editSpeciesDescripcion').val(row.descripcion);
 
     $('#editSpeciesModal').modal({ focus: false }).modal('show');
   });
@@ -166,8 +161,9 @@ $(document).ready(function () {
 
   // Eliminar especie
   $(document).on('click', '.btn-delete', function () {
-    const id = $(this).data('id');
-    const nombre = $(this).data('nombre_especie');
+    const row = speciesTable.row($(this).closest('tr')).data();
+    const id = row.id;
+    const nombre = row.nombre_especie;
 
     Helpers.confirmDialog(
       '¿Eliminar especie?',

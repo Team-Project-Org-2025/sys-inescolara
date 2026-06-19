@@ -19,7 +19,7 @@ class AuditLog extends Database implements ReadableInterface
             date_default_timezone_set('America/Caracas');
             $fecha = date('Y-m-d H:i:s');
 
-            $stmt = $this->db->prepare("
+            $stmt = $this->db()->prepare("
                 INSERT INTO auditoria_logs 
                     (id_usuario, accion, tabla_afectada, id_registro_afectado, valor_anterior, valor_nuevo, endpoint_solicitado, fecha_accion)
                 VALUES 
@@ -45,7 +45,7 @@ class AuditLog extends Database implements ReadableInterface
     public function getAll(): array
     {
         try {
-            $stmt = $this->db->query("
+            $stmt = $this->db()->query("
                 SELECT 
                     al.*,
                     u.nombre_usuario
@@ -66,12 +66,12 @@ class AuditLog extends Database implements ReadableInterface
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
-        if (!isset($_SESSION['user_id'])) {
+        if (!\SysInescolara\helpers\Auth::check()) {
             return;
         }
         try {
             $log = new self();
-            $log->log((int)$_SESSION['user_id'], $action, $table, $recordId, $oldValue, $newValue);
+            $log->log(\SysInescolara\helpers\Auth::id(), $action, $table, $recordId, $oldValue, $newValue);
         } catch (\Throwable $e) {
             error_log('Audit record error: ' . $e->getMessage());
         }
@@ -80,7 +80,7 @@ class AuditLog extends Database implements ReadableInterface
     public function getById(int $id): ?array
     {
         try {
-            $stmt = $this->db->prepare("
+            $stmt = $this->db()->prepare("
                 SELECT 
                     al.*,
                     u.nombre_usuario

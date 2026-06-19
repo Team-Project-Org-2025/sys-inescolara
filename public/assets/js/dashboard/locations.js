@@ -44,19 +44,13 @@ SkeletonHelper.showTableSkeleton('locationsTable', 5, 5);
           orderable: false,
           searchable: false,
           width: '25%',
-          render: (data) => {
+          render: () => {
             return `
               <div class="d-flex gap-1">
-                <button class="btn btn-sm btn-outline-primary btn-edit"
-                        data-id="${Helpers.escapeHtml(data.id)}"
-                        data-nombre_ubicacion="${Helpers.escapeHtml(data.nombre_ubicacion)}"
-                        data-descripcion="${Helpers.escapeHtml(data.descripcion || '')}"
-                        data-zona="${Helpers.escapeHtml(data.zona || '')}">
+                <button class="btn btn-sm btn-outline-primary btn-edit">
                     <i class="fas fa-edit"></i> Editar
                 </button>
-                <button class="btn btn-sm btn-outline-danger btn-delete"
-                        data-id="${Helpers.escapeHtml(data.id)}"
-                        data-nombre="${Helpers.escapeHtml(data.nombre_ubicacion || '')}">
+                <button class="btn btn-sm btn-outline-danger btn-delete">
                     <i class="fas fa-trash"></i> Eliminar
                 </button>
               </div>
@@ -128,17 +122,17 @@ SkeletonHelper.showTableSkeleton('locationsTable', 5, 5);
   });
 
   $(document).on('click', '.btn-edit', function () {
-    const $btn = $(this);
+    const row = locationsTable.row($(this).closest('tr')).data();
 
     const $addModal = $('#addLocationModal');
     if ($addModal.hasClass('show')) {
       $addModal.modal('hide');
     }
 
-    $('#editLocationId').val($btn.data('id'));
-    $('#editLocationName').val($btn.data('nombre_ubicacion'));
-    $('#editLocationDesc').val($btn.data('descripcion'));
-    $('#editLocationZona').val($btn.data('zona'));
+    $('#editLocationId').val(row.id);
+    $('#editLocationName').val(row.nombre_ubicacion);
+    $('#editLocationDesc').val(row.descripcion);
+    $('#editLocationZona').val(row.zona);
 
     $('#editLocationModal').modal({ focus: false }).modal('show');
   });
@@ -178,8 +172,9 @@ SkeletonHelper.showTableSkeleton('locationsTable', 5, 5);
   });
 
   $(document).on('click', '.btn-delete', function () {
-    const id = $(this).data('id');
-    const nombre = $(this).data('nombre');
+    const row = locationsTable.row($(this).closest('tr')).data();
+    const id = row.id;
+    const nombre = row.nombre_ubicacion;
 
     Helpers.confirmDialog(
       '¿Eliminar ubicación?',

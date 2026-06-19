@@ -72,20 +72,13 @@ $(document).ready(function () {
         {
           data: null,
           orderable: false,
-          render: (data) => {
+          render: () => {
             return `
               <div class="d-flex gap-1">
-                <button class="btn btn-sm btn-outline-primary btn-edit"
-                        data-id="${Helpers.escapeHtml(data.id)}"
-                        data-nombre_comun="${Helpers.escapeHtml(data.nombre_comun)}"
-                        data-nombre_tecnico="${Helpers.escapeHtml(data.nombre_tecnico || '')}"
-                        data-especie_id="${Helpers.escapeHtml(data.especie_id || '')}"
-                        data-imagen="${Helpers.escapeHtml(data.imagen || '')}">
+                <button class="btn btn-sm btn-outline-primary btn-edit">
                     <i class="fas fa-edit"></i> Editar
                 </button>
-                <button class="btn btn-sm btn-outline-danger btn-delete"
-                        data-id="${Helpers.escapeHtml(data.id)}"
-                        data-nombre="${Helpers.escapeHtml(data.nombre_comun || '')}">
+                <button class="btn btn-sm btn-outline-danger btn-delete">
                     <i class="fas fa-trash"></i> Eliminar
                 </button>
               </div>
@@ -169,19 +162,19 @@ $(document).ready(function () {
   });
 
   $(document).on('click', '.btn-edit', function () {
-    const $btn = $(this);
+    const row = plantsTable.row($(this).closest('tr')).data();
 
     const $addModal = $('#addPlantModal');
     if ($addModal.hasClass('show')) {
       $addModal.modal('hide');
     }
 
-    $('#editPlantId').val($btn.data('id'));
-    $('#editPlantName').val($btn.data('nombre_comun'));
-    $('#editPlantTecnico').val($btn.data('nombre_tecnico'));
-    $('#editPlantSpecies').val($btn.data('especie_id'));
+    $('#editPlantId').val(row.id);
+    $('#editPlantName').val(row.nombre_comun);
+    $('#editPlantTecnico').val(row.nombre_tecnico);
+    $('#editPlantSpecies').val(row.especie_id);
 
-    const imagen = $btn.data('imagen');
+    const imagen = row.imagen;
     const $currentImg = $('#editImageCurrent');
     if (imagen) {
       $currentImg.show().find('img').attr('src', `${window.BASE_URL || '/'}${imagen}`);
@@ -226,8 +219,9 @@ $(document).ready(function () {
   });
 
   $(document).on('click', '.btn-delete', function () {
-    const id = $(this).data('id');
-    const nombre = $(this).data('nombre');
+    const row = plantsTable.row($(this).closest('tr')).data();
+    const id = row.id;
+    const nombre = row.nombre_comun;
 
     Helpers.confirmDialog(
       '¿Eliminar planta?',

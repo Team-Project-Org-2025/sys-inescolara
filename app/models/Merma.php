@@ -41,7 +41,7 @@ class Merma extends Database implements ReadableInterface, DeletableInterface
                     LEFT JOIN `SysInescolara-Seguridad`.usuarios u ON m.id_usuario_registra = u.id_usuario
                     WHERE m.activo = 1
                     ORDER BY m.fecha_merma DESC, m.id_merma DESC";
-            $stmt = $this->db->query($sql);
+            $stmt = $this->db()->query($sql);
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
         } catch (\Throwable $e) {
             error_log('Error en Merma::getAll: ' . $e->getMessage());
@@ -52,7 +52,7 @@ class Merma extends Database implements ReadableInterface, DeletableInterface
     public function getById(int $id): ?array
     {
         try {
-            $stmt = $this->db->prepare("
+            $stmt = $this->db()->prepare("
                 SELECT m.*,
                        COALESCE(p.nombre_comun, CONCAT('Planta #', CAST(l.id_planta AS CHAR))) AS planta_nombre,
                        t.estado_salud,
@@ -74,27 +74,27 @@ class Merma extends Database implements ReadableInterface, DeletableInterface
 
     public function exists(int $id): bool
     {
-        $stmt = $this->db->prepare("SELECT COUNT(*) FROM mermas_historico WHERE id_merma = :id");
+        $stmt = $this->db()->prepare("SELECT COUNT(*) FROM mermas_historico WHERE id_merma = :id");
         $stmt->execute([':id' => $id]);
         return $stmt->fetchColumn() > 0;
     }
 
     public function delete(int $id): bool
     {
-        $stmt = $this->db->prepare("UPDATE mermas_historico SET activo = 0 WHERE id_merma = :id");
+        $stmt = $this->db()->prepare("UPDATE mermas_historico SET activo = 0 WHERE id_merma = :id");
         return $stmt->execute([':id' => $id]);
     }
 
     public function restore(int $id): bool
     {
-        $stmt = $this->db->prepare("UPDATE mermas_historico SET activo = 1 WHERE id_merma = :id");
+        $stmt = $this->db()->prepare("UPDATE mermas_historico SET activo = 1 WHERE id_merma = :id");
         return $stmt->execute([':id' => $id]);
     }
 
     public function getLastInsertId(): ?int
     {
         try {
-            return (int)$this->db->lastInsertId();
+            return (int)$this->db()->lastInsertId();
         } catch (\Throwable $e) {
             return null;
         }
@@ -120,7 +120,7 @@ class Merma extends Database implements ReadableInterface, DeletableInterface
                     LEFT JOIN calculo_precio c ON l.id_lote = c.id_lote
                     WHERE t.activo = 1 AND t.cantidad > 0
                     ORDER BY t.fecha_registro DESC, p.nombre_comun ASC";
-            $stmt = $this->db->query($sql);
+            $stmt = $this->db()->query($sql);
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
         } catch (\Throwable $e) {
             error_log('Error en Merma::getAvailableQuarantine: ' . $e->getMessage());
@@ -145,7 +145,7 @@ class Merma extends Database implements ReadableInterface, DeletableInterface
         try {
             $this->beginTransaction();
 
-            $stmt = $this->db->prepare("
+            $stmt = $this->db()->prepare("
                 INSERT INTO mermas_historico (id_trazabilidad, id_lote, cantidad, motivo, descripcion, fecha_merma, impacto_economico, id_usuario_registra)
                 VALUES (:id_trazabilidad, :id_lote, :cantidad, :motivo, :descripcion, :fecha_merma, :impacto_economico, :id_usuario_registra)
             ");
@@ -175,7 +175,7 @@ class Merma extends Database implements ReadableInterface, DeletableInterface
 
     private function getQuarantineInfo(int $idTrazabilidad): ?array
     {
-        $stmt = $this->db->prepare("
+        $stmt = $this->db()->prepare("
             SELECT t.id_trazabilidad, t.id_lote, t.cantidad, t.estado_salud,
                    c.precio_final_sugerido AS precio_unitario
             FROM trazabilidad t
@@ -189,28 +189,7 @@ class Merma extends Database implements ReadableInterface, DeletableInterface
 
     private function deductQuarantineStock(int $idTrazabilidad, int $cantidad): bool
     {
-        $stmt = $this->db->prepare("UPDATE trazabilidad SET cantidad = GREATEST(0, cantidad - :cantidad) WHERE id_trazabilidad = :id AND cantidad >= :check");
+        $stmt = $this->db()->prepare("UPDATE trazabilidad SET cantidad = GREATEST(0, cantidad - :cantidad) WHERE id_trazabilidad = :id AND cantidad >= :check");
         return $stmt->execute([':cantidad' => $cantidad, ':id' => $idTrazabilidad, ':check' => $cantidad]);
-    }
-
-    protected function beginTransaction(): void
-    {
-        if (!$this->db->inTransaction()) {
-            $this->db->beginTransaction();
-        }
-    }
-
-    protected function commit(): void
-    {
-        if ($this->db->inTransaction()) {
-            $this->db->commit();
-        }
-    }
-
-    protected function rollback(): void
-    {
-        if ($this->db->inTransaction()) {
-            $this->db->rollBack();
-        }
     }
 }

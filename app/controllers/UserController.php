@@ -74,14 +74,14 @@ function users_handleAddEdit(string $mode): void
     if ($id === 1) $rolId = 1;
 
     $isChangingPassword = ($mode === 'edit' && $password !== '');
-    $isOwnAccount = isset($_SESSION['user_id']) && (int)$_SESSION['user_id'] === $id;
-    $isAdmin = isset($_SESSION['user_rol_id']) && (int)$_SESSION['user_rol_id'] === 1;
+    $isOwnAccount = \SysInescolara\helpers\Auth::check() && \SysInescolara\helpers\Auth::id() === $id;
+    $isAdmin = \SysInescolara\helpers\Auth::isAdmin();
     if ($isChangingPassword && ($isOwnAccount || $isAdmin)) {
         $currentPassword = $_POST['current_password'] ?? '';
         if ($currentPassword === '') {
             throw new \Exception('Debes ingresar tu contraseña actual para realizar este cambio.');
         }
-        $verifyUserId = $isOwnAccount ? $id : (int)$_SESSION['user_id'];
+        $verifyUserId = $isOwnAccount ? $id : \SysInescolara\helpers\Auth::id();
         if (!$model->verifyPassword($verifyUserId, $currentPassword)) {
             throw new \Exception('La contraseña actual no es correcta.');
         }
@@ -129,9 +129,9 @@ function users_handleAddEdit(string $mode): void
 
     AuditLog::record('UPDATE', 'usuarios', $id, $oldData, compact('nombreUsuario', 'correoElectronico', 'rolId'));
 
-    if (isset($_SESSION['user_id']) && (int)$_SESSION['user_id'] === $id) {
-        $_SESSION['user_nombre'] = $nombreUsuario;
-        $_SESSION['user_avatar'] = $avatar;
+    if (\SysInescolara\helpers\Auth::check() && \SysInescolara\helpers\Auth::id() === $id) {
+        \SysInescolara\helpers\Auth::setField('user_nombre', $nombreUsuario);
+        \SysInescolara\helpers\Auth::setField('user_avatar', $avatar);
     }
 
     jsonResponse([
@@ -156,7 +156,7 @@ function users_handleDelete(): void
         jsonResponse(['success' => false, 'message' => 'Debes ingresar tu contraseña para eliminar un usuario.'], 400);
         return;
     }
-    $userId = (int)($_SESSION['user_id'] ?? 0);
+    $userId = \SysInescolara\helpers\Auth::id();
     if ($userId <= 0 || !$model->verifyPassword($userId, $currentPassword)) {
         jsonResponse(['success' => false, 'message' => 'Contraseña incorrecta. No se puede eliminar el usuario.'], 403);
         return;

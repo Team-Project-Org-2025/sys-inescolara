@@ -33,18 +33,13 @@ $(document).ready(function () {
         {
           data: null,
           orderable: false,
-          render: (data) => {
+          render: () => {
             return `
               <div class="d-flex gap-1">
-                <button class="btn btn-sm btn-outline-primary btn-edit"
-                        data-id="${Helpers.escapeHtml(data.id)}"
-                        data-nombre="${Helpers.escapeHtml(data.nombre_unidad_medida)}"
-                        data-simbolo="${Helpers.escapeHtml(data.simbolo || '')}">
+                <button class="btn btn-sm btn-outline-primary btn-edit">
                     <i class="fas fa-edit"></i>
                 </button>
-                <button class="btn btn-sm btn-outline-danger btn-delete"
-                        data-id="${Helpers.escapeHtml(data.id)}"
-                        data-nombre="${Helpers.escapeHtml(data.nombre_unidad_medida)}">
+                <button class="btn btn-sm btn-outline-danger btn-delete">
                     <i class="fas fa-trash"></i>
                 </button>
               </div>
@@ -116,16 +111,16 @@ $(document).ready(function () {
   });
 
   $(document).on('click', '.btn-edit', function () {
-    const $btn = $(this);
+    const row = unitsTable.row($(this).closest('tr')).data();
 
     const $addModal = $('#addUnitModal');
     if ($addModal.hasClass('show')) {
       $addModal.modal('hide');
     }
 
-    $('#editUnitId').val($btn.data('id'));
-    $('#editUnitName').val($btn.data('nombre'));
-    $('#editUnitSymbol').val($btn.data('simbolo'));
+    $('#editUnitId').val(row.id);
+    $('#editUnitName').val(row.nombre_unidad_medida);
+    $('#editUnitSymbol').val(row.simbolo);
 
     $('#editUnitModal').modal({ focus: false }).modal('show');
   });
@@ -164,8 +159,9 @@ $(document).ready(function () {
   });
 
   $(document).on('click', '.btn-delete', function () {
-    const id = $(this).data('id');
-    const nombre = $(this).data('nombre');
+    const row = unitsTable.row($(this).closest('tr')).data();
+    const id = row.id;
+    const nombre = row.nombre_unidad_medida;
 
     Helpers.confirmDialog(
       '¿Eliminar unidad?',
