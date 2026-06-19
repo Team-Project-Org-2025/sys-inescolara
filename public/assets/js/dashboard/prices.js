@@ -142,8 +142,9 @@ $(document).ready(function () {
   // ============================================================
 
   $(document).on('click', '.btn-delete', function () {
-    const id = $(this).data('id');
-    const info = $(this).data('info');
+    const row = pricesTable.row($(this).closest('tr')).data();
+    const id = row.id;
+    const info = `#${row.id_lote} - ${row.planta_nombre || ''}`;
 
     Helpers.confirmDialog(
       '¿Eliminar cálculo?',
@@ -169,16 +170,16 @@ $(document).ready(function () {
   // ============================================================
 
   $(document).on('click', '.btn-edit', function () {
-    const $btn = $(this);
+    const row = pricesTable.row($(this).closest('tr')).data();
 
     Helpers.confirmDialog(
       '¿Editar cálculo?',
-      `Se abrirá una ventana para editar el precio del lote <strong>#${Helpers.escapeHtml($btn.data('id_lote'))}</strong>.<br>
+      `Se abrirá una ventana para editar el precio del lote <strong>#${Helpers.escapeHtml(row.id_lote)}</strong>.<br>
        <small>Se recomienda recalcular desde la planta para mantener consistencia.</small>`,
       () => {
-        const id = $btn.data('id');
-        const precioActual = $btn.data('precio_final_sugerido');
-        const gananciaActual = $btn.data('porcentaje_ganancia');
+        const id = row.id;
+        const precioActual = row.precio_final_sugerido;
+        const gananciaActual = row.porcentaje_ganancia;
 
         Swal.fire({
           title: 'Editar Precio',
@@ -208,8 +209,8 @@ $(document).ready(function () {
 
           Ajax.post(`${baseUrl}?action=edit_ajax`, {
             id: data.id,
-            id_lote: $btn.data('id_lote'),
-            costo_total_insumo: parseFloat($btn.data('costo_total_insumo')) || 0,
+            id_lote: row.id_lote,
+            costo_total_insumo: parseFloat(row.costo_total_insumo) || 0,
             porcentaje_ganancia: data.porcentaje_ganancia,
             precio_final_sugerido: data.precio_final_sugerido,
             fecha_calculo: data.fecha_calculo,
@@ -249,21 +250,13 @@ $(document).ready(function () {
           { data: 'porcentaje_ganancia', render: (data) => `${parseFloat(data).toFixed(1)}%` },
           { data: 'precio_final_sugerido', className: 'text-center', render: (data) => `<strong>${Helpers.formatCurrencyBs(data)}</strong>` },
           { data: 'fecha_calculo', className: 'text-center', render: (data) => data || '<span class="text-muted">&mdash;</span>' },
-          { data: null, orderable: false, render: (data) => {
+          { data: null, orderable: false, render: () => {
               return `
                 <div class="d-flex gap-1">
-                  <button class="btn btn-sm btn-outline-primary btn-edit"
-                          data-id="${Helpers.escapeHtml(data.id)}"
-                          data-id_lote="${Helpers.escapeHtml(data.id_lote)}"
-                          data-costo_total_insumo="${Helpers.escapeHtml(data.costo_total_insumo)}"
-                          data-porcentaje_ganancia="${Helpers.escapeHtml(data.porcentaje_ganancia)}"
-                          data-precio_final_sugerido="${Helpers.escapeHtml(data.precio_final_sugerido)}"
-                          data-fecha_calculo="${Helpers.escapeHtml(data.fecha_calculo || '')}">
+                  <button class="btn btn-sm btn-outline-primary btn-edit">
                       <i class="fas fa-edit"></i>
                   </button>
-                  <button class="btn btn-sm btn-outline-danger btn-delete"
-                          data-id="${Helpers.escapeHtml(data.id)}"
-                          data-info="#${Helpers.escapeHtml(data.id_lote)} - ${Helpers.escapeHtml(data.planta_nombre || '')}">
+                  <button class="btn btn-sm btn-outline-danger btn-delete">
                       <i class="fas fa-trash"></i>
                   </button>
                 </div>

@@ -76,12 +76,10 @@ $(document).ready(function () {
         {
           data: null,
           orderable: false,
-          render: (data) => {
+          render: () => {
             return `
               <div class="d-flex gap-1">
-                <button class="btn btn-sm btn-outline-danger btn-delete"
-                        data-id="${Helpers.escapeHtml(data.id_merma)}"
-                        data-planta="${Helpers.escapeHtml(data.planta_nombre || '')}">
+                <button class="btn btn-sm btn-outline-danger btn-delete">
                     <i class="fas fa-trash"></i> Eliminar
                 </button>
               </div>
@@ -228,8 +226,9 @@ $(document).ready(function () {
 
   // Eliminar Merma
   $(document).on('click', '.btn-delete', function () {
-    const id = $(this).data('id');
-    const planta = $(this).data('planta') || 'este registro';
+    const row = mermasTable.row($(this).closest('tr')).data();
+    const id = row.id_merma;
+    const planta = row.planta_nombre || 'este registro';
 
     Helpers.confirmDialog(
       '¿Desactivar registro?',
