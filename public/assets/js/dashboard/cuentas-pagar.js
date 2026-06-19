@@ -1,6 +1,5 @@
 import * as Helpers from '../utils/helpers.js';
 import * as Ajax from '../utils/ajax-handler.js';
-import { setupRealTimeValidation } from '../utils/validation.js';
 
 $(document).ready(function () {
   const urlBase = `${window.BASE_URL || '/'}CuentasPagar`;

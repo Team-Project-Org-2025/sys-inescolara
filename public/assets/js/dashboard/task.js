@@ -1,10 +1,23 @@
 import * as Helpers from '../utils/helpers.js';
 import * as Ajax from '../utils/ajax-handler.js';
+import { setupRealTimeValidation, validateForm } from '../utils/validation.js';
 
 const DATA = window.TASK_DATA || {};
 const baseUrl = DATA.tasksUrl || `${window.BASE_URL || '/'}tasks`;
 
 let assignmentsTable = null;
+
+const assignRules = {
+  nombre_tarea: 'nombre',
+  id_trabajador: 'select',
+  id_lote: 'select',
+  descripcion: null,
+  fecha_asignacion: 'fechaFuturaCheck',
+};
+
+const completeRules = {
+  fecha_cumplimiento: 'fechaFuturaCheck',
+};
 
 // ============================================================
 //  ASIGNACIONES DATATABLE
@@ -203,6 +216,8 @@ $('#assignTaskForm').on('submit', function (e) {
     e.preventDefault();
 
     const $form = $(this);
+    if (!validateForm($form, assignRules)) return;
+
     const data = {
         nombre_tarea: $form.find('[name="nombre_tarea"]').val().trim(),
         descripcion: $form.find('[name="descripcion"]').val().trim(),
@@ -327,6 +342,7 @@ $(document).on('click', '.btn-complete-assign', function () {
 $('#completeAssignForm').on('submit', function (e) {
     e.preventDefault();
     const $form = $(this);
+    if (!validateForm($form, completeRules)) return;
     const data = {
         id: parseInt($form.find('[name="id"]').val()) || 0,
         fecha_cumplimiento: $form.find('[name="fecha_cumplimiento"]').val() || DATA.hoy,
@@ -501,4 +517,6 @@ $(document).on('click', '.btn-view-assign', function () {
 // ============================================================
 $(document).ready(function () {
     initAssignmentsTable();
+    setupRealTimeValidation($('#assignTaskForm'), assignRules);
+    setupRealTimeValidation($('#completeAssignForm'), completeRules);
 });
