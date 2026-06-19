@@ -10,6 +10,8 @@ $(document).ready(function () {
     nombre_herramienta: 'nombrePlanta',
     tipo: 'text',
     estado: 'select',
+    fecha_adquisicion: 'fechaFuturaCheck',
+    fecha_ultimo_mantenimiento: 'fechaFuturaCheck',
   };
 
   const initDataTable = () => {

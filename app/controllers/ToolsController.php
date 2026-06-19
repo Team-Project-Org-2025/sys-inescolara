@@ -57,10 +57,32 @@ function tools_handleAddEdit(string $mode): void
     if ($estado === '') $estado = 'disponible';
 
     $fechaAdquisicion = trim((string)($_POST['fecha_adquisicion'] ?? ''));
-    if ($fechaAdquisicion === '') $fechaAdquisicion = null;
+    if ($fechaAdquisicion === '') {
+        $fechaAdquisicion = null;
+    } else {
+        $d = \DateTime::createFromFormat('Y-m-d', $fechaAdquisicion);
+        if (!$d || $d->format('Y-m-d') !== $fechaAdquisicion) {
+            throw new \InvalidArgumentException('Formato de fecha de adquisición inválido.');
+        }
+        $todayStr = (new \DateTime('today'))->format('Y-m-d');
+        if ($fechaAdquisicion > $todayStr) {
+            throw new \InvalidArgumentException('La fecha de adquisición no puede ser posterior al día de hoy.');
+        }
+    }
 
     $fechaUltimoMantenimiento = trim((string)($_POST['fecha_ultimo_mantenimiento'] ?? ''));
-    if ($fechaUltimoMantenimiento === '') $fechaUltimoMantenimiento = null;
+    if ($fechaUltimoMantenimiento === '') {
+        $fechaUltimoMantenimiento = null;
+    } else {
+        $d = \DateTime::createFromFormat('Y-m-d', $fechaUltimoMantenimiento);
+        if (!$d || $d->format('Y-m-d') !== $fechaUltimoMantenimiento) {
+            throw new \InvalidArgumentException('Formato de fecha de último mantenimiento inválido.');
+        }
+        $todayStr = (new \DateTime('today'))->format('Y-m-d');
+        if ($fechaUltimoMantenimiento > $todayStr) {
+            throw new \InvalidArgumentException('La fecha de último mantenimiento no puede ser posterior al día de hoy.');
+        }
+    }
 
     $observacion = trim((string)($_POST['observacion'] ?? ''));
     if ($observacion === '') $observacion = null;
