@@ -1,7 +1,15 @@
 import * as Helpers from '../utils/helpers.js';
 import * as Ajax from '../utils/ajax-handler.js';
+import { setupRealTimeValidation, validateForm } from '../utils/validation.js';
 
 $(document).ready(function () {
+  const trazabilidadRules = {
+    id_lote: 'select',
+    cantidad: 'cantidad',
+    estado_salud: 'select',
+    fecha_registro: 'fechaFuturaCheck',
+    observacion: null,
+  };
   const baseUrl = `${window.BASE_URL || '/'}trazabilidad`;
   let trazabilidadTable = null;
 
@@ -132,14 +140,17 @@ $(document).ready(function () {
     $('#trazabilidadModalTitle').text('Registrar Cuarentena');
     $('#trazabilidadId').val('0');
     $('#trazabilidadForm')[0].reset();
-    $('#fecha_registro').val(new Date().toISOString().split('T')[0]);
+    const _now = new Date();
+    $('#fecha_registro').val(`${_now.getFullYear()}-${String(_now.getMonth() + 1).padStart(2, '0')}-${String(_now.getDate()).padStart(2, '0')}`);
     $('#trazabilidadSubmitBtn').text('Guardar');
     loadBatches().then(() => updateLoteInfo());
     $('#trazabilidadModal').modal({ focus: false }).modal('show');
+    setupRealTimeValidation($('#trazabilidadForm'), trazabilidadRules);
   });
 
   $('#trazabilidadForm').on('submit', function (e) {
     e.preventDefault();
+    if (!validateForm($(this), trazabilidadRules)) return;
     const id = $('#trazabilidadId').val();
     const action = id && id !== '0' ? 'edit_ajax' : 'add_ajax';
     const formData = new FormData(this);
@@ -178,6 +189,7 @@ $(document).ready(function () {
     $('#trazabilidadSubmitBtn').text('Actualizar');
     loadBatches($btn.data('id_lote')).then(() => updateLoteInfo());
     $('#trazabilidadModal').modal({ focus: false }).modal('show');
+    setupRealTimeValidation($('#trazabilidadForm'), trazabilidadRules);
   });
 
   $(document).on('click', '.btn-delete', function () {
