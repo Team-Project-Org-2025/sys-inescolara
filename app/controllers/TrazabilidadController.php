@@ -66,6 +66,14 @@ function trazabilidad_handleAddEdit(string $mode): void
 
     $fechaRegistro = trim((string)($_POST['fecha_registro'] ?? ''));
     if ($fechaRegistro === '') throw new \Exception('La fecha de cuarentena es requerida.');
+    $d = \DateTime::createFromFormat('Y-m-d', $fechaRegistro);
+    if (!$d || $d->format('Y-m-d') !== $fechaRegistro) {
+        throw new \InvalidArgumentException('Formato de fecha inválido (debe ser YYYY-MM-DD).');
+    }
+    $todayStr = (new \DateTime('today'))->format('Y-m-d');
+    if ($fechaRegistro > $todayStr) {
+        throw new \InvalidArgumentException('La fecha de cuarentena no puede ser posterior al día de hoy.');
+    }
 
     $observacion = trim((string)($_POST['observacion'] ?? ''));
     if ($observacion === '') $observacion = null;

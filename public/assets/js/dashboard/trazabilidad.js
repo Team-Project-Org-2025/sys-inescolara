@@ -1,7 +1,15 @@
 import * as Helpers from '../utils/helpers.js';
 import * as Ajax from '../utils/ajax-handler.js';
+import { setupRealTimeValidation, validateForm } from '../utils/validation.js';
 
 $(document).ready(function () {
+  const trazabilidadRules = {
+    id_lote: 'select',
+    cantidad: 'cantidad',
+    estado_salud: 'select',
+    fecha_registro: 'fechaFuturaCheck',
+    observacion: null,
+  };
   const baseUrl = `${window.BASE_URL || '/'}trazabilidad`;
   let trazabilidadTable = null;
 
@@ -50,13 +58,7 @@ $(document).ready(function () {
 
             if (perms.includes('TRAZABILIDAD_EDIT')) {
               html += `
-                <button class="btn btn-sm btn-outline-primary btn-edit"
-                        data-id="${Helpers.escapeHtml(data.id)}"
-                        data-id_lote="${Helpers.escapeHtml(data.id_lote)}"
-                        data-cantidad="${Helpers.escapeHtml(data.cantidad)}"
-                        data-estado_salud="${Helpers.escapeHtml(data.estado_salud)}"
-                        data-fecha_registro="${Helpers.escapeHtml(data.fecha_registro)}"
-                        data-observacion="${Helpers.escapeHtml(data.observacion || '')}">
+                <button class="btn btn-sm btn-outline-primary btn-edit">
                   <i class="fas fa-edit"></i>
                 </button>
               `;
@@ -64,8 +66,7 @@ $(document).ready(function () {
 
             if (perms.includes('TRAZABILIDAD_DELETE')) {
               html += `
-                <button class="btn btn-sm btn-outline-danger btn-delete"
-                        data-id="${Helpers.escapeHtml(data.id)}">
+                <button class="btn btn-sm btn-outline-danger btn-delete">
                   <i class="fas fa-trash"></i>
                 </button>
               `;
@@ -132,14 +133,17 @@ $(document).ready(function () {
     $('#trazabilidadModalTitle').text('Registrar Cuarentena');
     $('#trazabilidadId').val('0');
     $('#trazabilidadForm')[0].reset();
-    $('#fecha_registro').val(new Date().toISOString().split('T')[0]);
+    const _now = new Date();
+    $('#fecha_registro').val(`${_now.getFullYear()}-${String(_now.getMonth() + 1).padStart(2, '0')}-${String(_now.getDate()).padStart(2, '0')}`);
     $('#trazabilidadSubmitBtn').text('Guardar');
     loadBatches().then(() => updateLoteInfo());
     $('#trazabilidadModal').modal({ focus: false }).modal('show');
+    setupRealTimeValidation($('#trazabilidadForm'), trazabilidadRules);
   });
 
   $('#trazabilidadForm').on('submit', function (e) {
     e.preventDefault();
+    if (!validateForm($(this), trazabilidadRules)) return;
     const id = $('#trazabilidadId').val();
     const action = id && id !== '0' ? 'edit_ajax' : 'add_ajax';
     const formData = new FormData(this);
@@ -168,20 +172,22 @@ $(document).ready(function () {
   });
 
   $(document).on('click', '.btn-edit', function () {
-    const $btn = $(this);
+    const row = trazabilidadTable.row($(this).closest('tr')).data();
     $('#trazabilidadModalTitle').text('Editar Cuarentena');
-    $('#trazabilidadId').val($btn.data('id'));
-    $('#cantidad').val($btn.data('cantidad'));
-    $('#estado_salud').val($btn.data('estado_salud'));
-    $('#fecha_registro').val($btn.data('fecha_registro'));
-    $('#observacion').val($btn.data('observacion'));
+    $('#trazabilidadId').val(row.id);
+    $('#cantidad').val(row.cantidad);
+    $('#estado_salud').val(row.estado_salud);
+    $('#fecha_registro').val(row.fecha_registro);
+    $('#observacion').val(row.observacion);
     $('#trazabilidadSubmitBtn').text('Actualizar');
-    loadBatches($btn.data('id_lote')).then(() => updateLoteInfo());
+    loadBatches(row.id_lote).then(() => updateLoteInfo());
     $('#trazabilidadModal').modal({ focus: false }).modal('show');
+    setupRealTimeValidation($('#trazabilidadForm'), trazabilidadRules);
   });
 
   $(document).on('click', '.btn-delete', function () {
-    const id = $(this).data('id');
+    const row = trazabilidadTable.row($(this).closest('tr')).data();
+    const id = row.id;
     Helpers.confirmDialog(
       '¿Desactivar cuarentena?',
       '¿Deseas desactivar este registro de cuarentena? El stock se devolverá al lote original.',

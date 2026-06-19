@@ -22,7 +22,8 @@ export const REGEX = {
   cantidad: /^[1-9]\d*$/,
 };
 
-export const hoy = new Date().toISOString().split("T")[0];
+const _today = new Date();
+export const hoy = `${_today.getFullYear()}-${String(_today.getMonth() + 1).padStart(2, '0')}-${String(_today.getDate()).padStart(2, '0')}`;
 
 export const validateNoFutureDate = ($input) => {
   const valor = $input.val().trim();
