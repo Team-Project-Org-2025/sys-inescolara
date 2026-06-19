@@ -71,11 +71,11 @@ const Ventas = {
                     orderable: false,
                     render: (r) => {
                         const btns = [
-                            `<button class="btn btn-sm btn-info ver-detalle" data-id="${r.id_venta}" title="Ver"><i class="fas fa-eye"></i></button>`,
+                            `<button class="btn btn-sm btn-info ver-detalle" title="Ver"><i class="fas fa-eye"></i></button>`,
                             `<a href="${urlBaseVentas}?accion=comprobante&id=${r.id_venta}" class="btn btn-sm btn-success btn-pdf-download" title="PDF"><i class="fas fa-file-pdf"></i></a>`
                         ];
                         if (r.estado === 'pendiente') {
-                            btns.push(`<button class="btn btn-sm btn-danger cancelar-venta" data-id="${r.id_venta}" title="Anular"><i class="fas fa-ban"></i></button>`);
+                            btns.push(`<button class="btn btn-sm btn-danger cancelar-venta" title="Anular"><i class="fas fa-ban"></i></button>`);
                         }
                         return `<div class="d-flex gap-1 justify-content-center">${btns.join('')}</div>`;
                     }
@@ -453,12 +453,18 @@ const Ventas = {
     initAcciones() {
         document.addEventListener('click', (e) => {
             const btn = e.target.closest('.ver-detalle');
-            if (btn) this.verDetalle(parseInt(btn.dataset.id));
+            if (btn) {
+                const row = this.tabla.row(btn.closest('tr')).data();
+                if (row) this.verDetalle(row.id_venta);
+            }
         });
 
         document.addEventListener('click', (e) => {
             const btn = e.target.closest('.cancelar-venta');
-            if (btn) this.cancelarVenta(parseInt(btn.dataset.id));
+            if (btn) {
+                const row = this.tabla.row(btn.closest('tr')).data();
+                if (row) this.cancelarVenta(row.id_venta);
+            }
         });
 
         document.addEventListener('click', (e) => {
