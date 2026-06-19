@@ -344,7 +344,10 @@ $(document).ready(function () {
     $('#compraId').val('');
     $('#compraModalTitle').text('Nueva Compra');
     $('#compraForm')[0].reset();
-    $('#frmFecha').val(new Date().toISOString().split('T')[0]);
+    const hoyLocal = new Date();
+    $('#frmFecha').val(
+      `${hoyLocal.getFullYear()}-${String(hoyLocal.getMonth()+1).padStart(2,'0')}-${String(hoyLocal.getDate()).padStart(2,'0')}`
+    );
     $('#itemsBody').empty();
     agregarFilaItem('insumo', null, '', 1, 0);
     actualizarTotales();
@@ -368,6 +371,7 @@ $(document).ready(function () {
     let subtotal = 0;
     items.forEach((it) => { subtotal += it.cantidad * it.costo_unitario; });
     $('#frmSubtotal').val(subtotal.toFixed(2));
+    $('#frmTotal').val(subtotal.toFixed(2));
 
     const formData = new FormData(this);
     formData.set('items', JSON.stringify(items));

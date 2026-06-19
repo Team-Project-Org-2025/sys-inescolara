@@ -67,6 +67,12 @@ function compras_manejarAgregarEditar(string $modo): void
 
     $fechaCompra = trim((string)($_POST['fecha_compra'] ?? ''));
     if ($fechaCompra === '') throw new \Exception('La fecha es requerida.');
+    $fechaCompraObj = \DateTime::createFromFormat('Y-m-d', $fechaCompra);
+    if (!$fechaCompraObj || $fechaCompraObj->format('Y-m-d') !== $fechaCompra) {
+        throw new \Exception('Formato de fecha inválido (YYYY-MM-DD).');
+    }
+    $todayStr = date('Y-m-d');
+    if ($fechaCompra > $todayStr) throw new \Exception('La fecha no puede ser posterior al día de hoy.');
 
     $tipoComprobante = trim((string)($_POST['tipo_comprobante'] ?? ''));
     if ($tipoComprobante === '') $tipoComprobante = 'Factura';
@@ -78,7 +84,7 @@ function compras_manejarAgregarEditar(string $modo): void
     $iva = isset($_POST['iva']) ? floatval($_POST['iva']) : 0;
     $total = isset($_POST['total']) ? floatval($_POST['total']) : 0;
 
-    if ($subtotal < 0 || $iva < 0 || $total <= 0) throw new \Exception('Valores inválidos.');
+    if ($subtotal < 0 || $iva < 0 || $total <= 0) throw new \Exception('El total debe ser mayor a cero. Verifique los costos de los items.');
 
     $observacion = trim((string)($_POST['observacion'] ?? ''));
     if ($observacion === '') $observacion = null;

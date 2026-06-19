@@ -56,17 +56,17 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
     //  Transacciones
     // ============================================================
 
-    protected function iniciarTransaccion(): bool
+    public function iniciarTransaccion(): bool
     {
         return $this->db()->beginTransaction();
     }
 
-    protected function confirmarTransaccion(): bool
+    public function confirmarTransaccion(): bool
     {
         return $this->db()->commit();
     }
 
-    protected function revertirTransaccion(): bool
+    public function revertirTransaccion(): bool
     {
         return $this->db()->rollBack();
     }
@@ -307,7 +307,7 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
         if ($compra['estado'] !== 'pendiente') {
             throw new \Exception('Solo se pueden recibir compras pendientes.');
         }
-        $stmt = $this->db()->prepare("UPDATE compra SET estado = 'recibida', fecha_recepcion = CURDATE() WHERE id_compra = :id AND activo = 1");
+        $stmt = $this->db()->prepare("UPDATE compra SET estado = 'recibida' WHERE id_compra = :id AND activo = 1");
         return $stmt->execute([':id' => $id]);
     }
 
