@@ -42,6 +42,9 @@ function checkModuleAuth(): void
         header('Location: ' . BASE_URL . 'login');
         exit();
     }
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        checkCsrf();
+    }
 }
 
 function checkPermisoOrFail(string $codigo): void
@@ -49,6 +52,14 @@ function checkPermisoOrFail(string $codigo): void
     if (!\SysInescolara\helpers\Auth::hasPermiso($codigo)) {
         jsonResponse(['success' => false, 'message' => 'No tienes permiso para realizar esta acción.'], 403);
     }
+}
+
+function checkCsrf(): void
+{
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
+    $data = getRequestData();
+    $token = $data['_csrf_token'] ?? '';
+    \SysInescolara\helpers\Csrf::validate($token);
 }
 
 function getRequestData(): array
