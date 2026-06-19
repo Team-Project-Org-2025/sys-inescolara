@@ -27,7 +27,7 @@ $(document).ready(function () {
         { data: 'proveedor_nombre', render: (data) => data || '<span class="text-muted">&mdash;</span>' },
         {
           data: null,
-          render: (d) => `<a href="#" class="link-compra" data-id="${Helpers.escapeHtml(d.id_compra)}">Compra #${Helpers.escapeHtml(d.id_compra)}</a>`,
+          render: (d) => `<a href="#" class="link-compra">Compra #${Helpers.escapeHtml(d.id_compra)}</a>`,
         },
         { data: 'monto_total', className: 'text-end', render: (data) => Helpers.formatCurrencyBs(data) },
         {
@@ -58,15 +58,11 @@ $(document).ready(function () {
             const tieneSaldo = parseFloat(data.saldo_pendiente) > 0;
             return `
               <div class="d-flex gap-1">
-                <button class="btn btn-sm btn-outline-info btn-detalle"
-                        data-id="${Helpers.escapeHtml(data.id_cuenta_pagar)}">
+                <button class="btn btn-sm btn-outline-info btn-detalle">
                     <i class="fas fa-eye"></i>
                 </button>
                 ${tieneSaldo ? `
-                <button class="btn btn-sm btn-outline-success btn-pagar"
-                        data-id="${Helpers.escapeHtml(data.id_cuenta_pagar)}"
-                        data-info="#${Helpers.escapeHtml(data.id_cuenta_pagar)} - ${Helpers.escapeHtml(data.proveedor_nombre || '')}"
-                        data-saldo="${Helpers.escapeHtml(data.saldo_pendiente)}">
+                <button class="btn btn-sm btn-outline-success btn-pagar">
                     <i class="fas fa-money-bill"></i>
                 </button>
                 ` : ''}
@@ -98,7 +94,8 @@ $(document).ready(function () {
   // ============================================================
 
   $(document).on('click', '.btn-detalle', function () {
-    const id = $(this).data('id');
+    const row = tablaCuentas.row($(this).closest('tr')).data();
+    const id = row.id_cuenta_pagar;
     $.ajax({
       url: `${urlBase}?action=obtener_detalle&id_cuenta=${id}`,
       method: 'GET',
@@ -194,7 +191,8 @@ $(document).ready(function () {
   // ============================================================
 
   $(document).on('click', '.btn-pagar', function () {
-    abrirModalPago($(this).data('id'), $(this).data('saldo'));
+    const row = tablaCuentas.row($(this).closest('tr')).data();
+    abrirModalPago(row.id_cuenta_pagar, row.saldo_pendiente);
   });
 
   $(document).on('click', '#btnPagarDesdeDetalle', function () {

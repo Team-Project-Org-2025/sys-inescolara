@@ -290,28 +290,20 @@ $(document).ready(function () {
             const esPendiente = data.estado === 'pendiente';
             return `
               <div class="d-flex gap-1">
-                <button class="btn btn-sm btn-outline-info btn-detail"
-                        data-id="${Helpers.escapeHtml(data.id_compra)}">
+                <button class="btn btn-sm btn-outline-info btn-detail">
                     <i class="fas fa-eye"></i>
                 </button>
                 ${esPendiente ? `
-                <button class="btn btn-sm btn-outline-primary btn-edit"
-                        data-id="${Helpers.escapeHtml(data.id_compra)}">
+                <button class="btn btn-sm btn-outline-primary btn-edit">
                     <i class="fas fa-edit"></i>
                 </button>
-                <button class="btn btn-sm btn-outline-success btn-recibir"
-                        data-id="${Helpers.escapeHtml(data.id_compra)}"
-                        data-info="#${Helpers.escapeHtml(data.id_compra)} - ${Helpers.escapeHtml(data.proveedor_nombre || '')}">
+                <button class="btn btn-sm btn-outline-success btn-recibir">
                     <i class="fas fa-check"></i>
                 </button>
-                <button class="btn btn-sm btn-outline-danger btn-cancelar"
-                        data-id="${Helpers.escapeHtml(data.id_compra)}"
-                        data-info="#${Helpers.escapeHtml(data.id_compra)}">
+                <button class="btn btn-sm btn-outline-danger btn-cancelar">
                     <i class="fas fa-ban"></i>
                 </button>
-                <button class="btn btn-sm btn-outline-danger btn-delete"
-                        data-id="${Helpers.escapeHtml(data.id_compra)}"
-                        data-info="#${Helpers.escapeHtml(data.id_compra)} - ${Helpers.escapeHtml(data.proveedor_nombre || '')}">
+                <button class="btn btn-sm btn-outline-danger btn-delete">
                     <i class="fas fa-trash"></i>
                 </button>
                 ` : ''}
@@ -411,7 +403,8 @@ $(document).ready(function () {
   // ============================================================
 
   $(document).on('click', '.btn-edit', function () {
-    const id = $(this).data('id');
+    const row = tablaCompras.row($(this).closest('tr')).data();
+    const id = row.id_compra;
     editandoId = id;
     $('#compraModalTitle').text('Editar Compra');
     $('#compraForm')[0].reset();
@@ -452,7 +445,8 @@ $(document).ready(function () {
   // ============================================================
 
   $(document).on('click', '.btn-detail', function () {
-    const id = $(this).data('id');
+    const row = tablaCompras.row($(this).closest('tr')).data();
+    const id = row.id_compra;
     $.ajax({
       url: `${urlBase}?action=obtener_detalles&id_compra=${id}`,
       method: 'GET',
@@ -525,8 +519,9 @@ $(document).ready(function () {
   // ============================================================
 
   $(document).on('click', '.btn-recibir', function () {
-    const id = $(this).data('id');
-    const info = $(this).data('info');
+    const row = tablaCompras.row($(this).closest('tr')).data();
+    const id = row.id_compra;
+    const info = `#${row.id_compra} - ${row.proveedor_nombre || ''}`;
     Helpers.confirmDialog(
       '¿Recibir compra?',
       `Al recibir la compra <strong>${Helpers.escapeHtml(info)}</strong> se actualizará el stock y se crearán lotes para las plantas con los datos de categoría y ubicación configurados en cada item. ¿Desea continuar?`,
@@ -550,8 +545,9 @@ $(document).ready(function () {
   // ============================================================
 
   $(document).on('click', '.btn-cancelar', function () {
-    const id = $(this).data('id');
-    const info = $(this).data('info');
+    const row = tablaCompras.row($(this).closest('tr')).data();
+    const id = row.id_compra;
+    const info = `#${row.id_compra} - ${row.proveedor_nombre || ''}`;
     Helpers.confirmDialog(
       '¿Cancelar compra?',
       `¿Deseas cancelar la compra <strong>${Helpers.escapeHtml(info)}</strong>?`,
@@ -575,8 +571,9 @@ $(document).ready(function () {
   // ============================================================
 
   $(document).on('click', '.btn-delete', function () {
-    const id = $(this).data('id');
-    const info = $(this).data('info');
+    const row = tablaCompras.row($(this).closest('tr')).data();
+    const id = row.id_compra;
+    const info = `#${row.id_compra} - ${row.proveedor_nombre || ''}`;
     Helpers.confirmDialog(
       '¿Eliminar compra?',
       `¿Deseas eliminar la compra <strong>${Helpers.escapeHtml(info)}</strong>?`,

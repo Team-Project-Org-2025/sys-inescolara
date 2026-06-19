@@ -59,20 +59,13 @@ $(document).ready(function () {
 
             if (data.estatus === 'Pendiente') {
               html += `
-                <button class="btn btn-sm btn-outline-primary btn-edit"
-                        data-id="${Helpers.escapeHtml(data.id)}"
-                        data-id_trabajador="${Helpers.escapeHtml(data.id_trabajador)}"
-                        data-id_ubicacion="${Helpers.escapeHtml(data.id_ubicacion)}"
-                        data-fecha_asignacion="${Helpers.escapeHtml(data.fecha_asignacion)}"
-                        data-observacion="${Helpers.escapeHtml(data.observacion || '')}">
+                <button class="btn btn-sm btn-outline-primary btn-edit">
                   <i class="fas fa-edit"></i> Editar
                 </button>
-                <button class="btn btn-sm btn-outline-success btn-completar"
-                        data-id="${Helpers.escapeHtml(data.id)}">
+                <button class="btn btn-sm btn-outline-success btn-completar">
                   <i class="fas fa-check"></i> Completar
                 </button>
-                <button class="btn btn-sm btn-outline-danger btn-delete"
-                        data-id="${Helpers.escapeHtml(data.id)}">
+                <button class="btn btn-sm btn-outline-danger btn-delete">
                   <i class="fas fa-trash"></i> Eliminar
                 </button>
               `;
@@ -80,8 +73,7 @@ $(document).ready(function () {
 
             if (data.estatus === 'Realizada' && (!data.total_detalles || parseInt(data.total_detalles) === 0)) {
               html += `
-                <button class="btn btn-sm btn-outline-info btn-registrar-insumo"
-                        data-id="${Helpers.escapeHtml(data.id)}">
+                <button class="btn btn-sm btn-outline-info btn-registrar-insumo">
                   <i class="fas fa-seedling"></i> Registrar Insumo
                 </button>
               `;
@@ -160,20 +152,21 @@ $(document).ready(function () {
   });
 
   $(document).on('click', '.btn-edit', function () {
-    const $btn = $(this);
+    const row = recoleccionTable.row($(this).closest('tr')).data();
     $('#recoleccionModalTitle').text('Editar Recolección');
-    $('#recoleccionId').val($btn.data('id'));
-    $('#id_trabajador').val($btn.data('id_trabajador'));
-    $('#id_ubicacion').val($btn.data('id_ubicacion'));
-    $('#fecha_asignacion').val($btn.data('fecha_asignacion'));
-    $('#observacion').val($btn.data('observacion'));
+    $('#recoleccionId').val(row.id);
+    $('#id_trabajador').val(row.id_trabajador);
+    $('#id_ubicacion').val(row.id_ubicacion);
+    $('#fecha_asignacion').val(row.fecha_asignacion);
+    $('#observacion').val(row.observacion);
     clearValidation($('#recoleccionForm'));
     $('#recoleccionSubmitBtn').text('Actualizar');
     $('#recoleccionModal').modal({ focus: false }).modal('show');
   });
 
   $(document).on('click', '.btn-delete', function () {
-    const id = $(this).data('id');
+    const row = recoleccionTable.row($(this).closest('tr')).data();
+    const id = row.id;
     Helpers.confirmDialog(
       '¿Desactivar recolección?',
       '¿Deseas desactivar esta tarea de recolección?',
@@ -196,7 +189,8 @@ $(document).ready(function () {
   });
 
   $(document).on('click', '.btn-completar', function () {
-    const id = $(this).data('id');
+    const row = recoleccionTable.row($(this).closest('tr')).data();
+    const id = row.id;
     $('#completarId').val(id);
     $('#fecha_recoleccion').val(new Date().toISOString().split('T')[0]);
     clearValidation($('#completarForm'));
@@ -286,7 +280,8 @@ $(document).ready(function () {
   };
 
   $(document).on('click', '.btn-registrar-insumo', function () {
-    const id = $(this).data('id');
+    const row = recoleccionTable.row($(this).closest('tr')).data();
+    const id = row.id;
     $('#insumoRecoleccionId').val(id);
     $('#insumosTableBody').empty();
     addInsumoRow('', '', '', '');

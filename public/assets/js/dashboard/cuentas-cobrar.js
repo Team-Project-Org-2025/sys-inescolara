@@ -28,7 +28,7 @@ $(document).ready(function () {
         {
           data: 'referencia',
           render: (data, type, row) => type === 'display'
-            ? `<a href="#" class="ver-detalle" data-id="${row.id_venta}"><strong>${data}</strong></a>`
+            ? `<a href="#" class="ver-detalle"><strong>${data}</strong></a>\`
             : data
         },
         { data: 'nombre_cliente' },
@@ -65,9 +65,9 @@ $(document).ready(function () {
           data: null,
           orderable: false,
           render: (data) => {
-            let html = `<button class="btn btn-sm btn-outline-info ver-detalle me-1" data-id="${data.id_venta}" title="Ver detalle"><i class="fas fa-eye"></i></button>`;
+            let html = `<button class="btn btn-sm btn-outline-info ver-detalle me-1" title="Ver detalle"><i class="fas fa-eye"></i></button>`;
             if (data.estado_cuenta !== 'pagado') {
-              html += `<button class="btn btn-sm btn-success btn-pagar" data-id="${data.id_venta}" data-cliente="${data.nombre_cliente}" data-saldo="${data.saldo_pendiente}" data-referencia="${data.referencia}" title="Registrar pago"><i class="fas fa-money-bill-wave"></i></button>`;
+              html += `<button class="btn btn-sm btn-success btn-pagar" title="Registrar pago"><i class="fas fa-money-bill-wave"></i></button>`;
             }
             return html;
           }
@@ -238,15 +238,17 @@ $(document).ready(function () {
 
   $(document).on('click', '.ver-detalle', function (e) {
     e.preventDefault();
-    const id = $(this).data('id');
+    const row = tablaCuentas.row($(this).closest('tr')).data();
+    const id = row.id_venta;
     cargarDetalle(id);
   });
 
   $(document).on('click', '.btn-pagar', function () {
-    const id = $(this).data('id');
-    const cliente = $(this).data('cliente');
-    const saldo = $(this).data('saldo');
-    const referencia = $(this).data('referencia');
+    const row = tablaCuentas.row($(this).closest('tr')).data();
+    const id = row.id_venta;
+    const cliente = row.nombre_cliente;
+    const saldo = row.saldo_pendiente;
+    const referencia = row.referencia;
     abrirModalPago(id, cliente, saldo, referencia);
   });
 
