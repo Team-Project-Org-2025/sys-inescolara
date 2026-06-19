@@ -42,16 +42,10 @@ $(document).ready(function () {
             const canDelete = data.id > 2;
             return `
               <div class="d-flex gap-1">
-                <button class="btn btn-sm btn-outline-primary btn-edit"
-                        data-id="${Helpers.escapeHtml(data.id)}"
-                        data-nombre_rol="${Helpers.escapeHtml(data.nombre_rol || '')}"
-                        data-descripcion_rol="${Helpers.escapeHtml(data.descripcion_rol || '')}"
-                        data-permisos='${Helpers.escapeHtml(JSON.stringify(data.permisos || []))}'>
+                <button class="btn btn-sm btn-outline-primary btn-edit">
                     <i class="fas fa-edit"></i>
                 </button>
                 <button class="btn btn-sm btn-outline-danger btn-delete"
-                        data-id="${Helpers.escapeHtml(data.id)}"
-                        data-nombre="${Helpers.escapeHtml(data.nombre_rol || '')}"
                         ${!canDelete ? 'disabled' : ''}>
                     <i class="fas fa-trash"></i>
                 </button>
@@ -124,18 +118,18 @@ $(document).ready(function () {
   });
 
   $(document).on('click', '.btn-edit', function () {
-    const $btn = $(this);
+    const row = rolesTable.row($(this).closest('tr')).data();
 
     const $addModal = $('#addRoleModal');
     if ($addModal.hasClass('show')) {
       $addModal.modal('hide');
     }
 
-    $('#editRoleId').val($btn.data('id'));
-    $('#editRoleName').val($btn.data('nombre_rol'));
-    $('#editRoleDesc').val($btn.data('descripcion_rol'));
+    $('#editRoleId').val(row.id);
+    $('#editRoleName').val(row.nombre_rol);
+    $('#editRoleDesc').val(row.descripcion_rol);
 
-    const permIds = $btn.data('permisos');
+    const permIds = row.permisos;
     $('#editRoleModal input[name="permisos[]"]').prop('checked', false);
     if (permIds && Array.isArray(permIds)) {
       permIds.forEach((pid) => {
@@ -180,8 +174,9 @@ $(document).ready(function () {
   });
 
   $(document).on('click', '.btn-delete', function () {
-    const id = $(this).data('id');
-    const nombre = $(this).data('nombre');
+    const row = rolesTable.row($(this).closest('tr')).data();
+    const id = row.id;
+    const nombre = row.nombre_rol;
 
     Helpers.confirmDialog(
       '¿Eliminar rol?',
