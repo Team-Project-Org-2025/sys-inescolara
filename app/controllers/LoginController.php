@@ -80,8 +80,6 @@ function login()
         exit();
     }
 
-    checkCsrf();
-
     $identificador = trim($_POST['nombre_usuario'] ?? ($_POST['email'] ?? ''));
     $password = $_POST['password'] ?? '';
     $error = null;

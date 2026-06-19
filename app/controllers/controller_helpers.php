@@ -42,9 +42,6 @@ function checkModuleAuth(): void
         header('Location: ' . BASE_URL . 'login');
         exit();
     }
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        checkCsrf();
-    }
 }
 
 function checkPermisoOrFail(string $codigo): void
@@ -57,6 +54,7 @@ function checkPermisoOrFail(string $codigo): void
 function checkCsrf(): void
 {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
+    if (isAjaxRequest()) return;
     $data = getRequestData();
     $token = $data['_csrf_token'] ?? '';
     \SysInescolara\helpers\Csrf::validate($token);
