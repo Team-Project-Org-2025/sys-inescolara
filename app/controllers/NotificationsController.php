@@ -14,24 +14,24 @@ function get_unread(): void
             jsonResponse(['success' => false, 'count' => 0]);
         }
 
+        $notifModel->markAllWarningsAsRead($userId);
+
         $dashboardData = new DashboardData();
-        $lowStockLots = $dashboardData->getLowStockLots(20);
+        $lowStockLots = $dashboardData->getLowStockLots(10);
         $lowStockSupplies = $dashboardData->getLowStockSupplies(10);
 
         foreach ($lowStockLots as $lot) {
             $titulo = 'Stock bajo: ' . ($lot['planta_nombre'] ?? "Lote #{$lot['id_lote']}");
+            if ($notifModel->existsByTitle($userId, $titulo)) continue;
             $mensaje = 'Solo quedan ' . (int)$lot['cantidad_actual'] . ' unidades';
-            if (!$notifModel->existsByTitle($userId, $titulo)) {
-                $notifModel->create($userId, $titulo, $mensaje, 'warning', 'dashboard/inventario');
-            }
+            $notifModel->create($userId, $titulo, $mensaje, 'warning', 'dashboard/inventario');
         }
 
         foreach ($lowStockSupplies as $supply) {
             $titulo = 'Insumo agotándose: ' . ($supply['nombre_insumo'] ?? "Insumo #{$supply['id_insumo']}");
+            if ($notifModel->existsByTitle($userId, $titulo)) continue;
             $mensaje = 'Stock actual: ' . (string)$supply['stock_actual'] . ' ' . ($supply['unidad_medida'] ?? 'unidades');
-            if (!$notifModel->existsByTitle($userId, $titulo)) {
-                $notifModel->create($userId, $titulo, $mensaje, 'warning', 'dashboard/inventario');
-            }
+            $notifModel->create($userId, $titulo, $mensaje, 'warning', 'dashboard/inventario');
         }
 
         $count = $notifModel->getUnreadCount($userId);

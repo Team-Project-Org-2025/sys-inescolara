@@ -45,7 +45,7 @@ function index(): void
 
     $stats = $dashboardData->getStats();
     $recentActivity = $dashboardData->getRecentActivity(10);
-    $lowStockLots = $dashboardData->getLowStockLots(20);
+    $lowStockLots = $dashboardData->getLowStockLots(10);
     $lowStockSupplies = $dashboardData->getLowStockSupplies(10);
     $plantsBySpecies = $dashboardData->getPlantsBySpecies();
     $inventorySummary = $dashboardData->getInventorySummary();

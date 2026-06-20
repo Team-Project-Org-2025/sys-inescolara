@@ -90,6 +90,17 @@ class Notification extends Database
         }
     }
 
+    public function markAllWarningsAsRead(int $userId): bool
+    {
+        try {
+            $stmt = $this->db()->prepare("UPDATE notificaciones SET leida = 1 WHERE id_usuario = :uid AND tipo = 'warning' AND leida = 0");
+            return $stmt->execute([':uid' => $userId]);
+        } catch (\Throwable $e) {
+            error_log('Error al marcar warnings como leídas: ' . $e->getMessage());
+            return false;
+        }
+    }
+
     public function create(int $userId, string $titulo, ?string $mensaje = null, string $tipo = 'info', ?string $link = null): bool
     {
         try {
