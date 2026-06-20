@@ -436,84 +436,104 @@ $(document).on('click', '.btn-view-assign', function () {
             const tools = r.tool_usages || [];
 
             let html = `
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <p class="assignment-detail-label">Trabajador</p>
-                        <p>${Helpers.escapeHtml(a.nombre_trabajador || '')} ${Helpers.escapeHtml(a.apellido_trabajador || '')}</p>
+                <div class="card border mb-3">
+                    <div class="card-header d-flex justify-content-between align-items-center py-2">
+                        <h6 class="mb-0"><i class="fas fa-info-circle"></i> Información de la Asignación</h6>
                     </div>
-                    <div class="col-md-6">
-                        <p class="assignment-detail-label">Tarea</p>
-                        <p>${Helpers.escapeHtml(a.nombre_tarea || '')}</p>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4 mb-2">
+                                <small class="text-muted d-block">Trabajador</small>
+                                <span class="fw-semibold">${Helpers.escapeHtml(a.nombre_trabajador || '')} ${Helpers.escapeHtml(a.apellido_trabajador || '')}</span>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <small class="text-muted d-block">Tarea</small>
+                                <span class="fw-semibold">${Helpers.escapeHtml(a.nombre_tarea || '')}</span>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <small class="text-muted d-block">Lote</small>
+                                <span class="fw-semibold">${Helpers.escapeHtml(a.codigo_lote || '—')}</span>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-2">
+                                <small class="text-muted d-block">Fecha Asignación</small>
+                                <span class="fw-semibold">${Helpers.escapeHtml(a.fecha_asignacion || '—')}</span>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <small class="text-muted d-block">Estatus</small>
+                                <span class="fw-semibold">${Helpers.escapeHtml(a.estatus_tarea || '—')}</span>
+                            </div>
+                            ${a.estatus_tarea === 'completada' ? `
+                            <div class="col-md-4 mb-2">
+                                <small class="text-muted d-block">Fecha Cumplimiento</small>
+                                <span class="fw-semibold">${Helpers.escapeHtml(a.fecha_cumplimiento || '—')}</span>
+                            </div>` : ''}
+                        </div>
+                        ${a.estatus_tarea === 'completada' ? `
+                        <div class="row">
+                            <div class="col-md-4 mb-2">
+                                <small class="text-muted d-block">Horas Dedicadas</small>
+                                <span class="fw-semibold">${a.horas_dedicadas || '—'}</span>
+                            </div>
+                        </div>` : ''}
                     </div>
                 </div>
-                <div class="row mb-3">
-                    <div class="col-md-4">
-                        <p class="assignment-detail-label">Lote</p>
-                        <p>${Helpers.escapeHtml(a.codigo_lote || '—')}</p>
+
+                <div class="card border-success mb-3">
+                    <div class="card-header d-flex justify-content-between align-items-center py-2 bg-success bg-opacity-10 text-success">
+                        <h6 class="mb-0"><i class="fas fa-boxes"></i> Insumos Consumidos</h6>
                     </div>
-                    <div class="col-md-4">
-                        <p class="assignment-detail-label">Fecha Asignación</p>
-                        <p>${Helpers.escapeHtml(a.fecha_asignacion || '—')}</p>
-                    </div>
-                    <div class="col-md-4">
-                        <p class="assignment-detail-label">Estatus</p>
-                        <p>${Helpers.escapeHtml(a.estatus_tarea || '—')}</p>
+                    <div class="card-body p-2">
+                        ${consumos.length === 0 ? '<p class="text-muted mb-0">No se registraron consumos.</p>' : `
+                        <table class="table table-sm table-bordered mb-0">
+                            <thead><tr><th>Insumo</th><th>Cantidad</th><th>Costo Unit.</th><th>Subtotal</th><th>Fecha</th></tr></thead>
+                            <tbody>
+                                ${(() => {
+                                    let total = 0;
+                                    const rows = consumos.map(c => {
+                                        const sub = parseFloat(c.cantidad_usada || 0) * parseFloat(c.costo_unitario || 0);
+                                        total += sub;
+                                        return `<tr>
+                                            <td>${Helpers.escapeHtml(c.nombre_insumo || '—')}</td>
+                                            <td>${parseFloat(c.cantidad_usada || 0).toFixed(2)} ${Helpers.escapeHtml(c.simbolo || '')}</td>
+                                            <td>$${parseFloat(c.costo_unitario || 0).toFixed(2)}</td>
+                                            <td><strong>$${sub.toFixed(2)}</strong></td>
+                                            <td>${Helpers.escapeHtml(c.fecha_consumo || '—')}</td>
+                                        </tr>`;
+                                    }).join('');
+                                    return rows + `<tr class="table-active fw-bold">
+                                        <td colspan="3" class="text-end">Total:</td>
+                                        <td>$${total.toFixed(2)}</td>
+                                        <td></td>
+                                    </tr>`;
+                                })()}
+                            </tbody>
+                        </table>
+                        <div class="d-flex justify-content-end mt-2">
+                            <strong>Gasto total en insumos: $${(() => { let t = 0; consumos.forEach(c => { t += parseFloat(c.cantidad_usada || 0) * parseFloat(c.costo_unitario || 0); }); return t.toFixed(2); })()}</strong>
+                        </div>`}
                     </div>
                 </div>
-                ${a.estatus_tarea === 'completada' ? `
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <p class="assignment-detail-label">Fecha Cumplimiento</p>
-                        <p>${Helpers.escapeHtml(a.fecha_cumplimiento || '—')}</p>
+
+                <div class="card border-primary">
+                    <div class="card-header d-flex justify-content-between align-items-center py-2 bg-primary bg-opacity-10 text-primary">
+                        <h6 class="mb-0"><i class="fas fa-wrench"></i> Uso de Herramientas</h6>
                     </div>
-                    <div class="col-md-6">
-                        <p class="assignment-detail-label">Horas Dedicadas</p>
-                        <p>${a.horas_dedicadas || '—'}</p>
+                    <div class="card-body p-2">
+                        ${tools.length === 0 ? '<p class="text-muted mb-0">No se registró uso de herramientas.</p>' : `
+                        <table class="table table-sm table-bordered mb-0">
+                            <thead><tr><th>Herramienta</th><th>Tipo</th><th>Fecha</th></tr></thead>
+                            <tbody>
+                                ${tools.map(t => `<tr>
+                                    <td>${Helpers.escapeHtml(t.nombre_herramienta || '—')}</td>
+                                    <td>${Helpers.escapeHtml(t.tipo || '—')}</td>
+                                    <td>${Helpers.escapeHtml(t.fecha_uso || '—')}</td>
+                                </tr>`).join('')}
+                            </tbody>
+                        </table>`}
                     </div>
-                </div>` : ''}
-                <hr>
-                <h6>Insumos Consumidos</h6>
-                ${consumos.length === 0 ? '<p class="text-muted">No se registraron consumos.</p>' : `
-                <table class="table table-sm table-bordered">
-                    <thead><tr><th>Insumo</th><th>Cantidad</th><th>Costo Unit.</th><th>Subtotal</th><th>Fecha</th></tr></thead>
-                    <tbody>
-                        ${(() => {
-                            let total = 0;
-                            const rows = consumos.map(c => {
-                                const sub = parseFloat(c.cantidad_usada || 0) * parseFloat(c.costo_unitario || 0);
-                                total += sub;
-                                return `<tr>
-                                    <td>${Helpers.escapeHtml(c.nombre_insumo || '—')}</td>
-                                    <td>${parseFloat(c.cantidad_usada || 0).toFixed(2)} ${Helpers.escapeHtml(c.simbolo || '')}</td>
-                                    <td>$${parseFloat(c.costo_unitario || 0).toFixed(2)}</td>
-                                    <td><strong>$${sub.toFixed(2)}</strong></td>
-                                    <td>${Helpers.escapeHtml(c.fecha_consumo || '—')}</td>
-                                </tr>`;
-                            }).join('');
-                            return rows + `<tr class="table-active fw-bold">
-                                <td colspan="3" class="text-end">Total:</td>
-                                <td>$${total.toFixed(2)}</td>
-                                <td></td>
-                            </tr>`;
-                        })()}
-                    </tbody>
-                </table>`}
-                <div class="alert alert-info py-2 mb-3">
-                    <strong>Gasto total en insumos:</strong>
-                    $${(() => { let t = 0; consumos.forEach(c => { t += parseFloat(c.cantidad_usada || 0) * parseFloat(c.costo_unitario || 0); }); return t.toFixed(2); })()}
                 </div>
-                <h6 class="mt-3">Uso de Herramientas</h6>
-                ${tools.length === 0 ? '<p class="text-muted">No se registró uso de herramientas.</p>' : `
-                <table class="table table-sm table-bordered">
-                    <thead><tr><th>Herramienta</th><th>Tipo</th><th>Fecha</th></tr></thead>
-                    <tbody>
-                        ${tools.map(t => `<tr>
-                            <td>${Helpers.escapeHtml(t.nombre_herramienta || '—')}</td>
-                            <td>${Helpers.escapeHtml(t.tipo || '—')}</td>
-                            <td>${Helpers.escapeHtml(t.fecha_uso || '—')}</td>
-                        </tr>`).join('')}
-                    </tbody>
-                </table>`}
             `;
             $('#detailAssignBody').html(html);
         })

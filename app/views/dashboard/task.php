@@ -109,8 +109,8 @@ include_once __DIR__ . '/../common/links.php';
                             <input type="date" class="form-control" name="fecha_asignacion">
                         </div>
 
-                        <div class="card border mb-3">
-                            <div class="card-header d-flex justify-content-between align-items-center py-2">
+                        <div class="card border-success mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center py-2 bg-success bg-opacity-10 text-success">
                                 <h6 class="mb-0"><i class="fas fa-boxes"></i> Consumo de Insumos</h6>
                                 <small class="text-muted">(opcional)</small>
                             </div>
@@ -136,8 +136,8 @@ include_once __DIR__ . '/../common/links.php';
                             </div>
                         </div>
 
-                        <div class="card border mb-3">
-                            <div class="card-header d-flex justify-content-between align-items-center py-2">
+                        <div class="card border-primary mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center py-2 bg-primary bg-opacity-10 text-primary">
                                 <h6 class="mb-0"><i class="fas fa-wrench"></i> Uso de Herramientas</h6>
                                 <small class="text-muted">(opcional)</small>
                             </div>
@@ -186,8 +186,8 @@ include_once __DIR__ . '/../common/links.php';
                             <label class="form-label">Fecha de Cumplimiento</label>
                             <input type="date" class="form-control" name="fecha_cumplimiento">
                         </div>
-                        <div class="card border">
-                            <div class="card-header d-flex justify-content-between align-items-center py-2">
+                        <div class="card border-primary">
+                            <div class="card-header d-flex justify-content-between align-items-center py-2 bg-primary bg-opacity-10 text-primary">
                                 <h6 class="mb-0"><i class="fas fa-wrench"></i> Estado de Herramientas</h6>
                                 <small class="text-muted">Post-uso</small>
                             </div>
