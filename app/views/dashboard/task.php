@@ -9,11 +9,9 @@ include_once __DIR__ . '/../common/links.php';
     <title>Asignar Tareas - INECOLARA</title>
     <?= $css_links ?>
     <style>
-        .consumptions-grid { margin-top: 1rem; }
-        .consumptions-grid table { margin-bottom: 0.5rem; }
-        .consumptions-grid .btn-add-row { margin-bottom: 0.5rem; }
         .badge-estatus { font-size: 0.8rem; }
         .assignment-detail-label { font-weight: 600; color: var(--text-secondary); }
+        .card-header h6 { font-size: 0.95rem; }
     </style>
 </head>
 <body>
@@ -111,50 +109,56 @@ include_once __DIR__ . '/../common/links.php';
                             <input type="date" class="form-control" name="fecha_asignacion">
                         </div>
 
-                        <hr>
-                        <h6><i class="fas fa-boxes"></i> Consumo de Insumos <small class="text-muted">(opcional)</small></h6>
-
-                        <div class="consumptions-grid">
-                            <table class="table table-sm table-bordered">
-                                <thead>
-                                    <tr>
-                                        <th style="width:28%">Insumo</th>
-                                        <th style="width:12%">Stock</th>
-                                        <th style="width:18%">Cantidad</th>
-                                        <th style="width:15%">Costo Unit.</th>
-                                        <th style="width:15%">Fecha</th>
-                                        <th style="width:12%"></th>
-                                    </tr>
-                                </thead>
-                                <tbody id="consumptionsBody">
-                                    <!-- rows added by JS -->
-                                </tbody>
-                            </table>
-                            <button type="button" class="btn btn-sm btn-outline-success btn-add-row" id="btnAddConsumptionRow">
-                                <i class="fas fa-plus"></i> Agregar Insumo
-                            </button>
+                        <div class="card border mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center py-2">
+                                <h6 class="mb-0"><i class="fas fa-boxes"></i> Consumo de Insumos</h6>
+                                <small class="text-muted">(opcional)</small>
+                            </div>
+                            <div class="card-body p-2">
+                                <table class="table table-sm table-bordered mb-2">
+                                    <thead>
+                                        <tr>
+                                            <th style="width:28%">Insumo</th>
+                                            <th style="width:12%">Stock</th>
+                                            <th style="width:18%">Cantidad</th>
+                                            <th style="width:15%">Costo Unit.</th>
+                                            <th style="width:15%">Fecha</th>
+                                            <th style="width:12%"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="consumptionsBody">
+                                        <!-- rows added by JS -->
+                                    </tbody>
+                                </table>
+                                <button type="button" class="btn btn-sm btn-outline-success btn-add-row" id="btnAddConsumptionRow">
+                                    <i class="fas fa-plus"></i> Agregar Insumo
+                                </button>
+                            </div>
                         </div>
 
-                        <hr>
-                        <h6><i class="fas fa-wrench"></i> Uso de Herramientas <small class="text-muted">(opcional)</small></h6>
-
-                        <div class="tools-grid">
-                            <table class="table table-sm table-bordered">
-                                <thead>
-                                    <tr>
-                                        <th style="width:40%">Herramienta</th>
-                                        <th style="width:20%">Fecha</th>
-                                        <th>Observación</th>
-                                        <th style="width:10%"></th>
-                                    </tr>
-                                </thead>
-                                <tbody id="toolsBody">
-                                    <!-- rows added by JS -->
-                                </tbody>
-                            </table>
-                            <button type="button" class="btn btn-sm btn-outline-primary btn-add-row" id="btnAddToolRow">
-                                <i class="fas fa-plus"></i> Agregar Herramienta
-                            </button>
+                        <div class="card border mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center py-2">
+                                <h6 class="mb-0"><i class="fas fa-wrench"></i> Uso de Herramientas</h6>
+                                <small class="text-muted">(opcional)</small>
+                            </div>
+                            <div class="card-body p-2">
+                                <table class="table table-sm table-bordered mb-2">
+                                    <thead>
+                                        <tr>
+                                            <th style="width:40%">Herramienta</th>
+                                            <th style="width:20%">Fecha</th>
+                                            <th>Observación</th>
+                                            <th style="width:10%"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="toolsBody">
+                                        <!-- rows added by JS -->
+                                    </tbody>
+                                </table>
+                                <button type="button" class="btn btn-sm btn-outline-primary btn-add-row" id="btnAddToolRow">
+                                    <i class="fas fa-plus"></i> Agregar Herramienta
+                                </button>
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -182,11 +186,17 @@ include_once __DIR__ . '/../common/links.php';
                             <label class="form-label">Fecha de Cumplimiento</label>
                             <input type="date" class="form-control" name="fecha_cumplimiento">
                         </div>
-                        <hr>
-                        <h6><i class="fas fa-wrench"></i> Estado de Herramientas</h6>
-                        <p class="text-muted small">Indica el estado de cada herramienta después de su uso.</p>
-                        <div id="completeToolsContainer">
-                            <!-- filled by JS -->
+                        <div class="card border">
+                            <div class="card-header d-flex justify-content-between align-items-center py-2">
+                                <h6 class="mb-0"><i class="fas fa-wrench"></i> Estado de Herramientas</h6>
+                                <small class="text-muted">Post-uso</small>
+                            </div>
+                            <div class="card-body p-2">
+                                <p class="text-muted small mb-2">Indica el estado de cada herramienta después de su uso.</p>
+                                <div id="completeToolsContainer">
+                                    <!-- filled by JS -->
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer">
