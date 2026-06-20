@@ -194,7 +194,7 @@ const Ventas = {
                     </div>
                     <div class="col-4">
                         <small class="text-muted d-block" style="font-size:.7rem;line-height:1;letter-spacing:.5px;">PRECIO UNIT.</small>
-                        <input type="number" class="form-control form-control-sm precio-producto text-end mt-1" value="${parseFloat(lote.precio_unitario || 0).toFixed(2)}" step="0.01" min="0">
+                            <input type="text" class="form-control form-control-sm precio-producto text-end mt-1" value="${parseFloat(lote.precio_unitario || 0).toFixed(2)}" inputmode="decimal">
                     </div>
                     <div class="col-4 text-end">
                         <small class="text-muted d-block" style="font-size:.7rem;line-height:1;letter-spacing:.5px;">SUBTOTAL</small>
@@ -216,7 +216,10 @@ const Ventas = {
         };
 
         cant.addEventListener('input', recalcular);
-        precio.addEventListener('input', recalcular);
+        precio.addEventListener('input', () => {
+            precio.value = precio.value.replace(/[^0-9.,]/g, '').replace(/,/g, '.');
+            recalcular();
+        });
         div.querySelector('.quitar-producto').addEventListener('click', () => {
             div.remove();
             this.calcularTotales();
@@ -446,7 +449,7 @@ const Ventas = {
                         </select>
                     </div>
                     <div class="col-4">
-                        <input type="number" class="form-control form-control-sm monto-pago" placeholder="Monto" step="0.01" min="0">
+                        <input type="text" class="form-control form-control-sm monto-pago" placeholder="Monto" inputmode="decimal">
                     </div>
                     <div class="col-2">
                         <input type="text" class="form-control form-control-sm ref-pago" placeholder="Ref.">
