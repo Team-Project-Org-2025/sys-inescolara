@@ -4,6 +4,7 @@ require_once __DIR__ . '/controller_helpers.php';
 
 use SysInescolara\models\Employee;
 use SysInescolara\models\AuditLog;
+use SysInescolara\models\Role;
 
 function index(): void
 {
@@ -22,6 +23,15 @@ function index(): void
             handleError($e, true);
         }
         return;
+    }
+
+    try {
+        $roleModel = new Role();
+        $roles = $roleModel->getAll();
+        $cargoOptions = array_map(fn($r) => $r['nombre_rol'], $roles);
+        sort($cargoOptions);
+    } catch (\Throwable $e) {
+        $cargoOptions = [];
     }
 
     $view = ROOT_PATH . 'app/views/dashboard/employees.php';

@@ -291,6 +291,17 @@ function tasks(): void
 function employees(): void
 {
     dashboardCheckPermiso('TRABAJADORES_VIEW');
+
+    require_once ROOT_PATH . 'vendor/autoload.php';
+    try {
+        $roleModel = new \SysInescolara\models\Role();
+        $roles = $roleModel->getAll();
+        $cargoOptions = array_map(fn($r) => $r['nombre_rol'], $roles);
+        sort($cargoOptions);
+    } catch (\Throwable $e) {
+        $cargoOptions = [];
+    }
+
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'employees.php';
 
