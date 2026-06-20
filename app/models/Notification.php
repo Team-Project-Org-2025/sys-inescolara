@@ -110,6 +110,21 @@ class Notification extends Database
         }
     }
 
+    public function existsByTitle(int $userId, string $titulo): bool
+    {
+        try {
+            $stmt = $this->db()->prepare("
+                SELECT COUNT(*) FROM notificaciones
+                WHERE id_usuario = :uid AND titulo = :titulo AND leida = 0
+            ");
+            $stmt->execute([':uid' => $userId, ':titulo' => $titulo]);
+            return (int) $stmt->fetchColumn() > 0;
+        } catch (\Throwable $e) {
+            error_log('Error al verificar notificación: ' . $e->getMessage());
+            return false;
+        }
+    }
+
     public function delete(int $notificationId, int $userId): bool
     {
         try {
