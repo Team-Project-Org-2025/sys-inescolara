@@ -11,7 +11,7 @@ $(document).ready(function () {
     id_trazabilidad: 'select',
     cantidad: 'cantidad',
     motivo: 'select',
-    fecha_merma: 'fechaFormato',
+    fecha_merma: 'fechaFuturaCheck',
   };
 
   const initDataTable = () => {

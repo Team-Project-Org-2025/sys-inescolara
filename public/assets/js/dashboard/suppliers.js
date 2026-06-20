@@ -10,7 +10,7 @@ $(document).ready(function () {
     nombre_proveedor: 'nombre',      
     contacto_vendedor: 'nombre',     
     telefono_proveedor: 'telefono',
-    rif_numero: 'codigo',
+    rif_numero: null,
     rif_tipo: 'select'
   };
 

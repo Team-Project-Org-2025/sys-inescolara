@@ -1,5 +1,14 @@
 const urlBaseVentas = `${window.BASE_URL || '/'}ventas`;
 
+import { setupRealTimeValidation, validateForm } from '../utils/validation.js';
+
+const ventasRules = {
+  id_cliente: 'select',
+  id_trabajador: 'select',
+  tipo_venta: 'select',
+  observaciones: null,
+};
+
 const Ventas = {
     tabla: null,
 
@@ -11,6 +20,7 @@ const Ventas = {
         this.initPagarCompleto();
         this.initForm();
         this.initAcciones();
+        setupRealTimeValidation($('#ventaForm'), ventasRules);
     },
 
     fechaAutomatica() {
@@ -326,6 +336,7 @@ const Ventas = {
     initForm() {
         document.getElementById('ventaForm').addEventListener('submit', (e) => {
             e.preventDefault();
+            if (!validateForm($('#ventaForm'), ventasRules)) return;
             this.guardarVenta();
         });
     },
