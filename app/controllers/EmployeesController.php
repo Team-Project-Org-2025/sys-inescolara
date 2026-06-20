@@ -62,7 +62,7 @@ function employees_handleAddEdit(string $mode): void
     if ($telefono === '') $telefono = null;
     $cargo = trim((string)($_POST['cargo'] ?? ''));
     if ($cargo === '') $cargo = null;
-    $activo = isset($_POST['activo']) ? (bool)$_POST['activo'] : true;
+    $activo = isset($_POST['activo']) ? 1 : 0;
 
     if ($mode === 'add') {
         $model->add($nombre, $apellido, $cedula, $telefono, $cargo, $activo);
