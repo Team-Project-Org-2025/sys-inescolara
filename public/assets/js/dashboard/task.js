@@ -63,11 +63,13 @@ function initAssignmentsTable() {
                     let btnVer = `<button class="btn btn-sm btn-outline-info btn-view-assign" title="Ver detalle"><i class="fas fa-eye"></i></button>`;
                     let btnCompletar = '';
                     let btnCancelar = '';
+                    let btnEditar = '';
                     if (est === 'pendiente') {
+                        btnEditar = `<button class="btn btn-sm btn-outline-warning btn-edit-assign" title="Editar"><i class="fas fa-pen"></i></button>`;
                         btnCompletar = `<button class="btn btn-sm btn-outline-success btn-complete-assign" title="Completar"><i class="fas fa-check"></i></button>`;
                         btnCancelar = `<button class="btn btn-sm btn-outline-danger btn-cancel-assign" title="Cancelar"><i class="fas fa-times"></i></button>`;
                     }
-                    return `<div class="d-flex gap-1">${btnVer}${btnCompletar}${btnCancelar}</div>`;
+                    return `<div class="d-flex gap-1">${btnVer}${btnEditar}${btnCompletar}${btnCancelar}</div>`;
                 },
             },
         ],
@@ -168,8 +170,12 @@ $(document).on('click', '.btn-remove-row', function () {
 // ============================================================
 $('#btnAssignTask').on('click', function () {
     $('#assignTaskForm')[0].reset();
+    $('#assignTaskForm input[name="id_asignacion"]').val('');
     $('#consumptionsBody').empty();
+    $('#toolsBody').empty();
     $('#assignTaskForm input[name="fecha_asignacion"]').val(DATA.hoy || new Date().toISOString().split('T')[0]);
+    $('#assignTaskModal .modal-title').text('Asignar Tarea');
+    $('#assignTaskModal .btn-primary').text('Guardar Asignación');
     $('#assignTaskModal').modal({ focus: false }).modal('show');
 });
 
@@ -275,10 +281,14 @@ $('#assignTaskForm').on('submit', function (e) {
         });
     });
 
-    Ajax.post(`${baseUrl}?action=assign_ajax`, data)
+    const idAsignacion = parseInt($form.find('[name="id_asignacion"]').val()) || 0;
+    const isEdit = idAsignacion > 0;
+    const action = isEdit ? 'edit_ajax' : 'assign_ajax';
+
+    Ajax.post(`${baseUrl}?action=${action}`, data)
         .then((r) => {
             if (r.success) {
-                Helpers.toast('success', 'Tarea asignada correctamente');
+                Helpers.toast('success', isEdit ? 'Tarea actualizada correctamente' : 'Tarea asignada correctamente');
                 $('#assignTaskModal').modal('hide');
                 assignmentsTable.ajax.reload(null, false);
             } else {
@@ -509,6 +519,65 @@ $(document).on('click', '.btn-view-assign', function () {
         })
         .fail(() => {
             $('#detailAssignBody').html('<div class="alert alert-danger mb-0">Error al cargar detalle.</div>');
+        });
+});
+
+// ============================================================
+//  EDIT ASSIGNMENT
+// ============================================================
+$(document).on('click', '.btn-edit-assign', function () {
+    const row = assignmentsTable.row($(this).closest('tr')).data();
+    const id = row ? row.id_asignacion : 0;
+    if (!id) return;
+
+    $.ajax({
+        url: `${baseUrl}?action=get_assignment&id=${id}`,
+        method: 'GET',
+        dataType: 'json',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+    })
+        .done((r) => {
+            if (!r.success) {
+                Helpers.toast('error', r.message);
+                return;
+            }
+            const a = r.assignment || {};
+            const consumos = r.consumptions || [];
+            const tools = r.tool_usages || [];
+
+            $('#assignTaskForm')[0].reset();
+            $('#consumptionsBody').empty();
+            $('#toolsBody').empty();
+
+            $('#assignTaskForm input[name="id_asignacion"]').val(a.id_asignacion);
+            $('#assignTaskForm input[name="nombre_tarea"]').val(a.nombre_tarea || '');
+            $('#assignTaskForm textarea[name="descripcion"]').val(a.descripcion || '');
+            $('#assignTaskForm select[name="id_trabajador"]').val(a.id_trabajador || '');
+            $('#assignTaskForm select[name="id_lote"]').val(a.id_lote || '');
+            $('#assignTaskForm input[name="fecha_asignacion"]').val(a.fecha_asignacion || DATA.hoy);
+
+            consumos.forEach(function (c) {
+                addConsumptionRow();
+                const $row = $('#consumptionsBody tr:last');
+                $row.find('select').val(c.id_insumo).trigger('change');
+                $row.find('.cantidad-input').val(c.cantidad_usada);
+                $row.find('input[name$="[fecha_consumo]"]').val(c.fecha_consumo || DATA.hoy);
+            });
+
+            tools.forEach(function (t) {
+                addToolRow();
+                const $row = $('#toolsBody tr:last');
+                $row.find('select').val(t.id_herramienta);
+                $row.find('input[name$="[fecha_uso]"]').val(t.fecha_uso || DATA.hoy);
+                $row.find('input[name$="[observacion]"]').val(t.observacion || '');
+            });
+
+            $('#assignTaskModal .modal-title').text('Editar Tarea');
+            $('#assignTaskModal .btn-primary').text('Guardar Cambios');
+            $('#assignTaskModal').modal({ focus: false }).modal('show');
+        })
+        .fail(() => {
+            Helpers.toast('error', 'Error al cargar datos de la asignación.');
         });
 });
 
