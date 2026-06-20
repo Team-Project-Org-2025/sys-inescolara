@@ -184,6 +184,10 @@ class User extends Database
 
     private function normalizeUserRow(array $user): array
     {
+        $trabajadorNombre = '';
+        if (!empty($user['nombre_trabajador']) || !empty($user['apellido_trabajador'])) {
+            $trabajadorNombre = trim(($user['nombre_trabajador'] ?? '') . ' ' . ($user['apellido_trabajador'] ?? ''));
+        }
         return [
             'id' => (int)($user['id_usuario'] ?? $user['id'] ?? 0),
             'nombre_usuario' => $user['nombre_usuario'] ?? null,
@@ -192,6 +196,8 @@ class User extends Database
             'rol_id' => $user['id_rol'] ?? $user['rol_id'] ?? null,
             'nombre_rol' => $user['nombre_rol'] ?? null,
             'estatus' => $user['estatus'] ?? null,
+            'id_trabajador_ref' => $user['id_trabajador_ref'] ?? null,
+            'trabajador_nombre' => $trabajadorNombre,
         ];
     }
 
@@ -291,9 +297,12 @@ class User extends Database
     {
         try {
             $stmt = $this->db()->query("
-                SELECT u.id_usuario, u.nombre_usuario, u.avatar, u.id_rol, r.nombre_rol, u.correo_electronico, u.estatus 
+                SELECT u.id_usuario, u.nombre_usuario, u.avatar, u.id_rol, u.id_trabajador_ref,
+                       r.nombre_rol, u.correo_electronico, u.estatus,
+                       t.nombre_trabajador, t.apellido_trabajador
                 FROM usuarios u
                 LEFT JOIN roles r ON r.id_rol = u.id_rol
+                LEFT JOIN `sysinescolara`.`trabajadores` t ON u.id_trabajador_ref = t.id_trabajador
                 ORDER BY u.id_usuario ASC
             ");
             if (!$stmt) {
@@ -331,7 +340,14 @@ class User extends Database
     public function getById(int $id)
     {
         try {
-            $stmt = $this->db()->prepare("SELECT id_usuario, nombre_usuario, avatar, id_rol, correo_electronico, estatus FROM usuarios WHERE id_usuario = :id");
+            $stmt = $this->db()->prepare("
+                SELECT u.id_usuario, u.nombre_usuario, u.avatar, u.id_rol, u.id_trabajador_ref,
+                       u.correo_electronico, u.estatus,
+                       t.nombre_trabajador, t.apellido_trabajador
+                FROM usuarios u
+                LEFT JOIN `sysinescolara`.`trabajadores` t ON u.id_trabajador_ref = t.id_trabajador
+                WHERE u.id_usuario = :id
+            ");
             $stmt->execute([':id' => $id]);
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
             return $user ? $this->normalizeUserRow($user) : null;
@@ -341,7 +357,7 @@ class User extends Database
         }
     }
 
-    public function add(string $nombreUsuario, string $password, int $rolId, ?string $correoElectronico = null, ?string $avatar = null)
+    public function add(string $nombreUsuario, string $password, int $rolId, ?string $correoElectronico = null, ?string $avatar = null, ?int $idTrabajadorRef = null)
     {
         $this->validateData([
             'nombre_usuario' => $nombreUsuario,
@@ -360,8 +376,8 @@ class User extends Database
         }
 
         $stmt = $this->db()->prepare("
-            INSERT INTO usuarios (nombre_usuario, password_hash, id_rol, correo_electronico, avatar)
-            VALUES (:nombre_usuario, :password_hash, :id_rol, :correo_electronico, :avatar)
+            INSERT INTO usuarios (nombre_usuario, password_hash, id_rol, correo_electronico, avatar, id_trabajador_ref)
+            VALUES (:nombre_usuario, :password_hash, :id_rol, :correo_electronico, :avatar, :id_trabajador_ref)
         ");
 
         return $stmt->execute([
@@ -370,11 +386,12 @@ class User extends Database
             ':id_rol' => $rolId,
             ':correo_electronico' => $correoElectronico,
             ':avatar' => $avatar,
+            ':id_trabajador_ref' => $idTrabajadorRef,
         ]);
     }
 
 
-    public function update(int $id, string $nombreUsuario, int $rolId, ?string $correoElectronico = null, ?string $password = null, ?string $avatar = null)
+    public function update(int $id, string $nombreUsuario, int $rolId, ?string $correoElectronico = null, ?string $password = null, ?string $avatar = null, ?int $idTrabajadorRef = null)
     {
         $this->validateData([
             'nombre_usuario' => $nombreUsuario,
@@ -386,12 +403,13 @@ class User extends Database
             throw new Exception("No existe el usuario con ID: $id");
         }
 
-        $sql = "UPDATE usuarios SET nombre_usuario = :nombre_usuario, id_rol = :id_rol, correo_electronico = :correo_electronico";
+        $sql = "UPDATE usuarios SET nombre_usuario = :nombre_usuario, id_rol = :id_rol, correo_electronico = :correo_electronico, id_trabajador_ref = :id_trabajador_ref";
         $params = [
             ':id' => $id,
             ':nombre_usuario' => $nombreUsuario,
             ':id_rol' => $rolId,
             ':correo_electronico' => $correoElectronico,
+            ':id_trabajador_ref' => $idTrabajadorRef,
         ];
 
         if ($password !== null && $password !== '') {

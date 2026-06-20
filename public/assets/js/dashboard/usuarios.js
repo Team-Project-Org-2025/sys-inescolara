@@ -41,6 +41,10 @@ $(document).ready(function () {
         },
         { data: 'nombre_rol' },
         {
+          data: 'trabajador_nombre',
+          render: (data) => data || '<span class="text-muted">—</span>',
+        },
+        {
           data: null,
           orderable: false,
           render: (data) => {
@@ -160,6 +164,7 @@ $(document).ready(function () {
     $('#editUserName').val(row.nombre_usuario);
     $('#editUserEmail').val(row.correo_electronico);
     $('#editUserRole').val(row.rol_id).prop('disabled', false).css('pointerEvents', isSuper ? 'none' : '').toggleClass('readonly-look', isSuper);
+    $('#editTrabajadorRef').val(row.id_trabajador_ref || '');
     $('#editUserPassword').val('');
     $('#editCurrentPassword').val('');
     $('#editUserRoleNote').toggle(isSuper);

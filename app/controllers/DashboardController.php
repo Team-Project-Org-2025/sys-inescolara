@@ -154,6 +154,8 @@ function usuarios(): void
     $userModel = new \SysInescolara\models\User();
     $roles = $userModel->getRoles();
     $allPermisos = $userModel->getAllPermissions();
+    $employeeModel = new \SysInescolara\models\Employee();
+    $trabajadores = $employeeModel->getAll();
 
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'usuarios.php';

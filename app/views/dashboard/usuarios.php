@@ -42,6 +42,7 @@ include_once __DIR__ . '/../common/links.php';
                                     <th>Nombre de Usuario</th>
                                     <th>Correo Electrónico</th>
                                     <th>Rol</th>
+                                    <th>Trabajador</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
@@ -135,6 +136,16 @@ function renderPermisosChecklist(array $modulos, array $codigoToId): void
                                 <?php endforeach; ?>
                             </select>
                         </div>
+                        <div class="mb-3">
+                            <label class="form-label">Vinculado a trabajador</label>
+                            <select class="form-select" name="id_trabajador_ref">
+                                <option value="">— Sin vincular —</option>
+                                <?php foreach ($trabajadores as $t): ?>
+                                <option value="<?= $t['id'] ?>"><?= htmlspecialchars($t['nombre_trabajador'] . ' ' . ($t['apellido_trabajador'] ?? '')) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                            <small class="text-muted">Opcional. Vincula este usuario a un trabajador para notificaciones de tareas.</small>
+                        </div>
                         <div class="mb-3 permisos-checklist" id="addPermisosChecklist" style="display:none;">
                             <label class="form-label">Módulos y acciones permitidas</label>
                             <div style="padding:8px 12px;border:1px solid var(--color-gray-200);border-radius:var(--radius-md);background:var(--bg-secondary);max-height:300px;overflow-y:auto;">
@@ -194,6 +205,16 @@ function renderPermisosChecklist(array $modulos, array $codigoToId): void
                                 <?php endforeach; ?>
                             </select>
                             <small class="text-muted" id="editUserRoleNote" style="display:none;">El rol del superusuario no se puede modificar.</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Vinculado a trabajador</label>
+                            <select class="form-select" name="id_trabajador_ref" id="editTrabajadorRef">
+                                <option value="">— Sin vincular —</option>
+                                <?php foreach ($trabajadores as $t): ?>
+                                <option value="<?= $t['id'] ?>"><?= htmlspecialchars($t['nombre_trabajador'] . ' ' . ($t['apellido_trabajador'] ?? '')) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                            <small class="text-muted">Opcional. Vincula este usuario a un trabajador para notificaciones de tareas.</small>
                         </div>
                         <div class="mb-3 permisos-checklist" id="editPermisosChecklist" style="display:none;">
                             <label class="form-label">Módulos y acciones permitidas</label>

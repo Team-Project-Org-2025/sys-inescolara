@@ -27,7 +27,12 @@ $currentPage = 'perfil';
                         </div>
                     <?php endif; ?>
                     <div>
-                        <h1 style="font-size:1.5rem;font-weight:600;margin:0 0 4px 0;"><?= htmlspecialchars($user['nombre_usuario'] ?? '') ?></h1>
+                        <h1 style="font-size:1.5rem;font-weight:600;margin:0 0 4px 0;">
+                            <?= htmlspecialchars($user['nombre_usuario'] ?? '') ?>
+                            <?php if (!empty($user['trabajador_nombre'])): ?>
+                                <span style="font-size:0.9rem;color:var(--text-muted);font-weight:400;">— <?= htmlspecialchars($user['trabajador_nombre']) ?></span>
+                            <?php endif; ?>
+                        </h1>
                         <p style="margin:0;color:var(--text-muted);font-size:0.875rem;"><?= htmlspecialchars($user['correo_electronico'] ?? '') ?></p>
                     </div>
                 </div>
