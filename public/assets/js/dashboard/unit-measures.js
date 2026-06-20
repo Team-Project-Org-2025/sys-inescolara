@@ -12,7 +12,7 @@ $(document).ready(function () {
 
   const initDataTable = () => {
     if (typeof SkeletonHelper !== 'undefined') {
-      SkeletonHelper.showTableSkeleton('unitsTable', 5, 3);
+      SkeletonHelper.showTableSkeleton('unitsTable', 5, 2);
     }
     unitsTable = $('#unitsTable').DataTable({
       ajax: {
@@ -24,12 +24,6 @@ $(document).ready(function () {
       },
       columns: [
         { data: 'nombre_unidad_medida' },
-        {
-          data: 'simbolo',
-          render: (data) => data
-            ? `<code class="px-2 py-1 bg-light rounded">${Helpers.escapeHtml(data)}</code>`
-            : '<span class="text-muted">—</span>',
-        },
         {
           data: null,
           orderable: false,
@@ -60,7 +54,7 @@ $(document).ready(function () {
           className: 'btn btn-outline-secondary btn-sm',
           action: () => {
             if (typeof SkeletonHelper !== 'undefined') {
-              SkeletonHelper.showTableSkeleton('unitsTable', 5, 3);
+              SkeletonHelper.showTableSkeleton('unitsTable', 5, 2);
             }
             unitsTable.ajax.reload(null, false);
           },
@@ -120,7 +114,6 @@ $(document).ready(function () {
 
     $('#editUnitId').val(row.id);
     $('#editUnitName').val(row.nombre_unidad_medida);
-    $('#editUnitSymbol').val(row.simbolo);
 
     $('#editUnitModal').modal({ focus: false }).modal('show');
   });

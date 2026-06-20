@@ -40,7 +40,6 @@ include_once __DIR__ . '/../common/links.php';
                             <thead>
                                 <tr>
                                     <th>Nombre</th>
-                                    <th>Símbolo</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
@@ -66,11 +65,6 @@ include_once __DIR__ . '/../common/links.php';
                             <label class="form-label">Nombre <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" name="nombre" required maxlength="50" placeholder="Ej: Kilogramo">
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">Símbolo</label>
-                            <input type="text" class="form-control" name="simbolo" maxlength="10" placeholder="Ej: kg">
-                            <small class="text-muted">Opcional. Ej: kg, L, und, m</small>
-                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -95,11 +89,6 @@ include_once __DIR__ . '/../common/links.php';
                         <div class="mb-3">
                             <label class="form-label">Nombre <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" name="nombre" id="editUnitName" required maxlength="50">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Símbolo</label>
-                            <input type="text" class="form-control" name="simbolo" id="editUnitSymbol" maxlength="10">
-                            <small class="text-muted">Opcional. Ej: kg, L, und, m</small>
                         </div>
                     </div>
                     <div class="modal-footer">
