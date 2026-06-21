@@ -8,7 +8,7 @@ use SysInescolara\interfaces\DeletableInterface;
 use SysInescolara\traits\ValidationTrait;
 use PDO;
 
-class Batch extends Database implements ReadableInterface, DeletableInterface
+class Lote extends Database implements ReadableInterface, DeletableInterface
 {
     use ValidationTrait;
 

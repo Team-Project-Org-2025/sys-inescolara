@@ -9,7 +9,7 @@ include_once __DIR__ . '/../common/links.php';
     <title>Lotes - INECOLARA</title>
     <?= $css_links ?>
     <style>
-        .batch-thumb {
+        .lote-thumb {
             width: 60px;
             height: 60px;
             object-fit: cover;
@@ -18,8 +18,8 @@ include_once __DIR__ . '/../common/links.php';
             transition: transform .2s;
             border: 2px solid #e5e7eb;
         }
-        .batch-thumb:hover { transform: scale(1.1); }
-        .batch-thumb-placeholder {
+.lote-thumb:hover { transform: scale(1.1); }
+.lote-thumb-placeholder {
             width: 60px;
             height: 60px;
             border-radius: 8px;
@@ -46,7 +46,7 @@ include_once __DIR__ . '/../common/links.php';
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
     <?php
-    $currentPage = 'batches';
+    $currentPage = 'lotes';
     include_once __DIR__ . '/../partials/sidebar.php';
     ?>
 
@@ -68,7 +68,7 @@ include_once __DIR__ . '/../common/links.php';
             <div class="card shadow-sm">
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table id="batchesTable" class="table table-striped table-hover w-100">
+                        <table id="lotesTable" class="table table-striped table-hover w-100">
                             <thead>
                                 <tr>
                                     <th>Imagen</th>
@@ -94,7 +94,7 @@ include_once __DIR__ . '/../common/links.php';
         </div>
     </main>
 
-    <!-- Add Batch Modal -->
+    <!-- Add Lote Modal -->
     <div class="modal fade" id="addBatchModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -190,7 +190,7 @@ include_once __DIR__ . '/../common/links.php';
         </div>
     </div>
 
-    <!-- Edit Batch Modal -->
+    <!-- Edit Lote Modal -->
     <div class="modal fade" id="editBatchModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -304,6 +304,6 @@ include_once __DIR__ . '/../common/links.php';
 
     <script src="<?= BASE_URL ?>public/assets/js/dashboard/notifications.js"></script>
     <?= $scripts_links ?>
-    <script type="module" src="<?= BASE_URL ?>public/assets/js/dashboard/batches.js"></script>
+    <script type="module" src="<?= BASE_URL ?>public/assets/js/dashboard/lotes.js"></script>
 </body>
 </html>
