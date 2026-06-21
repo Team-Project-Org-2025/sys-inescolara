@@ -14,6 +14,7 @@ include_once __DIR__ . '/../common/links.php';
         .consumptions-grid .btn-add-row { margin-bottom: 0.5rem; }
         .badge-estatus { font-size: 0.8rem; }
         .assignment-detail-label { font-weight: 600; color: var(--text-secondary); }
+        .text-pre-wrap { white-space: pre-wrap; }
     </style>
 </head>
 <body>

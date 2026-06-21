@@ -436,6 +436,13 @@ $(document).on('click', '.btn-view-assign', function () {
                         <p>${Helpers.escapeHtml(a.nombre_tarea || '')}</p>
                     </div>
                 </div>
+                ${a.descripcion ? `
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <p class="assignment-detail-label">Descripción</p>
+                        <p class="text-pre-wrap">${Helpers.escapeHtml(a.descripcion)}</p>
+                    </div>
+                </div>` : ''}
                 <div class="row mb-3">
                     <div class="col-md-4">
                         <p class="assignment-detail-label">Lote</p>

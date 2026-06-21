@@ -204,7 +204,7 @@ class Task extends Database implements ReadableInterface, DeletableInterface
 
     public function getAssignmentById(int $id): ?array
     {
-        $sql = "SELECT a.*, t.nombre_tarea, tr.nombre_trabajador, tr.apellido_trabajador,
+        $sql = "SELECT a.*, t.nombre_tarea, t.descripcion, tr.nombre_trabajador, tr.apellido_trabajador,
                        l.id_lote AS codigo_lote
                 FROM asignar_tarea a
                 LEFT JOIN tareas t ON a.id_tarea = t.id_tarea
