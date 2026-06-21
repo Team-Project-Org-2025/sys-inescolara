@@ -131,7 +131,7 @@ $showSistema = hasPermiso('USUARIOS_MANAGE');
                     <li>
                         <a href="<?= BASE_URL ?>dashboard/trazabilidad" class="nav-link <?= $current === 'trazabilidad' ? 'active' : '' ?>">
                             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                            <span>Monitoreo</span>
+                            <span>Trazabilidad</span>
                         </a>
                     </li>
                     <?php endif; ?>
