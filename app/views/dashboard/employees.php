@@ -86,7 +86,12 @@ include_once __DIR__ . '/../common/links.php';
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Cargo</label>
-                            <input type="text" class="form-control" name="cargo" placeholder="Ej: Viverista, Supervisor, Administrador">
+                            <select class="form-select" name="cargo">
+                                <option value="">Seleccione...</option>
+                                <?php foreach ($cargoOptions as $c): ?>
+                                <option value="<?= htmlspecialchars($c) ?>"><?= htmlspecialchars($c) ?></option>
+                                <?php endforeach; ?>
+                            </select>
                         </div>
                         <div class="mb-3 form-check form-switch">
                             <input type="checkbox" class="form-check-input" name="activo" id="addEmployeeActivo" value="1" checked>
@@ -131,7 +136,12 @@ include_once __DIR__ . '/../common/links.php';
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Cargo</label>
-                            <input type="text" class="form-control" name="cargo" id="editEmployeeCargo" placeholder="Ej: Viverista, Supervisor, Administrador">
+                            <select class="form-select" name="cargo" id="editEmployeeCargo">
+                                <option value="">Seleccione...</option>
+                                <?php foreach ($cargoOptions as $c): ?>
+                                <option value="<?= htmlspecialchars($c) ?>"><?= htmlspecialchars($c) ?></option>
+                                <?php endforeach; ?>
+                            </select>
                         </div>
                         <div class="mb-3 form-check form-switch">
                             <input type="checkbox" class="form-check-input" name="activo" id="editEmployeeActivo" value="1">

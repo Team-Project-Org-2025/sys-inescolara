@@ -63,6 +63,17 @@ class Employee extends Database implements ReadableInterface, DeletableInterface
         return $stmt->execute([':id' => $id]);
     }
 
+    public function getDistinctCargos(): array
+    {
+        try {
+            $stmt = $this->db()->query("SELECT DISTINCT cargo FROM trabajadores WHERE cargo IS NOT NULL AND cargo != '' ORDER BY cargo");
+            return $stmt ? $stmt->fetchAll(PDO::FETCH_COLUMN) : [];
+        } catch (\Throwable $e) {
+            error_log('Error al obtener cargos: ' . $e->getMessage());
+            return [];
+        }
+    }
+
     public function getLastInsertId(): ?int
     {
         try {
