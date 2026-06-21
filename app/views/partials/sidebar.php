@@ -10,7 +10,7 @@ $current = $currentPage ?? '';
 $isPlanta = in_array($current, ['plantas', 'species', 'locations']);
 $isActivos = in_array($current, ['inventario', 'batches', 'trazabilidad', 'supplies', 'tools', 'unit-measures', 'mermas']);
 $isVenta = in_array($current, ['ventas', 'prices', 'clientes', 'cuentas-cobrar', 'cuentas-pagar', 'compras']);
-$isServicios = in_array($current, ['ornatos', 'ampliacion', 'suppliers']);
+$isServicios = in_array($current, ['ornatos', 'ampliacion', 'proveedores']);
 $isTarea = in_array($current, ['tasks', 'employees', 'seed-collection']);
 $isConfiguracion = in_array($current, ['usuarios', 'roles', 'auditlog', 'backups']);
 
@@ -265,7 +265,7 @@ $showSistema = hasPermiso('USUARIOS_MANAGE');
                     <?php endif; ?>
                     <?php if (hasPermiso('PROVEEDORES_VIEW')): ?>
                     <li>
-                        <a href="<?= BASE_URL ?>dashboard/suppliers" class="nav-link <?= $current === 'suppliers' ? 'active' : '' ?>">
+                        <a href="<?= BASE_URL ?>dashboard/proveedores" class="nav-link <?= $current === 'proveedores' ? 'active' : '' ?>">
                             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
                             <span>Gestionar proveedor</span>
                         </a>

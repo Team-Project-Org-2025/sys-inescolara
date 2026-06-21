@@ -3,7 +3,7 @@
 require_once __DIR__ . '/controller_helpers.php';
 
 use SysInescolara\models\Purchase;
-use SysInescolara\models\Supplier;
+use SysInescolara\models\Proveedor;
 use SysInescolara\models\Supplies;
 use SysInescolara\models\Location;
 use SysInescolara\models\Planta;
@@ -33,7 +33,7 @@ function index(): void
         return;
     }
 
-    $modeloProveedor = new Supplier();
+    $modeloProveedor = new Proveedor();
     $proveedores = $modeloProveedor->getAll();
     $modeloInsumo = new Supplies();
     $insumos = $modeloInsumo->getAll();

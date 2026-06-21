@@ -3,8 +3,8 @@ import * as Ajax from '../utils/ajax-handler.js';
 import { setupRealTimeValidation, validateForm, clearValidation } from '../utils/validation.js';
 
 $(document).ready(function () {
-  const baseUrl = `${window.BASE_URL || '/'}suppliers`;
-  let suppliersTable = null;
+  const baseUrl = `${window.BASE_URL || '/'}proveedores`;
+  let proveedoresTable = null;
 
   const supplierRules = {
     nombre_proveedor: 'nombre',      
@@ -16,9 +16,9 @@ $(document).ready(function () {
 
   const initDataTable = () => {
     if (typeof SkeletonHelper !== 'undefined') {
-      SkeletonHelper.showTableSkeleton('suppliersTable', 5, 5);
+      SkeletonHelper.showTableSkeleton('proveedoresTable', 5, 5);
     }
-    suppliersTable = $('#suppliersTable').DataTable({
+    proveedoresTable = $('#proveedoresTable').DataTable({
       ajax: {
         url: `${baseUrl}?action=get_suppliers`,
         method: 'GET',
@@ -70,9 +70,9 @@ $(document).ready(function () {
           className: 'btn btn-outline-secondary btn-sm',
           action: () => {
             if (typeof SkeletonHelper !== 'undefined') {
-              SkeletonHelper.showTableSkeleton('suppliersTable', 5, 5);
+              SkeletonHelper.showTableSkeleton('proveedoresTable', 5, 5);
             }
-            suppliersTable.ajax.reload(null, false);
+            proveedoresTable.ajax.reload(null, false);
           },
         },
       ],
@@ -118,7 +118,7 @@ $(document).ready(function () {
         if (response.success) {
           Helpers.toast('success', 'Proveedor agregado correctamente');
           $('#addSupplierModal').modal('hide');
-          suppliersTable.ajax.reload(null, false);
+          proveedoresTable.ajax.reload(null, false);
         } else {
           Helpers.toast('error', response.message);
         }
@@ -131,7 +131,7 @@ $(document).ready(function () {
   // Editar proveedor
   $(document).on('click', '.btn-edit', function () {
     const $btn = $(this);
-    const row = suppliersTable.row($btn.closest('tr')).data();
+    const row = proveedoresTable.row($btn.closest('tr')).data();
 
     const $addModal = $('#addSupplierModal');
     if ($addModal.hasClass('show')) {
@@ -168,7 +168,7 @@ $(document).ready(function () {
         if (response.success) {
           Helpers.toast('success', 'Proveedor actualizado correctamente');
           $('#editSupplierModal').modal('hide');
-          suppliersTable.ajax.reload(null, false);
+          proveedoresTable.ajax.reload(null, false);
         } else {
           Helpers.toast('error', response.message);
         }
@@ -180,7 +180,7 @@ $(document).ready(function () {
 
   // Eliminar proveedor
   $(document).on('click', '.btn-delete', function () {
-    const row = suppliersTable.row($(this).closest('tr')).data();
+    const row = proveedoresTable.row($(this).closest('tr')).data();
     const id = row.id;
     const nombre = row.nombre_proveedor;
 
@@ -192,7 +192,7 @@ $(document).ready(function () {
           .then((response) => {
             if (response.success) {
               Helpers.toast('success', 'Proveedor eliminado correctamente');
-              suppliersTable.ajax.reload(null, false);
+              proveedoresTable.ajax.reload(null, false);
             } else {
               Helpers.toast('error', response.message);
             }
