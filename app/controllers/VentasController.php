@@ -3,7 +3,7 @@
 require_once __DIR__ . '/controller_helpers.php';
 
 use SysInescolara\models\Venta;
-use SysInescolara\models\Client;
+use SysInescolara\models\Cliente;
 use SysInescolara\models\Employee;
 use SysInescolara\models\AuditLog;
 use SysInescolara\helpers\PdfHelper;
@@ -37,7 +37,7 @@ function index(): void
         return;
     }
 
-    $modeloCliente = new Client();
+    $modeloCliente = new Cliente();
     $clientes = $modeloCliente->getAll();
     $modeloTrabajador = new Employee();
     $trabajadores = $modeloTrabajador->getAll();
