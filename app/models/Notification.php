@@ -146,4 +146,15 @@ class Notification extends Database
             return false;
         }
     }
+
+    public function deleteByTitle(int $userId, string $titulo): bool
+    {
+        try {
+            $stmt = $this->db()->prepare("DELETE FROM notificaciones WHERE id_usuario = :uid AND titulo = :titulo");
+            return $stmt->execute([':uid' => $userId, ':titulo' => $titulo]);
+        } catch (\Throwable $e) {
+            error_log('Error al eliminar notificación por título: ' . $e->getMessage());
+            return false;
+        }
+    }
 }

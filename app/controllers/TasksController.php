@@ -3,6 +3,8 @@
 require_once __DIR__ . '/controller_helpers.php';
 
 use SysInescolara\models\Task;
+use SysInescolara\models\User;
+use SysInescolara\models\Notification;
 use SysInescolara\models\AuditLog;
 use SysInescolara\models\Employee;
 use SysInescolara\models\Batch;
@@ -148,6 +150,15 @@ function tasks_assignAjax(): void
         AuditLog::record('CREATE', 'uso_herramienta', $asignacionId, null, ['count' => $toolCount]);
     }
 
+    $userModel = new User();
+    $userId = $userModel->getUserIdByTrabajador($assignmentData['id_trabajador']);
+    if ($userId) {
+        $notifTitle = "Tarea asignada #{$asignacionId}: {$nombreTarea}";
+        $notifLink = "dashboard/tasks";
+        $notificationModel = new Notification();
+        $notificationModel->create($userId, $notifTitle, $descripcion, 'task_assigned', $notifLink);
+    }
+
     jsonResponse(['success' => true, 'message' => 'Tarea asignada correctamente', 'id_asignacion' => $asignacionId]);
 }
 
@@ -254,6 +265,15 @@ function tasks_completeAssignmentAjax(): void
         'estatus_tarea' => 'completada',
         'fecha_cumplimiento' => $fechaCumplimiento,
     ]);
+
+    $userModel = new User();
+    $userId = $userModel->getUserIdByTrabajador((int)$oldData['id_trabajador']);
+    if ($userId) {
+        $notifTitle = "Tarea asignada #{$id}: {$oldData['nombre_tarea']}";
+        $notificationModel = new Notification();
+        $notificationModel->deleteByTitle($userId, $notifTitle);
+    }
+
     jsonResponse(['success' => true, 'message' => 'Tarea completada correctamente']);
 }
 
@@ -268,6 +288,15 @@ function tasks_cancelAssignmentAjax(): void
 
     $model->cancelAssignment($id);
     AuditLog::record('UPDATE', 'asignar_tarea', $id, $oldData, ['estatus_tarea' => 'cancelada']);
+
+    $userModel = new User();
+    $userId = $userModel->getUserIdByTrabajador((int)$oldData['id_trabajador']);
+    if ($userId) {
+        $notifTitle = "Tarea asignada #{$id}: {$oldData['nombre_tarea']}";
+        $notificationModel = new Notification();
+        $notificationModel->deleteByTitle($userId, $notifTitle);
+    }
+
     jsonResponse(['success' => true, 'message' => 'Tarea cancelada correctamente']);
 }
 

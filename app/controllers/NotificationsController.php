@@ -3,6 +3,8 @@
 require_once __DIR__ . '/controller_helpers.php';
 
 use SysInescolara\models\Notification;
+use SysInescolara\models\User;
+use SysInescolara\models\Task;
 use SysInescolara\models\DashboardData;
 
 function get_unread(): void
@@ -32,6 +34,23 @@ function get_unread(): void
             if ($notifModel->existsByTitle($userId, $titulo)) continue;
             $mensaje = 'Stock actual: ' . (string)$supply['stock_actual'] . ' ' . ($supply['unidad_medida'] ?? 'unidades');
             $notifModel->create($userId, $titulo, $mensaje, 'warning', 'dashboard/inventario');
+        }
+
+        try {
+            $syncUserId = $userId;
+            $userModel = new User();
+            $userData = $userModel->getById($syncUserId);
+            if ($userData && !empty($userData['id_trabajador_ref'])) {
+                $taskModel = new Task();
+                $pendingTasks = $taskModel->getPendingAssignmentsByWorker((int)$userData['id_trabajador_ref']);
+                foreach ($pendingTasks as $task) {
+                    $titulo = "Tarea asignada #{$task['id_asignacion']}: {$task['nombre_tarea']}";
+                    $notifModel->deleteByTitle($syncUserId, $titulo);
+                    $notifModel->create($syncUserId, $titulo, $task['descripcion'] ?? '', 'task_assigned', 'dashboard/tasks');
+                }
+            }
+        } catch (\Throwable $e) {
+            error_log('Error al sincronizar notificaciones de tareas: ' . $e->getMessage());
         }
 
         $count = $notifModel->getUnreadCount($userId);

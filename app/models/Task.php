@@ -354,4 +354,16 @@ class Task extends Database implements ReadableInterface, DeletableInterface
         $stmt->execute([':id_asignacion' => $asignacionId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    public function getPendingAssignmentsByWorker(int $idTrabajador): array
+    {
+        $sql = "SELECT a.id_asignacion, t.nombre_tarea, t.descripcion
+                FROM asignar_tarea a
+                JOIN tareas t ON a.id_tarea = t.id_tarea
+                WHERE a.id_trabajador = :id AND a.estatus_tarea = 'pendiente'
+                ORDER BY a.fecha_asignacion DESC";
+        $stmt = $this->db()->prepare($sql);
+        $stmt->execute([':id' => $idTrabajador]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }

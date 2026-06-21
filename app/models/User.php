@@ -563,6 +563,19 @@ class User extends Database
         }
     }
 
+    public function getUserIdByTrabajador(int $idTrabajador): ?int
+    {
+        try {
+            $stmt = $this->db()->prepare("SELECT id_usuario FROM usuarios WHERE id_trabajador_ref = :id");
+            $stmt->execute([':id' => $idTrabajador]);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $row ? (int)$row['id_usuario'] : null;
+        } catch (\Throwable $e) {
+            error_log("Error en getUserIdByTrabajador: " . $e->getMessage());
+            return null;
+        }
+    }
+
     public function isPasswordStrong(string $password): bool
     {
         return preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&._-])[A-Za-z\d@$!%*?&._-]{8,}$/', $password) === 1;
