@@ -2,7 +2,7 @@
 
 require_once __DIR__ . '/controller_helpers.php';
 
-use SysInescolara\models\Client;
+use SysInescolara\models\Cliente;
 use SysInescolara\models\AuditLog;
 
 function index(): void
@@ -24,7 +24,7 @@ function index(): void
         return;
     }
 
-    $view = ROOT_PATH . 'app/views/dashboard/clients.php';
+    $view = ROOT_PATH . 'app/views/dashboard/clientes.php';
     if (!is_file($view)) {
         http_response_code(500);
         echo 'Vista de clientes no encontrada.';
@@ -40,7 +40,7 @@ function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('CLIENTES_D
 
 function clients_handleAddEdit(string $mode): void
 {
-    $model = new Client();
+    $model = new Cliente();
     $nombreCliente = trim((string)($_POST['nombre_cliente'] ?? ''));
     if ($nombreCliente === '') throw new \Exception('El nombre del cliente es requerido.');
 
@@ -65,7 +65,7 @@ function clients_handleAddEdit(string $mode): void
 
 function clients_handleDelete(): void
 {
-    $model = new Client();
+    $model = new Cliente();
     $id = (int)($_POST['id'] ?? 0);
     if ($id <= 0) throw new \Exception('ID inválido');
     if (!$model->exists($id)) throw new \Exception('No existe el cliente');
@@ -78,6 +78,6 @@ function clients_handleDelete(): void
 
 function clients_getClientsAjax(): void
 {
-    $model = new Client();
-    jsonResponse(['success' => true, 'clients' => $model->getAll(), 'count' => 0]);
+    $model = new Cliente();
+    jsonResponse(['success' => true, 'clientes' => $model->getAll(), 'count' => 0]);
 }

@@ -107,7 +107,7 @@ function ventas(): void
     dashboardCheckPermiso('VENTAS_ACCESS');
 
     require_once ROOT_PATH . 'vendor/autoload.php';
-    $modeloCliente = new \SysInescolara\models\Client();
+    $modeloCliente = new \SysInescolara\models\Cliente();
     $clientes = $modeloCliente->getAll();
     $modeloTrabajador = new \SysInescolara\models\Employee();
     $trabajadores = $modeloTrabajador->getAll();
@@ -316,11 +316,11 @@ function employees(): void
     require $view;
 }
 
-function clients(): void
+function clientes(): void
 {
     dashboardCheckPermiso('CLIENTES_VIEW');
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
-        . 'dashboard' . DIRECTORY_SEPARATOR . 'clients.php';
+        . 'dashboard' . DIRECTORY_SEPARATOR . 'clientes.php';
 
     if (!is_file($view)) {
         http_response_code(500);
@@ -473,7 +473,7 @@ function ornatos(): void
     dashboardCheckPermiso('ORNATOS_VIEW');
 
     require_once ROOT_PATH . 'vendor/autoload.php';
-    $modeloCliente = new \SysInescolara\models\Client();
+    $modeloCliente = new \SysInescolara\models\Cliente();
     $clientes = $modeloCliente->getAll();
     $modeloLote = new \SysInescolara\models\Batch();
     $lotes = $modeloLote->getAll();
@@ -605,7 +605,7 @@ function ampliacion(): void
     dashboardCheckPermiso('AMPLIACION_VIEW');
 
     require_once ROOT_PATH . 'vendor/autoload.php';
-    $clientModel = new \SysInescolara\models\Client();
+    $clientModel = new \SysInescolara\models\Cliente();
     $clientes = $clientModel->getAll();
     $employeeModel = new \SysInescolara\models\Employee();
     $trabajadores = $employeeModel->getAll();

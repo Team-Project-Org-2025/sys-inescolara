@@ -3,8 +3,8 @@ import * as Ajax from '../utils/ajax-handler.js';
 import { setupRealTimeValidation, validateForm } from '../utils/validation.js';
 
 $(document).ready(function () {
-  const baseUrl = `${window.BASE_URL || '/'}clients`;
-  let clientsTable = null;
+const baseUrl = `${window.BASE_URL || '/'}clientes`;
+let clientesTable = null;
 
   const clientRules = {
     nombre_cliente: 'nombre',
@@ -13,15 +13,15 @@ $(document).ready(function () {
 
   const initDataTable = () => {
     if (typeof SkeletonHelper !== 'undefined') {
-      SkeletonHelper.showTableSkeleton('clientsTable', 5, 3);
+SkeletonHelper.showTableSkeleton('clientesTable', 5, 3);
     }
-    clientsTable = $('#clientsTable').DataTable({
-      ajax: {
-        url: `${baseUrl}?action=get_clients`,
-        method: 'GET',
-        dataType: 'json',
-        headers: { 'X-Requested-With': 'XMLHttpRequest' },
-        dataSrc: 'clients',
+    clientesTable = $('#clientesTable').DataTable({
+        ajax: {
+            url: `${baseUrl}?action=get_clients`,
+            method: 'GET',
+            dataType: 'json',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            dataSrc: 'clientes',
       },
       columns: [
         { data: 'nombre_cliente' },
@@ -59,9 +59,9 @@ $(document).ready(function () {
           className: 'btn btn-outline-secondary btn-sm',
           action: () => {
             if (typeof SkeletonHelper !== 'undefined') {
-              SkeletonHelper.showTableSkeleton('clientsTable', 5, 3);
+              SkeletonHelper.showTableSkeleton('clientesTable', 5, 3);
             }
-            clientsTable.ajax.reload(null, false);
+            clientesTable.ajax.reload(null, false);
           },
         },
       ],
@@ -100,7 +100,7 @@ $(document).ready(function () {
         if (response.success) {
           Helpers.toast('success', 'Cliente agregado correctamente');
           $('#addClientModal').modal('hide');
-          clientsTable.ajax.reload(null, false);
+          clientesTable.ajax.reload(null, false);
         } else {
           Helpers.toast('error', response.message);
         }
@@ -113,7 +113,7 @@ $(document).ready(function () {
   // Editar cliente
   $(document).on('click', '.btn-edit', function () {
     const $btn = $(this);
-    const row = clientsTable.row($btn.closest('tr')).data();
+    const row = clientesTable.row($btn.closest('tr')).data();
 
     const $addModal = $('#addClientModal');
     if ($addModal.hasClass('show')) {
@@ -150,7 +150,7 @@ $(document).ready(function () {
         if (response.success) {
           Helpers.toast('success', 'Cliente actualizado correctamente');
           $('#editClientModal').modal('hide');
-          clientsTable.ajax.reload(null, false);
+          clientesTable.ajax.reload(null, false);
         } else {
           Helpers.toast('error', response.message);
         }
@@ -162,7 +162,7 @@ $(document).ready(function () {
 
   // Eliminar cliente
   $(document).on('click', '.btn-delete', function () {
-    const row = clientsTable.row($(this).closest('tr')).data();
+    const row = clientesTable.row($(this).closest('tr')).data();
     const id = row.id;
     const nombre = row.nombre_cliente;
 
@@ -174,7 +174,7 @@ $(document).ready(function () {
           .then((response) => {
             if (response.success) {
               Helpers.toast('success', 'Cliente eliminado correctamente');
-              clientsTable.ajax.reload(null, false);
+              clientesTable.ajax.reload(null, false);
             } else {
               Helpers.toast('error', response.message);
             }

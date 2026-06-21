@@ -305,7 +305,7 @@ $userAvatar = \SysInescolara\helpers\Auth::avatar();
                 <a href="<?= BASE_URL ?>dashboard/plants" class="quick-action-btn"><i class="fas fa-plus-circle" style="color:var(--color-secondary);"></i> Nueva Planta</a>
                 <a href="<?= BASE_URL ?>dashboard/batches" class="quick-action-btn"><i class="fas fa-plus-circle" style="color:#e5a835;"></i> Nuevo Lote</a>
                 <a href="<?= BASE_URL ?>dashboard/supplies" class="quick-action-btn"><i class="fas fa-plus-circle" style="color:#f59e0b;"></i> Nuevo Insumo</a>
-                <a href="<?= BASE_URL ?>dashboard/clients" class="quick-action-btn"><i class="fas fa-plus-circle" style="color:#2e7d32;"></i> Nuevo Cliente</a>
+                <a href="<?= BASE_URL ?>dashboard/clientes" class="quick-action-btn"><i class="fas fa-plus-circle" style="color:#2e7d32;"></i> Nuevo Cliente</a>
                 <a href="<?= BASE_URL ?>dashboard/tasks" class="quick-action-btn"><i class="fas fa-plus-circle" style="color:#0ea5e9;"></i> Nueva Tarea</a>
                 <a href="<?= BASE_URL ?>dashboard/ventas" class="quick-action-btn"><i class="fas fa-shopping-cart" style="color:#2e7d32;"></i> Nueva Venta</a>
                 <a href="<?= BASE_URL ?>dashboard/reports" class="quick-action-btn"><i class="fas fa-chart-bar" style="color:#8b5cf6;"></i> Reportes</a>
@@ -411,7 +411,7 @@ $userAvatar = \SysInescolara\helpers\Auth::avatar();
 
                 <div class="section-divider"><i class="fas fa-handshake"></i> Comercial</div>
 
-                <a href="<?= BASE_URL ?>dashboard/clients" class="text-decoration-none">
+                <a href="<?= BASE_URL ?>dashboard/clientes" class="text-decoration-none">
                 <div class="kpi-card">
                     <div class="kpi-card-header">
                         <span class="kpi-card-title">Clientes</span>
