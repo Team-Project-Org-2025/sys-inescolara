@@ -236,7 +236,7 @@ include_once __DIR__ . '/../common/links.php';
                 </select>
             </td>
             <td>
-                <input type="text" class="form-control form-control-sm insumo-nombre" placeholder="Ej: Semillas de Araguaney" required maxlength="100">
+                <input type="text" class="form-control form-control-sm insumo-nombre" placeholder="Ej: Semillas de Araguaney" required maxlength="50">
             </td>
             <td>
                 <select class="form-select form-select-sm insumo-unidad" required>

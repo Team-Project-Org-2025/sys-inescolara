@@ -44,13 +44,13 @@
                 <div class="form-group">
                     <label for="password">Nueva Contraseña</label>
                     <input type="password" id="password" name="password" placeholder="Mínimo 8 caracteres"
-                           required minlength="8" autocomplete="new-password" maxlength="100">
+                           required minlength="8" autocomplete="new-password" maxlength="30">
                 </div>
 
                 <div class="form-group">
                     <label for="password2">Confirmar Contraseña</label>
                     <input type="password" id="password2" name="password2" placeholder="Repite la contraseña"
-                           required minlength="8" autocomplete="new-password" maxlength="100">
+                           required minlength="8" autocomplete="new-password" maxlength="30">
                 </div>
 
                 <button type="submit" class="btn btn-primary btn-block btn-lg">

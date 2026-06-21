@@ -188,7 +188,7 @@ include_once __DIR__ . '/../common/links.php';
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Referencia (6 dígitos)</label>
-                                <input type="text" class="form-control" name="referencia" id="payReferencia" maxlength="50" pattern="[0-9]{6}" inputmode="numeric">
+                                <input type="text" class="form-control" name="referencia" id="payReferencia" maxlength="6" pattern="[0-9]{6}" inputmode="numeric">
                             </div>
                         </div>
                         <div class="mb-3">
