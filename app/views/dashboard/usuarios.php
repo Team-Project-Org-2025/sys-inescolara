@@ -126,7 +126,7 @@ function renderPermisosChecklist(array $modulos, array $codigoToId): void
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Contraseña</label>
-                            <input type="password" class="form-control" name="password" required maxlength="100">
+                            <input type="password" class="form-control" name="password" required maxlength="30">
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Rol</label>
@@ -190,12 +190,12 @@ function renderPermisosChecklist(array $modulos, array $codigoToId): void
                         </div>
                         <div class="mb-3" id="currentPasswordGroup" style="display:none;">
                             <label class="form-label">Tu Contraseña Actual</label>
-                            <input type="password" class="form-control" name="current_password" id="editCurrentPassword" placeholder="Ingresa tu contraseña actual para autorizar el cambio" maxlength="100">
+                            <input type="password" class="form-control" name="current_password" id="editCurrentPassword" placeholder="Ingresa tu contraseña actual para autorizar el cambio" maxlength="30">
                             <small class="text-muted" id="currentPasswordHelp">Debes ingresar tu propia contraseña para realizar este cambio.</small>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Nueva Contraseña (Dejar en blanco para no cambiar)</label>
-                            <input type="password" class="form-control" name="password" id="editUserPassword" placeholder="Nueva contraseña" maxlength="100">
+                            <input type="password" class="form-control" name="password" id="editUserPassword" placeholder="Nueva contraseña" maxlength="30">
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Rol</label>
