@@ -2,7 +2,7 @@
 require_once __DIR__ . '/controller_helpers.php';
 
 use SysInescolara\models\Planta;
-use SysInescolara\models\Species;
+use SysInescolara\models\Especie;
 use SysInescolara\models\AuditLog;
 
 function index(): void
@@ -25,7 +25,7 @@ function index(): void
         return;
     }
     
-    $speciesModel = new Species();
+    $speciesModel = new Especie();
     $species = $speciesModel->getAll();
     $view = ROOT_PATH . 'app/views/dashboard/plantas.php';
     

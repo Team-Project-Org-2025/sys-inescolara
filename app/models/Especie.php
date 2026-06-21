@@ -8,7 +8,7 @@ use SysInescolara\interfaces\DeletableInterface;
 use SysInescolara\traits\ValidationTrait;
 use PDO;
 
-class Species extends Database implements ReadableInterface, DeletableInterface
+class Especie extends Database implements ReadableInterface, DeletableInterface
 {
     use ValidationTrait;
 

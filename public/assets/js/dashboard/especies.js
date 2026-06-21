@@ -3,8 +3,8 @@ import * as Ajax from '../utils/ajax-handler.js';
 import { setupRealTimeValidation, validateForm, clearValidation } from '../utils/validation.js';
 
 $(document).ready(function () {
-  const baseUrl = `${window.BASE_URL || '/'}species`;
-  let speciesTable = null;
+  const baseUrl = `${window.BASE_URL || '/'}especies`;
+  let especiesTable = null;
 
   const speciesRules = {
     nombre_especie: 'nombreProducto',
@@ -12,15 +12,15 @@ $(document).ready(function () {
 
   const initDataTable = () => {
     if (typeof SkeletonHelper !== 'undefined') {
-      SkeletonHelper.showTableSkeleton('speciesTable', 5, 3);
+      SkeletonHelper.showTableSkeleton('especiesTable', 5, 3);
     }
-    speciesTable = $('#speciesTable').DataTable({
+    especiesTable = $('#especiesTable').DataTable({
       ajax: {
         url: `${baseUrl}?action=get_species`,
         method: 'GET',
         dataType: 'json',
         headers: { 'X-Requested-With': 'XMLHttpRequest' },
-        dataSrc: 'species',
+        dataSrc: 'especies',
       },
       order: [[0, 'asc']],
       columns: [
@@ -65,9 +65,9 @@ $(document).ready(function () {
           className: 'btn btn-outline-secondary btn-sm',
           action: () => {
             if (typeof SkeletonHelper !== 'undefined') {
-              SkeletonHelper.showTableSkeleton('speciesTable', 5, 3);
+              SkeletonHelper.showTableSkeleton('especiesTable', 5, 3);
             }
-            speciesTable.ajax.reload(null, false);
+            especiesTable.ajax.reload(null, false);
           },
         },
       ],
@@ -106,7 +106,7 @@ $(document).ready(function () {
         if (response.success) {
           Helpers.toast('success', 'Especie agregada correctamente');
           $('#addSpeciesModal').modal('hide');
-          speciesTable.ajax.reload(null, false);
+          especiesTable.ajax.reload(null, false);
         } else {
           Helpers.toast('error', response.message);
         }
@@ -118,7 +118,7 @@ $(document).ready(function () {
 
   // Editar especie
   $(document).on('click', '.btn-edit', function () {
-    const row = speciesTable.row($(this).closest('tr')).data();
+    const row = especiesTable.row($(this).closest('tr')).data();
 
     const $addModal = $('#addSpeciesModal');
     if ($addModal.hasClass('show')) {
@@ -155,7 +155,7 @@ $(document).ready(function () {
         if (response.success) {
           Helpers.toast('success', 'Especie actualizada correctamente');
           $('#editSpeciesModal').modal('hide');
-          speciesTable.ajax.reload(null, false);
+          especiesTable.ajax.reload(null, false);
         } else {
           Helpers.toast('error', response.message);
         }
@@ -167,7 +167,7 @@ $(document).ready(function () {
 
   // Eliminar especie
   $(document).on('click', '.btn-delete', function () {
-    const row = speciesTable.row($(this).closest('tr')).data();
+    const row = especiesTable.row($(this).closest('tr')).data();
     const id = row.id;
     const nombre = row.nombre_especie;
 
@@ -179,7 +179,7 @@ $(document).ready(function () {
           .then((response) => {
             if (response.success) {
               Helpers.toast('success', 'Especie eliminada correctamente');
-              speciesTable.ajax.reload(null, false);
+              especiesTable.ajax.reload(null, false);
             } else {
               Helpers.toast('error', response.message);
             }

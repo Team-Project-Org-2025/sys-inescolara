@@ -168,7 +168,7 @@ class Ampliacion extends Database implements ReadableInterface
 
     public function getSpecies(): array
     {
-        $sp = new Species();
+        $sp = new Especie();
         return $sp->getAll();
     }
 

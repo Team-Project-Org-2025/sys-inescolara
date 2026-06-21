@@ -7,7 +7,7 @@ function hasPermiso(string $codigo): bool
 
 $current = $currentPage ?? '';
 
-$isPlanta = in_array($current, ['plantas', 'species', 'locations']);
+$isPlanta = in_array($current, ['plantas', 'especies', 'locations']);
 $isActivos = in_array($current, ['inventario', 'lotes', 'trazabilidad', 'supplies', 'tools', 'unit-measures', 'mermas']);
 $isVenta = in_array($current, ['ventas', 'prices', 'clientes', 'cuentas-cobrar', 'cuentas-pagar', 'compras']);
 $isServicios = in_array($current, ['ornatos', 'ampliacion', 'proveedores']);
@@ -83,7 +83,7 @@ $showSistema = hasPermiso('USUARIOS_MANAGE');
                     <?php endif; ?>
                     <?php if (hasPermiso('PLANTAS_VIEW')): ?>
                     <li>
-                        <a href="<?= BASE_URL ?>dashboard/species" class="nav-link <?= $current === 'species' ? 'active' : '' ?>">
+                        <a href="<?= BASE_URL ?>dashboard/especies" class="nav-link <?= $current === 'especies' ? 'active' : '' ?>">
                             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="3" x2="6" y2="15"></line><circle cx="18" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><path d="M18 9a9 9 0 0 1-9 9"></path></svg>
                             <span>Administrar especie</span>
                         </a>
