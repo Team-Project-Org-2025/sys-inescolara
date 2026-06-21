@@ -211,11 +211,11 @@ function batches(): void
     require $view;
 }
 
-function suppliers(): void
+function proveedores(): void
 {
     dashboardCheckPermiso('PROVEEDORES_VIEW');
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
-        . 'dashboard' . DIRECTORY_SEPARATOR . 'suppliers.php';
+        . 'dashboard' . DIRECTORY_SEPARATOR . 'proveedores.php';
 
     if (!is_file($view)) {
         http_response_code(500);
@@ -251,7 +251,7 @@ function compras(): void
     dashboardCheckPermiso('COMPRAS_VIEW');
 
     require_once ROOT_PATH . 'vendor/autoload.php';
-    $supplierModel = new \SysInescolara\models\Supplier();
+    $supplierModel = new \SysInescolara\models\Proveedor();
     $proveedores = $supplierModel->getAll();
     $supplyModel = new \SysInescolara\models\Supplies();
     $insumos = $supplyModel->getAll();

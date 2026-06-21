@@ -8,7 +8,7 @@ use SysInescolara\interfaces\DeletableInterface;
 use SysInescolara\traits\ValidationTrait;
 use PDO;
 
-class Supplier extends Database implements ReadableInterface, DeletableInterface
+class Proveedor extends Database implements ReadableInterface, DeletableInterface
 {
     use ValidationTrait;
 
@@ -75,6 +75,13 @@ class Supplier extends Database implements ReadableInterface, DeletableInterface
             error_log('Error al obtener proveedores: ' . $e->getMessage());
             return [];
         }
+    }
+
+    public function getByRif(string $rif): ?array
+    {
+        $stmt = $this->db()->prepare("SELECT id_proveedor AS id FROM proveedores WHERE rif_proveedor = :rif AND activo = 1 LIMIT 1");
+        $stmt->execute([':rif' => $rif]);
+        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 
     public function getById(int $id): ?array

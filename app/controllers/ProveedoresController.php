@@ -2,7 +2,7 @@
 
 require_once __DIR__ . '/controller_helpers.php';
 
-use SysInescolara\models\Supplier;
+use SysInescolara\models\Proveedor;
 use SysInescolara\models\AuditLog;
 
 function index(): void
@@ -24,7 +24,7 @@ function index(): void
         return;
     }
 
-    $view = ROOT_PATH . 'app/views/dashboard/suppliers.php';
+    $view = ROOT_PATH . 'app/views/dashboard/proveedores.php';
     if (!is_file($view)) {
         http_response_code(500);
         echo 'Vista de proveedores no encontrada.';
@@ -40,11 +40,19 @@ function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('PROVEEDORE
 
 function suppliers_handleAddEdit(string $mode): void
 {
-    $model = new Supplier();
+    $model = new Proveedor();
     $nombre = trim((string)($_POST['nombre_proveedor'] ?? ''));
     if ($nombre === '') throw new \Exception('El nombre del proveedor es requerido.');
     $rif = trim((string)($_POST['rif_proveedor'] ?? ''));
     if ($rif === '') $rif = null;
+
+    if ($rif !== null) {
+        $existing = $model->getByRif($rif);
+        $idActual = (int)($_POST['id'] ?? 0);
+        if ($existing && $existing['id'] !== $idActual) {
+            throw new \Exception('El RIF ingresado ya está registrado en otro proveedor.');
+        }
+    }
     $contacto = trim((string)($_POST['contacto_vendedor'] ?? ''));
     if ($contacto === '') $contacto = null;
     $telefono = trim((string)($_POST['telefono_proveedor'] ?? ''));
@@ -54,7 +62,7 @@ function suppliers_handleAddEdit(string $mode): void
         $model->add($nombre, $rif, $contacto, $telefono);
         $newId = $model->getLastInsertId() ?? 0;
         AuditLog::record('CREATE', 'proveedores', $newId, null, compact('nombre', 'rif', 'contacto', 'telefono'));
-        jsonResponse(['success' => true, 'message' => 'Proveedor agregado correctamente', 'supplier' => ['id' => $newId, 'nombre_proveedor' => $nombre, 'rif_proveedor' => $rif, 'contacto_vendedor' => $contacto, 'telefono_proveedor' => $telefono]]);
+        jsonResponse(['success' => true, 'message' => 'Proveedor agregado correctamente', 'proveedor' => ['id' => $newId, 'nombre_proveedor' => $nombre, 'rif_proveedor' => $rif, 'contacto_vendedor' => $contacto, 'telefono_proveedor' => $telefono]]);
     }
 
     $id = (int)($_POST['id'] ?? 0);
@@ -63,12 +71,12 @@ function suppliers_handleAddEdit(string $mode): void
     $oldData = $model->getById($id);
     $model->update($id, $nombre, $rif, $contacto, $telefono);
     AuditLog::record('UPDATE', 'proveedores', $id, $oldData, compact('nombre', 'rif', 'contacto', 'telefono'));
-    jsonResponse(['success' => true, 'message' => 'Proveedor actualizado correctamente', 'supplier' => ['id' => $id, 'nombre_proveedor' => $nombre, 'rif_proveedor' => $rif, 'contacto_vendedor' => $contacto, 'telefono_proveedor' => $telefono]]);
+    jsonResponse(['success' => true, 'message' => 'Proveedor actualizado correctamente', 'proveedor' => ['id' => $id, 'nombre_proveedor' => $nombre, 'rif_proveedor' => $rif, 'contacto_vendedor' => $contacto, 'telefono_proveedor' => $telefono]]);
 }
 
 function suppliers_handleDelete(): void
 {
-    $model = new Supplier();
+    $model = new Proveedor();
     $id = (int)($_POST['id'] ?? 0);
     if ($id <= 0) throw new \Exception('ID inválido');
     if (!$model->exists($id)) throw new \Exception('No existe el proveedor');
@@ -81,6 +89,6 @@ function suppliers_handleDelete(): void
 
 function suppliers_getSuppliersAjax(): void
 {
-    $model = new Supplier();
+    $model = new Proveedor();
     jsonResponse(['success' => true, 'suppliers' => $model->getAll(), 'count' => 0]);
 }

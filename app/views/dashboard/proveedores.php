@@ -14,7 +14,7 @@ include_once __DIR__ . '/../common/links.php';
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
     
     <?php 
-    $currentPage = 'suppliers';
+    $currentPage = 'proveedores';
     include_once __DIR__ . '/../partials/sidebar.php'; 
     ?>
     
@@ -36,7 +36,7 @@ include_once __DIR__ . '/../common/links.php';
             <div class="card shadow-sm">
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table id="suppliersTable" class="table table-striped table-hover w-100">
+                        <table id="proveedoresTable" class="table table-striped table-hover w-100">
                             <thead>
                                 <tr>
                                     <th>Nombre del Proveedor</th>
@@ -54,7 +54,7 @@ include_once __DIR__ . '/../common/links.php';
         </div>
     </main>
 
-    <!-- Add Supplier Modal -->
+    <!-- Add Proveedor Modal -->
     <div class="modal fade" id="addSupplierModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -104,7 +104,7 @@ include_once __DIR__ . '/../common/links.php';
         </div>
     </div>
 
-    <!-- Edit Supplier Modal -->
+    <!-- Edit Proveedor Modal -->
     <div class="modal fade" id="editSupplierModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -154,6 +154,6 @@ include_once __DIR__ . '/../common/links.php';
 
     <script src="<?= BASE_URL ?>public/assets/js/dashboard/notifications.js"></script>
     <?= $scripts_links ?>
-    <script type="module" src="<?= BASE_URL ?>public/assets/js/dashboard/suppliers.js"></script>
+    <script type="module" src="<?= BASE_URL ?>public/assets/js/dashboard/proveedores.js"></script>
 </body>
 </html>
