@@ -8,7 +8,7 @@ function hasPermiso(string $codigo): bool
 $current = $currentPage ?? '';
 
 $isPlanta = in_array($current, ['plantas', 'species', 'locations']);
-$isActivos = in_array($current, ['inventario', 'batches', 'trazabilidad', 'supplies', 'tools', 'unit-measures', 'mermas']);
+$isActivos = in_array($current, ['inventario', 'lotes', 'trazabilidad', 'supplies', 'tools', 'unit-measures', 'mermas']);
 $isVenta = in_array($current, ['ventas', 'prices', 'clientes', 'cuentas-cobrar', 'cuentas-pagar', 'compras']);
 $isServicios = in_array($current, ['ornatos', 'ampliacion', 'proveedores']);
 $isTarea = in_array($current, ['tasks', 'employees', 'seed-collection']);
@@ -121,7 +121,7 @@ $showSistema = hasPermiso('USUARIOS_MANAGE');
                     <?php endif; ?>
                     <?php if (hasPermiso('PLANTAS_VIEW')): ?>
                     <li>
-                        <a href="<?= BASE_URL ?>dashboard/batches" class="nav-link <?= $current === 'batches' ? 'active' : '' ?>">
+                        <a href="<?= BASE_URL ?>dashboard/lotes" class="nav-link <?= $current === 'lotes' ? 'active' : '' ?>">
                             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5"></polygon><line x1="12" y1="22" x2="12" y2="15.5"></line><polyline points="2 8.5 12 15.5 22 8.5"></polyline></svg>
                             <span>Lote</span>
                         </a>

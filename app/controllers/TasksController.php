@@ -5,7 +5,7 @@ require_once __DIR__ . '/controller_helpers.php';
 use SysInescolara\models\Task;
 use SysInescolara\models\AuditLog;
 use SysInescolara\models\Employee;
-use SysInescolara\models\Batch;
+use SysInescolara\models\Lote;
 use SysInescolara\models\Supplies;
 use SysInescolara\models\Tool;
 
@@ -32,7 +32,7 @@ function index(): void
 
     $employeeModel = new Employee();
     $trabajadores = $employeeModel->getAll();
-    $batchModel = new Batch();
+    $batchModel = new Lote();
     $lotes = $batchModel->getAll();
     $suppliesModel = new Supplies();
     $insumos = $suppliesModel->getAll();

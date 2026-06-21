@@ -3,7 +3,7 @@
 require_once __DIR__ . '/controller_helpers.php';
 
 use SysInescolara\models\PriceCalculation;
-use SysInescolara\models\Batch;
+use SysInescolara\models\Lote;
 use SysInescolara\models\Planta;
 use SysInescolara\models\AuditLog;
 
@@ -48,7 +48,7 @@ function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('PRECIOS_DE
 function prices_handleEdit(): void
 {
     $model = new PriceCalculation();
-    $batchModel = new Batch();
+    $batchModel = new Lote();
 
     $id = (int)($_POST['id'] ?? 0);
     if ($id <= 0) throw new \Exception('ID inválido');
@@ -121,7 +121,7 @@ function prices_guardarPorPlantaAjax(): void
     }
 
     $model = new PriceCalculation();
-    $batchModel = new Batch();
+    $batchModel = new Lote();
     $saved = 0;
 
     foreach ($loteIds as $idLote) {

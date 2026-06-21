@@ -189,7 +189,7 @@ function plantas(): void
     require $view;
 }
 
-function batches(): void
+function lotes(): void
 {
     dashboardCheckPermiso('PLANTAS_VIEW');
 
@@ -200,7 +200,7 @@ function batches(): void
     $locations = $locationModel->getAll();
 
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
-        . 'dashboard' . DIRECTORY_SEPARATOR . 'batches.php';
+        . 'dashboard' . DIRECTORY_SEPARATOR . 'lotes.php';
 
     if (!is_file($view)) {
         http_response_code(500);
@@ -275,7 +275,7 @@ function tasks(): void
     dashboardCheckPermiso('TAREAS_VIEW');
     $employeeModel = new \SysInescolara\models\Employee();
     $trabajadores = $employeeModel->getAll();
-    $batchModel = new \SysInescolara\models\Batch();
+    $batchModel = new \SysInescolara\models\Lote();
     $lotes = $batchModel->getAll();
     $suppliesModel = new \SysInescolara\models\Supplies();
     $insumos = $suppliesModel->getAll();
@@ -475,7 +475,7 @@ function ornatos(): void
     require_once ROOT_PATH . 'vendor/autoload.php';
     $modeloCliente = new \SysInescolara\models\Cliente();
     $clientes = $modeloCliente->getAll();
-    $modeloLote = new \SysInescolara\models\Batch();
+    $modeloLote = new \SysInescolara\models\Lote();
     $lotes = $modeloLote->getAll();
 
     $vista = ROOT_PATH . 'app/views/dashboard/ornatos.php';

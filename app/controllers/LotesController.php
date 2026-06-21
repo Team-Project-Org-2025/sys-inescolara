@@ -2,7 +2,7 @@
 
 require_once __DIR__ . '/controller_helpers.php';
 
-use SysInescolara\models\Batch;
+use SysInescolara\models\Lote;
 use SysInescolara\models\Planta;
 use SysInescolara\models\Location;
 use SysInescolara\models\AuditLog;
@@ -33,10 +33,10 @@ function index(): void
         $locations = $locationModel->getAll();
     } catch (\Throwable $e) {
         $locations = [];
-        error_log('[Batches] Error loading locations: ' . $e->getMessage());
+        error_log('[Lotes] Error loading locations: ' . $e->getMessage());
     }
 
-    $view = ROOT_PATH . 'app/views/dashboard/batches.php';
+    $view = ROOT_PATH . 'app/views/dashboard/lotes.php';
     if (!is_file($view)) {
         http_response_code(500);
         echo 'Vista de lotes no encontrada.';
@@ -52,7 +52,7 @@ function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('PLANTAS_DE
 
 function batches_handleAddEdit(string $mode): void
 {
-    $model = new Batch();
+    $model = new Lote();
     $id_planta = (int)($_POST['id_planta'] ?? 0);
     $id_ubicacion = (int)($_POST['id_ubicacion'] ?? 0);
     $fecha_siembra = trim((string)($_POST['fecha_siembra'] ?? ''));
@@ -74,8 +74,8 @@ function batches_handleAddEdit(string $mode): void
 
     $imagen = null;
     if (!empty($_FILES['imagen']) && $_FILES['imagen']['error'] === UPLOAD_ERR_OK) {
-        $uploader = new \SysInescolara\helpers\ImageUploader('assets/uploads/batches');
-        $result = $uploader->upload($_FILES['imagen'], 'batch');
+        $uploader = new \SysInescolara\helpers\ImageUploader('assets/uploads/lotes');
+        $result = $uploader->upload($_FILES['imagen'], 'lote');
         if (!$result['success']) {
             throw new \Exception(implode(', ', $result['errors']));
         }
@@ -92,7 +92,7 @@ function batches_handleAddEdit(string $mode): void
         ]);
         jsonResponse([
             'success' => true, 'message' => 'Lote agregado correctamente',
-            'batch' => ['id' => $newId, 'id_planta' => $id_planta, 'imagen' => $imagen],
+            'lote' => ['id' => $newId, 'id_planta' => $id_planta, 'imagen' => $imagen],
         ]);
     }
 
@@ -118,13 +118,13 @@ function batches_handleAddEdit(string $mode): void
     ]);
     jsonResponse([
         'success' => true, 'message' => 'Lote actualizado correctamente',
-        'batch' => ['id' => $id, 'imagen' => $imagen],
+        'lote' => ['id' => $id, 'imagen' => $imagen],
     ]);
 }
 
 function batches_handleDelete(): void
 {
-    $model = new Batch();
+    $model = new Lote();
     $id = (int)($_POST['id'] ?? 0);
     if ($id <= 0) throw new \Exception('ID inválido');
     if (!$model->exists($id)) throw new \Exception('No existe el lote');
@@ -137,12 +137,12 @@ function batches_handleDelete(): void
 
     $model->delete($id);
     AuditLog::record('DEACTIVATE', 'lote', $id, $oldData, null);
-    jsonResponse(['success' => true, 'message' => 'Lote desactivado correctamente', 'batchId' => $id]);
+    jsonResponse(['success' => true, 'message' => 'Lote desactivado correctamente', 'loteId' => $id]);
 }
 
 function batches_getBatchesAjax(): void
 {
-    $model = new Batch();
+    $model = new Lote();
     $batches = $model->getAll();
-    jsonResponse(['success' => true, 'batches' => $batches, 'count' => count($batches)]);
+    jsonResponse(['success' => true, 'lotes' => $batches, 'count' => count($batches)]);
 }

@@ -3,8 +3,8 @@ import * as Ajax from '../utils/ajax-handler.js';
 import { setupRealTimeValidation, validateForm, clearValidation } from '../utils/validation.js';
 
 $(document).ready(function () {
-  const baseUrl = `${window.BASE_URL || '/'}batches`;
-  let batchesTable = null;
+  const baseUrl = `${window.BASE_URL || '/'}lotes`;
+  let lotesTable = null;
 
   const batchValidationRules = {
     id_planta: 'select',
@@ -37,15 +37,15 @@ $(document).ready(function () {
 
   const initDataTable = () => {
     if (typeof SkeletonHelper !== 'undefined') {
-      SkeletonHelper.showTableSkeleton('batchesTable', 5, 12);
+      SkeletonHelper.showTableSkeleton('lotesTable', 5, 12);
     }
-    batchesTable = $('#batchesTable').DataTable({
+    lotesTable = $('#lotesTable').DataTable({
       ajax: {
         url: `${baseUrl}?action=get_batches`,
         method: 'GET',
         dataType: 'json',
         headers: { 'X-Requested-With': 'XMLHttpRequest' },
-        dataSrc: 'batches',
+        dataSrc: 'lotes',
       },
       columns: [
         {
@@ -130,9 +130,9 @@ $(document).ready(function () {
           className: 'btn btn-outline-secondary btn-sm',
           action: () => {
             if (typeof SkeletonHelper !== 'undefined') {
-              SkeletonHelper.showTableSkeleton('batchesTable', 5, 12);
+              SkeletonHelper.showTableSkeleton('lotesTable', 5, 12);
             }
-            batchesTable.ajax.reload(null, false);
+            lotesTable.ajax.reload(null, false);
           },
         },
       ],
@@ -182,7 +182,7 @@ $(document).ready(function () {
         if (response.success) {
           Helpers.toast('success', 'Lote agregado correctamente');
           $('#addBatchModal').modal('hide');
-          batchesTable.ajax.reload(null, false);
+          lotesTable.ajax.reload(null, false);
         } else {
           Helpers.toast('error', response.message);
         }
@@ -193,7 +193,7 @@ $(document).ready(function () {
   });
 
   $(document).on('click', '.btn-edit', function () {
-    const row = batchesTable.row($(this).closest('tr')).data();
+    const row = lotesTable.row($(this).closest('tr')).data();
 
     const $addModal = $('#addBatchModal');
     if ($addModal.hasClass('show')) {
@@ -247,7 +247,7 @@ $(document).ready(function () {
         if (response.success) {
           Helpers.toast('success', 'Lote actualizado correctamente');
           $('#editBatchModal').modal('hide');
-          batchesTable.ajax.reload(null, false);
+          lotesTable.ajax.reload(null, false);
         } else {
           Helpers.toast('error', response.message);
         }
@@ -258,7 +258,7 @@ $(document).ready(function () {
   });
 
   $(document).on('click', '.btn-delete', function () {
-    const row = batchesTable.row($(this).closest('tr')).data();
+    const row = lotesTable.row($(this).closest('tr')).data();
     const id = row.id;
     const nombre = row.planta_nombre;
 
@@ -270,7 +270,7 @@ $(document).ready(function () {
           .then((response) => {
             if (response.success) {
               Helpers.toast('success', 'Lote eliminado correctamente');
-              batchesTable.ajax.reload(null, false);
+              lotesTable.ajax.reload(null, false);
             } else {
               Helpers.toast('error', response.message);
             }
