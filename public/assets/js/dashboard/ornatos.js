@@ -1,9 +1,18 @@
 import * as Ayuda from '../utils/helpers.js';
 import * as Ajax from '../utils/ajax-handler.js';
+import { setupRealTimeValidation, validateForm } from '../utils/validation.js';
 
 const urlBase = `${window.BASE_URL || '/'}ornatos`;
 let tablaOrnatos = null;
 let editando = false;
+
+const ornatoRules = {
+  id_cliente: 'select',
+  tipo_ornato: 'select',
+  fecha: 'fechaFuturaCheck',
+  ubicacion: null,
+  descripcion: null,
+};
 
 $(document).ready(function () {
     inicializarTabla();
@@ -85,6 +94,7 @@ function configurarEventos()
     // Submit del formulario
     $('#formOrnato').on('submit', function (e) {
         e.preventDefault();
+        if (!validateForm($(this), ornatoRules)) return;
         guardarOrnato($(this));
     });
 
@@ -155,6 +165,8 @@ function configurarEventos()
         $('#inputMontoTotalHidden').val('0.00');
         $('#totalDetalle').text('$0.00');
     });
+
+    setupRealTimeValidation($('#formOrnato'), ornatoRules);
 }
 
 function abrirModalParaAgregar()

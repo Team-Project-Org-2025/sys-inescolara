@@ -9,8 +9,8 @@ $(document).ready(function () {
   const supplyRules = {
     nombre_insumo: 'nombre',
     id_unidad_medida: 'select',
-    stock_actual: 'precio',
-    costo_unitario_actual: 'precio'
+    stock_actual: 'cantidad',
+    costo_unitario_actual: 'cantidad'
   };
 
   const initDataTable = () => {

@@ -1,5 +1,6 @@
 import * as Helpers from '../utils/helpers.js';
 import * as Ajax from '../utils/ajax-handler.js';
+import { validateField, validateSelect } from '../utils/validation.js';
 
 $(document).ready(function () {
   const baseUrl = `${window.BASE_URL || '/'}prices`;
@@ -99,6 +100,8 @@ $(document).ready(function () {
       Helpers.toast('error', 'Primero calcule los precios.');
       return;
     }
+
+    if (!validateSelect($('#calcPlanta'))) return;
 
     const idPlanta = parseInt($('#calcPlanta').val()) || 0;
     const ganancia = parseFloat($('#calcGanancia').val()) || 0;
