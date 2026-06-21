@@ -3,6 +3,7 @@
 require_once __DIR__ . '/controller_helpers.php';
 
 use SysInescolara\models\Notification;
+use SysInescolara\models\DashboardData;
 
 function get_unread(): void
 {
@@ -12,6 +13,27 @@ function get_unread(): void
         if (!$userId) {
             jsonResponse(['success' => false, 'count' => 0]);
         }
+
+        $notifModel->markAllWarningsAsRead($userId);
+
+        $dashboardData = new DashboardData();
+        $lowStockLots = $dashboardData->getLowStockLots(10);
+        $lowStockSupplies = $dashboardData->getLowStockSupplies(10);
+
+        foreach ($lowStockLots as $lot) {
+            $titulo = 'Stock bajo: ' . ($lot['planta_nombre'] ?? "Lote #{$lot['id_lote']}");
+            if ($notifModel->existsByTitle($userId, $titulo)) continue;
+            $mensaje = 'Solo quedan ' . (int)$lot['cantidad_actual'] . ' unidades';
+            $notifModel->create($userId, $titulo, $mensaje, 'warning', 'dashboard/inventario');
+        }
+
+        foreach ($lowStockSupplies as $supply) {
+            $titulo = 'Insumo agotándose: ' . ($supply['nombre_insumo'] ?? "Insumo #{$supply['id_insumo']}");
+            if ($notifModel->existsByTitle($userId, $titulo)) continue;
+            $mensaje = 'Stock actual: ' . (string)$supply['stock_actual'] . ' ' . ($supply['unidad_medida'] ?? 'unidades');
+            $notifModel->create($userId, $titulo, $mensaje, 'warning', 'dashboard/inventario');
+        }
+
         $count = $notifModel->getUnreadCount($userId);
         $recent = $notifModel->getRecent($userId, 5);
         jsonResponse(['success' => true, 'count' => $count, 'notifications' => $recent]);
