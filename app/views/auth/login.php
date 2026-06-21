@@ -90,6 +90,7 @@
             <?php endif; ?>
             
             <form action="<?= BASE_URL ?>login" method="POST" class="auth-form" id="loginForm">
+                <?= \SysInescolara\helpers\Csrf::render() ?>
                 <div class="form-group">
                     <label for="email" class="form-label">Usuario o Correo Electrónico</label>
                     <div class="input-wrapper">

@@ -136,9 +136,9 @@ function login()
 
         // Remember me: guardar cookie por 30 días si marcó la opción
         if (!empty($_POST['remember'])) {
-            setcookie('remember_email', $identificador, time() + 86400 * 30, '/');
+            setcookie('remember_email', $identificador, time() + 86400 * 30, '/', '', true, true);
         } else {
-            setcookie('remember_email', '', time() - 3600, '/');
+            setcookie('remember_email', '', time() - 3600, '/', '', true, true);
         }
 
         header('Location: ' . BASE_URL . 'dashboard');
