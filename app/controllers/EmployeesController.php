@@ -4,6 +4,7 @@ require_once __DIR__ . '/controller_helpers.php';
 
 use SysInescolara\models\Employee;
 use SysInescolara\models\AuditLog;
+use SysInescolara\models\Role;
 
 function index(): void
 {
@@ -22,6 +23,15 @@ function index(): void
             handleError($e, true);
         }
         return;
+    }
+
+    try {
+        $roleModel = new Role();
+        $roles = $roleModel->getAll();
+        $cargoOptions = array_map(fn($r) => $r['nombre_rol'], $roles);
+        sort($cargoOptions);
+    } catch (\Throwable $e) {
+        $cargoOptions = [];
     }
 
     $view = ROOT_PATH . 'app/views/dashboard/employees.php';
@@ -52,7 +62,7 @@ function employees_handleAddEdit(string $mode): void
     if ($telefono === '') $telefono = null;
     $cargo = trim((string)($_POST['cargo'] ?? ''));
     if ($cargo === '') $cargo = null;
-    $activo = isset($_POST['activo']) ? (bool)$_POST['activo'] : true;
+    $activo = isset($_POST['activo']) ? 1 : 0;
 
     if ($mode === 'add') {
         $model->add($nombre, $apellido, $cedula, $telefono, $cargo, $activo);
