@@ -19,6 +19,7 @@ function index(): void
                 'GET_get_assignments' => tasks_getAssignmentsAjax(),
                 'GET_get_assignment'  => tasks_getAssignmentDetailAjax(),
                 'POST_assign_ajax'    => tasks_assignAjax(),
+                'POST_edit_ajax'      => tasks_editAjax(),
                 'POST_complete_ajax'  => tasks_completeAssignmentAjax(),
                 'POST_cancel_ajax'    => tasks_cancelAssignmentAjax(),
                 default               => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
@@ -52,6 +53,7 @@ function get_assignment(): void { checkModuleAuth(); tasks_getAssignmentDetailAj
 function assign_ajax(): void { checkModuleAuth(); checkPermisoOrFail('TAREAS_ASSIGN'); tasks_assignAjax(); }
 function complete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('TAREAS_EDIT'); tasks_completeAssignmentAjax(); }
 function cancel_ajax(): void { checkModuleAuth(); checkPermisoOrFail('TAREAS_DELETE'); tasks_cancelAssignmentAjax(); }
+function edit_ajax(): void { checkModuleAuth(); checkPermisoOrFail('TAREAS_EDIT'); tasks_editAjax(); }
 
 // -- Asignación de tareas --
 
@@ -147,6 +149,86 @@ function tasks_assignAjax(): void
     }
 
     jsonResponse(['success' => true, 'message' => 'Tarea asignada correctamente', 'id_asignacion' => $asignacionId]);
+}
+
+function tasks_editAjax(): void
+{
+    $data = getRequestData();
+
+    $idAsignacion = (int)($data['id_asignacion'] ?? 0);
+    if ($idAsignacion <= 0) {
+        jsonResponse(['success' => false, 'message' => 'ID de asignación inválido.'], 400);
+    }
+
+    $nombreTarea = trim((string)($data['nombre_tarea'] ?? ''));
+    if ($nombreTarea === '') {
+        jsonResponse(['success' => false, 'message' => 'El nombre de la tarea es obligatorio.'], 400);
+    }
+
+    $descripcion = trim((string)($data['descripcion'] ?? ''));
+    if ($descripcion === '') {
+        $descripcion = null;
+    }
+
+    $assignmentData = [
+        'nombre_tarea'     => $nombreTarea,
+        'descripcion'      => $descripcion,
+        'id_trabajador'    => (int)($data['id_trabajador'] ?? 0),
+        'id_lote'          => (int)($data['id_lote'] ?? 0),
+        'fecha_asignacion' => $data['fecha_asignacion'] ?? date('Y-m-d'),
+    ];
+
+    if (!$assignmentData['id_trabajador'] || !$assignmentData['id_lote']) {
+        jsonResponse(['success' => false, 'message' => 'Se requieren trabajador y lote.'], 400);
+    }
+
+    $rawConsumos = $data['consumptions'] ?? [];
+    $consumptions = [];
+    $suppliesModel = new Supplies();
+    foreach ($rawConsumos as $c) {
+        $idInsumo = (int)($c['id_insumo'] ?? 0);
+        $cantidad = (float)($c['cantidad_usada'] ?? 0);
+        if ($idInsumo <= 0 || $cantidad <= 0) {
+            continue;
+        }
+        $insumo = $suppliesModel->getById($idInsumo);
+        if (!$insumo) {
+            jsonResponse(['success' => false, 'message' => "El insumo ID $idInsumo no existe."], 400);
+        }
+        $consumptions[] = [
+            'id_insumo'      => $idInsumo,
+            'cantidad_usada' => $cantidad,
+            'costo_unitario' => (float)($insumo['costo_unitario_actual'] ?? 0),
+            'fecha_consumo'  => $c['fecha_consumo'] ?? date('Y-m-d'),
+        ];
+    }
+
+    $rawTools = $data['tools'] ?? [];
+    $tools = [];
+    $toolModel = new Tool();
+    foreach ($rawTools as $t) {
+        $idHerramienta = (int)($t['id_herramienta'] ?? 0);
+        if ($idHerramienta <= 0) continue;
+        $tools[] = [
+            'id_herramienta'  => $idHerramienta,
+            'nombre_herramienta' => '',
+            'fecha_uso'       => $t['fecha_uso'] ?? date('Y-m-d'),
+            'observacion'     => $t['observacion'] ?? '',
+        ];
+    }
+
+    $model = new Task();
+    $model->updateAssignmentWithConsumptions($idAsignacion, $assignmentData, $consumptions, $tools);
+
+    AuditLog::record('UPDATE', 'asignar_tarea', $idAsignacion, null, $assignmentData);
+    if (!empty($consumptions)) {
+        AuditLog::record('UPDATE', 'consumo_insumos', $idAsignacion, null, ['count' => count($consumptions)]);
+    }
+    if (!empty($tools)) {
+        AuditLog::record('UPDATE', 'uso_herramienta', $idAsignacion, null, ['count' => count($tools)]);
+    }
+
+    jsonResponse(['success' => true, 'message' => 'Tarea actualizada correctamente', 'id_asignacion' => $idAsignacion]);
 }
 
 function tasks_completeAssignmentAjax(): void
