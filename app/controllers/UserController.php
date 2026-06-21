@@ -4,6 +4,7 @@ require_once __DIR__ . '/controller_helpers.php';
 
 use SysInescolara\models\User;
 use SysInescolara\models\AuditLog;
+use SysInescolara\models\Employee;
 
 function index(): void
 {
@@ -27,6 +28,8 @@ function index(): void
     $model = new User();
     $roles = $model->getRoles();
     $allPermisos = $model->getAllPermissions();
+    $employeeModel = new Employee();
+    $trabajadores = $employeeModel->getAll();
 
     $view = ROOT_PATH . 'app/views/dashboard/usuarios.php';
     if (!is_file($view)) {
@@ -71,6 +74,7 @@ function users_handleAddEdit(string $mode): void
     $rolId = (int)($_POST['rol_id'] ?? 1);
     $correoElectronico = trim((string)($_POST['correo_electronico'] ?? ''));
     if ($correoElectronico === '') $correoElectronico = null;
+    $idTrabajadorRef = !empty($_POST['id_trabajador_ref']) ? (int)$_POST['id_trabajador_ref'] : null;
     if ($id === 1) $rolId = 1;
 
     $isChangingPassword = ($mode === 'edit' && $password !== '');
@@ -101,13 +105,13 @@ function users_handleAddEdit(string $mode): void
         if ($model->userExists(null, $nombreUsuario)) {
             throw new \Exception('El nombre de usuario ya está registrado');
         }
-        $model->add($nombreUsuario, $password, $rolId, $correoElectronico, $avatar);
+        $model->add($nombreUsuario, $password, $rolId, $correoElectronico, $avatar, $idTrabajadorRef);
         $newId = $model->getLastInsertId() ?? 0;
         if ($rolId !== 1) $model->setUserPermissions($newId, $permisoIds);
         AuditLog::record('CREATE', 'usuarios', $newId, null, compact('nombreUsuario', 'correoElectronico', 'rolId'));
         jsonResponse([
             'success' => true, 'message' => 'Usuario agregado',
-            'user' => ['id' => $newId, 'nombre_usuario' => $nombreUsuario, 'correo_electronico' => $correoElectronico, 'rol_id' => $rolId, 'avatar' => $avatar, 'permisos' => $rolId !== 1 ? $model->getUserPermissions($newId) : []],
+            'user' => ['id' => $newId, 'nombre_usuario' => $nombreUsuario, 'correo_electronico' => $correoElectronico, 'rol_id' => $rolId, 'id_trabajador_ref' => $idTrabajadorRef, 'avatar' => $avatar, 'permisos' => $rolId !== 1 ? $model->getUserPermissions($newId) : []],
         ]);
     }
 
@@ -120,7 +124,7 @@ function users_handleAddEdit(string $mode): void
         (new \SysInescolara\helpers\ImageUploader())->delete($oldData['avatar']);
     }
 
-    $model->update($id, $nombreUsuario, $rolId, $correoElectronico, $password !== '' ? $password : null, $avatar);
+    $model->update($id, $nombreUsuario, $rolId, $correoElectronico, $password !== '' ? $password : null, $avatar, $idTrabajadorRef);
     if ($rolId !== 1) {
         $model->setUserPermissions($id, $permisoIds);
     } else {
@@ -136,7 +140,7 @@ function users_handleAddEdit(string $mode): void
 
     jsonResponse([
         'success' => true, 'message' => 'Usuario actualizado',
-        'user' => ['id' => $id, 'nombre_usuario' => $nombreUsuario, 'correo_electronico' => $correoElectronico, 'rol_id' => $rolId, 'avatar' => $avatar, 'permisos' => $rolId !== 1 ? $model->getUserPermissions($id) : []],
+        'user' => ['id' => $id, 'nombre_usuario' => $nombreUsuario, 'correo_electronico' => $correoElectronico, 'rol_id' => $rolId, 'id_trabajador_ref' => $idTrabajadorRef, 'avatar' => $avatar, 'permisos' => $rolId !== 1 ? $model->getUserPermissions($id) : []],
     ]);
 }
 
@@ -163,7 +167,10 @@ function users_handleDelete(): void
     }
 
     $oldData = $model->getById($id);
-    $model->delete($id);
+    if (!$model->delete($id)) {
+        jsonResponse(['success' => false, 'message' => 'No se pudo eliminar el usuario. Puede tener registros asociados (ej. sesiones activas, auditoría).'], 500);
+        return;
+    }
     AuditLog::record('DELETE', 'usuarios', $id, $oldData, null);
     jsonResponse(['success' => true, 'message' => 'Usuario desactivado', 'userId' => $id]);
 }
