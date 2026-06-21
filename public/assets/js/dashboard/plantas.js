@@ -3,8 +3,8 @@ import * as Ajax from '../utils/ajax-handler.js';
 import { setupRealTimeValidation, validateForm } from '../utils/validation.js';
 
 $(document).ready(function () {
-  const baseUrl = `${window.BASE_URL || '/'}plants`;
-  let plantsTable = null;
+  const baseUrl = `${window.BASE_URL || '/'}plantas`;
+  let plantasTable = null;
 
   const plantValidationRules = {
     nombre_comun: 'nombrePlanta',
@@ -33,15 +33,15 @@ $(document).ready(function () {
 
   const initDataTable = () => {
     if (typeof SkeletonHelper !== 'undefined') {
-      SkeletonHelper.showTableSkeleton('plantsTable', 5, 7);
+      SkeletonHelper.showTableSkeleton('plantasTable', 5, 7);
     }
-    plantsTable = $('#plantsTable').DataTable({
+    plantasTable = $('#plantasTable').DataTable({
       ajax: {
         url: `${baseUrl}?action=get_plants`,
         method: 'GET',
         dataType: 'json',
         headers: { 'X-Requested-With': 'XMLHttpRequest' },
-        dataSrc: 'plants',
+        dataSrc: 'plantas',
       },
       columns: [
         {
@@ -99,9 +99,9 @@ $(document).ready(function () {
           className: 'btn btn-outline-secondary btn-sm',
           action: () => {
             if (typeof SkeletonHelper !== 'undefined') {
-              SkeletonHelper.showTableSkeleton('plantsTable', 5, 7);
+              SkeletonHelper.showTableSkeleton('plantasTable', 5, 7);
             }
-            plantsTable.ajax.reload(null, false);
+            plantasTable.ajax.reload(null, false);
           },
         },
       ],
@@ -151,7 +151,7 @@ $(document).ready(function () {
         if (response.success) {
           Helpers.toast('success', 'Planta agregada correctamente');
           $('#addPlantModal').modal('hide');
-          plantsTable.ajax.reload(null, false);
+          plantasTable.ajax.reload(null, false);
         } else {
           Helpers.toast('error', response.message);
         }
@@ -162,7 +162,7 @@ $(document).ready(function () {
   });
 
   $(document).on('click', '.btn-edit', function () {
-    const row = plantsTable.row($(this).closest('tr')).data();
+    const row = plantasTable.row($(this).closest('tr')).data();
 
     const $addModal = $('#addPlantModal');
     if ($addModal.hasClass('show')) {
@@ -208,7 +208,7 @@ $(document).ready(function () {
         if (response.success) {
           Helpers.toast('success', 'Planta actualizada correctamente');
           $('#editPlantModal').modal('hide');
-          plantsTable.ajax.reload(null, false);
+          plantasTable.ajax.reload(null, false);
         } else {
           Helpers.toast('error', response.message);
         }
@@ -219,7 +219,7 @@ $(document).ready(function () {
   });
 
   $(document).on('click', '.btn-delete', function () {
-    const row = plantsTable.row($(this).closest('tr')).data();
+    const row = plantasTable.row($(this).closest('tr')).data();
     const id = row.id;
     const nombre = row.nombre_comun;
 
@@ -231,7 +231,7 @@ $(document).ready(function () {
           .then((response) => {
             if (response.success) {
               Helpers.toast('success', 'Planta eliminada correctamente');
-              plantsTable.ajax.reload(null, false);
+              plantasTable.ajax.reload(null, false);
             } else {
               Helpers.toast('error', response.message);
             }

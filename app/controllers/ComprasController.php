@@ -6,7 +6,7 @@ use SysInescolara\models\Purchase;
 use SysInescolara\models\Supplier;
 use SysInescolara\models\Supplies;
 use SysInescolara\models\Location;
-use SysInescolara\models\Plant;
+use SysInescolara\models\Planta;
 use SysInescolara\models\CuentaPagar;
 use SysInescolara\models\AuditLog;
 
@@ -224,7 +224,7 @@ function compras_agregarPlantaRapido(): void
         return;
     }
 
-    $modelo = new Plant();
+    $modelo = new Planta();
     $modelo->add($nombre, $nombre);
     $nuevoId = $modelo->getLastInsertId() ?? 0;
 

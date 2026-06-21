@@ -4,7 +4,7 @@ require_once __DIR__ . '/controller_helpers.php';
 
 use SysInescolara\models\PriceCalculation;
 use SysInescolara\models\Batch;
-use SysInescolara\models\Plant;
+use SysInescolara\models\Planta;
 use SysInescolara\models\AuditLog;
 
 function index(): void
@@ -27,7 +27,7 @@ function index(): void
         return;
     }
 
-    $plantModel = new Plant();
+    $plantModel = new Planta();
     $plants = $plantModel->getAll();
 
     $view = ROOT_PATH . 'app/views/dashboard/prices.php';

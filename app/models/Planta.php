@@ -9,7 +9,7 @@ use SysInescolara\traits\ValidationTrait;
 use PDO;
 use Throwable;
 
-class Plant extends Database implements ReadableInterface, DeletableInterface
+class Planta extends Database implements ReadableInterface, DeletableInterface
 {
     use ValidationTrait;
 
