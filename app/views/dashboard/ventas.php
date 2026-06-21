@@ -216,7 +216,7 @@ include_once __DIR__ . '/../common/links.php';
                                                             </select>
                                                         </div>
                                                         <div class="col-4">
-                                                            <input type="number" class="form-control form-control-sm monto-pago" placeholder="Monto" step="0.01" min="0">
+                                                            <input type="text" class="form-control form-control-sm monto-pago" placeholder="Monto" inputmode="decimal">
                                                         </div>
                                                         <div class="col-2">
                                                             <input type="text" class="form-control form-control-sm ref-pago" placeholder="Ref.">
