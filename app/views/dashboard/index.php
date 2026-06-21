@@ -329,7 +329,7 @@ $userAvatar = \SysInescolara\helpers\Auth::avatar();
                 </div>
                 </a>
 
-                <a href="<?= BASE_URL ?>dashboard/species" class="text-decoration-none">
+                <a href="<?= BASE_URL ?>dashboard/especies" class="text-decoration-none">
                 <div class="kpi-card">
                     <div class="kpi-card-header">
                         <span class="kpi-card-title">Especies</span>

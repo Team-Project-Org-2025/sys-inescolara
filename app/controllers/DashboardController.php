@@ -174,7 +174,7 @@ function plantas(): void
     dashboardCheckPermiso('PLANTAS_VIEW');
 
     require_once ROOT_PATH . 'vendor/autoload.php';
-    $speciesModel = new \SysInescolara\models\Species();
+    $speciesModel = new \SysInescolara\models\Especie();
     $species = $speciesModel->getAll();
 
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
@@ -330,12 +330,12 @@ function clientes(): void
 
     require $view;
 }
-
-function species(): void
+function especies(): void
 {
     dashboardCheckPermiso('PLANTAS_VIEW');
+
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
-        . 'dashboard' . DIRECTORY_SEPARATOR . 'species.php';
+        . 'dashboard' . DIRECTORY_SEPARATOR . 'especies.php';
 
     if (!is_file($view)) {
         http_response_code(500);
