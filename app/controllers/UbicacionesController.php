@@ -2,7 +2,7 @@
 
 require_once __DIR__ . '/controller_helpers.php';
 
-use SysInescolara\models\Location;
+use SysInescolara\models\Ubicacion;
 use SysInescolara\models\AuditLog;
 
 function index(): void
@@ -24,7 +24,7 @@ function index(): void
         return;
     }
 
-    $view = ROOT_PATH . 'app/views/dashboard/locations.php';
+    $view = ROOT_PATH . 'app/views/dashboard/ubicaciones.php';
     if (!is_file($view)) {
         http_response_code(500);
         echo 'Vista de ubicaciones no encontrada.';
@@ -40,14 +40,14 @@ function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('UBICACIONE
 
 function locations_getLocationsAjax(): void
 {
-    $model = new Location();
+    $model = new Ubicacion();
     $locations = $model->getAll();
-    jsonResponse(['success' => true, 'locations' => $locations, 'count' => count($locations)]);
+    jsonResponse(['success' => true, 'ubicaciones' => $locations, 'count' => count($locations)]);
 }
 
 function locations_handleAddEdit(string $mode): void
 {
-    $model = new Location();
+    $model = new Ubicacion();
     $nombreUbicacion = trim((string)($_POST['nombre_ubicacion'] ?? ''));
     if ($nombreUbicacion === '') {
         throw new \Exception('El nombre de la ubicación es requerido.');
@@ -66,7 +66,7 @@ function locations_handleAddEdit(string $mode): void
         jsonResponse([
             'success' => true,
             'message' => 'Ubicación agregada correctamente',
-            'location' => [
+            'ubicacion' => [
                 'id' => $newId, 'nombre_ubicacion' => $nombreUbicacion,
                 'descripcion' => $descripcion, 'zona' => $zona,
             ],
@@ -85,13 +85,13 @@ function locations_handleAddEdit(string $mode): void
     jsonResponse([
         'success' => true,
         'message' => 'Ubicación actualizada correctamente',
-        'location' => ['id' => $id, 'nombre_ubicacion' => $nombreUbicacion, 'descripcion' => $descripcion, 'zona' => $zona],
+        'ubicacion' => ['id' => $id, 'nombre_ubicacion' => $nombreUbicacion, 'descripcion' => $descripcion, 'zona' => $zona],
     ]);
 }
 
 function locations_handleDelete(): void
 {
-    $model = new Location();
+    $model = new Ubicacion();
     $id = (int)($_POST['id'] ?? 0);
     if ($id <= 0) throw new \Exception('ID de ubicación inválido');
     $oldData = $model->getById($id);
@@ -101,6 +101,6 @@ function locations_handleDelete(): void
     jsonResponse([
         'success' => true,
         'message' => 'Ubicación desactivada correctamente',
-        'locationId' => $id,
+        'ubicacionId' => $id,
     ]);
 }

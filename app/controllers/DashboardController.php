@@ -196,7 +196,7 @@ function lotes(): void
     require_once ROOT_PATH . 'vendor/autoload.php';
     $plantModel = new \SysInescolara\models\Planta();
     $plants = $plantModel->getAll();
-    $locationModel = new \SysInescolara\models\Location();
+    $locationModel = new \SysInescolara\models\Ubicacion();
     $locations = $locationModel->getAll();
 
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
@@ -205,6 +205,22 @@ function lotes(): void
     if (!is_file($view)) {
         http_response_code(500);
         echo 'Vista de lotes no encontrada.';
+        return;
+    }
+
+    require $view;
+}
+
+function ubicaciones(): void
+{
+    dashboardCheckPermiso('UBICACIONES_VIEW');
+
+    $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
+        . 'dashboard' . DIRECTORY_SEPARATOR . 'ubicaciones.php';
+
+    if (!is_file($view)) {
+        http_response_code(500);
+        echo 'Vista de ubicaciones no encontrada.';
         return;
     }
 
@@ -255,7 +271,7 @@ function compras(): void
     $proveedores = $supplierModel->getAll();
     $supplyModel = new \SysInescolara\models\Supplies();
     $insumos = $supplyModel->getAll();
-    $locationModel = new \SysInescolara\models\Location();
+    $locationModel = new \SysInescolara\models\Ubicacion();
     $ubicaciones = $locationModel->getAll();
 
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
@@ -580,7 +596,7 @@ function seedcollection(): void
     dashboardCheckPermiso('RECOLECCION_VIEW');
 
     require_once ROOT_PATH . 'vendor/autoload.php';
-    $locationModel = new \SysInescolara\models\Location();
+    $locationModel = new \SysInescolara\models\Ubicacion();
     $ubicaciones = $locationModel->getAll();
     $employeeModel = new \SysInescolara\models\Employee();
     $trabajadores = $employeeModel->getAll();

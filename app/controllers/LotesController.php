@@ -4,7 +4,7 @@ require_once __DIR__ . '/controller_helpers.php';
 
 use SysInescolara\models\Lote;
 use SysInescolara\models\Planta;
-use SysInescolara\models\Location;
+use SysInescolara\models\Ubicacion;
 use SysInescolara\models\AuditLog;
 
 function index(): void
@@ -29,7 +29,7 @@ function index(): void
     $plantModel = new Planta();
     $plants = $plantModel->getAll();
     try {
-        $locationModel = new Location();
+        $locationModel = new Ubicacion();
         $locations = $locationModel->getAll();
     } catch (\Throwable $e) {
         $locations = [];

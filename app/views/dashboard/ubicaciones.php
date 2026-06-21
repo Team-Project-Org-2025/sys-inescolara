@@ -14,7 +14,7 @@ include_once __DIR__ . '/../common/links.php';
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
     
     <?php 
-    $currentPage = 'locations';
+    $currentPage = 'ubicaciones';
     include_once __DIR__ . '/../partials/sidebar.php'; 
     ?>
     
@@ -36,7 +36,7 @@ include_once __DIR__ . '/../common/links.php';
             <div class="card shadow-sm">
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table id="locationsTable" class="table table-striped table-hover w-100">
+                        <table id="ubicacionesTable" class="table table-striped table-hover w-100">
                             <thead>
                                 <tr>
                                     <th>ID</th>
@@ -54,7 +54,7 @@ include_once __DIR__ . '/../common/links.php';
         </div>
     </main>
 
-    <!-- Add Location Modal -->
+    <!-- Add Ubicacion Modal -->
     <div class="modal fade" id="addLocationModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -86,7 +86,7 @@ include_once __DIR__ . '/../common/links.php';
         </div>
     </div>
 
-    <!-- Edit Location Modal -->
+    <!-- Edit Ubicacion Modal -->
     <div class="modal fade" id="editLocationModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -121,6 +121,6 @@ include_once __DIR__ . '/../common/links.php';
 
     <script src="<?= BASE_URL ?>public/assets/js/dashboard/notifications.js"></script>
     <?= $scripts_links ?>
-    <script type="module" src="<?= BASE_URL ?>public/assets/js/dashboard/locations.js"></script>
+    <script type="module" src="<?= BASE_URL ?>public/assets/js/dashboard/ubicaciones.js"></script>
 </body>
 </html>

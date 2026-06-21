@@ -8,7 +8,7 @@ use SysInescolara\interfaces\DeletableInterface;
 use SysInescolara\traits\ValidationTrait;
 use PDO;
 
-class Location extends Database implements ReadableInterface, DeletableInterface
+class Ubicacion extends Database implements ReadableInterface, DeletableInterface
 {
     use ValidationTrait;
 
