@@ -123,7 +123,7 @@ include_once __DIR__ . '/../common/links.php';
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Descripción (opcional)</label>
-                            <textarea class="form-control" name="descripcion" rows="3" placeholder="Detalles adicionales sobre la pérdida..."></textarea>
+                            <textarea class="form-control" name="descripcion" rows="3" placeholder="Detalles adicionales sobre la pérdida..." maxlength="500"></textarea>
                         </div>
                         <div class="alert alert-info mb-0" id="impactoPreview" style="display:none;">
                             Impacto económico estimado: <strong id="impactoValue">$0.00</strong>

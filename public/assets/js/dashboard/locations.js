@@ -33,7 +33,13 @@ SkeletonHelper.showTableSkeleton('locationsTable', 5, 5);
         },
         {
           data: 'descripcion',
-          render: (data) => data || '<span class="text-muted">—</span>',
+          render: (data) => {
+            if (!data) return '<span class="text-muted">—</span>';
+            const escaped = Helpers.escapeHtml(data);
+            return escaped.length > 80
+              ? `<span title="${escaped}">${Helpers.truncateText(escaped, 80)}</span>`
+              : escaped;
+          },
         },
         {
           data: 'zona',

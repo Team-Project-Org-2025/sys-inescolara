@@ -52,24 +52,24 @@ $currentPage = 'perfil';
                     </div>
                     <div class="perfil-field">
                         <label for="nombre">Nombre de usuario</label>
-                        <input type="text" id="nombre" name="nombre" value="<?= htmlspecialchars($user['nombre_usuario'] ?? '') ?>" required>
+                        <input type="text" id="nombre" name="nombre" value="<?= htmlspecialchars($user['nombre_usuario'] ?? '') ?>" required maxlength="100">
                     </div>
                     <div class="perfil-field">
                         <label for="email">Correo electrónico</label>
-                        <input type="email" id="email" name="email" value="<?= htmlspecialchars($user['correo_electronico'] ?? '') ?>">
+                        <input type="email" id="email" name="email" value="<?= htmlspecialchars($user['correo_electronico'] ?? '') ?>" maxlength="254">
                     </div>
                     <div class="perfil-field">
                         <label for="current_password">Contraseña actual</label>
-                        <input type="password" id="current_password" name="current_password" required autocomplete="current-password">
+                        <input type="password" id="current_password" name="current_password" required autocomplete="current-password" maxlength="100">
                     </div>
                     <hr style="border:none;border-top:1px solid var(--color-gray-200);margin:var(--space-2) 0;">
                     <div class="perfil-field">
                         <label for="password">Nueva contraseña <span style="color:var(--text-muted);font-weight:400;font-size:0.8rem;">(dejar vacío para mantener la actual)</span></label>
-                        <input type="password" id="password" name="password" autocomplete="new-password">
+                        <input type="password" id="password" name="password" autocomplete="new-password" maxlength="100">
                     </div>
                     <div class="perfil-field">
                         <label for="password2">Confirmar contraseña</label>
-                        <input type="password" id="password2" name="password2" autocomplete="new-password">
+                        <input type="password" id="password2" name="password2" autocomplete="new-password" maxlength="100">
                     </div>
                     <button type="submit" class="perfil-btn">Guardar cambios</button>
                 </form>

@@ -176,7 +176,7 @@ include_once __DIR__ . '/../common/links.php';
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Motivo</label>
-                            <textarea class="form-control" name="motivo" rows="2" required></textarea>
+                            <textarea class="form-control" name="motivo" rows="2" maxlength="500" required></textarea>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Fecha del Ajuste</label>

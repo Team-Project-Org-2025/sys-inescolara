@@ -78,7 +78,7 @@ include_once __DIR__ . '/../common/links.php';
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Nombre de la tarea *</label>
-                                <input type="text" class="form-control" name="nombre_tarea" required placeholder="Ej: Regar plantas, Podar rosales">
+                                <input type="text" class="form-control" name="nombre_tarea" required placeholder="Ej: Regar plantas, Podar rosales" maxlength="50">
                             </div>
                             <div class="col-md-3 mb-3">
                                 <label class="form-label">Trabajador *</label>
@@ -103,7 +103,7 @@ include_once __DIR__ . '/../common/links.php';
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Descripción</label>
-                            <textarea class="form-control" name="descripcion" rows="2" placeholder="Detalles adicionales de la tarea (opcional)"></textarea>
+                            <textarea class="form-control" name="descripcion" rows="2" placeholder="Detalles adicionales de la tarea (opcional)" maxlength="500"></textarea>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Fecha de Asignación</label>

@@ -100,7 +100,7 @@ include_once __DIR__ . '/../common/links.php';
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">N° Comprobante</label>
-                                <input type="text" class="form-control" name="numero_comprobante" id="frmNumComprobante" placeholder="Opcional">
+                                <input type="text" class="form-control" name="numero_comprobante" id="frmNumComprobante" placeholder="Opcional" maxlength="50">
                             </div>
                         </div>
 
@@ -141,7 +141,7 @@ include_once __DIR__ . '/../common/links.php';
                         <div class="row g-3 mt-1">
                             <div class="col-12">
                                 <label class="form-label">Observación</label>
-                                <textarea class="form-control" name="observacion" id="frmObservacion" rows="2" placeholder="Opcional"></textarea>
+                                <textarea class="form-control" name="observacion" id="frmObservacion" rows="2" placeholder="Opcional" maxlength="500"></textarea>
                             </div>
                         </div>
                     </div>

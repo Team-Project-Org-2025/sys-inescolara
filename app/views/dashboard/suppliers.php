@@ -66,7 +66,7 @@ include_once __DIR__ . '/../common/links.php';
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label">Nombre del Proveedor</label>
-                            <input type="text" class="form-control" name="nombre_proveedor" required placeholder="Ej: Viveros del Valle C.A.">
+                            <input type="text" class="form-control" name="nombre_proveedor" required placeholder="Ej: Viveros del Valle C.A." maxlength="50">
                         </div>
                         <div class="mb-3">
                             <label class="form-label">RIF</label>
@@ -86,7 +86,7 @@ include_once __DIR__ . '/../common/links.php';
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Nombre del Contacto (Vendedor)</label>
-                            <input type="text" class="form-control" name="contacto_vendedor" placeholder="Ej: María García">
+                            <input type="text" class="form-control" name="contacto_vendedor" placeholder="Ej: María García" maxlength="50">
                             <small class="text-muted">Opcional</small>
                         </div>
                         <div class="mb-3">
@@ -117,7 +117,7 @@ include_once __DIR__ . '/../common/links.php';
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label">Nombre del Proveedor</label>
-                            <input type="text" class="form-control" name="nombre_proveedor" id="editSupplierName" required>
+                            <input type="text" class="form-control" name="nombre_proveedor" id="editSupplierName" required maxlength="50">
                         </div>
                         <div class="mb-3">
                             <label class="form-label">RIF</label>
@@ -130,17 +130,17 @@ include_once __DIR__ . '/../common/links.php';
                                     <option value="E">E</option>
                                     <option value="P">P</option>
                                 </select>
-                                <input type="text" class="form-control" name="rif_numero" id="editRifNumero" placeholder="12345678-9" style="font-family: monospace;">
+                                <input type="text" class="form-control" name="rif_numero" id="editRifNumero" placeholder="12345678-9" style="font-family: monospace;" maxlength="9">
                                 <input type="hidden" name="rif_proveedor" id="editRifProveedor">
                             </div>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Contacto (Vendedor)</label>
-                            <input type="text" class="form-control" name="contacto_vendedor" id="editSupplierContacto" placeholder="Opcional">
+                            <input type="text" class="form-control" name="contacto_vendedor" id="editSupplierContacto" placeholder="Opcional" maxlength="50">
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Teléfono</label>
-                            <input type="text" class="form-control" name="telefono_proveedor" id="editSupplierTelefono" placeholder="Opcional">
+                            <input type="text" class="form-control" name="telefono_proveedor" id="editSupplierTelefono" placeholder="Opcional" maxlength="11">
                         </div>
                     </div>
                     <div class="modal-footer">

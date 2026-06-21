@@ -104,7 +104,7 @@ include_once __DIR__ . '/../common/links.php';
                             </div>
                             <div class="col-md-12">
                                 <label class="form-label" for="observacion">Observación</label>
-                                <textarea class="form-control" name="observacion" id="observacion" rows="2"></textarea>
+                                <textarea class="form-control" name="observacion" id="observacion" rows="2" maxlength="500"></textarea>
                             </div>
                         </div>
                     </div>
@@ -129,15 +129,15 @@ include_once __DIR__ . '/../common/links.php';
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label" for="quick_nombre_ubicacion">Nombre <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" name="nombre_ubicacion" id="quick_nombre_ubicacion" required>
+                            <input type="text" class="form-control" name="nombre_ubicacion" id="quick_nombre_ubicacion" required maxlength="50">
                         </div>
                         <div class="mb-3">
                             <label class="form-label" for="quick_descripcion">Descripción</label>
-                            <textarea class="form-control" name="descripcion" id="quick_descripcion" rows="2"></textarea>
+                            <textarea class="form-control" name="descripcion" id="quick_descripcion" rows="2" maxlength="500"></textarea>
                         </div>
                         <div class="mb-3">
                             <label class="form-label" for="quick_zona">Zona</label>
-                            <input type="text" class="form-control" name="zona" id="quick_zona">
+                            <input type="text" class="form-control" name="zona" id="quick_zona" maxlength="50">
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -236,7 +236,7 @@ include_once __DIR__ . '/../common/links.php';
                 </select>
             </td>
             <td>
-                <input type="text" class="form-control form-control-sm insumo-nombre" placeholder="Ej: Semillas de Araguaney" required>
+                <input type="text" class="form-control form-control-sm insumo-nombre" placeholder="Ej: Semillas de Araguaney" required maxlength="100">
             </td>
             <td>
                 <select class="form-select form-select-sm insumo-unidad" required>

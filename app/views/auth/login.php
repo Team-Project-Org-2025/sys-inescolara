@@ -107,10 +107,11 @@
                             value="<?= htmlspecialchars($old['email'] ?? '') ?>"
                             required
                             autocomplete="username"
+                            maxlength="100"
                         >
                     </div>
                 </div>
-                
+
                 <div class="form-group">
                     <label for="password" class="form-label">Contraseña</label>
                     <div class="input-wrapper">
@@ -126,6 +127,7 @@
                             placeholder="Ingresa tu contraseña"
                             required
                             autocomplete="current-password"
+                            maxlength="100"
                         >
                         <button type="button" class="password-toggle" id="passwordToggle" aria-label="Mostrar contraseña">
                             <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

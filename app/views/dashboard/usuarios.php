@@ -117,16 +117,16 @@ function renderPermisosChecklist(array $modulos, array $codigoToId): void
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label">Nombre de Usuario</label>
-                            <input type="text" class="form-control" name="nombre_usuario" required>
+                            <input type="text" class="form-control" name="nombre_usuario" required maxlength="50">
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Correo Electrónico</label>
-                            <input type="email" class="form-control" name="correo_electronico" placeholder="usuario@correo.com">
+                            <input type="email" class="form-control" name="correo_electronico" placeholder="usuario@correo.com" maxlength="254">
                             <small class="text-muted">Opcional, necesario para recuperación de contraseña.</small>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Contraseña</label>
-                            <input type="password" class="form-control" name="password" required>
+                            <input type="password" class="form-control" name="password" required maxlength="100">
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Rol</label>
@@ -181,21 +181,21 @@ function renderPermisosChecklist(array $modulos, array $codigoToId): void
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label">Nombre de Usuario</label>
-                            <input type="text" class="form-control" name="nombre_usuario" id="editUserName" required>
+                            <input type="text" class="form-control" name="nombre_usuario" id="editUserName" required maxlength="50">
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Correo Electrónico</label>
-                            <input type="email" class="form-control" name="correo_electronico" id="editUserEmail" placeholder="usuario@correo.com">
+                            <input type="email" class="form-control" name="correo_electronico" id="editUserEmail" placeholder="usuario@correo.com" maxlength="254">
                             <small class="text-muted">Opcional, necesario para recuperación de contraseña.</small>
                         </div>
                         <div class="mb-3" id="currentPasswordGroup" style="display:none;">
                             <label class="form-label">Tu Contraseña Actual</label>
-                            <input type="password" class="form-control" name="current_password" id="editCurrentPassword" placeholder="Ingresa tu contraseña actual para autorizar el cambio">
+                            <input type="password" class="form-control" name="current_password" id="editCurrentPassword" placeholder="Ingresa tu contraseña actual para autorizar el cambio" maxlength="100">
                             <small class="text-muted" id="currentPasswordHelp">Debes ingresar tu propia contraseña para realizar este cambio.</small>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Nueva Contraseña (Dejar en blanco para no cambiar)</label>
-                            <input type="password" class="form-control" name="password" id="editUserPassword" placeholder="Nueva contraseña">
+                            <input type="password" class="form-control" name="password" id="editUserPassword" placeholder="Nueva contraseña" maxlength="100">
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Rol</label>

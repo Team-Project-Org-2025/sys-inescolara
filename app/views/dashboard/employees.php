@@ -68,11 +68,11 @@ include_once __DIR__ . '/../common/links.php';
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label">Nombre</label>
-                            <input type="text" class="form-control" name="nombre_trabajador" required placeholder="Ej: Luis">
+                            <input type="text" class="form-control" name="nombre_trabajador" required placeholder="Ej: Luis" maxlength="50">
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Apellido</label>
-                            <input type="text" class="form-control" name="apellido_trabajador" placeholder="Ej: Rodríguez">
+                            <input type="text" class="form-control" name="apellido_trabajador" placeholder="Ej: Rodríguez" maxlength="50">
                             <small class="text-muted">Opcional</small>
                         </div>
                         <div class="mb-3">
@@ -120,11 +120,11 @@ include_once __DIR__ . '/../common/links.php';
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label">Nombre</label>
-                            <input type="text" class="form-control" name="nombre_trabajador" id="editEmployeeName" required>
+                            <input type="text" class="form-control" name="nombre_trabajador" id="editEmployeeName" required maxlength="50">
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Apellido</label>
-                            <input type="text" class="form-control" name="apellido_trabajador" id="editEmployeeApellido" placeholder="Opcional">
+                            <input type="text" class="form-control" name="apellido_trabajador" id="editEmployeeApellido" placeholder="Opcional" maxlength="50">
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Cédula</label>

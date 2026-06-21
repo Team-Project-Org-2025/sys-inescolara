@@ -64,7 +64,7 @@ include_once __DIR__ . '/../common/links.php';
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label">Nombre del Cliente</label>
-                            <input type="text" class="form-control" name="nombre_cliente" required placeholder="Ej: Juan Pérez">
+                            <input type="text" class="form-control" name="nombre_cliente" required placeholder="Ej: Juan Pérez" maxlength="50">
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Contacto</label>
@@ -94,7 +94,7 @@ include_once __DIR__ . '/../common/links.php';
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label">Nombre del Cliente</label>
-                            <input type="text" class="form-control" name="nombre_cliente" id="editClientName" required>
+                            <input type="text" class="form-control" name="nombre_cliente" id="editClientName" required maxlength="50">
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Contacto</label>

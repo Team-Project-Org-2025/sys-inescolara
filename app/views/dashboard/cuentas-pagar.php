@@ -105,11 +105,11 @@ include_once __DIR__ . '/../common/links.php';
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Referencia</label>
-                                <input type="text" class="form-control" name="referencia" id="pagoReferencia" placeholder="Opcional">
+                                <input type="text" class="form-control" name="referencia" id="pagoReferencia" placeholder="Opcional" maxlength="50">
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Observación</label>
-                                <textarea class="form-control" name="observacion" id="pagoObservacion" rows="2" placeholder="Opcional"></textarea>
+                                <textarea class="form-control" name="observacion" id="pagoObservacion" rows="2" placeholder="Opcional" maxlength="500"></textarea>
                             </div>
                         </div>
                     </div>

@@ -170,7 +170,7 @@ include_once __DIR__ . '/../common/links.php';
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Observación</label>
-                            <textarea class="form-control" name="observacion" rows="2" placeholder="Opcional"></textarea>
+                            <textarea class="form-control" name="observacion" rows="2" placeholder="Opcional" maxlength="500"></textarea>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Imagen del Lote</label>
@@ -267,7 +267,7 @@ include_once __DIR__ . '/../common/links.php';
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Observación</label>
-                            <textarea class="form-control" name="observacion" id="editBatchObs" rows="2" placeholder="Opcional"></textarea>
+                            <textarea class="form-control" name="observacion" id="editBatchObs" rows="2" placeholder="Opcional" maxlength="500"></textarea>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Imagen del Lote</label>

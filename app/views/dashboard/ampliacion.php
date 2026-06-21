@@ -97,7 +97,7 @@ include_once __DIR__ . '/../common/links.php';
                             </div>
                             <div class="col-md-12">
                                 <label class="form-label" for="observacion">Observación</label>
-                                <textarea class="form-control" name="observacion" id="observacion" rows="2"></textarea>
+                                <textarea class="form-control" name="observacion" id="observacion" rows="2" maxlength="500"></textarea>
                             </div>
                         </div>
 
@@ -203,8 +203,8 @@ include_once __DIR__ . '/../common/links.php';
                         <option value="">Seleccione planta</option>
                     </select>
                     <div class="entrada-nueva-planta mt-2 p-2 bg-light rounded d-none">
-                        <input type="text" class="form-control mb-1 entrada-nueva-nombre" placeholder="Nombre común *">
-                        <input type="text" class="form-control mb-1 entrada-nueva-tecnico" placeholder="Nombre científico">
+                        <input type="text" class="form-control mb-1 entrada-nueva-nombre" placeholder="Nombre común *" maxlength="100">
+                        <input type="text" class="form-control mb-1 entrada-nueva-tecnico" placeholder="Nombre científico" maxlength="100">
                         <select class="form-select entrada-nueva-especie">
                             <option value="">Especie *</option>
                         </select>
