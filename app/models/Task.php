@@ -163,6 +163,100 @@ class Task extends Database implements ReadableInterface, DeletableInterface
         }
     }
 
+    public function updateAssignmentWithConsumptions(int $asignacionId, array $assignmentData, array $consumptions, array $tools): void
+    {
+        $this->db()->beginTransaction();
+        try {
+            $oldAssignment = $this->getAssignmentById($asignacionId);
+            if (!$oldAssignment) throw new \Exception("Asignación no encontrada: $asignacionId");
+            $idTarea = (int)$oldAssignment['id_tarea'];
+
+            $oldConsumptions = $this->getConsumptions($asignacionId);
+            foreach ($oldConsumptions as $oc) {
+                $stmt = $this->db()->prepare("UPDATE insumo SET stock_actual = stock_actual + :cantidad WHERE id_insumo = :id_insumo");
+                $stmt->execute([':cantidad' => $oc['cantidad_usada'], ':id_insumo' => $oc['id_insumo']]);
+            }
+            $stmt = $this->db()->prepare("DELETE FROM consumo_insumos WHERE id_asignacion = :id");
+            $stmt->execute([':id' => $asignacionId]);
+
+            $oldTools = $this->getToolUsages($asignacionId);
+            foreach ($oldTools as $ot) {
+                $stmt = $this->db()->prepare("UPDATE herramienta SET estado = 'disponible' WHERE id_herramienta = :id");
+                $stmt->execute([':id' => $ot['id_herramienta']]);
+            }
+            $stmt = $this->db()->prepare("DELETE FROM uso_herramienta WHERE id_asignacion = :id");
+            $stmt->execute([':id' => $asignacionId]);
+
+            $stmt = $this->db()->prepare("UPDATE tareas SET nombre_tarea = :nombre, descripcion = :descripcion WHERE id_tarea = :id");
+            $stmt->execute([
+                ':nombre'      => $assignmentData['nombre_tarea'],
+                ':descripcion' => $assignmentData['descripcion'] ?? null,
+                ':id'          => $idTarea,
+            ]);
+
+            $stmt = $this->db()->prepare("UPDATE asignar_tarea SET id_trabajador = :t, id_lote = :l, fecha_asignacion = :f WHERE id_asignacion = :id");
+            $stmt->execute([
+                ':t'  => $assignmentData['id_trabajador'],
+                ':l'  => $assignmentData['id_lote'],
+                ':f'  => $assignmentData['fecha_asignacion'],
+                ':id' => $asignacionId,
+            ]);
+
+            foreach ($consumptions as $c) {
+                $stmt = $this->db()->prepare("SELECT stock_actual FROM insumo WHERE id_insumo = :id");
+                $stmt->execute([':id' => $c['id_insumo']]);
+                $stockActual = (float)$stmt->fetchColumn();
+                if ($c['cantidad_usada'] > $stockActual) {
+                    throw new \Exception("Stock insuficiente para insumo ID {$c['id_insumo']}. Disponible: $stockActual");
+                }
+
+                $stmt = $this->db()->prepare("
+                    INSERT INTO consumo_insumos (id_asignacion, id_insumo, cantidad_usada, costo_unitario, stock_actual, fecha_consumo)
+                    VALUES (:id_asignacion, :id_insumo, :cantidad_usada, :costo_unitario, :stock_actual, :fecha_consumo)
+                ");
+                $stmt->execute([
+                    ':id_asignacion'  => $asignacionId,
+                    ':id_insumo'      => $c['id_insumo'],
+                    ':cantidad_usada' => $c['cantidad_usada'],
+                    ':costo_unitario' => $c['costo_unitario'],
+                    ':stock_actual'   => $stockActual,
+                    ':fecha_consumo'  => $c['fecha_consumo'],
+                ]);
+
+                $stmt = $this->db()->prepare("UPDATE insumo SET stock_actual = GREATEST(0, stock_actual - :c) WHERE id_insumo = :id");
+                $stmt->execute([':c' => $c['cantidad_usada'], ':id' => $c['id_insumo']]);
+            }
+
+            foreach ($tools as $t) {
+                $stmt = $this->db()->prepare("SELECT estado FROM herramienta WHERE id_herramienta = :id");
+                $stmt->execute([':id' => $t['id_herramienta']]);
+                $toolEstado = $stmt->fetchColumn();
+                if ($toolEstado !== 'disponible') {
+                    throw new \Exception("La herramienta '{$t['nombre_herramienta']}' no está disponible.");
+                }
+
+                $stmt = $this->db()->prepare("
+                    INSERT INTO uso_herramienta (id_asignacion, id_herramienta, fecha_uso, observacion, estado_herramienta_post_uso)
+                    VALUES (:id_asignacion, :id_herramienta, :fecha_uso, :observacion, 'ok')
+                ");
+                $stmt->execute([
+                    ':id_asignacion'  => $asignacionId,
+                    ':id_herramienta' => $t['id_herramienta'],
+                    ':fecha_uso'      => $t['fecha_uso'],
+                    ':observacion'    => $t['observacion'] ?? null,
+                ]);
+
+                $stmt = $this->db()->prepare("UPDATE herramienta SET estado = 'ok' WHERE id_herramienta = :id");
+                $stmt->execute([':id' => $t['id_herramienta']]);
+            }
+
+            $this->db()->commit();
+        } catch (\Exception $e) {
+            $this->db()->rollBack();
+            throw $e;
+        }
+    }
+
     public function completeAssignment(int $id, string $fechaCumplimiento): void
     {
         $this->db()->beginTransaction();
