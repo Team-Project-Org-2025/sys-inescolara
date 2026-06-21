@@ -1,6 +1,6 @@
 import * as Helpers from '../utils/helpers.js';
 import * as Ajax from '../utils/ajax-handler.js';
-import { setupRealTimeValidation, validateForm } from '../utils/validation.js';
+import { setupRealTimeValidation, validateForm, clearValidation } from '../utils/validation.js';
 
 $(document).ready(function () {
   const baseUrl = `${window.BASE_URL || '/'}batches`;
@@ -212,6 +212,8 @@ $(document).ready(function () {
     } else {
       $currentImg.hide();
     }
+
+    clearValidation($('#editBatchForm'));
 
     $('#editBatchModal').modal({ focus: false }).modal('show');
   });
