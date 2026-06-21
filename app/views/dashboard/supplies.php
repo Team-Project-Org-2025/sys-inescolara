@@ -67,7 +67,7 @@ include_once __DIR__ . '/../common/links.php';
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label">Nombre del Insumo</label>
-                            <input type="text" class="form-control" name="nombre_insumo" required placeholder="Ej: Fertilizante NPK, Bolsa de polietileno">
+                            <input type="text" class="form-control" name="nombre_insumo" required placeholder="Ej: Fertilizante NPK, Bolsa de polietileno" maxlength="50">
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Unidad de Medida</label>
@@ -80,7 +80,7 @@ include_once __DIR__ . '/../common/links.php';
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Categoría</label>
-                            <input type="text" class="form-control" name="categoria" placeholder="Ej: Fertilizantes, Herramientas, Empaques">
+                            <input type="text" class="form-control" name="categoria" placeholder="Ej: Fertilizantes, Herramientas, Empaques" maxlength="50">
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
@@ -115,7 +115,7 @@ include_once __DIR__ . '/../common/links.php';
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label">Nombre del Insumo</label>
-                            <input type="text" class="form-control" name="nombre_insumo" id="editSupplyName" required>
+                            <input type="text" class="form-control" name="nombre_insumo" id="editSupplyName" required maxlength="50">
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Unidad de Medida</label>
@@ -128,7 +128,7 @@ include_once __DIR__ . '/../common/links.php';
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Categoría</label>
-                            <input type="text" class="form-control" name="categoria" id="editSupplyCat" placeholder="Ej: Fertilizantes, Herramientas, Empaques">
+                            <input type="text" class="form-control" name="categoria" id="editSupplyCat" placeholder="Ej: Fertilizantes, Herramientas, Empaques" maxlength="50">
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">

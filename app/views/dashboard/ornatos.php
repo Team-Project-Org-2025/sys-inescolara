@@ -92,7 +92,7 @@ include_once __DIR__ . '/../common/links.php';
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Ubicación</label>
-                                <input type="text" class="form-control" name="ubicacion" id="inputUbicacion" placeholder="Ej: Jardín frontal, Área de recepción">
+                                <input type="text" class="form-control" name="ubicacion" id="inputUbicacion" placeholder="Ej: Jardín frontal, Área de recepción" maxlength="50">
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Monto Total</label>
@@ -102,7 +102,7 @@ include_once __DIR__ . '/../common/links.php';
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Descripción</label>
-                            <textarea class="form-control" name="descripcion" id="inputDescripcion" rows="2" placeholder="Detalles del servicio de ornato..."></textarea>
+                            <textarea class="form-control" name="descripcion" id="inputDescripcion" rows="2" placeholder="Detalles del servicio de ornato..." maxlength="500"></textarea>
                         </div>
 
                         <hr>

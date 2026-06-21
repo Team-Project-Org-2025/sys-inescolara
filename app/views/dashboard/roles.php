@@ -112,11 +112,11 @@ function renderPermisosChecklist(array $modulos, array $codigoToId): void
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label">Nombre del Rol</label>
-                            <input type="text" class="form-control" name="nombre_rol" required placeholder="Ej: Supervisor, Vendedor">
+                            <input type="text" class="form-control" name="nombre_rol" required placeholder="Ej: Supervisor, Vendedor" maxlength="50">
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Descripción</label>
-                            <textarea class="form-control" name="descripcion_rol" rows="2" placeholder="Descripción opcional del rol"></textarea>
+                            <textarea class="form-control" name="descripcion_rol" rows="2" placeholder="Descripción opcional del rol" maxlength="500"></textarea>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Módulos y acciones permitidas</label>
@@ -148,11 +148,11 @@ function renderPermisosChecklist(array $modulos, array $codigoToId): void
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label">Nombre del Rol</label>
-                            <input type="text" class="form-control" name="nombre_rol" id="editRoleName" required>
+                            <input type="text" class="form-control" name="nombre_rol" id="editRoleName" required maxlength="50">
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Descripción</label>
-                            <textarea class="form-control" name="descripcion_rol" id="editRoleDesc" rows="2"></textarea>
+                            <textarea class="form-control" name="descripcion_rol" id="editRoleDesc" rows="2" maxlength="500"></textarea>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Módulos y acciones permitidas</label>

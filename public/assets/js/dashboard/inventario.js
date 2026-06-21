@@ -117,12 +117,24 @@ $(document).ready(function () {
         { data: 'gestor' },
         {
           data: 'detalle',
-          render: (data) => data || '<span class="text-muted">—</span>',
+          render: (data) => {
+            if (!data) return '<span class="text-muted">—</span>';
+            const escaped = Helpers.escapeHtml(data);
+            return escaped.length > 80
+              ? `<span title="${escaped}">${Helpers.truncateText(escaped, 80)}</span>`
+              : escaped;
+          },
         },
         { data: 'fecha' },
         {
           data: 'observacion',
-          render: (data) => data || '<span class="text-muted">—</span>',
+          render: (data) => {
+            if (!data) return '<span class="text-muted">—</span>';
+            const escaped = Helpers.escapeHtml(data);
+            return escaped.length > 80
+              ? `<span title="${escaped}">${Helpers.truncateText(escaped, 80)}</span>`
+              : escaped;
+          },
         },
       ],
       pageLength: 15,
@@ -172,7 +184,16 @@ $(document).ready(function () {
           },
         },
         { data: 'cantidad', render: (data) => Number(data).toLocaleString() },
-        { data: 'motivo' },
+        {
+          data: 'motivo',
+          render: (data) => {
+            if (!data) return '<span class="text-muted">—</span>';
+            const escaped = Helpers.escapeHtml(data);
+            return escaped.length > 80
+              ? `<span title="${escaped}">${Helpers.truncateText(escaped, 80)}</span>`
+              : escaped;
+          },
+        },
         { data: 'fecha_ajuste' },
       ],
       pageLength: 10,

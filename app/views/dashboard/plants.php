@@ -100,11 +100,11 @@ include_once __DIR__ . '/../common/links.php';
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label">Nombre Común</label>
-                            <input type="text" class="form-control" name="nombre_comun" required placeholder="Ej: Rosa, Cactus, Suculenta">
+                            <input type="text" class="form-control" name="nombre_comun" required placeholder="Ej: Rosa, Cactus, Suculenta" maxlength="50">
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Nombre Técnico (Científico)</label>
-                            <input type="text" class="form-control" name="nombre_tecnico" placeholder="Ej: Rosa gallica, Echinocactus grusonii">
+                            <input type="text" class="form-control" name="nombre_tecnico" placeholder="Ej: Rosa gallica, Echinocactus grusonii" maxlength="50">
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Especie / Grupo Familiar</label>
@@ -147,11 +147,11 @@ include_once __DIR__ . '/../common/links.php';
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label">Nombre Común</label>
-                            <input type="text" class="form-control" name="nombre_comun" id="editPlantName" required>
+                            <input type="text" class="form-control" name="nombre_comun" id="editPlantName" required maxlength="50">
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Nombre Técnico</label>
-                            <input type="text" class="form-control" name="nombre_tecnico" id="editPlantTecnico">
+                            <input type="text" class="form-control" name="nombre_tecnico" id="editPlantTecnico" maxlength="50">
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Especie / Grupo Familiar</label>

@@ -101,7 +101,7 @@ include_once __DIR__ . '/../common/links.php';
                             </div>
                             <div class="col-md-12">
                                 <label class="form-label" for="observacion">Observación</label>
-                                <textarea class="form-control" name="observacion" id="observacion" rows="2" placeholder="Motivo de la cuarentena, síntomas observados, etc."></textarea>
+                                <textarea class="form-control" name="observacion" id="observacion" rows="2" placeholder="Motivo de la cuarentena, síntomas observados, etc." maxlength="500"></textarea>
                             </div>
                         </div>
                     </div>

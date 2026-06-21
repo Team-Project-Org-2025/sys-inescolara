@@ -165,7 +165,7 @@ include_once __DIR__ . '/../common/links.php';
                             <label class="form-label small fw-semibold mb-1">Buscar Planta</label>
                             <div class="input-group mb-2">
                                 <span class="input-group-text"><i class="fas fa-search"></i></span>
-                                <input type="text" class="form-control" id="buscarLote" placeholder="Escriba nombre de la planta..." minlength="2">
+                                <input type="text" class="form-control" id="buscarLote" placeholder="Escriba nombre de la planta..." minlength="2" maxlength="100">
                             </div>
                             <div id="resultadosLotes" class="list-group mb-2" style="display:none;"></div>
 
@@ -176,7 +176,7 @@ include_once __DIR__ . '/../common/links.php';
 
                             <div class="mb-2">
                                 <label class="form-label small fw-semibold mb-1">Observaciones</label>
-                                <textarea class="form-control" name="observaciones" rows="2" placeholder="Opcional"></textarea>
+                                <textarea class="form-control" name="observaciones" rows="2" placeholder="Opcional" maxlength="500"></textarea>
                             </div>
                             </div>
 
@@ -219,7 +219,7 @@ include_once __DIR__ . '/../common/links.php';
                                                             <input type="text" class="form-control form-control-sm monto-pago" placeholder="Monto" inputmode="decimal">
                                                         </div>
                                                         <div class="col-2">
-                                                            <input type="text" class="form-control form-control-sm ref-pago" placeholder="Ref.">
+                                                            <input type="text" class="form-control form-control-sm ref-pago" placeholder="Ref." maxlength="100">
                                                         </div>
                                                         <div class="col-1 text-end">
                                                             <button type="button" class="btn btn-sm btn-outline-danger quitar-pago py-0 px-1" style="display:none;"><i class="fas fa-times"></i></button>

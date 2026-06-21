@@ -55,6 +55,9 @@ $scripts_links = '
     <!-- Bootstrap 5 jQuery Compatibility Bridge -->
     <script src="' . BASE_URL . 'public/assets/js/utils/bs5-jquery-bridge.js"></script>
 
+    <!-- Maxlength Character Counter -->
+    <script src="' . BASE_URL . 'public/assets/js/utils/maxlength-counter.js"></script>
+
     <!-- Google reCAPTCHA v2 -->
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 ';

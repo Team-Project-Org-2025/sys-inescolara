@@ -64,11 +64,11 @@ include_once __DIR__ . '/../common/links.php';
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label">Nombre de la Especie</label>
-                            <input type="text" class="form-control" name="nombre_especie" required placeholder="Ej: Rosal, Girasol, Cactus">
+                            <input type="text" class="form-control" name="nombre_especie" required placeholder="Ej: Rosal, Girasol, Cactus" maxlength="50">
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Descripción</label>
-                            <textarea class="form-control" name="descripcion" rows="2" placeholder="Ej: Arbusto perenne con flores de colores variados"></textarea>
+                            <textarea class="form-control" name="descripcion" rows="2" placeholder="Ej: Arbusto perenne con flores de colores variados" maxlength="500"></textarea>
                             <small class="text-muted">Opcional</small>
                         </div>
                     </div>
@@ -94,11 +94,11 @@ include_once __DIR__ . '/../common/links.php';
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label">Nombre de la Especie</label>
-                            <input type="text" class="form-control" name="nombre_especie" id="editSpeciesName" required>
+                            <input type="text" class="form-control" name="nombre_especie" id="editSpeciesName" required maxlength="50">
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Descripción</label>
-                            <textarea class="form-control" name="descripcion" id="editSpeciesDescripcion" rows="2" placeholder="Opcional"></textarea>
+                            <textarea class="form-control" name="descripcion" id="editSpeciesDescripcion" rows="2" placeholder="Opcional" maxlength="500"></textarea>
                         </div>
                     </div>
                     <div class="modal-footer">

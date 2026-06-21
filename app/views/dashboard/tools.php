@@ -68,11 +68,11 @@ include_once __DIR__ . '/../common/links.php';
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label">Nombre de la Herramienta</label>
-                            <input type="text" class="form-control" name="nombre_herramienta" required placeholder="Ej: Pala, Rastrillo, Tijeras de podar">
+                            <input type="text" class="form-control" name="nombre_herramienta" required placeholder="Ej: Pala, Rastrillo, Tijeras de podar" maxlength="50">
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Tipo</label>
-                            <input type="text" class="form-control" name="tipo" placeholder="Ej: Manual, Eléctrica, Mecánica">
+                            <input type="text" class="form-control" name="tipo" placeholder="Ej: Manual, Eléctrica, Mecánica" maxlength="50">
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Estado</label>
@@ -96,7 +96,7 @@ include_once __DIR__ . '/../common/links.php';
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Observación</label>
-                            <textarea class="form-control" name="observacion" rows="2" placeholder="Notas adicionales..."></textarea>
+                            <textarea class="form-control" name="observacion" rows="2" placeholder="Notas adicionales..." maxlength="500"></textarea>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -121,11 +121,11 @@ include_once __DIR__ . '/../common/links.php';
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label">Nombre de la Herramienta</label>
-                            <input type="text" class="form-control" name="nombre_herramienta" id="editToolName" required>
+                            <input type="text" class="form-control" name="nombre_herramienta" id="editToolName" required maxlength="50">
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Tipo</label>
-                            <input type="text" class="form-control" name="tipo" id="editToolType" placeholder="Ej: Manual, Eléctrica, Mecánica">
+                            <input type="text" class="form-control" name="tipo" id="editToolType" placeholder="Ej: Manual, Eléctrica, Mecánica" maxlength="50">
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Estado</label>
@@ -149,7 +149,7 @@ include_once __DIR__ . '/../common/links.php';
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Observación</label>
-                            <textarea class="form-control" name="observacion" id="editToolObs" rows="2" placeholder="Notas adicionales..."></textarea>
+                            <textarea class="form-control" name="observacion" id="editToolObs" rows="2" placeholder="Notas adicionales..." maxlength="500"></textarea>
                         </div>
                     </div>
                     <div class="modal-footer">

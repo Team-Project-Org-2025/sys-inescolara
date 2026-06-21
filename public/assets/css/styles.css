@@ -132,6 +132,11 @@ textarea {
   font-size: inherit;
 }
 
+textarea.form-control {
+  resize: vertical;
+  max-height: 300px;
+}
+
 ul,
 ol {
   list-style: none;
