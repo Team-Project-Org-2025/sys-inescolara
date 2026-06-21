@@ -169,7 +169,7 @@ function usuarios(): void
     require $view;
 }
 
-function plants(): void
+function plantas(): void
 {
     dashboardCheckPermiso('PLANTAS_VIEW');
 
@@ -178,7 +178,7 @@ function plants(): void
     $species = $speciesModel->getAll();
 
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
-        . 'dashboard' . DIRECTORY_SEPARATOR . 'plants.php';
+        . 'dashboard' . DIRECTORY_SEPARATOR . 'plantas.php';
 
     if (!is_file($view)) {
         http_response_code(500);
@@ -194,7 +194,7 @@ function batches(): void
     dashboardCheckPermiso('PLANTAS_VIEW');
 
     require_once ROOT_PATH . 'vendor/autoload.php';
-    $plantModel = new \SysInescolara\models\Plant();
+    $plantModel = new \SysInescolara\models\Planta();
     $plants = $plantModel->getAll();
     $locationModel = new \SysInescolara\models\Location();
     $locations = $locationModel->getAll();
@@ -544,7 +544,7 @@ function prices(): void
 
     require_once ROOT_PATH . 'vendor/autoload.php';
 
-    $plantModel = new \SysInescolara\models\Plant();
+    $plantModel = new \SysInescolara\models\Planta();
     $plants = $plantModel->getAll();
 
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
@@ -584,7 +584,7 @@ function seedcollection(): void
     $ubicaciones = $locationModel->getAll();
     $employeeModel = new \SysInescolara\models\Employee();
     $trabajadores = $employeeModel->getAll();
-    $plantModel = new \SysInescolara\models\Plant();
+    $plantModel = new \SysInescolara\models\Planta();
     $plantas = $plantModel->getAll();
     $unidadMedidaModel = new \SysInescolara\models\UnidadMedida();
     $unidades = $unidadMedidaModel->getAll();

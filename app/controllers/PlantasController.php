@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/controller_helpers.php';
 
-use SysInescolara\models\Plant;
+use SysInescolara\models\Planta;
 use SysInescolara\models\Species;
 use SysInescolara\models\AuditLog;
 
@@ -27,7 +27,7 @@ function index(): void
     
     $speciesModel = new Species();
     $species = $speciesModel->getAll();
-    $view = ROOT_PATH . 'app/views/dashboard/plants.php';
+    $view = ROOT_PATH . 'app/views/dashboard/plantas.php';
     
     if (!is_file($view)) {
         http_response_code(500);
@@ -65,7 +65,7 @@ function plants_handleAddEdit(string $mode): void
         $imagen = $result['data']['url'];
     }
     
-    $planta = new Plant();
+    $planta = new Planta();
 
     if ($mode === 'add') {
         $planta->setNombreComun($nombreComun)
@@ -133,7 +133,7 @@ function plants_handleAddEdit(string $mode): void
 
 function plants_handleDelete(): void
 {
-    $planta = new Plant();
+    $planta = new Planta();
     $id = (int)($_POST['id'] ?? 0);
     
     if ($id <= 0) {
@@ -183,10 +183,10 @@ function plants_handleDelete(): void
 
 function plants_getPlantsAjax(): void
 {
-    $model = new Plant();
+    $model = new Planta();
     jsonResponse([
         'success' => true, 
-        'plants' => $model->getAll(), 
+        'plantas' => $model->getAll(), 
         'count' => 0
     ]);
 }

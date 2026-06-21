@@ -7,7 +7,7 @@ function hasPermiso(string $codigo): bool
 
 $current = $currentPage ?? '';
 
-$isPlanta = in_array($current, ['plants', 'species', 'locations']);
+$isPlanta = in_array($current, ['plantas', 'species', 'locations']);
 $isActivos = in_array($current, ['inventario', 'batches', 'trazabilidad', 'supplies', 'tools', 'unit-measures', 'mermas']);
 $isVenta = in_array($current, ['ventas', 'prices', 'clientes', 'cuentas-cobrar', 'cuentas-pagar', 'compras']);
 $isServicios = in_array($current, ['ornatos', 'ampliacion', 'suppliers']);
@@ -75,7 +75,7 @@ $showSistema = hasPermiso('USUARIOS_MANAGE');
                 <ul class="submenu-inner">
                     <?php if (hasPermiso('PLANTAS_VIEW')): ?>
                     <li>
-                        <a href="<?= BASE_URL ?>dashboard/plants" class="nav-link <?= $current === 'plants' ? 'active' : '' ?>">
+                        <a href="<?= BASE_URL ?>dashboard/plantas" class="nav-link <?= $current === 'plantas' ? 'active' : '' ?>">
                             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-9"></path><path d="M12 13c2.5-2.5 6-3 7.5-1.5s1 5-1.5 7.5"></path><path d="M12 10c-2.5-2.5-6-3-7.5-1.5s-1 5 1.5 7.5"></path></svg>
                             <span>Administrar planta</span>
                         </a>

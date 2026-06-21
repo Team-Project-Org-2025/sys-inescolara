@@ -3,7 +3,7 @@
 require_once __DIR__ . '/controller_helpers.php';
 
 use SysInescolara\models\Batch;
-use SysInescolara\models\Plant;
+use SysInescolara\models\Planta;
 use SysInescolara\models\Location;
 use SysInescolara\models\AuditLog;
 
@@ -26,7 +26,7 @@ function index(): void
         return;
     }
 
-    $plantModel = new Plant();
+    $plantModel = new Planta();
     $plants = $plantModel->getAll();
     try {
         $locationModel = new Location();
