@@ -7,7 +7,7 @@ use SysInescolara\models\AuditLog;
 use SysInescolara\models\Employee;
 use SysInescolara\models\Lote;
 use SysInescolara\models\Supplies;
-use SysInescolara\models\Tool;
+use SysInescolara\models\Herramienta;
 
 function index(): void
 {
@@ -36,7 +36,7 @@ function index(): void
     $lotes = $batchModel->getAll();
     $suppliesModel = new Supplies();
     $insumos = $suppliesModel->getAll();
-    $toolModel = new Tool();
+    $toolModel = new Herramienta();
     $herramientas = $toolModel->getAll();
 
     $view = ROOT_PATH . 'app/views/dashboard/task.php';
@@ -123,7 +123,7 @@ function tasks_assignAjax(): void
 
     // Save tool usages
     $rawTools = $data['tools'] ?? [];
-    $toolModel = new Tool();
+    $toolModel = new Herramienta();
     $toolCount = 0;
     foreach ($rawTools as $t) {
         $idHerramienta = (int)($t['id_herramienta'] ?? 0);
@@ -205,7 +205,7 @@ function tasks_editAjax(): void
 
     $rawTools = $data['tools'] ?? [];
     $tools = [];
-    $toolModel = new Tool();
+    $toolModel = new Herramienta();
     foreach ($rawTools as $t) {
         $idHerramienta = (int)($t['id_herramienta'] ?? 0);
         if ($idHerramienta <= 0) continue;
