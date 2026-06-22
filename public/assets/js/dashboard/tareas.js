@@ -3,7 +3,7 @@ import * as Ajax from '../utils/ajax-handler.js';
 import { setupRealTimeValidation, validateForm } from '../utils/validation.js';
 
 const DATA = window.TASK_DATA || {};
-const baseUrl = DATA.tasksUrl || `${window.BASE_URL || '/'}tasks`;
+const baseUrl = DATA.tasksUrl || `${window.BASE_URL || '/'}tareas`;
 
 let assignmentsTable = null;
 
@@ -284,6 +284,7 @@ $('#assignTaskForm').on('submit', function (e) {
     const idAsignacion = parseInt($form.find('[name="id_asignacion"]').val()) || 0;
     const isEdit = idAsignacion > 0;
     const action = isEdit ? 'edit_ajax' : 'assign_ajax';
+    if (isEdit) data.id_asignacion = idAsignacion;
 
     Ajax.post(`${baseUrl}?action=${action}`, data)
         .then((r) => {

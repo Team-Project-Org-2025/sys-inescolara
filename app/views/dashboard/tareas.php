@@ -20,7 +20,7 @@ include_once __DIR__ . '/../common/links.php';
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
     <?php
-    $currentPage = 'tasks';
+    $currentPage = 'tareas';
     include_once __DIR__ . '/../partials/sidebar.php';
     ?>
 
@@ -231,12 +231,12 @@ include_once __DIR__ . '/../common/links.php';
     <?= $scripts_links ?>
     <script>
         window.TASK_DATA = {
-            tasksUrl: '<?= BASE_URL ?>tasks',
+            tasksUrl: '<?= BASE_URL ?>tareas',
             insumos: <?= json_encode($insumos, JSON_UNESCAPED_UNICODE) ?>,
             herramientas: <?= json_encode($herramientas ?? [], JSON_UNESCAPED_UNICODE) ?>,
             hoy: '<?= date('Y-m-d') ?>'
         };
     </script>
-    <script type="module" src="<?= BASE_URL ?>public/assets/js/dashboard/task.js"></script>
+    <script type="module" src="<?= BASE_URL ?>public/assets/js/dashboard/tareas.js"></script>
 </body>
 </html>
