@@ -109,61 +109,6 @@ class Inventory extends Database
         }
     }
 
-    public function getMovements(): array
-    {
-        try {
-            $this->db()->exec("SET NAMES 'utf8mb4' COLLATE 'utf8mb4_unicode_ci'");
-            $sql = "
-                SELECT id, tipo_movimiento, tipo_item, cliente, gestor, fecha, observacion, detalle FROM (
-
-                    -- Movimientos de Plantas (Ventas)
-                    SELECT
-                        CONCAT('MP_', mp.id_movimiento_planta) AS id,
-                        mp.tipo_movimiento,
-                        'Planta' AS tipo_item,
-                        COALESCE(c.nombre_cliente, '—') AS cliente,
-                        CONCAT(t.nombre_trabajador, ' ', t.apellido_trabajador) AS gestor,
-                        mp.fecha_movimiento AS fecha,
-                        COALESCE(mp.observacion, '') AS observacion,
-                        (SELECT GROUP_CONCAT(
-                            CONCAT('Lote #', d.id_lote, ': ', d.cantidad, ' unds')
-                            SEPARATOR ' | '
-                        ) FROM movimiento_planta_detalle d WHERE d.id_movimiento_planta = mp.id_movimiento_planta) AS detalle
-                    FROM movimiento_planta mp
-                    LEFT JOIN cliente c ON mp.id_cliente = c.id_cliente
-                    LEFT JOIN trabajadores t ON mp.id_trabajador_gestor = t.id_trabajador
-
-                    UNION ALL
-
-                    -- Movimientos de Insumos
-                    SELECT
-                        CONCAT('MI_', mi.id_movimiento_insumo),
-                        mi.tipo_movimiento,
-                        'Insumo',
-                        NULL,
-                        CONCAT(t.nombre_trabajador, ' ', t.apellido_trabajador),
-                        mi.fecha_movimiento,
-                        COALESCE(mi.observacion, ''),
-                        (SELECT GROUP_CONCAT(
-                            CONCAT(i2.nombre_insumo, ': ', d.cantidad)
-                            SEPARATOR ' | '
-                        ) FROM movimiento_insumo_detalle d
-                        LEFT JOIN insumo i2 ON d.id_insumo = i2.id_insumo
-                        WHERE d.id_movimiento_insumo = mi.id_movimiento_insumo) AS detalle
-                    FROM movimiento_insumo mi
-                    LEFT JOIN trabajadores t ON mi.id_trabajador_gestor = t.id_trabajador
-                ) AS mov
-                ORDER BY fecha DESC
-                LIMIT 500
-            ";
-            $stmt = $this->db()->query($sql);
-            return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
-        } catch (\Throwable $e) {
-            error_log('Error en Inventory::getMovements: ' . $e->getMessage());
-            return [];
-        }
-    }
-
     public function getAdjustments(): array
     {
         try {
