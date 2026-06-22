@@ -8,7 +8,7 @@ use SysInescolara\interfaces\DeletableInterface;
 use SysInescolara\traits\ValidationTrait;
 use PDO;
 
-class PriceCalculation extends Database implements ReadableInterface, DeletableInterface
+class CalculoPrecio extends Database implements ReadableInterface, DeletableInterface
 {
     use ValidationTrait;
 
@@ -50,7 +50,7 @@ class PriceCalculation extends Database implements ReadableInterface, DeletableI
             $stmt = $this->db()->query($sql);
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
         } catch (\Throwable $e) {
-            error_log('Error en PriceCalculation::getAll: ' . $e->getMessage());
+            error_log('Error en CalculoPrecio::getAll: ' . $e->getMessage());
             return [];
         }
     }
@@ -69,7 +69,7 @@ class PriceCalculation extends Database implements ReadableInterface, DeletableI
             $stmt->execute([':id' => $id]);
             return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
         } catch (\Throwable $e) {
-            error_log('Error en PriceCalculation::getById: ' . $e->getMessage());
+            error_log('Error en CalculoPrecio::getById: ' . $e->getMessage());
             return null;
         }
     }
@@ -90,7 +90,7 @@ class PriceCalculation extends Database implements ReadableInterface, DeletableI
             return $this->db()->commit();
         } catch (\Throwable $e) {
             $this->db()->rollBack();
-            error_log('Error en PriceCalculation::delete: ' . $e->getMessage());
+            error_log('Error en CalculoPrecio::delete: ' . $e->getMessage());
             return false;
         }
     }
@@ -161,7 +161,7 @@ class PriceCalculation extends Database implements ReadableInterface, DeletableI
             return true;
         } catch (\Throwable $e) {
             if ($this->db()->inTransaction()) $this->db()->rollBack();
-            error_log('Error en PriceCalculation::add: ' . $e->getMessage());
+            error_log('Error en CalculoPrecio::add: ' . $e->getMessage());
             return false;
         }
     }
@@ -252,7 +252,7 @@ class PriceCalculation extends Database implements ReadableInterface, DeletableI
             }
             return $lotes;
         } catch (\Throwable $e) {
-            error_log('Error en PriceCalculation::getLotesByPlanta: ' . $e->getMessage());
+            error_log('Error en CalculoPrecio::getLotesByPlanta: ' . $e->getMessage());
             return [];
         }
     }
@@ -293,7 +293,7 @@ class PriceCalculation extends Database implements ReadableInterface, DeletableI
             $stmt->execute([':id_lote' => $idLote]);
             return (float)$stmt->fetchColumn();
         } catch (\Throwable $e) {
-            error_log('Error en PriceCalculation::getCostoInsumosByLote: ' . $e->getMessage());
+            error_log('Error en CalculoPrecio::getCostoInsumosByLote: ' . $e->getMessage());
             return 0;
         }
     }

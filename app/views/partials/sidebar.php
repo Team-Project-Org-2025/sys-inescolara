@@ -9,7 +9,7 @@ $current = $currentPage ?? '';
 
 $isPlanta = in_array($current, ['plantas', 'especies', 'ubicaciones']);
 $isActivos = in_array($current, ['inventario', 'lotes', 'trazabilidad', 'insumos', 'herramientas', 'unit-measures', 'mermas']);
-$isVenta = in_array($current, ['ventas', 'prices', 'clientes', 'cuentas-cobrar', 'cuentas-pagar', 'compras']);
+$isVenta = in_array($current, ['ventas', 'precios', 'clientes', 'cuentas-cobrar', 'cuentas-pagar', 'compras']);
 $isServicios = in_array($current, ['ornatos', 'ampliacion', 'proveedores']);
 $isTarea = in_array($current, ['tareas', 'empleados', 'seed-collection']);
 $isConfiguracion = in_array($current, ['usuarios', 'roles', 'auditlog', 'backups']);
@@ -195,7 +195,7 @@ $showSistema = hasPermiso('USUARIOS_MANAGE');
                     <?php endif; ?>
                     <?php if (hasPermiso('PRECIOS_VIEW')): ?>
                     <li>
-                        <a href="<?= BASE_URL ?>dashboard/prices" class="nav-link <?= $current === 'prices' ? 'active' : '' ?>">
+                        <a href="<?= BASE_URL ?>dashboard/precios" class="nav-link <?= $current === 'precios' ? 'active' : '' ?>">
                             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
                             <span>Gestionar precio</span>
                         </a>

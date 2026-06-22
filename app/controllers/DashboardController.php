@@ -596,7 +596,7 @@ function tools(): void
     require $view;
 }
 
-function prices(): void
+function precios(): void
 {
     dashboardCheckPermiso('PRECIOS_VIEW');
 
@@ -606,7 +606,7 @@ function prices(): void
     $plants = $plantModel->getAll();
 
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
-        . 'dashboard' . DIRECTORY_SEPARATOR . 'prices.php';
+        . 'dashboard' . DIRECTORY_SEPARATOR . 'precios.php';
 
     if (!is_file($view)) {
         http_response_code(500);

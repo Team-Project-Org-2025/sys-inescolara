@@ -2,7 +2,7 @@
 
 require_once __DIR__ . '/controller_helpers.php';
 
-use SysInescolara\models\PriceCalculation;
+use SysInescolara\models\CalculoPrecio;
 use SysInescolara\models\Lote;
 use SysInescolara\models\Planta;
 use SysInescolara\models\AuditLog;
@@ -30,7 +30,7 @@ function index(): void
     $plantModel = new Planta();
     $plants = $plantModel->getAll();
 
-    $view = ROOT_PATH . 'app/views/dashboard/prices.php';
+    $view = ROOT_PATH . 'app/views/dashboard/precios.php';
     if (!is_file($view)) {
         http_response_code(500);
         echo 'Vista de precios no encontrada.';
@@ -47,7 +47,7 @@ function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('PRECIOS_DE
 
 function prices_handleEdit(): void
 {
-    $model = new PriceCalculation();
+    $model = new CalculoPrecio();
     $batchModel = new Lote();
 
     $id = (int)($_POST['id'] ?? 0);
@@ -75,7 +75,7 @@ function prices_handleEdit(): void
 
 function prices_handleDelete(): void
 {
-    $model = new PriceCalculation();
+    $model = new CalculoPrecio();
     $id = (int)($_POST['id'] ?? 0);
     if ($id <= 0) throw new \Exception('ID inválido');
     if (!$model->exists($id)) throw new \Exception('No existe el cálculo de precio');
@@ -88,7 +88,7 @@ function prices_handleDelete(): void
 
 function prices_getPricesAjax(): void
 {
-    $model = new PriceCalculation();
+    $model = new CalculoPrecio();
     $prices = $model->getAll();
     jsonResponse(['success' => true, 'prices' => $prices, 'count' => count($prices)]);
 }
@@ -100,7 +100,7 @@ function prices_calcularPorPlantaAjax(): void
     if ($idPlanta <= 0) {
         jsonResponse(['success' => false, 'message' => 'Seleccione una planta.'], 400);
     }
-    $model = new PriceCalculation();
+    $model = new CalculoPrecio();
     $result = $model->calcularCostoPorPlanta($idPlanta, $categoria);
     jsonResponse(['success' => true, 'data' => $result]);
 }
@@ -120,7 +120,7 @@ function prices_guardarPorPlantaAjax(): void
         jsonResponse(['success' => false, 'message' => 'Datos inválidos.'], 400);
     }
 
-    $model = new PriceCalculation();
+    $model = new CalculoPrecio();
     $batchModel = new Lote();
     $saved = 0;
 

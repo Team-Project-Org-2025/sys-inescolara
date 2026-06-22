@@ -3,8 +3,8 @@ import * as Ajax from '../utils/ajax-handler.js';
 import { validateField, validateSelect } from '../utils/validation.js';
 
 $(document).ready(function () {
-  const baseUrl = `${window.BASE_URL || '/'}prices`;
-  let pricesTable = null;
+  const baseUrl = `${window.BASE_URL || '/'}precios`;
+  let preciosTable = null;
   let calcData = null;
 
   // ============================================================
@@ -130,7 +130,7 @@ $(document).ready(function () {
       .then((r) => {
         if (r.success) {
           Helpers.toast('success', r.message);
-          if (pricesTable) pricesTable.ajax.reload(null, false);
+          if (preciosTable) preciosTable.ajax.reload(null, false);
           $('#calcResultContainer').addClass('d-none');
           calcData = null;
         } else {
@@ -145,7 +145,7 @@ $(document).ready(function () {
   // ============================================================
 
   $(document).on('click', '.btn-delete', function () {
-    const row = pricesTable.row($(this).closest('tr')).data();
+    const row = preciosTable.row($(this).closest('tr')).data();
     const id = row.id;
     const info = `#${row.id_lote} - ${row.planta_nombre || ''}`;
 
@@ -157,7 +157,7 @@ $(document).ready(function () {
           .then((response) => {
             if (response.success) {
               Helpers.toast('success', response.message);
-              if (pricesTable) pricesTable.ajax.reload(null, false);
+              if (preciosTable) preciosTable.ajax.reload(null, false);
           } else {
             Helpers.toast('error', response.message);
           }
@@ -173,7 +173,7 @@ $(document).ready(function () {
   // ============================================================
 
   $(document).on('click', '.btn-edit', function () {
-    const row = pricesTable.row($(this).closest('tr')).data();
+    const row = preciosTable.row($(this).closest('tr')).data();
 
     Helpers.confirmDialog(
       '¿Editar cálculo?',
@@ -221,7 +221,7 @@ $(document).ready(function () {
             .then((response) => {
               if (response.success) {
                 Helpers.toast('success', response.message);
-                if (pricesTable) pricesTable.ajax.reload(null, false);
+                if (preciosTable) preciosTable.ajax.reload(null, false);
               } else {
                 Helpers.toast('error', response.message);
               }
@@ -235,10 +235,10 @@ $(document).ready(function () {
 
   function initDataTable() {
     try {
-      if ($.fn.DataTable.isDataTable('#pricesTable')) {
-        $('#pricesTable').DataTable().destroy();
+      if ($.fn.DataTable.isDataTable('#preciosTable')) {
+        $('#preciosTable').DataTable().destroy();
       }
-      pricesTable = $('#pricesTable').DataTable({
+      preciosTable = $('#preciosTable').DataTable({
         ajax: {
           url: `${baseUrl}?action=get_prices`,
           method: 'GET',

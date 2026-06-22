@@ -494,7 +494,7 @@ $userAvatar = \SysInescolara\helpers\Auth::avatar();
                 </div>
                 </a>
 
-                <a href="<?= BASE_URL ?>dashboard/prices" class="text-decoration-none">
+                <a href="<?= BASE_URL ?>dashboard/precios" class="text-decoration-none">
                 <div class="kpi-card">
                     <div class="kpi-card-header">
                         <span class="kpi-card-title">Precios Vigentes</span>
