@@ -157,7 +157,7 @@ export const setupRealTimeValidation = ($form, rules, isEdit = false) => {
     // ========================================================================
     // BLOQUEO 1: BLOQUEAR LETRAS (Para Teléfonos, Cédulas, Códigos)
     // ========================================================================
-    if (['telefono', 'cedula', 'codigo', 'factura', 'referencia'].includes(tipo)) {
+    if (['telefono', 'cedula', 'codigo', 'factura', 'referencia', 'cantidad'].includes(tipo)) {
       
       // 1. Evitar que se escriban letras (Evento de pulsación de tecla)
       $input.on('keypress', function (e) {
