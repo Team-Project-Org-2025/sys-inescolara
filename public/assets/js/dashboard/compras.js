@@ -291,20 +291,20 @@ $(document).ready(function () {
             return `
               <div class="d-flex gap-1">
                 <button class="btn btn-sm btn-outline-info btn-detail">
-                    <i class="fas fa-eye"></i>
+                    <i class="fas fa-eye"></i> Ver
                 </button>
                 ${esPendiente ? `
                 <button class="btn btn-sm btn-outline-primary btn-edit">
-                    <i class="fas fa-edit"></i>
+                    <i class="fas fa-edit"></i> Editar
                 </button>
                 <button class="btn btn-sm btn-outline-success btn-recibir">
-                    <i class="fas fa-check"></i>
+                    <i class="fas fa-check"></i> Recibir
                 </button>
                 <button class="btn btn-sm btn-outline-danger btn-cancelar">
-                    <i class="fas fa-ban"></i>
+                    <i class="fas fa-ban"></i> Cancelar
                 </button>
                 <button class="btn btn-sm btn-outline-danger btn-delete">
-                    <i class="fas fa-trash"></i>
+                    <i class="fas fa-trash"></i> Eliminar
                 </button>
                 ` : ''}
               </div>

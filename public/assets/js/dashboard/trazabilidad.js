@@ -65,7 +65,7 @@ $(document).ready(function () {
             if (perms.includes('TRAZABILIDAD_EDIT')) {
               html += `
                 <button class="btn btn-sm btn-outline-primary btn-edit">
-                  <i class="fas fa-edit"></i>
+                  <i class="fas fa-edit"></i> Editar
                 </button>
               `;
             }
@@ -73,7 +73,7 @@ $(document).ready(function () {
             if (perms.includes('TRAZABILIDAD_DELETE')) {
               html += `
                 <button class="btn btn-sm btn-outline-danger btn-delete">
-                  <i class="fas fa-trash"></i>
+                  <i class="fas fa-trash"></i> Eliminar
                 </button>
               `;
             }

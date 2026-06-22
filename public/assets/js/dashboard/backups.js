@@ -50,13 +50,13 @@ $(document).ready(function () {
             return `
               <div class="btn-group btn-group-sm">
                 <a href="${downloadUrl}" class="btn btn-outline-primary" title="Descargar">
-                  <i class="fas fa-download"></i>
+                  <i class="fas fa-download"></i> Descargar
                 </a>
                 <button class="btn btn-outline-warning btn-restore" data-filename="${data.filename}" data-db="${data.db_label}" title="Restaurar">
-                  <i class="fas fa-undo"></i>
+                  <i class="fas fa-undo"></i> Restaurar
                 </button>
                 <button class="btn btn-outline-danger btn-delete-backup" data-filename="${data.filename}" title="Eliminar">
-                  <i class="fas fa-trash"></i>
+                  <i class="fas fa-trash"></i> Eliminar
                 </button>
               </div>
             `;

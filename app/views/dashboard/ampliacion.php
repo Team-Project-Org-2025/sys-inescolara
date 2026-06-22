@@ -107,7 +107,7 @@ include_once __DIR__ . '/../common/links.php';
                             <h5 class="mb-3 text-danger fw-bold"><i class="fas fa-arrow-right"></i> Plantas que salen</h5>
                             <div class="table-responsive">
                                 <table class="table table-bordered mb-0" id="salidaTable">
-                                    <thead class="table-danger">
+                                    <thead class="table-light">
                                         <tr>
                                             <th>Lote</th>
                                             <th>Stock</th>
@@ -127,7 +127,7 @@ include_once __DIR__ . '/../common/links.php';
                             <h5 class="mb-3 text-success fw-bold"><i class="fas fa-arrow-left"></i> Plantas que entran</h5>
                             <div class="table-responsive">
                                 <table class="table table-bordered mb-0" id="entradaTable">
-                                    <thead class="table-success">
+                                    <thead class="table-light">
                                         <tr>
                                             <th>Planta</th>
                                             <th>Ubicación</th>

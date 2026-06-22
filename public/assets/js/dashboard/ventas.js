@@ -81,11 +81,11 @@ const Ventas = {
                     orderable: false,
                     render: (r) => {
                         const btns = [
-                            `<button class="btn btn-sm btn-info ver-detalle" title="Ver"><i class="fas fa-eye"></i></button>`,
-                            `<a href="${urlBaseVentas}?accion=comprobante&id=${r.id_venta}" class="btn btn-sm btn-success btn-pdf-download" title="PDF"><i class="fas fa-file-pdf"></i></a>`
+                            `<button class="btn btn-sm btn-outline-info ver-detalle" title="Ver"><i class="fas fa-eye"></i> Ver</button>`,
+                            `<a href="${urlBaseVentas}?accion=comprobante&id=${r.id_venta}" class="btn btn-sm btn-outline-success btn-pdf-download" title="PDF"><i class="fas fa-file-pdf"></i> PDF</a>`
                         ];
                         if (r.estado === 'pendiente') {
-                            btns.push(`<button class="btn btn-sm btn-danger cancelar-venta" title="Anular"><i class="fas fa-ban"></i></button>`);
+                            btns.push(`<button class="btn btn-sm btn-outline-danger cancelar-venta" title="Anular"><i class="fas fa-ban"></i> Anular</button>`);
                         }
                         return `<div class="d-flex gap-1 justify-content-center">${btns.join('')}</div>`;
                     }

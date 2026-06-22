@@ -257,10 +257,10 @@ $(document).ready(function () {
               return `
                 <div class="d-flex gap-1">
                   <button class="btn btn-sm btn-outline-primary btn-edit">
-                      <i class="fas fa-edit"></i>
+                      <i class="fas fa-edit"></i> Editar
                   </button>
                   <button class="btn btn-sm btn-outline-danger btn-delete">
-                      <i class="fas fa-trash"></i>
+                      <i class="fas fa-trash"></i> Eliminar
                   </button>
                 </div>
               `;

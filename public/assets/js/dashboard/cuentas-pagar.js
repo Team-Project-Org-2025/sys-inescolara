@@ -58,11 +58,11 @@ $(document).ready(function () {
             return `
               <div class="d-flex gap-1">
                 <button class="btn btn-sm btn-outline-info btn-detalle">
-                    <i class="fas fa-eye"></i>
+                    <i class="fas fa-eye"></i> Ver
                 </button>
                 ${tieneSaldo ? `
                 <button class="btn btn-sm btn-outline-success btn-pagar">
-                    <i class="fas fa-money-bill"></i>
+                    <i class="fas fa-money-bill"></i> Pagar
                 </button>
                 ` : ''}
               </div>

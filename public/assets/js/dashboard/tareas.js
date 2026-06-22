@@ -60,14 +60,14 @@ function initAssignmentsTable() {
                 render: (d) => {
                     const id = d.id_asignacion;
                     const est = d.estatus_tarea;
-                    let btnVer = `<button class="btn btn-sm btn-outline-info btn-view-assign" title="Ver detalle"><i class="fas fa-eye"></i></button>`;
+                    let btnVer = `<button class="btn btn-sm btn-outline-info btn-view-assign" title="Ver detalle"><i class="fas fa-eye"></i> Ver</button>`;
                     let btnCompletar = '';
                     let btnCancelar = '';
                     let btnEditar = '';
                     if (est === 'pendiente') {
-                        btnEditar = `<button class="btn btn-sm btn-outline-warning btn-edit-assign" title="Editar"><i class="fas fa-pen"></i></button>`;
-                        btnCompletar = `<button class="btn btn-sm btn-outline-success btn-complete-assign" title="Completar"><i class="fas fa-check"></i></button>`;
-                        btnCancelar = `<button class="btn btn-sm btn-outline-danger btn-cancel-assign" title="Cancelar"><i class="fas fa-times"></i></button>`;
+                        btnEditar = `<button class="btn btn-sm btn-outline-warning btn-edit-assign" title="Editar"><i class="fas fa-pen"></i> Editar</button>`;
+                        btnCompletar = `<button class="btn btn-sm btn-outline-success btn-complete-assign" title="Completar"><i class="fas fa-check"></i> Completar</button>`;
+                        btnCancelar = `<button class="btn btn-sm btn-outline-danger btn-cancel-assign" title="Cancelar"><i class="fas fa-times"></i> Cancelar</button>`;
                     }
                     return `<div class="d-flex gap-1">${btnVer}${btnEditar}${btnCompletar}${btnCancelar}</div>`;
                 },

@@ -65,9 +65,9 @@ $(document).ready(function () {
           data: null,
           orderable: false,
           render: (data) => {
-            let html = `<button class="btn btn-sm btn-outline-info ver-detalle me-1" title="Ver detalle"><i class="fas fa-eye"></i></button>`;
+            let html = `<button class="btn btn-sm btn-outline-info ver-detalle me-1" title="Ver detalle"><i class="fas fa-eye"></i> Ver</button>`;
             if (data.estado_cuenta !== 'pagado') {
-              html += `<button class="btn btn-sm btn-success btn-pagar" title="Registrar pago"><i class="fas fa-money-bill-wave"></i></button>`;
+              html += `<button class="btn btn-sm btn-outline-success btn-pagar" title="Registrar pago"><i class="fas fa-money-bill-wave"></i> Pagar</button>`;
             }
             return html;
           }
