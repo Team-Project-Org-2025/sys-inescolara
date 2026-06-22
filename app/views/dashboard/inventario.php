@@ -1,5 +1,6 @@
 <?php
 include_once __DIR__ . '/../common/links.php';
+include_once __DIR__ . '/../common/modal.php';
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -41,11 +42,6 @@ include_once __DIR__ . '/../common/links.php';
                         <i class="fas fa-boxes"></i> Consolidado
                     </button>
                 </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="movements-tab" data-bs-toggle="tab" data-bs-target="#movements" type="button" role="tab">
-                        <i class="fas fa-exchange-alt"></i> Movimientos
-                    </button>
-                </li>
                 <?php if (isset($showAdjustBtn) && $showAdjustBtn): ?>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="adjustments-tab" data-bs-toggle="tab" data-bs-target="#adjustments" type="button" role="tab">
@@ -70,30 +66,6 @@ include_once __DIR__ . '/../common/links.php';
                                             <th>Unidad</th>
                                             <th>Ubicación</th>
                                             <th>Precio Unitario</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody></tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Movimientos -->
-                <div class="tab-pane fade" id="movements" role="tabpanel">
-                    <div class="card shadow-sm">
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table id="movementsTable" class="table table-striped table-hover w-100">
-                                    <thead>
-                                        <tr>
-                                            <th>Tipo Mov.</th>
-                                            <th>Ítem</th>
-                                            <th>Cliente / Destino</th>
-                                            <th>Gestor</th>
-                                            <th>Detalle</th>
-                                            <th>Fecha</th>
-                                            <th>Observación</th>
                                         </tr>
                                     </thead>
                                     <tbody></tbody>
