@@ -2,7 +2,7 @@
 
 require_once __DIR__ . '/controller_helpers.php';
 
-use SysInescolara\models\Task;
+use SysInescolara\models\Tarea;
 use SysInescolara\models\AuditLog;
 use SysInescolara\models\Employee;
 use SysInescolara\models\Lote;
@@ -39,7 +39,7 @@ function index(): void
     $toolModel = new Herramienta();
     $herramientas = $toolModel->getAll();
 
-    $view = ROOT_PATH . 'app/views/dashboard/task.php';
+    $view = ROOT_PATH . 'app/views/dashboard/tareas.php';
     if (!is_file($view)) {
         http_response_code(500);
         echo 'Vista de tareas no encontrada.';
@@ -113,7 +113,7 @@ function tasks_assignAjax(): void
         ];
     }
 
-    $model = new Task();
+    $model = new Tarea();
     $asignacionId = $model->assignTaskWithConsumptions($assignmentData, $consumptions);
 
     AuditLog::record('CREATE', 'asignar_tarea', $asignacionId, null, $assignmentData);
@@ -217,7 +217,7 @@ function tasks_editAjax(): void
         ];
     }
 
-    $model = new Task();
+    $model = new Tarea();
     $model->updateAssignmentWithConsumptions($idAsignacion, $assignmentData, $consumptions, $tools);
 
     AuditLog::record('UPDATE', 'asignar_tarea', $idAsignacion, null, $assignmentData);
@@ -239,7 +239,7 @@ function tasks_completeAssignmentAjax(): void
 
     $fechaCumplimiento = $data['fecha_cumplimiento'] ?? date('Y-m-d');
 
-    $model = new Task();
+    $model = new Tarea();
     $oldData = $model->getAssignmentById($id);
     if (!$oldData) jsonResponse(['success' => false, 'message' => 'Asignación no encontrada'], 404);
 
@@ -262,7 +262,7 @@ function tasks_cancelAssignmentAjax(): void
     $id = (int)($_POST['id'] ?? 0);
     if ($id <= 0) jsonResponse(['success' => false, 'message' => 'ID inválido'], 400);
 
-    $model = new Task();
+    $model = new Tarea();
     $oldData = $model->getAssignmentById($id);
     if (!$oldData) jsonResponse(['success' => false, 'message' => 'Asignación no encontrada'], 404);
 
@@ -273,7 +273,7 @@ function tasks_cancelAssignmentAjax(): void
 
 function tasks_getAssignmentsAjax(): void
 {
-    $model = new Task();
+    $model = new Tarea();
     $assignments = $model->getAssignments();
     jsonResponse(['success' => true, 'assignments' => $assignments, 'count' => count($assignments)]);
 }
@@ -283,7 +283,7 @@ function tasks_getAssignmentDetailAjax(): void
     $id = (int)($_GET['id'] ?? 0);
     if ($id <= 0) jsonResponse(['success' => false, 'message' => 'ID inválido'], 400);
 
-    $model = new Task();
+    $model = new Tarea();
     $assignment = $model->getAssignmentById($id);
     if (!$assignment) jsonResponse(['success' => false, 'message' => 'Asignación no encontrada'], 404);
 

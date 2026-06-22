@@ -11,7 +11,7 @@ $isPlanta = in_array($current, ['plantas', 'especies', 'ubicaciones']);
 $isActivos = in_array($current, ['inventario', 'lotes', 'trazabilidad', 'supplies', 'herramientas', 'unit-measures', 'mermas']);
 $isVenta = in_array($current, ['ventas', 'prices', 'clientes', 'cuentas-cobrar', 'cuentas-pagar', 'compras']);
 $isServicios = in_array($current, ['ornatos', 'ampliacion', 'proveedores']);
-$isTarea = in_array($current, ['tasks', 'employees', 'seed-collection']);
+$isTarea = in_array($current, ['tareas', 'employees', 'seed-collection']);
 $isConfiguracion = in_array($current, ['usuarios', 'roles', 'auditlog', 'backups']);
 
 $showInventario = hasPermiso('PLANTAS_VIEW') || hasPermiso('UBICACIONES_VIEW')
@@ -291,7 +291,7 @@ $showSistema = hasPermiso('USUARIOS_MANAGE');
                 <ul class="submenu-inner">
                     <?php if (hasPermiso('TAREAS_VIEW')): ?>
                     <li>
-                        <a href="<?= BASE_URL ?>dashboard/tasks" class="nav-link <?= $current === 'tasks' ? 'active' : '' ?>">
+                        <a href="<?= BASE_URL ?>dashboard/tareas" class="nav-link <?= $current === 'tareas' ? 'active' : '' ?>">
                             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
                             <span>Asignar tarea</span>
                         </a>

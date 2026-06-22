@@ -348,6 +348,32 @@ function employees(): void
     require $view;
 }
 
+function tareas(): void
+{
+    dashboardCheckPermiso('TAREAS_VIEW');
+
+    require_once ROOT_PATH . 'vendor/autoload.php';
+    $employeeModel = new \SysInescolara\models\Employee();
+    $trabajadores = $employeeModel->getAll();
+    $batchModel = new \SysInescolara\models\Lote();
+    $lotes = $batchModel->getAll();
+    $suppliesModel = new \SysInescolara\models\Supplies();
+    $insumos = $suppliesModel->getAll();
+    $toolModel = new \SysInescolara\models\Herramienta();
+    $herramientas = $toolModel->getAll();
+
+    $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
+        . 'dashboard' . DIRECTORY_SEPARATOR . 'tareas.php';
+
+    if (!is_file($view)) {
+        http_response_code(500);
+        echo 'Vista de tareas no encontrada.';
+        return;
+    }
+
+    require $view;
+}
+
 function clientes(): void
 {
     dashboardCheckPermiso('CLIENTES_VIEW');
