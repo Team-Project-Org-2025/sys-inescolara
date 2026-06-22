@@ -304,7 +304,7 @@ $userAvatar = \SysInescolara\helpers\Auth::avatar();
             <div class="quick-actions">
                 <a href="<?= BASE_URL ?>dashboard/plantas" class="quick-action-btn"><i class="fas fa-plus-circle" style="color:var(--color-secondary);"></i> Nueva Planta</a>
                 <a href="<?= BASE_URL ?>dashboard/lotes" class="quick-action-btn"><i class="fas fa-plus-circle" style="color:#e5a835;"></i> Nuevo Lote</a>
-                <a href="<?= BASE_URL ?>dashboard/supplies" class="quick-action-btn"><i class="fas fa-plus-circle" style="color:#f59e0b;"></i> Nuevo Insumo</a>
+                <a href="<?= BASE_URL ?>dashboard/insumos" class="quick-action-btn"><i class="fas fa-plus-circle" style="color:#f59e0b;"></i> Nuevo Insumo</a>
                 <a href="<?= BASE_URL ?>dashboard/clientes" class="quick-action-btn"><i class="fas fa-plus-circle" style="color:#2e7d32;"></i> Nuevo Cliente</a>
                 <a href="<?= BASE_URL ?>dashboard/tareas" class="quick-action-btn"><i class="fas fa-plus-circle" style="color:#0ea5e9;"></i> Nueva Tarea</a>
                 <a href="<?= BASE_URL ?>dashboard/ventas" class="quick-action-btn"><i class="fas fa-shopping-cart" style="color:#2e7d32;"></i> Nueva Venta</a>
@@ -370,7 +370,7 @@ $userAvatar = \SysInescolara\helpers\Auth::avatar();
 
                 <div class="section-divider"><i class="fas fa-boxes-stacked"></i> Inventario y Suministros</div>
 
-                <a href="<?= BASE_URL ?>dashboard/supplies" class="text-decoration-none">
+                <a href="<?= BASE_URL ?>dashboard/insumos" class="text-decoration-none">
                 <div class="kpi-card">
                     <div class="kpi-card-header">
                         <span class="kpi-card-title">Insumos</span>

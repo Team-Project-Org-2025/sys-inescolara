@@ -4,7 +4,7 @@ require_once __DIR__ . '/controller_helpers.php';
 
 use SysInescolara\models\Purchase;
 use SysInescolara\models\Proveedor;
-use SysInescolara\models\Supplies;
+use SysInescolara\models\Insumo;
 use SysInescolara\models\Ubicacion;
 use SysInescolara\models\Planta;
 use SysInescolara\models\CuentaPagar;
@@ -35,7 +35,7 @@ function index(): void
 
     $modeloProveedor = new Proveedor();
     $proveedores = $modeloProveedor->getAll();
-    $modeloInsumo = new Supplies();
+    $modeloInsumo = new Insumo();
     $insumos = $modeloInsumo->getAll();
     $modeloUbicacion = new Ubicacion();
     $ubicaciones = $modeloUbicacion->getAll();

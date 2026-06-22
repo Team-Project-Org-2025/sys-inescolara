@@ -3,8 +3,8 @@ import * as Ajax from '../utils/ajax-handler.js';
 import { setupRealTimeValidation, validateForm } from '../utils/validation.js';
 
 $(document).ready(function () {
-  const baseUrl = `${window.BASE_URL || '/'}supplies`;
-  let suppliesTable = null;
+  const baseUrl = `${window.BASE_URL || '/'}insumos`;
+  let insumosTable = null;
 
   const supplyRules = {
     nombre_insumo: 'nombre',
@@ -15,9 +15,9 @@ $(document).ready(function () {
 
   const initDataTable = () => {
     if (typeof SkeletonHelper !== 'undefined') {
-      SkeletonHelper.showTableSkeleton('suppliesTable', 5, 6);
+      SkeletonHelper.showTableSkeleton('insumosTable', 5, 6);
     }
-    suppliesTable = $('#suppliesTable').DataTable({
+    insumosTable = $('#insumosTable').DataTable({
       ajax: {
         url: `${baseUrl}?action=get_supplies`,
         method: 'GET',
@@ -73,9 +73,9 @@ $(document).ready(function () {
           className: 'btn btn-outline-secondary btn-sm',
           action: () => {
             if (typeof SkeletonHelper !== 'undefined') {
-              SkeletonHelper.showTableSkeleton('suppliesTable', 5, 6);
+              SkeletonHelper.showTableSkeleton('insumosTable', 5, 6);
             }
-            suppliesTable.ajax.reload(null, false);
+            insumosTable.ajax.reload(null, false);
           },
         },
       ],
@@ -111,7 +111,7 @@ $(document).ready(function () {
         if (response.success) {
           Helpers.toast('success', 'Insumo agregado correctamente');
           $('#addSupplyModal').modal('hide');
-          suppliesTable.ajax.reload(null, false);
+          insumosTable.ajax.reload(null, false);
         } else {
           Helpers.toast('error', response.message);
         }
@@ -123,7 +123,7 @@ $(document).ready(function () {
 
   // Abrir Modal Editar Insumo
   $(document).on('click', '.btn-edit', function () {
-    const row = suppliesTable.row($(this).closest('tr')).data();
+    const row = insumosTable.row($(this).closest('tr')).data();
 
     const $addModal = $('#addSupplyModal');
     if ($addModal.hasClass('show')) {
@@ -161,7 +161,7 @@ $(document).ready(function () {
         if (response.success) {
           Helpers.toast('success', 'Insumo actualizado correctamente');
           $('#editSupplyModal').modal('hide');
-          suppliesTable.ajax.reload(null, false);
+          insumosTable.ajax.reload(null, false);
         } else {
           Helpers.toast('error', response.message);
         }
@@ -173,7 +173,7 @@ $(document).ready(function () {
 
   // Eliminar Insumo
   $(document).on('click', '.btn-delete', function () {
-    const row = suppliesTable.row($(this).closest('tr')).data();
+    const row = insumosTable.row($(this).closest('tr')).data();
     const id = row.id_insumo;
     const nombre = row.nombre_insumo;
 
@@ -185,7 +185,7 @@ $(document).ready(function () {
           .then((response) => {
             if (response.success) {
               Helpers.toast('success', 'Insumo eliminado correctamente');
-              suppliesTable.ajax.reload(null, false);
+              insumosTable.ajax.reload(null, false);
             } else {
               Helpers.toast('error', response.message);
             }

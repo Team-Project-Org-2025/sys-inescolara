@@ -3,7 +3,7 @@
 require_once __DIR__ . '/controller_helpers.php';
 
 use SysInescolara\models\Inventory;
-use SysInescolara\models\Supplies;
+use SysInescolara\models\Insumo;
 use SysInescolara\models\Empleado;
 use SysInescolara\models\AuditLog;
 
@@ -26,7 +26,7 @@ function index(): void
         return;
     }
 
-    $supplyModel = new Supplies();
+    $supplyModel = new Insumo();
     $supplies = $supplyModel->getAll();
     $employeeModel = new Empleado();
     $employees = $employeeModel->getAll();
@@ -85,7 +85,7 @@ function inventory_addAdjustmentAjax(): void
     if ($fecha === '') throw new \Exception('La fecha es requerida.');
 
     $model = new Inventory();
-    $supplyModel = new Supplies();
+    $supplyModel = new Insumo();
 
     $oldSupply = $supplyModel->getById($idInsumo);
 

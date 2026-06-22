@@ -14,7 +14,7 @@ include_once __DIR__ . '/../common/links.php';
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
     
     <?php 
-    $currentPage = 'supplies'; 
+    $currentPage = 'insumos'; 
     include_once __DIR__ . '/../partials/sidebar.php'; 
     ?>
     
@@ -36,7 +36,7 @@ include_once __DIR__ . '/../common/links.php';
             <div class="card shadow-sm">
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table id="suppliesTable" class="table table-striped table-hover w-100">
+                        <table id="insumosTable" class="table table-striped table-hover w-100">
                             <thead>
                                 <tr>
                                     <th>Nombre del Insumo</th>
@@ -152,6 +152,6 @@ include_once __DIR__ . '/../common/links.php';
 
     <script src="<?= BASE_URL ?>public/assets/js/dashboard/notifications.js"></script>
     <?= $scripts_links ?>
-    <script type="module" src="<?= BASE_URL ?>public/assets/js/dashboard/supplies.js"></script>
+    <script type="module" src="<?= BASE_URL ?>public/assets/js/dashboard/insumos.js"></script>
 </body>
 </html>

@@ -83,7 +83,7 @@ function inventario(): void
     dashboardCheckPermiso('INVENTARIO_VIEW');
 
     require_once ROOT_PATH . 'vendor/autoload.php';
-    $supplyModel = new \SysInescolara\models\Supplies();
+    $supplyModel = new \SysInescolara\models\Insumo();
     $supplies = $supplyModel->getAll();
     $employeeModel = new \SysInescolara\models\Empleado();
     $employees = $employeeModel->getAll();
@@ -258,7 +258,7 @@ function proveedores(): void
     require $view;
 }
 
-function supplies(): void
+function insumos(): void
 {
     dashboardCheckPermiso('INSUMOS_VIEW');
 
@@ -267,7 +267,7 @@ function supplies(): void
     $unidades = $unidadMedidaModel->getAll();
 
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
-        . 'dashboard' . DIRECTORY_SEPARATOR . 'supplies.php';
+        . 'dashboard' . DIRECTORY_SEPARATOR . 'insumos.php';
 
     if (!is_file($view)) {
         http_response_code(500);
@@ -285,7 +285,7 @@ function compras(): void
     require_once ROOT_PATH . 'vendor/autoload.php';
     $supplierModel = new \SysInescolara\models\Proveedor();
     $proveedores = $supplierModel->getAll();
-    $supplyModel = new \SysInescolara\models\Supplies();
+    $supplyModel = new \SysInescolara\models\Insumo();
     $insumos = $supplyModel->getAll();
     $locationModel = new \SysInescolara\models\Ubicacion();
     $ubicaciones = $locationModel->getAll();
@@ -309,7 +309,7 @@ function tasks(): void
     $trabajadores = $employeeModel->getAll();
     $batchModel = new \SysInescolara\models\Lote();
     $lotes = $batchModel->getAll();
-    $suppliesModel = new \SysInescolara\models\Supplies();
+    $suppliesModel = new \SysInescolara\models\Insumo();
     $insumos = $suppliesModel->getAll();
     $toolModel = new \SysInescolara\models\Herramienta();
     $herramientas = $toolModel->getAll();
@@ -357,7 +357,7 @@ function tareas(): void
     $trabajadores = $employeeModel->getAll();
     $batchModel = new \SysInescolara\models\Lote();
     $lotes = $batchModel->getAll();
-    $suppliesModel = new \SysInescolara\models\Supplies();
+    $suppliesModel = new \SysInescolara\models\Insumo();
     $insumos = $suppliesModel->getAll();
     $toolModel = new \SysInescolara\models\Herramienta();
     $herramientas = $toolModel->getAll();

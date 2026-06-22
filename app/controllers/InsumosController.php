@@ -2,7 +2,7 @@
 
 require_once __DIR__ . '/controller_helpers.php';
 
-use SysInescolara\models\Supplies;
+use SysInescolara\models\Insumo;
 use SysInescolara\models\UnidadMedida;
 use SysInescolara\models\AuditLog;
 
@@ -28,7 +28,7 @@ function index(): void
     $unidadMedidaModel = new UnidadMedida();
     $unidades = $unidadMedidaModel->getAll();
 
-    $view = ROOT_PATH . 'app/views/dashboard/supplies.php';
+    $view = ROOT_PATH . 'app/views/dashboard/insumos.php';
     if (!is_file($view)) {
         http_response_code(500);
         echo 'Vista de insumos no encontrada.';
@@ -44,7 +44,7 @@ function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('INSUMOS_DE
 
 function supplies_handleAddEdit(string $mode): void
 {
-    $model = new Supplies();
+    $model = new Insumo();
     $nombre = trim((string)($_POST['nombre_insumo'] ?? ''));
     if ($nombre === '') {
         throw new \Exception('El nombre del insumo es requerido.');
@@ -94,7 +94,7 @@ function supplies_handleAddEdit(string $mode): void
 
 function supplies_handleDelete(): void
 {
-    $model = new Supplies();
+    $model = new Insumo();
     $id = (int)($_POST['id'] ?? 0);
     if ($id <= 0) throw new \Exception('ID inválido');
     if (!$model->exists($id)) throw new \Exception('No existe el insumo');
@@ -107,7 +107,7 @@ function supplies_handleDelete(): void
 
 function supplies_getSuppliesAjax(): void
 {
-    $model = new Supplies();
+    $model = new Insumo();
     $supplies = $model->getAll();
     jsonResponse(['success' => true, 'supplies' => $supplies, 'count' => count($supplies)]);
 }
