@@ -3,7 +3,7 @@
 require_once __DIR__ . '/controller_helpers.php';
 
 use SysInescolara\models\CuentaCobrar;
-use SysInescolara\models\Employee;
+use SysInescolara\models\Empleado;
 use SysInescolara\models\AuditLog;
 
 function index(): void
@@ -27,7 +27,7 @@ function index(): void
         return;
     }
 
-    $employeeModel = new Employee();
+    $employeeModel = new Empleado();
     $employees = $employeeModel->getAll();
 
     $canPay = \SysInescolara\helpers\Auth::hasPermiso('CUENTAS_COBRAR_PAY');

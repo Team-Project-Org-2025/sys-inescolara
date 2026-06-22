@@ -468,7 +468,7 @@ $userAvatar = \SysInescolara\helpers\Auth::avatar();
 
                 <div class="section-divider"><i class="fas fa-cog"></i> Personal y Configuración</div>
 
-                <a href="<?= BASE_URL ?>dashboard/employees" class="text-decoration-none">
+                <a href="<?= BASE_URL ?>dashboard/empleados" class="text-decoration-none">
                 <div class="kpi-card">
                     <div class="kpi-card-header">
                         <span class="kpi-card-title">Empleados</span>

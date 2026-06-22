@@ -4,7 +4,7 @@ require_once __DIR__ . '/controller_helpers.php';
 
 use SysInescolara\models\Inventory;
 use SysInescolara\models\Supplies;
-use SysInescolara\models\Employee;
+use SysInescolara\models\Empleado;
 use SysInescolara\models\AuditLog;
 
 function index(): void
@@ -28,7 +28,7 @@ function index(): void
 
     $supplyModel = new Supplies();
     $supplies = $supplyModel->getAll();
-    $employeeModel = new Employee();
+    $employeeModel = new Empleado();
     $employees = $employeeModel->getAll();
 
     $showAdjustBtn = \SysInescolara\helpers\Auth::hasPermiso('INVENTARIO_ADJUST');

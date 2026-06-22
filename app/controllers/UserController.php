@@ -4,7 +4,7 @@ require_once __DIR__ . '/controller_helpers.php';
 
 use SysInescolara\models\User;
 use SysInescolara\models\AuditLog;
-use SysInescolara\models\Employee;
+use SysInescolara\models\Empleado;
 
 function index(): void
 {
@@ -28,7 +28,7 @@ function index(): void
     $model = new User();
     $roles = $model->getRoles();
     $allPermisos = $model->getAllPermissions();
-    $employeeModel = new Employee();
+    $employeeModel = new Empleado();
     $trabajadores = $employeeModel->getAll();
 
     $view = ROOT_PATH . 'app/views/dashboard/usuarios.php';
