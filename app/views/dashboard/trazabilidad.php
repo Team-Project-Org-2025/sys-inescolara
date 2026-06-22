@@ -72,7 +72,7 @@ include_once __DIR__ . '/../common/modal.php';
             </div>
             <div class="col-md-6">
                 <label class="form-label" for="cantidad">Cantidad a Apartar <span class="text-danger">*</span></label>
-                <input type="number" class="form-control" name="cantidad" id="cantidad" min="1" required>
+                <input type="number" class="form-control" name="cantidad" id="cantidad" min="1" step="1" required>
                 <div class="form-text">Cantidad de ejemplares que pasarán a cuarentena.</div>
             </div>
             <div class="col-md-6">
