@@ -1,19 +1,6 @@
-import * as Helpers from '../utils/helpers.js';
-import * as Ajax from '../utils/ajax-handler.js';
-import { setupRealTimeValidation, validateForm } from '../utils/validation.js';
-
 $(document).ready(function () {
   const baseUrl = `${window.BASE_URL || '/'}inventario`;
   let consolidatedTable = null;
-  let adjustmentsTable = null;
-
-  const adjustmentRules = {
-    id_insumo: 'select',
-    id_trabajador: 'select',
-    tipo_ajuste: 'select',
-    cantidad: 'cantidad',
-    fecha_ajuste: 'fechaFuturaCheck'
-  };
 
   const initConsolidatedTable = () => {
     if (typeof SkeletonHelper !== 'undefined') {
@@ -86,113 +73,6 @@ $(document).ready(function () {
     });
   };
 
-  const initAdjustmentsTable = () => {
-    if (typeof SkeletonHelper !== 'undefined') {
-      SkeletonHelper.showTableSkeleton('adjustmentsTable', 5, 6);
-    }
-    adjustmentsTable = $('#adjustmentsTable').DataTable({
-      ajax: {
-        url: `${baseUrl}?action=get_adjustments`,
-        method: 'GET',
-        dataType: 'json',
-        headers: { 'X-Requested-With': 'XMLHttpRequest' },
-        dataSrc: 'data',
-      },
-      columns: [
-        { data: 'nombre_insumo' },
-        { data: 'trabajador' },
-        {
-          data: 'tipo_ajuste',
-          render: (data) => {
-            const cls = data === 'entrada' ? 'move-type-entrada' : 'move-type-salida';
-            const icon = data === 'entrada' ? 'fa-arrow-down' : 'fa-arrow-up';
-            return `<span class="move-type ${cls}"><i class="fas ${icon}"></i>${data.charAt(0).toUpperCase() + data.slice(1)}</span>`;
-          },
-        },
-        { data: 'cantidad', render: (data) => Number(data).toLocaleString() },
-        {
-          data: 'motivo',
-          render: (data) => {
-            if (!data) return '<span class="text-muted">—</span>';
-            const escaped = Helpers.escapeHtml(data);
-            return escaped.length > 80
-              ? `<span title="${escaped}">${Helpers.truncateText(escaped, 80)}</span>`
-              : escaped;
-          },
-        },
-        { data: 'fecha_ajuste' },
-      ],
-      pageLength: 10,
-      responsive: true,
-      autoWidth: false,
-      order: [[5, 'desc']],
-      language: {
-        url: 'https://cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json',
-      },
-      dom: '<"d-flex justify-content-between align-items-center mb-2"lfB>tip',
-      buttons: [
-        {
-          text: '<i class="fas fa-sync-alt"></i> Actualizar',
-          className: 'btn btn-outline-secondary btn-sm',
-          action: () => {
-            if (typeof SkeletonHelper !== 'undefined') {
-              SkeletonHelper.showTableSkeleton('adjustmentsTable', 5, 6);
-            }
-            adjustmentsTable.ajax.reload(null, false);
-          },
-        },
-      ],
-    });
-  };
-
-  // Open adjustment modal
-  $('#btnNewAdjustment').on('click', function () {
-    $('#adjustmentModal').modal({ focus: false }).modal('show');
-  });
-
-  // Save adjustment
-  $('#adjustmentForm').on('submit', function (e) {
-    e.preventDefault();
-    if (!validateForm($(this), adjustmentRules)) return;
-    const formData = new FormData(this);
-
-    $.ajax({
-      url: `${baseUrl}?action=add_adjustment`,
-      method: 'POST',
-      data: formData,
-      processData: false,
-      contentType: false,
-      headers: { 'X-Requested-With': 'XMLHttpRequest' },
-      dataType: 'json',
-    })
-      .done((response) => {
-        if (response.success) {
-          Helpers.toast('success', response.message);
-          $('#adjustmentModal').modal('hide');
-          if (adjustmentsTable) adjustmentsTable.ajax.reload(null, false);
-          if (consolidatedTable) consolidatedTable.ajax.reload(null, false);
-        } else {
-          Helpers.toast('error', response.message);
-        }
-      })
-      .fail((err) => {
-        Helpers.toast('error', err.responseJSON?.message || 'Error al registrar ajuste');
-      });
-  });
-
-  // Reset form on modal close
-  $('#adjustmentModal').on('hidden.bs.modal', function () {
-    const $form = $(this).find('form');
-    Helpers.resetForm($form);
-  });
-
-  if ($('#adjustmentForm').length) {
-    setupRealTimeValidation($('#adjustmentForm'), adjustmentRules);
-  }
-
   // Init tables
   initConsolidatedTable();
-  if ($('#adjustmentsTable').length) {
-    initAdjustmentsTable();
-  }
 });
