@@ -3,22 +3,10 @@
 namespace SysInescolara\models;
 
 use SysInescolara\core\Database;
-use SysInescolara\traits\ValidationTrait;
 use PDO;
 
 class Inventory extends Database
 {
-    use ValidationTrait;
-
-    protected array $validationRules = [
-        'id_insumo'    => ['type' => null,      'required' => true],
-        'id_trabajador'=> ['type' => null,      'required' => true],
-        'tipo_ajuste'  => ['type' => null,      'required' => true],
-        'cantidad'     => ['type' => 'cantidad','required' => true],
-        'motivo'       => ['type' => null,      'required' => true],
-        'fecha'        => ['type' => null,      'required' => true],
-    ];
-
     public function __construct()
     {
         parent::__construct();
@@ -109,87 +97,4 @@ class Inventory extends Database
         }
     }
 
-    public function getAdjustments(): array
-    {
-        try {
-            $this->db()->exec("SET NAMES 'utf8mb4' COLLATE 'utf8mb4_unicode_ci'");
-            $sql = "
-                SELECT
-                    a.id_ajuste,
-                    i.nombre_insumo,
-                    CONCAT(t.nombre_trabajador, ' ', t.apellido_trabajador) AS trabajador,
-                    a.tipo_ajuste,
-                    a.cantidad,
-                    a.motivo,
-                    a.fecha_ajuste
-                FROM ajuste_inventario a
-                LEFT JOIN insumo i ON a.id_insumo = i.id_insumo
-                LEFT JOIN trabajadores t ON a.id_trabajador = t.id_trabajador
-                ORDER BY a.fecha_ajuste DESC
-                LIMIT 200
-            ";
-            $stmt = $this->db()->query($sql);
-            return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
-        } catch (\Throwable $e) {
-            error_log('Error en Inventory::getAdjustments: ' . $e->getMessage());
-            return [];
-        }
-    }
-
-    public function addAdjustment(int $idInsumo, int $idTrabajador, string $tipoAjuste, float $cantidad, string $motivo, string $fecha): bool
-    {
-        $this->validateData([
-            'id_insumo' => $idInsumo,
-            'id_trabajador' => $idTrabajador,
-            'tipo_ajuste' => $tipoAjuste,
-            'cantidad' => $cantidad,
-            'motivo' => $motivo,
-            'fecha' => $fecha,
-        ]);
-        try {
-            $stmt = $this->db()->prepare("
-                INSERT INTO ajuste_inventario (id_insumo, id_trabajador, tipo_ajuste, cantidad, motivo, fecha_ajuste)
-                VALUES (:id_insumo, :id_trabajador, :tipo_ajuste, :cantidad, :motivo, :fecha)
-            ");
-            return $stmt->execute([
-                ':id_insumo' => $idInsumo,
-                ':id_trabajador' => $idTrabajador,
-                ':tipo_ajuste' => $tipoAjuste,
-                ':cantidad' => $cantidad,
-                ':motivo' => $motivo,
-                ':fecha' => $fecha,
-            ]);
-        } catch (\Throwable $e) {
-            error_log('Error en Inventory::addAdjustment: ' . $e->getMessage());
-            throw $e;
-        }
-    }
-
-    public function updateSupplyStock(int $idInsumo, float $cantidad, string $tipoAjuste): bool
-    {
-        try {
-            $stmt = $this->db()->prepare("
-                UPDATE insumo
-                SET stock_actual = GREATEST(0, stock_actual + :cantidad * CASE WHEN :tipo = 'entrada' THEN 1 ELSE -1 END)
-                WHERE id_insumo = :id
-            ");
-            return $stmt->execute([
-                ':tipo' => $tipoAjuste,
-                ':cantidad' => $cantidad,
-                ':id' => $idInsumo,
-            ]);
-        } catch (\Throwable $e) {
-            error_log('Error en Inventory::updateSupplyStock: ' . $e->getMessage());
-            throw $e;
-        }
-    }
-
-    public function getLastInsertId(): ?int
-    {
-        try {
-            return (int)$this->db()->lastInsertId();
-        } catch (\Throwable $e) {
-            return null;
-        }
-    }
 }
