@@ -75,4 +75,10 @@ $(document).ready(function () {
 
   // Init tables
   initConsolidatedTable();
+
+  // Filter by type
+  $('#filterTipo').on('change', function () {
+    const val = $(this).val();
+    consolidatedTable.column(0).search(val ? `^${val}$` : '', true, false).draw();
+  });
 });
