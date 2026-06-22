@@ -14,7 +14,7 @@ include_once __DIR__ . '/../common/links.php';
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
     <?php
-    $currentPage = 'prices';
+    $currentPage = 'precios';
     include_once __DIR__ . '/../partials/sidebar.php';
     ?>
 
@@ -137,13 +137,13 @@ include_once __DIR__ . '/../common/links.php';
             <div class="card shadow-sm">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <span>Precios Registrados</span>
-                    <button class="btn btn-outline-secondary btn-sm" onclick="if(typeof pricesTable !== 'undefined') pricesTable.ajax.reload(null, false)">
+                    <button class="btn btn-outline-secondary btn-sm" onclick="if(typeof preciosTable !== 'undefined') preciosTable.ajax.reload(null, false)">
                         <i class="fas fa-sync-alt"></i> Actualizar
                     </button>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table id="pricesTable" class="table table-striped table-hover w-100">
+                        <table id="preciosTable" class="table table-striped table-hover w-100">
                             <thead>
                                 <tr>
                                     <th>Lote</th>
@@ -166,6 +166,6 @@ include_once __DIR__ . '/../common/links.php';
 
     <script src="<?= BASE_URL ?>public/assets/js/dashboard/notifications.js"></script>
     <?= $scripts_links ?>
-    <script type="module" src="<?= BASE_URL ?>public/assets/js/dashboard/prices.js?v=<?= filemtime(ROOT_PATH . 'public/assets/js/dashboard/prices.js') ?>"></script>
+    <script type="module" src="<?= BASE_URL ?>public/assets/js/dashboard/precios.js?v=<?= filemtime(ROOT_PATH . 'public/assets/js/dashboard/precios.js') ?>"></script>
 </body>
 </html>
