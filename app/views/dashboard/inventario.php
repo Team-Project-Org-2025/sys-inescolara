@@ -30,11 +30,10 @@ include_once __DIR__ . '/../common/links.php';
 
             <div class="card shadow-sm">
                 <div class="card-body">
-                    <div class="inventory-filters">
-                        <div class="d-flex align-items-center gap-2">
-                            <i class="fas fa-filter text-muted"></i>
-                            <label for="filterTipo" class="form-label mb-0 text-nowrap">Tipo:</label>
-                            <select id="filterTipo" class="form-select form-select-sm" style="width:auto;min-width:140px">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <label for="filterTipo" class="form-label mb-0 me-2">Filtrar por tipo:</label>
+                            <select id="filterTipo" class="form-select form-select-sm d-inline-block w-auto">
                                 <option value="">Todos</option>
                                 <option value="Planta">Plantas</option>
                                 <option value="Insumo">Insumos</option>
