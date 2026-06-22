@@ -617,12 +617,12 @@ function precios(): void
     require $view;
 }
 
-function unitMeasures(): void
+function unidadesMedida(): void
 {
     dashboardCheckPermiso('UNIDADES_MEDIDA_VIEW');
 
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
-        . 'dashboard' . DIRECTORY_SEPARATOR . 'unit-measures.php';
+        . 'dashboard' . DIRECTORY_SEPARATOR . 'unidades-medida.php';
 
     if (!is_file($view)) {
         http_response_code(500);
