@@ -1,6 +1,7 @@
 import * as Helpers from '../utils/helpers.js';
 import * as Ajax from '../utils/ajax-handler.js';
 import { setupRealTimeValidation, validateForm, clearValidation } from '../utils/validation.js';
+import * as C from '../utils/components.js';
 
 $(document).ready(function () {
   const baseUrl = `${window.BASE_URL || '/'}lotes`;
@@ -104,16 +105,10 @@ $(document).ready(function () {
           data: null,
           orderable: false,
           render: () => {
-            return `
-              <div class="d-flex gap-1">
-                <button class="btn btn-sm btn-outline-primary btn-edit">
-                    <i class="fas fa-edit"></i> Editar
-                </button>
-                <button class="btn btn-sm btn-outline-danger btn-delete">
-                    <i class="fas fa-trash"></i> Eliminar
-                </button>
-              </div>
-            `;
+            return C.btnGroup(
+              C.btnEdit('btn-edit'),
+              C.btnDelete('btn-delete'),
+            );
           },
         },
       ],

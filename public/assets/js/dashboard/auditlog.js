@@ -1,4 +1,5 @@
 import * as Helpers from '../utils/helpers.js';
+import * as C from '../utils/components.js';
 
 const actionBadge = (action) => {
   const map = {
@@ -59,7 +60,7 @@ $(document).ready(function () {
             const hasOld = data.valor_anterior && data.valor_anterior !== 'null';
             const hasNew = data.valor_nuevo && data.valor_nuevo !== 'null';
             if (!hasOld && !hasNew) return '—';
-            return `<button class="btn btn-sm btn-outline-info btn-detail"><i class="fas fa-eye"></i> Ver</button>`;
+            return C.btnView('btn-detail');
           },
         },
       ],

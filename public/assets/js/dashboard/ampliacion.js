@@ -1,6 +1,7 @@
 import * as Helpers from '../utils/helpers.js';
 import * as Ajax from '../utils/ajax-handler.js';
 import { setupRealTimeValidation, validateForm, clearValidation } from '../utils/validation.js';
+import * as C from '../utils/components.js';
 
 $(document).ready(function () {
   const baseUrl = `${window.BASE_URL || '/'}ampliacion`;
@@ -63,18 +64,10 @@ $(document).ready(function () {
         {
           data: null,
           orderable: false,
-          render: () => {
-            return `
-              <div class="d-flex gap-1">
-                <button class="btn btn-sm btn-outline-info btn-view">
-                  <i class="fas fa-eye"></i> Ver
-                </button>
-                <button class="btn btn-sm btn-outline-danger btn-delete">
-                  <i class="fas fa-trash"></i> Eliminar
-                </button>
-              </div>
-            `;
-          },
+          render: () => C.btnGroup(
+              C.btnView('btn-view'),
+              C.btnDelete('btn-delete')
+            ),
         },
       ],
       pageLength: 10,

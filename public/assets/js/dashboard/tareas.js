@@ -1,6 +1,7 @@
 import * as Helpers from '../utils/helpers.js';
 import * as Ajax from '../utils/ajax-handler.js';
 import { setupRealTimeValidation, validateForm } from '../utils/validation.js';
+import * as C from '../utils/components.js';
 
 const DATA = window.TASK_DATA || {};
 const baseUrl = DATA.tasksUrl || `${window.BASE_URL || '/'}tareas`;
@@ -58,18 +59,17 @@ function initAssignmentsTable() {
                 data: null,
                 orderable: false,
                 render: (d) => {
-                    const id = d.id_asignacion;
                     const est = d.estatus_tarea;
-                    let btnVer = `<button class="btn btn-sm btn-outline-info btn-view-assign" title="Ver detalle"><i class="fas fa-eye"></i> Ver</button>`;
+                    let btnVer = C.btnView('btn-view-assign', 'title="Ver detalle"');
                     let btnCompletar = '';
                     let btnCancelar = '';
                     let btnEditar = '';
                     if (est === 'pendiente') {
-                        btnEditar = `<button class="btn btn-sm btn-outline-warning btn-edit-assign" title="Editar"><i class="fas fa-pen"></i> Editar</button>`;
-                        btnCompletar = `<button class="btn btn-sm btn-outline-success btn-complete-assign" title="Completar"><i class="fas fa-check"></i> Completar</button>`;
-                        btnCancelar = `<button class="btn btn-sm btn-outline-danger btn-cancel-assign" title="Cancelar"><i class="fas fa-times"></i> Cancelar</button>`;
+                        btnEditar = C.btnCustom({ label: 'Editar', icon: 'fa-pen', className: 'btn-edit-assign', btnClass: 'btn-outline-warning', extraAttrs: 'title="Editar"' });
+                        btnCompletar = C.btnComplete('btn-complete-assign', 'title="Completar"');
+                        btnCancelar = C.btnCancel('btn-cancel-assign', 'title="Cancelar"');
                     }
-                    return `<div class="d-flex gap-1">${btnVer}${btnEditar}${btnCompletar}${btnCancelar}</div>`;
+                    return C.btnGroup(btnVer, btnEditar, btnCompletar, btnCancelar);
                 },
             },
         ],

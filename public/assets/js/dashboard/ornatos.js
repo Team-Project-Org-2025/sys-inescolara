@@ -1,6 +1,7 @@
 import * as Ayuda from '../utils/helpers.js';
 import * as Ajax from '../utils/ajax-handler.js';
 import { setupRealTimeValidation, validateForm } from '../utils/validation.js';
+import * as C from '../utils/components.js';
 
 const urlBase = `${window.BASE_URL || '/'}ornatos`;
 let tablaOrnatos = null;
@@ -49,17 +50,10 @@ function inicializarTabla()
                 data: null,
                 orderable: false,
                 render: () => {
-                    const d = Ayuda.escapeHtml;
-                    return `
-                        <div class="d-flex gap-1">
-                            <button class="btn btn-sm btn-outline-primary btn-editar">
-                                <i class="fas fa-edit"></i> Editar
-                            </button>
-                            <button class="btn btn-sm btn-outline-danger btn-eliminar">
-                                <i class="fas fa-trash"></i> Eliminar
-                            </button>
-                        </div>
-                    `;
+                    return C.btnGroup(
+                        C.btnEdit('btn-editar'),
+                        C.btnDelete('btn-eliminar'),
+                    );
                 },
             },
         ],

@@ -1,6 +1,7 @@
 import * as Helpers from '../utils/helpers.js';
 import * as Ajax from '../utils/ajax-handler.js';
 import { setupRealTimeValidation, validateForm, clearValidation } from '../utils/validation.js';
+import * as C from '../utils/components.js';
 
 $(document).ready(function () {
   const baseUrl = `${window.BASE_URL || '/'}recoleccion`;
@@ -55,36 +56,27 @@ $(document).ready(function () {
           data: null,
           orderable: false,
           render: (data) => {
-            let html = '<div class="d-flex gap-1">';
+            const btns = [];
 
             if (data.estatus === 'Pendiente') {
-              html += `
-                <button class="btn btn-sm btn-outline-primary btn-edit">
-                  <i class="fas fa-edit"></i> Editar
-                </button>
-                <button class="btn btn-sm btn-outline-success btn-completar">
-                  <i class="fas fa-check"></i> Completar
-                </button>
-                <button class="btn btn-sm btn-outline-danger btn-delete">
-                  <i class="fas fa-trash"></i> Eliminar
-                </button>
-              `;
+              btns.push(
+                C.btnEdit('btn-edit'),
+                C.btnComplete('btn-completar'),
+                C.btnDelete('btn-delete'),
+              );
             }
 
             if (data.estatus === 'Realizada' && (!data.total_detalles || parseInt(data.total_detalles) === 0)) {
-              html += `
-                <button class="btn btn-sm btn-outline-info btn-registrar-insumo">
-                  <i class="fas fa-seedling"></i> Registrar Insumo
-                </button>
-              `;
+              btns.push(
+                C.btnCustom({ label: 'Registrar Insumo', icon: 'fa-seedling', className: 'btn-registrar-insumo', btnClass: 'btn-outline-info' }),
+              );
             }
 
             if (data.total_detalles && parseInt(data.total_detalles) > 0) {
-              html += `<span class="text-success" style="font-size:0.85rem;"><i class="fas fa-check-circle"></i> ${data.total_detalles} tipo(s)</span>`;
+              btns.push(`<span class="text-success" style="font-size:0.85rem;"><i class="fas fa-check-circle"></i> ${data.total_detalles} tipo(s)</span>`);
             }
 
-            html += '</div>';
-            return html;
+            return `<div class="d-flex gap-1">${btns.join('')}</div>`;
           },
         },
       ],

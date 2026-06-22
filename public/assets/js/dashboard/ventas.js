@@ -1,6 +1,7 @@
 const urlBaseVentas = `${window.BASE_URL || '/'}ventas`;
 
 import { setupRealTimeValidation, validateForm } from '../utils/validation.js';
+import * as C from '../utils/components.js';
 
 const ventasRules = {
   id_cliente: 'select',
@@ -81,11 +82,11 @@ const Ventas = {
                     orderable: false,
                     render: (r) => {
                         const btns = [
-                            `<button class="btn btn-sm btn-outline-info ver-detalle" title="Ver"><i class="fas fa-eye"></i> Ver</button>`,
-                            `<a href="${urlBaseVentas}?accion=comprobante&id=${r.id_venta}" class="btn btn-sm btn-outline-success btn-pdf-download" title="PDF"><i class="fas fa-file-pdf"></i> PDF</a>`
+                            C.btnView('ver-detalle'),
+                            C.btnLink({ label: 'PDF', icon: 'fa-file-pdf', href: `${urlBaseVentas}?accion=comprobante&id=${r.id_venta}`, className: 'btn-pdf-download', btnClass: 'btn-outline-success', extraAttrs: 'title="PDF"' }),
                         ];
                         if (r.estado === 'pendiente') {
-                            btns.push(`<button class="btn btn-sm btn-outline-danger cancelar-venta" title="Anular"><i class="fas fa-ban"></i> Anular</button>`);
+                            btns.push(C.btnCustom({ label: 'Anular', icon: 'fa-ban', className: 'cancelar-venta', btnClass: 'btn-outline-danger' }));
                         }
                         return `<div class="d-flex gap-1 justify-content-center">${btns.join('')}</div>`;
                     }

@@ -1,6 +1,7 @@
 import * as Validations from '../utils/validation.js';
 import * as Helpers from '../utils/helpers.js';
 import * as Ajax from '../utils/ajax-handler.js';
+import * as C from '../utils/components.js';
 
 $(document).ready(function () {
   const baseUrl = `${window.BASE_URL || '/'}usuarios`;
@@ -49,17 +50,9 @@ $(document).ready(function () {
           orderable: false,
           render: (data) => {
             const isSuper = data.id == 1;
-            return `
-              <div class="d-flex gap-1">
-                <button class="btn btn-sm btn-outline-primary btn-edit">
-                    <i class="fas fa-edit"></i> Editar
-                </button>
-                ${isSuper ? '' : `
-                <button class="btn btn-sm btn-outline-danger btn-delete">
-                    <i class="fas fa-trash"></i> Eliminar
-                </button>`}
-              </div>
-            `;
+            const btns = [C.btnEdit('btn-edit')];
+            if (!isSuper) btns.push(C.btnDelete('btn-delete'));
+            return C.btnGroup(...btns);
           },
         },
       ],

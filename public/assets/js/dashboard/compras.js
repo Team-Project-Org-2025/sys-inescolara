@@ -1,6 +1,7 @@
 import * as Helpers from '../utils/helpers.js';
 import * as Ajax from '../utils/ajax-handler.js';
 import { setupRealTimeValidation, validateForm } from '../utils/validation.js';
+import * as C from '../utils/components.js';
 
 $(document).ready(function () {
   const urlBase = `${window.BASE_URL || '/'}compras`;
@@ -288,27 +289,15 @@ $(document).ready(function () {
           orderable: false,
           render: (data) => {
             const esPendiente = data.estado === 'pendiente';
-            return `
-              <div class="d-flex gap-1">
-                <button class="btn btn-sm btn-outline-info btn-detail">
-                    <i class="fas fa-eye"></i> Ver
-                </button>
-                ${esPendiente ? `
-                <button class="btn btn-sm btn-outline-primary btn-edit">
-                    <i class="fas fa-edit"></i> Editar
-                </button>
-                <button class="btn btn-sm btn-outline-success btn-recibir">
-                    <i class="fas fa-check"></i> Recibir
-                </button>
-                <button class="btn btn-sm btn-outline-danger btn-cancelar">
-                    <i class="fas fa-ban"></i> Cancelar
-                </button>
-                <button class="btn btn-sm btn-outline-danger btn-delete">
-                    <i class="fas fa-trash"></i> Eliminar
-                </button>
-                ` : ''}
-              </div>
-            `;
+            return C.btnGroup(
+              C.btnView('btn-detail'),
+              ...(esPendiente ? [
+                C.btnEdit('btn-edit'),
+                C.btnReceive('btn-recibir'),
+                C.btnCancel('btn-cancelar'),
+                C.btnDelete('btn-delete'),
+              ] : []),
+            );
           },
         },
       ],

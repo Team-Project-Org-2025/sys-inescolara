@@ -1,5 +1,6 @@
 import * as Helpers from '../utils/helpers.js';
 import * as Ajax from '../utils/ajax-handler.js';
+import * as C from '../utils/components.js';
 
 function formatSize(bytes) {
   if (bytes >= 1048576) return (bytes / 1048576).toFixed(2) + ' MB';
@@ -49,15 +50,9 @@ $(document).ready(function () {
             const downloadUrl = `${baseUrl}?action=download_backup&file=${encodeURIComponent(data.filename)}`;
             return `
               <div class="btn-group btn-group-sm">
-                <a href="${downloadUrl}" class="btn btn-outline-primary" title="Descargar">
-                  <i class="fas fa-download"></i> Descargar
-                </a>
-                <button class="btn btn-outline-warning btn-restore" data-filename="${data.filename}" data-db="${data.db_label}" title="Restaurar">
-                  <i class="fas fa-undo"></i> Restaurar
-                </button>
-                <button class="btn btn-outline-danger btn-delete-backup" data-filename="${data.filename}" title="Eliminar">
-                  <i class="fas fa-trash"></i> Eliminar
-                </button>
+                ${C.btnLink({ label: 'Descargar', icon: 'fa-download', href: downloadUrl, extraAttrs: 'title="Descargar"' })}
+                ${C.btnCustom({ label: 'Restaurar', icon: 'fa-undo', className: 'btn-restore', btnClass: 'btn-outline-warning', extraAttrs: `data-filename="${data.filename}" data-db="${data.db_label}" title="Restaurar"` })}
+                ${C.btnDelete('btn-delete-backup', `data-filename="${data.filename}" title="Eliminar"`)}
               </div>
             `;
           },
