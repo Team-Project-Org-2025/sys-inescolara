@@ -2,7 +2,7 @@
 
 require_once __DIR__ . '/controller_helpers.php';
 
-use SysInescolara\models\User;
+use SysInescolara\models\Usuario;
 use SysInescolara\models\AuditLog;
 
 if (session_status() === PHP_SESSION_NONE) {
@@ -13,7 +13,7 @@ if (!defined('ROOT_PATH')) {
     define('ROOT_PATH', dirname(__DIR__, 2) . '/');
 }
 
-$GLOBALS['userModel'] = new User();
+$GLOBALS['userModel'] = new Usuario();
 
 function renderLoginView(?string $error = null, array $old = [], ?string $success = null): void
 {

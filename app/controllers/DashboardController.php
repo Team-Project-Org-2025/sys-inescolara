@@ -17,7 +17,7 @@ function dashboardCheckAuth(): void
 
     // Recargar permisos del usuario desde la BD (para reflejar cambios en tiempo real)
     require_once ROOT_PATH . 'vendor/autoload.php';
-    $userModel = new \SysInescolara\models\User();
+    $userModel = new \SysInescolara\models\Usuario();
     \SysInescolara\helpers\Auth::setField('user_permisos', $userModel->getRolePermissions(\SysInescolara\helpers\Auth::roleId(), \SysInescolara\helpers\Auth::id()));
 }
 
@@ -151,7 +151,7 @@ function usuarios(): void
     dashboardCheckPermiso('USUARIOS_MANAGE');
 
     require_once ROOT_PATH . 'vendor/autoload.php';
-    $userModel = new \SysInescolara\models\User();
+    $userModel = new \SysInescolara\models\Usuario();
     $roles = $userModel->getRoles();
     $allPermisos = $userModel->getAllPermissions();
     $employeeModel = new \SysInescolara\models\Empleado();
@@ -438,7 +438,7 @@ function perfil(): void
 {
     dashboardCheckAuth();
     require_once ROOT_PATH . 'vendor/autoload.php';
-    $userModel = new \SysInescolara\models\User();
+    $userModel = new \SysInescolara\models\Usuario();
     $userId = \SysInescolara\helpers\Auth::id();
     $user = $userModel->getById($userId);
 
