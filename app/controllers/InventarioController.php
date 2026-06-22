@@ -15,7 +15,6 @@ function index(): void
         try {
             match ($_SERVER['REQUEST_METHOD'] . '_' . $action) {
                 'GET_get_consolidated'  => inventory_getConsolidatedAjax(),
-                'GET_get_movements'     => inventory_getMovementsAjax(),
                 'GET_get_adjustments'   => inventory_getAdjustmentsAjax(),
                 'POST_add_adjustment'   => inventory_addAdjustmentAjax(),
                 default                 => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
@@ -43,7 +42,6 @@ function index(): void
 }
 
 function get_consolidated(): void { checkModuleAuth(); inventory_getConsolidatedAjax(); }
-function get_movements(): void { checkModuleAuth(); inventory_getMovementsAjax(); }
 function get_adjustments(): void { checkModuleAuth(); inventory_getAdjustmentsAjax(); }
 function add_adjustment(): void { checkModuleAuth(); checkPermisoOrFail('INVENTARIO_ADJUST'); inventory_addAdjustmentAjax(); }
 
@@ -51,13 +49,6 @@ function inventory_getConsolidatedAjax(): void
 {
     $model = new Inventory();
     $data = $model->getConsolidated();
-    jsonResponse(['success' => true, 'data' => $data, 'count' => count($data)]);
-}
-
-function inventory_getMovementsAjax(): void
-{
-    $model = new Inventory();
-    $data = $model->getMovements();
     jsonResponse(['success' => true, 'data' => $data, 'count' => count($data)]);
 }
 
