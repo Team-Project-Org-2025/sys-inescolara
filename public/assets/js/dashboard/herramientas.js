@@ -3,8 +3,8 @@ import * as Ajax from '../utils/ajax-handler.js';
 import { setupRealTimeValidation, validateForm } from '../utils/validation.js';
 
 $(document).ready(function () {
-  const baseUrl = `${window.BASE_URL || '/'}tools`;
-  let toolsTable = null;
+  const baseUrl = `${window.BASE_URL || '/'}herramientas`;
+  let herramientasTable = null;
 
   const toolValidationRules = {
     nombre_herramienta: 'nombrePlanta',
@@ -16,9 +16,9 @@ $(document).ready(function () {
 
   const initDataTable = () => {
     if (typeof SkeletonHelper !== 'undefined') {
-      SkeletonHelper.showTableSkeleton('toolsTable', 5, 7);
+      SkeletonHelper.showTableSkeleton('herramientasTable', 5, 7);
     }
-    toolsTable = $('#toolsTable').DataTable({
+    herramientasTable = $('#herramientasTable').DataTable({
       ajax: {
         url: `${baseUrl}?action=get_tools`,
         method: 'GET',
@@ -87,9 +87,9 @@ $(document).ready(function () {
           className: 'btn btn-outline-secondary btn-sm',
           action: () => {
             if (typeof SkeletonHelper !== 'undefined') {
-              SkeletonHelper.showTableSkeleton('toolsTable', 5, 7);
+              SkeletonHelper.showTableSkeleton('herramientasTable', 5, 7);
             }
-            toolsTable.ajax.reload(null, false);
+            herramientasTable.ajax.reload(null, false);
           },
         },
       ],
@@ -127,7 +127,7 @@ $(document).ready(function () {
         if (response.success) {
           Helpers.toast('success', response.message);
           $('#addToolModal').modal('hide');
-          toolsTable.ajax.reload(null, false);
+          herramientasTable.ajax.reload(null, false);
         } else {
           Helpers.toast('error', response.message);
         }
@@ -138,7 +138,7 @@ $(document).ready(function () {
   });
 
   $(document).on('click', '.btn-edit', function () {
-    const row = toolsTable.row($(this).closest('tr')).data();
+    const row = herramientasTable.row($(this).closest('tr')).data();
 
     const $addModal = $('#addToolModal');
     if ($addModal.hasClass('show')) {
@@ -179,7 +179,7 @@ $(document).ready(function () {
         if (response.success) {
           Helpers.toast('success', response.message);
           $('#editToolModal').modal('hide');
-          toolsTable.ajax.reload(null, false);
+          herramientasTable.ajax.reload(null, false);
         } else {
           Helpers.toast('error', response.message);
         }
@@ -190,7 +190,7 @@ $(document).ready(function () {
   });
 
   $(document).on('click', '.btn-delete', function () {
-    const row = toolsTable.row($(this).closest('tr')).data();
+    const row = herramientasTable.row($(this).closest('tr')).data();
     const id = row.id;
     const nombre = row.nombre_herramienta;
 
@@ -202,7 +202,7 @@ $(document).ready(function () {
           .then((response) => {
             if (response.success) {
               Helpers.toast('success', response.message);
-              toolsTable.ajax.reload(null, false);
+              herramientasTable.ajax.reload(null, false);
             } else {
               Helpers.toast('error', response.message);
             }

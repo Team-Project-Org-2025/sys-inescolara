@@ -8,7 +8,7 @@ use SysInescolara\interfaces\DeletableInterface;
 use SysInescolara\traits\ValidationTrait;
 use PDO;
 
-class Tool extends Database implements ReadableInterface, DeletableInterface
+class Herramienta extends Database implements ReadableInterface, DeletableInterface
 {
     use ValidationTrait;
 
@@ -38,7 +38,7 @@ class Tool extends Database implements ReadableInterface, DeletableInterface
             ");
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
         } catch (\Throwable $e) {
-            error_log('Error en Tool::getAll: ' . $e->getMessage());
+            error_log('Error en Herramienta::getAll: ' . $e->getMessage());
             return [];
         }
     }
@@ -55,7 +55,7 @@ class Tool extends Database implements ReadableInterface, DeletableInterface
             $stmt->execute([':id' => $id]);
             return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
         } catch (\Throwable $e) {
-            error_log('Error en Tool::getById: ' . $e->getMessage());
+            error_log('Error en Herramienta::getById: ' . $e->getMessage());
             return null;
         }
     }

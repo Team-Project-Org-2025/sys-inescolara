@@ -90,7 +90,7 @@ $(document).ready(function () {
 
     const urls = {
       insumo: `${window.BASE_URL || '/'}supplies?action=get_supplies`,
-      herramienta: `${window.BASE_URL || '/'}tools?action=get_tools`,
+      herramienta: `${window.BASE_URL || '/'}herramientas?action=get_tools`,
       planta: `${window.BASE_URL || '/'}plantas?action=get_plants`,
     };
 
@@ -101,7 +101,7 @@ $(document).ready(function () {
       headers: { 'X-Requested-With': 'XMLHttpRequest' },
     }).done((r) => {
       if (!r.success) return;
-      const mapaLista = { insumo: 'supplies', herramienta: 'tools', planta: 'plantas' };
+      const mapaLista = { insumo: 'supplies', herramienta: 'herramientas', planta: 'plantas' };
       const lista = r[mapaLista[tipo]] || [];
       lista.forEach((item) => {
         const mapaEtiqueta = { insumo: 'nombre_insumo', herramienta: 'nombre_herramienta', planta: 'nombre_comun' };

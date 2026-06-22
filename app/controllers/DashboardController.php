@@ -227,6 +227,22 @@ function ubicaciones(): void
     require $view;
 }
 
+function herramientas(): void
+{
+    dashboardCheckPermiso('HERRAMIENTAS_VIEW');
+
+    $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
+        . 'dashboard' . DIRECTORY_SEPARATOR . 'herramientas.php';
+
+    if (!is_file($view)) {
+        http_response_code(500);
+        echo 'Vista de herramientas no encontrada.';
+        return;
+    }
+
+    require $view;
+}
+
 function proveedores(): void
 {
     dashboardCheckPermiso('PROVEEDORES_VIEW');
@@ -295,7 +311,7 @@ function tasks(): void
     $lotes = $batchModel->getAll();
     $suppliesModel = new \SysInescolara\models\Supplies();
     $insumos = $suppliesModel->getAll();
-    $toolModel = new \SysInescolara\models\Tool();
+    $toolModel = new \SysInescolara\models\Herramienta();
     $herramientas = $toolModel->getAll();
     $view = ROOT_PATH . 'app/views/dashboard/task.php';
     if (!is_file($view)) {

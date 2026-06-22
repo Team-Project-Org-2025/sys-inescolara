@@ -2,7 +2,7 @@
 
 require_once __DIR__ . '/controller_helpers.php';
 
-use SysInescolara\models\Tool;
+use SysInescolara\models\Herramienta;
 use SysInescolara\models\AuditLog;
 
 function index(): void
@@ -26,7 +26,7 @@ function index(): void
         return;
     }
 
-    $view = ROOT_PATH . 'app/views/dashboard/tools.php';
+    $view = ROOT_PATH . 'app/views/dashboard/herramientas.php';
     if (!is_file($view)) {
         http_response_code(500);
         echo 'Vista de herramientas no encontrada.';
@@ -44,7 +44,7 @@ function get_usages(): void { checkModuleAuth(); tools_getUsagesAjax(); }
 
 function tools_handleAddEdit(string $mode): void
 {
-    $model = new Tool();
+    $model = new Herramienta();
     $nombre = trim((string)($_POST['nombre_herramienta'] ?? ''));
     if ($nombre === '') {
         throw new \Exception('El nombre de la herramienta es requerido.');
@@ -93,7 +93,7 @@ function tools_handleAddEdit(string $mode): void
         AuditLog::record('CREATE', 'herramienta', $newId, null, compact('nombre', 'tipo', 'estado', 'fechaAdquisicion', 'fechaUltimoMantenimiento', 'observacion'));
         jsonResponse([
             'success' => true, 'message' => 'Herramienta agregada correctamente',
-            'tool' => ['id' => $newId, 'nombre_herramienta' => $nombre, 'tipo' => $tipo, 'estado' => $estado],
+            'herramienta' => ['id' => $newId, 'nombre_herramienta' => $nombre, 'tipo' => $tipo, 'estado' => $estado],
         ]);
     }
 
@@ -105,13 +105,13 @@ function tools_handleAddEdit(string $mode): void
     AuditLog::record('UPDATE', 'herramienta', $id, $oldData, compact('nombre', 'tipo', 'estado', 'fechaAdquisicion', 'fechaUltimoMantenimiento', 'observacion'));
     jsonResponse([
         'success' => true, 'message' => 'Herramienta actualizada correctamente',
-        'tool' => ['id' => $id],
+        'herramienta' => ['id' => $id],
     ]);
 }
 
 function tools_handleDelete(): void
 {
-    $model = new Tool();
+    $model = new Herramienta();
     $id = (int)($_POST['id'] ?? 0);
     if ($id <= 0) throw new \Exception('ID inválido');
     if (!$model->exists($id)) throw new \Exception('No existe la herramienta');
@@ -119,12 +119,12 @@ function tools_handleDelete(): void
     $oldData = $model->getById($id);
     $model->delete($id);
     AuditLog::record('DEACTIVATE', 'herramienta', $id, $oldData, null);
-    jsonResponse(['success' => true, 'message' => 'Herramienta desactivada correctamente', 'toolId' => $id]);
+    jsonResponse(['success' => true, 'message' => 'Herramienta desactivada correctamente', 'herramientaId' => $id]);
 }
 
 function tools_getToolsAjax(): void
 {
-    $model = new Tool();
+    $model = new Herramienta();
     $tools = $model->getAll();
     jsonResponse(['success' => true, 'tools' => $tools, 'count' => count($tools)]);
 }
@@ -147,7 +147,7 @@ function tools_recordUsageAjax(): void
         jsonResponse(['success' => false, 'message' => 'Se requieren asignación y herramienta.'], 400);
     }
 
-    $model = new Tool();
+    $model = new Herramienta();
     $usoId = $model->recordUsageWithStateUpdate($usageData);
 
     AuditLog::record('CREATE', 'uso_herramienta', $usoId, null, $usageData);
@@ -160,7 +160,7 @@ function tools_getUsagesAjax(): void
     $herramientaId = (int)($_GET['id_herramienta'] ?? 0);
     if ($herramientaId <= 0) jsonResponse(['success' => false, 'message' => 'ID de herramienta inválido'], 400);
 
-    $model = new Tool();
+    $model = new Herramienta();
     $usages = $model->getUsages($herramientaId);
     jsonResponse(['success' => true, 'usages' => $usages, 'count' => count($usages)]);
 }
