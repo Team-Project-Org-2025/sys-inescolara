@@ -5,7 +5,6 @@ import { setupRealTimeValidation, validateForm } from '../utils/validation.js';
 $(document).ready(function () {
   const baseUrl = `${window.BASE_URL || '/'}inventario`;
   let consolidatedTable = null;
-  let movementsTable = null;
   let adjustmentsTable = null;
 
   const adjustmentRules = {
@@ -81,79 +80,6 @@ $(document).ready(function () {
               SkeletonHelper.showTableSkeleton('consolidatedTable', 5, 6);
             }
             consolidatedTable.ajax.reload(null, false);
-          },
-        },
-      ],
-    });
-  };
-
-  const initMovementsTable = () => {
-    if (typeof SkeletonHelper !== 'undefined') {
-      SkeletonHelper.showTableSkeleton('movementsTable', 5, 7);
-    }
-    movementsTable = $('#movementsTable').DataTable({
-      ajax: {
-        url: `${baseUrl}?action=get_movements`,
-        method: 'GET',
-        dataType: 'json',
-        headers: { 'X-Requested-With': 'XMLHttpRequest' },
-        dataSrc: 'data',
-      },
-      columns: [
-        {
-          data: 'tipo_movimiento',
-          render: (data) => {
-            const icons = { entrada: 'fa-arrow-down', salida: 'fa-arrow-up', venta: 'fa-shopping-cart', compra: 'fa-truck' };
-            const icon = icons[data] || 'fa-circle';
-            const cls = data === 'entrada' ? 'move-type-entrada' : 'move-type-salida';
-            return `<span class="move-type ${cls}"><i class="fas ${icon}"></i>${data.charAt(0).toUpperCase() + data.slice(1)}</span>`;
-          },
-        },
-        { data: 'tipo_item' },
-        {
-          data: 'cliente',
-          render: (data) => data || '<span class="text-muted">—</span>',
-        },
-        { data: 'gestor' },
-        {
-          data: 'detalle',
-          render: (data) => {
-            if (!data) return '<span class="text-muted">—</span>';
-            const escaped = Helpers.escapeHtml(data);
-            return escaped.length > 80
-              ? `<span title="${escaped}">${Helpers.truncateText(escaped, 80)}</span>`
-              : escaped;
-          },
-        },
-        { data: 'fecha' },
-        {
-          data: 'observacion',
-          render: (data) => {
-            if (!data) return '<span class="text-muted">—</span>';
-            const escaped = Helpers.escapeHtml(data);
-            return escaped.length > 80
-              ? `<span title="${escaped}">${Helpers.truncateText(escaped, 80)}</span>`
-              : escaped;
-          },
-        },
-      ],
-      pageLength: 15,
-      responsive: true,
-      autoWidth: false,
-      order: [[5, 'desc']],
-      language: {
-        url: 'https://cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json',
-      },
-      dom: '<"d-flex justify-content-between align-items-center mb-2"lfB>tip',
-      buttons: [
-        {
-          text: '<i class="fas fa-sync-alt"></i> Actualizar',
-          className: 'btn btn-outline-secondary btn-sm',
-          action: () => {
-            if (typeof SkeletonHelper !== 'undefined') {
-              SkeletonHelper.showTableSkeleton('movementsTable', 5, 7);
-            }
-            movementsTable.ajax.reload(null, false);
           },
         },
       ],
@@ -266,7 +192,6 @@ $(document).ready(function () {
 
   // Init tables
   initConsolidatedTable();
-  initMovementsTable();
   if ($('#adjustmentsTable').length) {
     initAdjustmentsTable();
   }
