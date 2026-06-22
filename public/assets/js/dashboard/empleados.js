@@ -3,8 +3,8 @@ import * as Ajax from '../utils/ajax-handler.js';
 import { setupRealTimeValidation, validateForm } from '../utils/validation.js';
 
 $(document).ready(function () {
-  const baseUrl = `${window.BASE_URL || '/'}employees`;
-  let employeesTable = null;
+  const baseUrl = `${window.BASE_URL || '/'}empleados`;
+  let empleadosTable = null;
 
   const employeeRules = {
     nombre_trabajador: 'nombre',
@@ -15,9 +15,9 @@ $(document).ready(function () {
 
   const initDataTable = () => {
     if (typeof SkeletonHelper !== 'undefined') {
-      SkeletonHelper.showTableSkeleton('employeesTable', 5, 7);
+      SkeletonHelper.showTableSkeleton('empleadosTable', 5, 7);
     }
-    employeesTable = $('#employeesTable').DataTable({
+    empleadosTable = $('#empleadosTable').DataTable({
       ajax: {
         url: `${baseUrl}?action=get_employees`,
         method: 'GET',
@@ -77,9 +77,9 @@ $(document).ready(function () {
           className: 'btn btn-outline-secondary btn-sm',
           action: () => {
             if (typeof SkeletonHelper !== 'undefined') {
-              SkeletonHelper.showTableSkeleton('employeesTable', 5, 5);
+              SkeletonHelper.showTableSkeleton('empleadosTable', 5, 5);
             }
-            employeesTable.ajax.reload(null, false);
+            empleadosTable.ajax.reload(null, false);
           },
         },
       ],
@@ -118,7 +118,7 @@ $(document).ready(function () {
         if (response.success) {
           Helpers.toast('success', 'Trabajador agregado correctamente');
           $('#addEmployeeModal').modal('hide');
-          employeesTable.ajax.reload(null, false);
+          empleadosTable.ajax.reload(null, false);
         } else {
           Helpers.toast('error', response.message);
         }
@@ -130,7 +130,7 @@ $(document).ready(function () {
 
   // Editar empleado
   $(document).on('click', '.btn-edit', function () {
-    const row = employeesTable.row($(this).closest('tr')).data();
+    const row = empleadosTable.row($(this).closest('tr')).data();
 
     const $addModal = $('#addEmployeeModal');
     if ($addModal.hasClass('show')) {
@@ -166,7 +166,7 @@ $(document).ready(function () {
         if (response.success) {
           Helpers.toast('success', 'Trabajador actualizado correctamente');
           $('#editEmployeeModal').modal('hide');
-          employeesTable.ajax.reload(null, false);
+          empleadosTable.ajax.reload(null, false);
         } else {
           Helpers.toast('error', response.message);
         }
@@ -178,7 +178,7 @@ $(document).ready(function () {
 
   // Eliminar empleado
   $(document).on('click', '.btn-delete', function () {
-    const row = employeesTable.row($(this).closest('tr')).data();
+    const row = empleadosTable.row($(this).closest('tr')).data();
     const id = row.id;
     const nombre = row.nombre_trabajador;
 
@@ -190,14 +190,14 @@ $(document).ready(function () {
           .then((response) => {
             if (response.success) {
               Helpers.toast('success', 'Trabajador eliminado correctamente');
-              employeesTable.ajax.reload(null, false);
-            } else {
-              Helpers.toast('error', response.message);
-            }
-          })
-          .catch((err) => {
-            Helpers.toast('error', err);
-          });
+          empleadosTable.ajax.reload(null, false);
+        } else {
+          Helpers.toast('error', response.message);
+        }
+      })
+      .catch((err) => {
+        Helpers.toast('error', err);
+      });
       },
       'Sí, eliminar'
     );

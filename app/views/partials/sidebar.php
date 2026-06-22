@@ -11,7 +11,7 @@ $isPlanta = in_array($current, ['plantas', 'especies', 'ubicaciones']);
 $isActivos = in_array($current, ['inventario', 'lotes', 'trazabilidad', 'supplies', 'herramientas', 'unit-measures', 'mermas']);
 $isVenta = in_array($current, ['ventas', 'prices', 'clientes', 'cuentas-cobrar', 'cuentas-pagar', 'compras']);
 $isServicios = in_array($current, ['ornatos', 'ampliacion', 'proveedores']);
-$isTarea = in_array($current, ['tareas', 'employees', 'seed-collection']);
+$isTarea = in_array($current, ['tareas', 'empleados', 'seed-collection']);
 $isConfiguracion = in_array($current, ['usuarios', 'roles', 'auditlog', 'backups']);
 
 $showInventario = hasPermiso('PLANTAS_VIEW') || hasPermiso('UBICACIONES_VIEW')
@@ -299,7 +299,7 @@ $showSistema = hasPermiso('USUARIOS_MANAGE');
                     <?php endif; ?>
                     <?php if (hasPermiso('TRABAJADORES_VIEW')): ?>
                     <li>
-                        <a href="<?= BASE_URL ?>dashboard/employees" class="nav-link <?= $current === 'employees' ? 'active' : '' ?>">
+                        <a href="<?= BASE_URL ?>dashboard/empleados" class="nav-link <?= $current === 'empleados' ? 'active' : '' ?>">
                             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
                             <span>Gestionar Empleados</span>
                         </a>

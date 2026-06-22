@@ -4,7 +4,7 @@ require_once __DIR__ . '/controller_helpers.php';
 
 use SysInescolara\models\Venta;
 use SysInescolara\models\Cliente;
-use SysInescolara\models\Employee;
+use SysInescolara\models\Empleado;
 use SysInescolara\models\AuditLog;
 use SysInescolara\helpers\PdfHelper;
 
@@ -39,7 +39,7 @@ function index(): void
 
     $modeloCliente = new Cliente();
     $clientes = $modeloCliente->getAll();
-    $modeloTrabajador = new Employee();
+    $modeloTrabajador = new Empleado();
     $trabajadores = $modeloTrabajador->getAll();
 
     $view = ROOT_PATH . 'app/views/dashboard/ventas.php';

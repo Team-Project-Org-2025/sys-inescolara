@@ -2,7 +2,7 @@
 
 require_once __DIR__ . '/controller_helpers.php';
 
-use SysInescolara\models\Employee;
+use SysInescolara\models\Empleado;
 use SysInescolara\models\AuditLog;
 use SysInescolara\models\Role;
 
@@ -34,7 +34,7 @@ function index(): void
         $cargoOptions = [];
     }
 
-    $view = ROOT_PATH . 'app/views/dashboard/employees.php';
+    $view = ROOT_PATH . 'app/views/dashboard/empleados.php';
     if (!is_file($view)) {
         http_response_code(500);
         echo 'Vista de empleados no encontrada.';
@@ -50,7 +50,7 @@ function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('TRABAJADOR
 
 function employees_handleAddEdit(string $mode): void
 {
-    $model = new Employee();
+    $model = new Empleado();
     $nombre = trim((string)($_POST['nombre_trabajador'] ?? ''));
     if ($nombre === '') throw new \Exception('El nombre del trabajador es requerido.');
 
@@ -82,7 +82,7 @@ function employees_handleAddEdit(string $mode): void
 
 function employees_handleDelete(): void
 {
-    $model = new Employee();
+    $model = new Empleado();
     $id = (int)($_POST['id'] ?? 0);
     if ($id <= 0) throw new \Exception('ID inválido');
     if (!$model->exists($id)) throw new \Exception('No existe el trabajador');
@@ -95,6 +95,6 @@ function employees_handleDelete(): void
 
 function employees_getEmployeesAjax(): void
 {
-    $model = new Employee();
+    $model = new Empleado();
     jsonResponse(['success' => true, 'employees' => $model->getAll(), 'count' => 0]);
 }
