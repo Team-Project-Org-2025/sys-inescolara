@@ -1,5 +1,6 @@
 <?php
 include_once __DIR__ . '/../common/links.php';
+include_once __DIR__ . '/../common/modal.php';
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -53,62 +54,29 @@ include_once __DIR__ . '/../common/links.php';
     </main>
 
     <!-- Add Especie Modal -->
-    <div class="modal fade" id="addSpeciesModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form id="addSpeciesForm">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Agregar Especie</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label">Nombre de la Especie</label>
-                            <input type="text" class="form-control" name="nombre_especie" required placeholder="Ej: Rosal, Girasol, Cactus" maxlength="50">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Descripción</label>
-                            <textarea class="form-control" name="descripcion" rows="2" placeholder="Ej: Arbusto perenne con flores de colores variados" maxlength="500"></textarea>
-                            <small class="text-muted">Opcional</small>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Guardar</button>
-                    </div>
-                </form>
-            </div>
+    <?php modal_form(['id' => 'addSpeciesModal', 'title' => 'Agregar Especie', 'formId' => 'addSpeciesForm']); ?>
+        <div class="mb-3">
+            <label class="form-label">Nombre de la Especie</label>
+            <input type="text" class="form-control" name="nombre_especie" required placeholder="Ej: Rosal, Girasol, Cactus" maxlength="50">
         </div>
-    </div>
+        <div class="mb-3">
+            <label class="form-label">Descripción</label>
+            <textarea class="form-control" name="descripcion" rows="2" placeholder="Ej: Arbusto perenne con flores de colores variados" maxlength="500"></textarea>
+            <small class="text-muted">Opcional</small>
+        </div>
+    <?php modal_form_end('addSpeciesForm'); ?>
 
     <!-- Edit Especie Modal -->
-    <div class="modal fade" id="editSpeciesModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form id="editSpeciesForm">
-                    <input type="hidden" name="id" id="editSpeciesId">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Editar Especie</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label">Nombre de la Especie</label>
-                            <input type="text" class="form-control" name="nombre_especie" id="editSpeciesName" required maxlength="50">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Descripción</label>
-                            <textarea class="form-control" name="descripcion" id="editSpeciesDescripcion" rows="2" placeholder="Opcional" maxlength="500"></textarea>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Actualizar</button>
-                    </div>
-                </form>
-            </div>
+    <?php modal_form(['id' => 'editSpeciesModal', 'title' => 'Editar Especie', 'formId' => 'editSpeciesForm', 'hasHiddenId' => true, 'hiddenId' => 'editSpeciesId', 'saveText' => 'Actualizar']); ?>
+        <div class="mb-3">
+            <label class="form-label">Nombre de la Especie</label>
+            <input type="text" class="form-control" name="nombre_especie" id="editSpeciesName" required maxlength="50">
         </div>
-    </div>
+        <div class="mb-3">
+            <label class="form-label">Descripción</label>
+            <textarea class="form-control" name="descripcion" id="editSpeciesDescripcion" rows="2" placeholder="Opcional" maxlength="500"></textarea>
+        </div>
+    <?php modal_form_end('editSpeciesForm'); ?>
 
     <script src="<?= BASE_URL ?>public/assets/js/dashboard/notifications.js"></script>
     <?= $scripts_links ?>

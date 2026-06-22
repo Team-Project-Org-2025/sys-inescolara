@@ -1,5 +1,6 @@
 <?php
 include_once __DIR__ . '/../common/links.php';
+include_once __DIR__ . '/../common/modal.php';
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -56,71 +57,42 @@ include_once __DIR__ . '/../common/links.php';
     </main>
 
     <!-- Detail Modal -->
-    <div class="modal fade" id="detalleModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Detalle de Cuenta</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body" id="detalleBody"></div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                </div>
-            </div>
-        </div>
-    </div>
+    <?php modal_detail_start(['id' => 'detalleModal', 'title' => 'Detalle de Cuenta', 'size' => 'modal-lg modal-dialog-centered', 'bodyId' => 'detalleBody']); ?>
+    <?php modal_detail_end(); ?>
 
     <!-- Pago Modal -->
-    <div class="modal fade" id="pagoModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <form id="pagoForm">
-                    <input type="hidden" name="id_cuenta_pagar" id="pagoIdCuenta">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Registrar Pago</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label">Monto *</label>
-                                <input type="number" class="form-control" name="monto" id="pagoMonto" step="0.01" min="0.01" required>
-                                <div class="form-text">Saldo pendiente: <strong id="pagoSaldoInfo">0,00</strong></div>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Fecha *</label>
-                                <input type="date" class="form-control" name="fecha_pago" id="pagoFecha" required value="<?= date('Y-m-d') ?>">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Tipo de Pago</label>
-                                <select class="form-select" name="tipo_pago" id="pagoTipo">
-                                    <option value="Efectivo">Efectivo</option>
-                                    <option value="Transferencia">Transferencia</option>
-                                    <option value="Cheque">Cheque</option>
-                                    <option value="Depósito">Depósito</option>
-                                    <option value="Pago Móvil">Pago Móvil</option>
-                                    <option value="Otro">Otro</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Referencia</label>
-                                <input type="text" class="form-control" name="referencia" id="pagoReferencia" placeholder="Opcional" maxlength="50">
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label">Observación</label>
-                                <textarea class="form-control" name="observacion" id="pagoObservacion" rows="2" placeholder="Opcional" maxlength="500"></textarea>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Registrar Pago</button>
-                    </div>
-                </form>
+    <?php modal_form(['id' => 'pagoModal', 'title' => 'Registrar Pago', 'formId' => 'pagoForm', 'hasHiddenId' => true, 'hiddenId' => 'pagoIdCuenta', 'saveText' => 'Registrar Pago']); ?>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">Monto *</label>
+                <input type="number" class="form-control" name="monto" id="pagoMonto" step="0.01" min="0.01" required>
+                <div class="form-text">Saldo pendiente: <strong id="pagoSaldoInfo">0,00</strong></div>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Fecha *</label>
+                <input type="date" class="form-control" name="fecha_pago" id="pagoFecha" required value="<?= date('Y-m-d') ?>">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Tipo de Pago</label>
+                <select class="form-select" name="tipo_pago" id="pagoTipo">
+                    <option value="Efectivo">Efectivo</option>
+                    <option value="Transferencia">Transferencia</option>
+                    <option value="Cheque">Cheque</option>
+                    <option value="Depósito">Depósito</option>
+                    <option value="Pago Móvil">Pago Móvil</option>
+                    <option value="Otro">Otro</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Referencia</label>
+                <input type="text" class="form-control" name="referencia" id="pagoReferencia" placeholder="Opcional" maxlength="50">
+            </div>
+            <div class="col-12">
+                <label class="form-label">Observación</label>
+                <textarea class="form-control" name="observacion" id="pagoObservacion" rows="2" placeholder="Opcional" maxlength="500"></textarea>
             </div>
         </div>
-    </div>
+    <?php modal_form_end('pagoForm'); ?>
 
     <script src="<?= BASE_URL ?>public/assets/js/dashboard/notifications.js"></script>
     <?= $scripts_links ?>

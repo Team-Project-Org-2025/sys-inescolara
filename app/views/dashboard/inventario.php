@@ -133,64 +133,48 @@ include_once __DIR__ . '/../common/links.php';
 
     <!-- Ajuste Modal -->
     <?php if (isset($showAdjustBtn) && $showAdjustBtn): ?>
-    <div class="modal fade" id="adjustmentModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form id="adjustmentForm">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Nuevo Ajuste de Inventario</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label">Insumo</label>
-                            <select class="form-select" name="id_insumo" required>
-                                <option value="">Seleccione...</option>
-                                <?php foreach ($supplies as $s): ?>
-                                <option value="<?= $s['id_insumo'] ?>"><?= htmlspecialchars($s['nombre_insumo']) ?> (Stock: <?= $s['stock_actual'] ?>)</option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Trabajador</label>
-                            <select class="form-select" name="id_trabajador" required>
-                                <option value="">Seleccione...</option>
-                                <?php foreach ($employees as $e): ?>
-                                <option value="<?= $e['id'] ?>"><?= htmlspecialchars($e['nombre_trabajador'] . ' ' . $e['apellido_trabajador']) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label">Tipo de Ajuste</label>
-                                <select class="form-select" name="tipo_ajuste" required>
-                                    <option value="">Seleccione...</option>
-                                    <option value="entrada">Entrada</option>
-                                    <option value="salida">Salida</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Cantidad</label>
-                                <input type="number" class="form-control" name="cantidad" step="0.01" min="0.01" required>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Motivo</label>
-                            <textarea class="form-control" name="motivo" rows="2" maxlength="500" required></textarea>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Fecha del Ajuste</label>
-                            <input type="date" class="form-control" name="fecha_ajuste" required>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-warning">Registrar Ajuste</button>
-                    </div>
-                </form>
+    <?php modal_form(['id' => 'adjustmentModal', 'title' => 'Nuevo Ajuste de Inventario', 'formId' => 'adjustmentForm', 'saveText' => 'Registrar Ajuste', 'saveClass' => 'warning']); ?>
+        <div class="mb-3">
+            <label class="form-label">Insumo</label>
+            <select class="form-select" name="id_insumo" required>
+                <option value="">Seleccione...</option>
+                <?php foreach ($supplies as $s): ?>
+                <option value="<?= $s['id_insumo'] ?>"><?= htmlspecialchars($s['nombre_insumo']) ?> (Stock: <?= $s['stock_actual'] ?>)</option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Trabajador</label>
+            <select class="form-select" name="id_trabajador" required>
+                <option value="">Seleccione...</option>
+                <?php foreach ($employees as $e): ?>
+                <option value="<?= $e['id'] ?>"><?= htmlspecialchars($e['nombre_trabajador'] . ' ' . $e['apellido_trabajador']) ?></option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label class="form-label">Tipo de Ajuste</label>
+                <select class="form-select" name="tipo_ajuste" required>
+                    <option value="">Seleccione...</option>
+                    <option value="entrada">Entrada</option>
+                    <option value="salida">Salida</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Cantidad</label>
+                <input type="number" class="form-control" name="cantidad" step="0.01" min="0.01" required>
             </div>
         </div>
-    </div>
+        <div class="mb-3">
+            <label class="form-label">Motivo</label>
+            <textarea class="form-control" name="motivo" rows="2" maxlength="500" required></textarea>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Fecha del Ajuste</label>
+            <input type="date" class="form-control" name="fecha_ajuste" required>
+        </div>
+    <?php modal_form_end('adjustmentForm'); ?>
     <?php endif; ?>
 
     <script src="<?= BASE_URL ?>public/assets/js/dashboard/notifications.js"></script>

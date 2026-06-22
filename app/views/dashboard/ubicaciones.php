@@ -1,5 +1,6 @@
 <?php
 include_once __DIR__ . '/../common/links.php';
+include_once __DIR__ . '/../common/modal.php';
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -55,69 +56,36 @@ include_once __DIR__ . '/../common/links.php';
     </main>
 
     <!-- Add Ubicacion Modal -->
-    <div class="modal fade" id="addLocationModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form id="addLocationForm">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Agregar Ubicación</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label">Nombre de la Ubicación</label>
-                            <input type="text" class="form-control" name="nombre_ubicacion" required placeholder="Ej: Invernadero Principal A, Sector de Sombreado 2..." maxlength="50">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Descripción</label>
-                            <textarea class="form-control" name="descripcion" rows="2" placeholder="Opcional" maxlength="500"></textarea>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Zona</label>
-                            <input type="text" class="form-control" name="zona" placeholder="Ej: Producción, Cuarentena, Venta" maxlength="50">
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Guardar</button>
-                    </div>
-                </form>
-            </div>
+    <?php modal_form(['id' => 'addLocationModal', 'title' => 'Agregar Ubicación', 'formId' => 'addLocationForm']); ?>
+        <div class="mb-3">
+            <label class="form-label">Nombre de la Ubicación</label>
+            <input type="text" class="form-control" name="nombre_ubicacion" required placeholder="Ej: Invernadero Principal A, Sector de Sombreado 2..." maxlength="50">
         </div>
-    </div>
+        <div class="mb-3">
+            <label class="form-label">Descripción</label>
+            <textarea class="form-control" name="descripcion" rows="2" placeholder="Opcional" maxlength="500"></textarea>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Zona</label>
+            <input type="text" class="form-control" name="zona" placeholder="Ej: Producción, Cuarentena, Venta" maxlength="50">
+        </div>
+    <?php modal_form_end('addLocationForm'); ?>
 
     <!-- Edit Ubicacion Modal -->
-    <div class="modal fade" id="editLocationModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form id="editLocationForm">
-                    <input type="hidden" name="id" id="editLocationId">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Editar Ubicación</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label">Nombre de la Ubicación</label>
-                            <input type="text" class="form-control" name="nombre_ubicacion" id="editLocationName" required maxlength="50">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Descripción</label>
-                            <textarea class="form-control" name="descripcion" id="editLocationDesc" rows="2" placeholder="Opcional" maxlength="500"></textarea>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Zona</label>
-                            <input type="text" class="form-control" name="zona" id="editLocationZona" placeholder="Ej: Producción, Cuarentena, Venta" maxlength="50">
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Actualizar</button>
-                    </div>
-                </form>
-            </div>
+    <?php modal_form(['id' => 'editLocationModal', 'title' => 'Editar Ubicación', 'formId' => 'editLocationForm', 'hasHiddenId' => true, 'hiddenId' => 'editLocationId', 'saveText' => 'Actualizar']); ?>
+        <div class="mb-3">
+            <label class="form-label">Nombre de la Ubicación</label>
+            <input type="text" class="form-control" name="nombre_ubicacion" id="editLocationName" required maxlength="50">
         </div>
-    </div>
+        <div class="mb-3">
+            <label class="form-label">Descripción</label>
+            <textarea class="form-control" name="descripcion" id="editLocationDesc" rows="2" placeholder="Opcional" maxlength="500"></textarea>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Zona</label>
+            <input type="text" class="form-control" name="zona" id="editLocationZona" placeholder="Ej: Producción, Cuarentena, Venta" maxlength="50">
+        </div>
+    <?php modal_form_end('editLocationForm'); ?>
 
     <script src="<?= BASE_URL ?>public/assets/js/dashboard/notifications.js"></script>
     <?= $scripts_links ?>

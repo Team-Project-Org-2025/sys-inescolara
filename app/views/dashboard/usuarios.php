@@ -1,5 +1,6 @@
 <?php
 include_once __DIR__ . '/../common/links.php';
+include_once __DIR__ . '/../common/modal.php';
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -106,140 +107,107 @@ function renderPermisosChecklist(array $modulos, array $codigoToId): void
     <!-- Modals fuera de main-content para evitar conflictos con Bootstrap 5.3 -->
     
     <!-- Add User Modal -->
-    <div class="modal fade" id="addUserModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form id="addUserForm">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Agregar Usuario</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label">Nombre de Usuario</label>
-                            <input type="text" class="form-control" name="nombre_usuario" required maxlength="50">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Correo Electrónico</label>
-                            <input type="email" class="form-control" name="correo_electronico" placeholder="usuario@correo.com" maxlength="254">
-                            <small class="text-muted">Opcional, necesario para recuperación de contraseña.</small>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Contraseña</label>
-                            <input type="password" class="form-control" name="password" required maxlength="30">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Rol</label>
-                            <select class="form-select" name="rol_id" id="addUserRole">
-                                <?php foreach ($roles as $rol): ?>
-                                <option value="<?= $rol['id_rol'] ?>"><?= htmlspecialchars($rol['nombre_rol']) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Vinculado a trabajador</label>
-                            <select class="form-select" name="id_trabajador_ref">
-                                <option value="">— Sin vincular —</option>
-                                <?php foreach ($trabajadores as $t): ?>
-                                <option value="<?= $t['id'] ?>"><?= htmlspecialchars($t['nombre_trabajador'] . ' ' . ($t['apellido_trabajador'] ?? '')) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                            <small class="text-muted">Opcional. Vincula este usuario a un trabajador para notificaciones de tareas.</small>
-                        </div>
-                        <div class="mb-3 permisos-checklist" id="addPermisosChecklist" style="display:none;">
-                            <label class="form-label">Módulos y acciones permitidas</label>
-                            <div style="padding:8px 12px;border:1px solid var(--color-gray-200);border-radius:var(--radius-md);background:var(--bg-secondary);max-height:300px;overflow-y:auto;">
-                                <?php renderPermisosChecklist($modulos, $codigoToId); ?>
-                            </div>
-                            <small class="text-muted">Selecciona los módulos y acciones a los que este usuario tendrá acceso.</small>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Foto de perfil</label>
-                            <input type="file" class="form-control" name="avatar" accept="image/jpeg,image/png,image/gif,image/webp">
-                            <small class="text-muted">Formatos: jpg, png, gif, webp. Máx 5MB.</small>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Guardar</button>
-                    </div>
-                </form>
-            </div>
+    <?php modal_form(['id' => 'addUserModal', 'title' => 'Agregar Usuario', 'formId' => 'addUserForm']); ?>
+        <div class="mb-3">
+            <label class="form-label">Nombre de Usuario</label>
+            <input type="text" class="form-control" name="nombre_usuario" required maxlength="50">
         </div>
-    </div>
+        <div class="mb-3">
+            <label class="form-label">Correo Electrónico</label>
+            <input type="email" class="form-control" name="correo_electronico" placeholder="usuario@correo.com" maxlength="254">
+            <small class="text-muted">Opcional, necesario para recuperación de contraseña.</small>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Contraseña</label>
+            <input type="password" class="form-control" name="password" required maxlength="30">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Rol</label>
+            <select class="form-select" name="rol_id" id="addUserRole">
+                <?php foreach ($roles as $rol): ?>
+                <option value="<?= $rol['id_rol'] ?>"><?= htmlspecialchars($rol['nombre_rol']) ?></option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Vinculado a trabajador</label>
+            <select class="form-select" name="id_trabajador_ref">
+                <option value="">— Sin vincular —</option>
+                <?php foreach ($trabajadores as $t): ?>
+                <option value="<?= $t['id'] ?>"><?= htmlspecialchars($t['nombre_trabajador'] . ' ' . ($t['apellido_trabajador'] ?? '')) ?></option>
+                <?php endforeach; ?>
+            </select>
+            <small class="text-muted">Opcional. Vincula este usuario a un trabajador para notificaciones de tareas.</small>
+        </div>
+        <div class="mb-3 permisos-checklist" id="addPermisosChecklist" style="display:none;">
+            <label class="form-label">Módulos y acciones permitidas</label>
+            <div style="padding:8px 12px;border:1px solid var(--color-gray-200);border-radius:var(--radius-md);background:var(--bg-secondary);max-height:300px;overflow-y:auto;">
+                <?php renderPermisosChecklist($modulos, $codigoToId); ?>
+            </div>
+            <small class="text-muted">Selecciona los módulos y acciones a los que este usuario tendrá acceso.</small>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Foto de perfil</label>
+            <input type="file" class="form-control" name="avatar" accept="image/jpeg,image/png,image/gif,image/webp">
+            <small class="text-muted">Formatos: jpg, png, gif, webp. Máx 5MB.</small>
+        </div>
+    <?php modal_form_end('addUserForm'); ?>
 
     <!-- Edit User Modal -->
-    <div class="modal fade" id="editUserModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form id="editUserForm">
-                    <input type="hidden" name="id" id="editUserIdHidden">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Editar Usuario</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label">Nombre de Usuario</label>
-                            <input type="text" class="form-control" name="nombre_usuario" id="editUserName" required maxlength="50">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Correo Electrónico</label>
-                            <input type="email" class="form-control" name="correo_electronico" id="editUserEmail" placeholder="usuario@correo.com" maxlength="254">
-                            <small class="text-muted">Opcional, necesario para recuperación de contraseña.</small>
-                        </div>
-                        <div class="mb-3" id="currentPasswordGroup" style="display:none;">
-                            <label class="form-label">Tu Contraseña Actual</label>
-                            <input type="password" class="form-control" name="current_password" id="editCurrentPassword" placeholder="Ingresa tu contraseña actual para autorizar el cambio" maxlength="30">
-                            <small class="text-muted" id="currentPasswordHelp">Debes ingresar tu propia contraseña para realizar este cambio.</small>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Nueva Contraseña (Dejar en blanco para no cambiar)</label>
-                            <input type="password" class="form-control" name="password" id="editUserPassword" placeholder="Nueva contraseña" maxlength="30">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Rol</label>
-                            <select class="form-select" name="rol_id" id="editUserRole">
-                                <?php foreach ($roles as $rol): ?>
-                                <option value="<?= $rol['id_rol'] ?>"><?= htmlspecialchars($rol['nombre_rol']) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                            <small class="text-muted" id="editUserRoleNote" style="display:none;">El rol del superusuario no se puede modificar.</small>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Vinculado a trabajador</label>
-                            <select class="form-select" name="id_trabajador_ref" id="editTrabajadorRef">
-                                <option value="">— Sin vincular —</option>
-                                <?php foreach ($trabajadores as $t): ?>
-                                <option value="<?= $t['id'] ?>"><?= htmlspecialchars($t['nombre_trabajador'] . ' ' . ($t['apellido_trabajador'] ?? '')) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                            <small class="text-muted">Opcional. Vincula este usuario a un trabajador para notificaciones de tareas.</small>
-                        </div>
-                        <div class="mb-3 permisos-checklist" id="editPermisosChecklist" style="display:none;">
-                            <label class="form-label">Módulos y acciones permitidas</label>
-                            <div style="padding:8px 12px;border:1px solid var(--color-gray-200);border-radius:var(--radius-md);background:var(--bg-secondary);max-height:300px;overflow-y:auto;">
-                                <?php renderPermisosChecklist($modulos, $codigoToId); ?>
-                            </div>
-                            <small class="text-muted">Selecciona los módulos y acciones a los que este usuario tendrá acceso.</small>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Foto de perfil</label>
-                            <div id="editAvatarPreview" class="mb-2" style="display:none;">
-                                <img src="" alt="Avatar actual" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid var(--color-primary);">
-                            </div>
-                            <input type="file" class="form-control" name="avatar" accept="image/jpeg,image/png,image/gif,image/webp">
-                            <small class="text-muted">Formatos: jpg, png, gif, webp. Máx 5MB.</small>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Actualizar</button>
-                    </div>
-                </form>
-            </div>
+    <?php modal_form(['id' => 'editUserModal', 'title' => 'Editar Usuario', 'formId' => 'editUserForm', 'hasHiddenId' => true, 'hiddenId' => 'editUserIdHidden', 'saveText' => 'Actualizar']); ?>
+        <div class="mb-3">
+            <label class="form-label">Nombre de Usuario</label>
+            <input type="text" class="form-control" name="nombre_usuario" id="editUserName" required maxlength="50">
         </div>
-    </div>
+        <div class="mb-3">
+            <label class="form-label">Correo Electrónico</label>
+            <input type="email" class="form-control" name="correo_electronico" id="editUserEmail" placeholder="usuario@correo.com" maxlength="254">
+            <small class="text-muted">Opcional, necesario para recuperación de contraseña.</small>
+        </div>
+        <div class="mb-3" id="currentPasswordGroup" style="display:none;">
+            <label class="form-label">Tu Contraseña Actual</label>
+            <input type="password" class="form-control" name="current_password" id="editCurrentPassword" placeholder="Ingresa tu contraseña actual para autorizar el cambio" maxlength="30">
+            <small class="text-muted" id="currentPasswordHelp">Debes ingresar tu propia contraseña para realizar este cambio.</small>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Nueva Contraseña (Dejar en blanco para no cambiar)</label>
+            <input type="password" class="form-control" name="password" id="editUserPassword" placeholder="Nueva contraseña" maxlength="30">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Rol</label>
+            <select class="form-select" name="rol_id" id="editUserRole">
+                <?php foreach ($roles as $rol): ?>
+                <option value="<?= $rol['id_rol'] ?>"><?= htmlspecialchars($rol['nombre_rol']) ?></option>
+                <?php endforeach; ?>
+            </select>
+            <small class="text-muted" id="editUserRoleNote" style="display:none;">El rol del superusuario no se puede modificar.</small>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Vinculado a trabajador</label>
+            <select class="form-select" name="id_trabajador_ref" id="editTrabajadorRef">
+                <option value="">— Sin vincular —</option>
+                <?php foreach ($trabajadores as $t): ?>
+                <option value="<?= $t['id'] ?>"><?= htmlspecialchars($t['nombre_trabajador'] . ' ' . ($t['apellido_trabajador'] ?? '')) ?></option>
+                <?php endforeach; ?>
+            </select>
+            <small class="text-muted">Opcional. Vincula este usuario a un trabajador para notificaciones de tareas.</small>
+        </div>
+        <div class="mb-3 permisos-checklist" id="editPermisosChecklist" style="display:none;">
+            <label class="form-label">Módulos y acciones permitidas</label>
+            <div style="padding:8px 12px;border:1px solid var(--color-gray-200);border-radius:var(--radius-md);background:var(--bg-secondary);max-height:300px;overflow-y:auto;">
+                <?php renderPermisosChecklist($modulos, $codigoToId); ?>
+            </div>
+            <small class="text-muted">Selecciona los módulos y acciones a los que este usuario tendrá acceso.</small>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Foto de perfil</label>
+            <div id="editAvatarPreview" class="mb-2" style="display:none;">
+                <img src="" alt="Avatar actual" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid var(--color-primary);">
+            </div>
+            <input type="file" class="form-control" name="avatar" accept="image/jpeg,image/png,image/gif,image/webp">
+            <small class="text-muted">Formatos: jpg, png, gif, webp. Máx 5MB.</small>
+        </div>
+    <?php modal_form_end('editUserForm'); ?>
 
     <script src="<?= BASE_URL ?>public/assets/js/dashboard/notifications.js"></script>
     <?= $scripts_links ?>
