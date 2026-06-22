@@ -82,14 +82,6 @@ function inventario(): void
 {
     dashboardCheckPermiso('INVENTARIO_VIEW');
 
-    require_once ROOT_PATH . 'vendor/autoload.php';
-    $supplyModel = new \SysInescolara\models\Insumo();
-    $supplies = $supplyModel->getAll();
-    $employeeModel = new \SysInescolara\models\Empleado();
-    $employees = $employeeModel->getAll();
-
-    $showAdjustBtn = \SysInescolara\helpers\Auth::hasPermiso('INVENTARIO_ADJUST');
-
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'inventario.php';
 
