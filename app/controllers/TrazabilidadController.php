@@ -49,8 +49,11 @@ function trazabilidad_handleAddEdit(string $mode): void
     $idLote = (int)($_POST['id_lote'] ?? 0);
     if ($idLote <= 0) throw new \Exception('Debe seleccionar un lote.');
 
-    $cantidad = (int)($_POST['cantidad'] ?? 0);
-    if ($cantidad <= 0) throw new \Exception('La cantidad debe ser mayor a cero.');
+    $rawCantidad = $_POST['cantidad'] ?? '';
+    if (!preg_match('/^[1-9]\d*$/', $rawCantidad)) {
+        throw new \Exception('La cantidad debe ser un número entero positivo, sin decimales ni signos.');
+    }
+    $cantidad = (int)$rawCantidad;
 
     $lote = $batchModel->getById($idLote);
     if (!$lote) throw new \Exception('El lote seleccionado no existe.');
