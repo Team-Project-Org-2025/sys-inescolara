@@ -1,5 +1,6 @@
 <?php
 include_once __DIR__ . '/../common/links.php';
+include_once __DIR__ . '/../common/modal.php';
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -52,53 +53,20 @@ include_once __DIR__ . '/../common/links.php';
     </main>
 
     <!-- Add Unit Modal -->
-    <div class="modal fade" id="addUnitModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form id="addUnitForm">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Nueva Unidad de Medida</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label">Nombre <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" name="nombre" required maxlength="50" placeholder="Ej: Kilogramo">
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Guardar</button>
-                    </div>
-                </form>
-            </div>
+    <?php modal_form(['id' => 'addUnitModal', 'title' => 'Nueva Unidad de Medida', 'formId' => 'addUnitForm']); ?>
+        <div class="mb-3">
+            <label class="form-label">Nombre <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" name="nombre" required maxlength="50" placeholder="Ej: Kilogramo">
         </div>
-    </div>
+    <?php modal_form_end('addUnitForm'); ?>
 
     <!-- Edit Unit Modal -->
-    <div class="modal fade" id="editUnitModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form id="editUnitForm">
-                    <input type="hidden" name="id" id="editUnitId">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Editar Unidad de Medida</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label">Nombre <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" name="nombre" id="editUnitName" required maxlength="50">
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Actualizar</button>
-                    </div>
-                </form>
-            </div>
+    <?php modal_form(['id' => 'editUnitModal', 'title' => 'Editar Unidad de Medida', 'formId' => 'editUnitForm', 'hasHiddenId' => true, 'hiddenId' => 'editUnitId', 'saveText' => 'Actualizar']); ?>
+        <div class="mb-3">
+            <label class="form-label">Nombre <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" name="nombre" id="editUnitName" required maxlength="50">
         </div>
-    </div>
+    <?php modal_form_end('editUnitForm'); ?>
 
     <script src="<?= BASE_URL ?>public/assets/js/dashboard/notifications.js"></script>
     <?= $scripts_links ?>

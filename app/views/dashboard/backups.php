@@ -1,5 +1,6 @@
 <?php
 include_once __DIR__ . '/../common/links.php';
+include_once __DIR__ . '/../common/modal.php';
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -75,27 +76,13 @@ include_once __DIR__ . '/../common/links.php';
     </main>
 
     <!-- Restore Confirmation Modal -->
-    <div class="modal fade" id="restoreModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header bg-warning text-dark">
-                    <h5 class="modal-title"><i class="fas fa-exclamation-triangle"></i> Restaurar Respaldo</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <p class="mb-2"><strong>¿Estás seguro de que deseas restaurar este respaldo?</strong></p>
-                    <p class="text-danger mb-0"><i class="fas fa-ban"></i> Esta acción <strong>sobrescribirá</strong> los datos actuales de la base de datos. No se puede deshacer.</p>
-                    <hr>
-                    <p class="mb-0">Archivo: <strong id="restoreFileName"></strong></p>
-                    <p class="mb-0">Base de Datos: <strong id="restoreDbName"></strong></p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-warning" id="confirmRestoreBtn"><i class="fas fa-undo"></i> Restaurar</button>
-                </div>
-            </div>
-        </div>
-    </div>
+    <?php modal_form(['id' => 'restoreModal', 'title' => 'Restaurar Respaldo', 'formId' => 'restoreForm', 'saveText' => 'Restaurar', 'saveClass' => 'warning']); ?>
+        <p class="mb-2"><strong>¿Estás seguro de que deseas restaurar este respaldo?</strong></p>
+        <p class="text-danger mb-0"><i class="fas fa-ban"></i> Esta acción <strong>sobrescribirá</strong> los datos actuales de la base de datos. No se puede deshacer.</p>
+        <hr>
+        <p class="mb-0">Archivo: <strong id="restoreFileName"></strong></p>
+        <p class="mb-0">Base de Datos: <strong id="restoreDbName"></strong></p>
+    <?php modal_form_end('restoreForm'); ?>
 
     <script src="<?= BASE_URL ?>public/assets/js/dashboard/notifications.js"></script>
     <?= $scripts_links ?>

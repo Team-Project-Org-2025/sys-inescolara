@@ -1,5 +1,6 @@
 <?php
 include_once __DIR__ . '/../common/links.php';
+include_once __DIR__ . '/../common/modal.php';
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -89,99 +90,66 @@ include_once __DIR__ . '/../common/links.php';
     </main>
 
     <!-- Add Plant Modal -->
-    <div class="modal fade" id="addPlantModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form id="addPlantForm">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Agregar Planta</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label">Nombre Común</label>
-                            <input type="text" class="form-control" name="nombre_comun" required placeholder="Ej: Rosa, Cactus, Suculenta" maxlength="50">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Nombre Técnico (Científico)</label>
-                            <input type="text" class="form-control" name="nombre_tecnico" placeholder="Ej: Rosa gallica, Echinocactus grusonii" maxlength="50">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Especie / Grupo Familiar</label>
-                            <select class="form-select" name="especie_id">
-                                <option value="">Sin especie</option>
-                                <?php foreach ($species as $s): ?>
-                                <option value="<?= $s['id'] ?>"><?= htmlspecialchars($s['nombre_especie']) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                            <small class="text-muted">Opcional. Selecciona la especie a la que pertenece.</small>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Imagen</label>
-                            <input type="file" class="form-control" name="imagen" accept="image/jpeg,image/png,image/gif,image/webp" id="addPlantImage">
-                            <small class="text-muted">Formatos: jpg, png, gif, webp. Máx 5MB.</small>
-                            <div class="mt-2">
-                                <img id="addPlantPreview" class="img-preview">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Guardar</button>
-                    </div>
-                </form>
+    <?php modal_form(['id' => 'addPlantModal', 'title' => 'Agregar Planta', 'formId' => 'addPlantForm']); ?>
+        <div class="mb-3">
+            <label class="form-label">Nombre Común</label>
+            <input type="text" class="form-control" name="nombre_comun" required placeholder="Ej: Rosa, Cactus, Suculenta" maxlength="50">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Nombre Técnico (Científico)</label>
+            <input type="text" class="form-control" name="nombre_tecnico" placeholder="Ej: Rosa gallica, Echinocactus grusonii" maxlength="50">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Especie / Grupo Familiar</label>
+            <select class="form-select" name="especie_id">
+                <option value="">Sin especie</option>
+                <?php foreach ($species as $s): ?>
+                <option value="<?= $s['id'] ?>"><?= htmlspecialchars($s['nombre_especie']) ?></option>
+                <?php endforeach; ?>
+            </select>
+            <small class="text-muted">Opcional. Selecciona la especie a la que pertenece.</small>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Imagen</label>
+            <input type="file" class="form-control" name="imagen" accept="image/jpeg,image/png,image/gif,image/webp" id="addPlantImage">
+            <small class="text-muted">Formatos: jpg, png, gif, webp. Máx 5MB.</small>
+            <div class="mt-2">
+                <img id="addPlantPreview" class="img-preview">
             </div>
         </div>
-    </div>
+    <?php modal_form_end('addPlantForm'); ?>
 
     <!-- Edit Plant Modal -->
-    <div class="modal fade" id="editPlantModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form id="editPlantForm">
-                    <input type="hidden" name="id" id="editPlantId">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Editar Planta</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label">Nombre Común</label>
-                            <input type="text" class="form-control" name="nombre_comun" id="editPlantName" required maxlength="50">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Nombre Técnico</label>
-                            <input type="text" class="form-control" name="nombre_tecnico" id="editPlantTecnico" maxlength="50">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Especie / Grupo Familiar</label>
-                            <select class="form-select" name="especie_id" id="editPlantSpecies">
-                                <option value="">Sin especie</option>
-                                <?php foreach ($species as $s): ?>
-                                <option value="<?= $s['id'] ?>"><?= htmlspecialchars($s['nombre_especie']) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Imagen</label>
-                            <div id="editImageCurrent" class="mb-2" style="display:none;">
-                                <img src="" alt="Imagen actual" style="width:100px;height:100px;object-fit:cover;border-radius:8px;border:2px solid var(--color-primary);">
-                            </div>
-                            <input type="file" class="form-control" name="imagen" accept="image/jpeg,image/png,image/gif,image/webp" id="editPlantImage">
-                            <small class="text-muted">Dejar vacío para mantener la imagen actual.</small>
-                            <div class="mt-2">
-                                <img id="editPlantPreview" class="img-preview">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Actualizar</button>
-                    </div>
-                </form>
+    <?php modal_form(['id' => 'editPlantModal', 'title' => 'Editar Planta', 'formId' => 'editPlantForm', 'hasHiddenId' => true, 'hiddenId' => 'editPlantId', 'saveText' => 'Actualizar']); ?>
+        <div class="mb-3">
+            <label class="form-label">Nombre Común</label>
+            <input type="text" class="form-control" name="nombre_comun" id="editPlantName" required maxlength="50">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Nombre Técnico</label>
+            <input type="text" class="form-control" name="nombre_tecnico" id="editPlantTecnico" maxlength="50">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Especie / Grupo Familiar</label>
+            <select class="form-select" name="especie_id" id="editPlantSpecies">
+                <option value="">Sin especie</option>
+                <?php foreach ($species as $s): ?>
+                <option value="<?= $s['id'] ?>"><?= htmlspecialchars($s['nombre_especie']) ?></option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Imagen</label>
+            <div id="editImageCurrent" class="mb-2" style="display:none;">
+                <img src="" alt="Imagen actual" style="width:100px;height:100px;object-fit:cover;border-radius:8px;border:2px solid var(--color-primary);">
+            </div>
+            <input type="file" class="form-control" name="imagen" accept="image/jpeg,image/png,image/gif,image/webp" id="editPlantImage">
+            <small class="text-muted">Dejar vacío para mantener la imagen actual.</small>
+            <div class="mt-2">
+                <img id="editPlantPreview" class="img-preview">
             </div>
         </div>
-    </div>
+    <?php modal_form_end('editPlantForm'); ?>
 
     <!-- Lightbox Modal -->
     <div class="modal fade" id="imageLightbox" tabindex="-1">

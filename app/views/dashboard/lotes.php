@@ -1,5 +1,6 @@
 <?php
 include_once __DIR__ . '/../common/links.php';
+include_once __DIR__ . '/../common/modal.php';
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -95,200 +96,167 @@ include_once __DIR__ . '/../common/links.php';
     </main>
 
     <!-- Add Lote Modal -->
-    <div class="modal fade" id="addBatchModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form id="addBatchForm">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Agregar Lote</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label">Planta</label>
-                            <select class="form-select" name="id_planta" required>
-                                <option value="">Seleccione una planta...</option>
-                                <?php foreach ($plants as $p): ?>
-                                <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['nombre_comun']) ?><?= $p['especie_nombre'] ? ' (' . htmlspecialchars($p['especie_nombre']) . ')' : '' ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Ubicación</label>
-                            <select class="form-select" name="id_ubicacion" required>
-                                <option value="">Seleccione una ubicación...</option>
-                                <?php foreach ($locations as $l): ?>
-                                <option value="<?= $l['id'] ?>"><?= htmlspecialchars($l['nombre_ubicacion']) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Fecha de Siembra</label>
-                            <input type="date" class="form-control" name="fecha_siembra" required>
-                        </div>
-                        <div class="row">
-                            <div class="col-6 mb-3">
-                                <label class="form-label">Cantidad Inicial</label>
-                                <input type="number" class="form-control" name="cantidad_inicial" min="1" required>
-                            </div>
-                            <div class="col-6 mb-3">
-                                <label class="form-label">Cantidad Actual</label>
-                                <input type="number" class="form-control" name="cantidad_actual" min="0" required>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-4 mb-3">
-                                <label class="form-label">Estado</label>
-                                <select class="form-select" name="estado" required>
-                                    <option value="">Seleccione...</option>
-                                    <option value="Vivo">Vivo</option>
-                                    <option value="Crecimiento">Crecimiento</option>
-                                    <option value="Floración">Floración</option>
-                                    <option value="Cosechado">Cosechado</option>
-                                </select>
-                            </div>
-                            <div class="col-4 mb-3">
-                                <label class="form-label">Categoría</label>
-                                <select class="form-select" name="categoria">
-                                    <option value="">Sin categoría</option>
-                                    <option value="germinado">Germinado</option>
-                                    <option value="en_crecimiento">En Crecimiento</option>
-                                    <option value="para_cosechar">Para Cosechar</option>
-                                    <option value="maduro">Maduro</option>
-                                </select>
-                            </div>
-                            <div class="col-4 mb-3">
-                                <label class="form-label">Origen</label>
-                                <select class="form-select" name="origen" required>
-                                    <option value="">Seleccione...</option>
-                                    <option value="Siembra">Siembra</option>
-                                    <option value="Ampliación">Ampliación</option>
-                                    <option value="Donación">Donación</option>
-                                    <option value="Compra">Compra</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Observación</label>
-                            <textarea class="form-control" name="observacion" rows="2" placeholder="Opcional" maxlength="500"></textarea>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Imagen del Lote</label>
-                            <input type="file" class="form-control" name="imagen" accept="image/jpeg,image/png,image/gif,image/webp" id="addBatchImage">
-                            <small class="text-muted">Formatos: jpg, png, gif, webp. Máx 5MB.</small>
-                            <div class="mt-2">
-                                <img id="addBatchPreview" class="img-preview">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Guardar</button>
-                    </div>
-                </form>
+    <?php modal_form(['id' => 'addBatchModal', 'title' => 'Agregar Lote', 'formId' => 'addBatchForm']); ?>
+        <div class="mb-3">
+            <label class="form-label">Planta</label>
+            <select class="form-select" name="id_planta" required>
+                <option value="">Seleccione una planta...</option>
+                <?php foreach ($plants as $p): ?>
+                <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['nombre_comun']) ?><?= $p['especie_nombre'] ? ' (' . htmlspecialchars($p['especie_nombre']) . ')' : '' ?></option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Ubicación</label>
+            <select class="form-select" name="id_ubicacion" required>
+                <option value="">Seleccione una ubicación...</option>
+                <?php foreach ($locations as $l): ?>
+                <option value="<?= $l['id'] ?>"><?= htmlspecialchars($l['nombre_ubicacion']) ?></option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Fecha de Siembra</label>
+            <input type="date" class="form-control" name="fecha_siembra" required>
+        </div>
+        <div class="row">
+            <div class="col-6 mb-3">
+                <label class="form-label">Cantidad Inicial</label>
+                <input type="number" class="form-control" name="cantidad_inicial" min="1" required>
+            </div>
+            <div class="col-6 mb-3">
+                <label class="form-label">Cantidad Actual</label>
+                <input type="number" class="form-control" name="cantidad_actual" min="0" required>
             </div>
         </div>
-    </div>
+        <div class="row">
+            <div class="col-4 mb-3">
+                <label class="form-label">Estado</label>
+                <select class="form-select" name="estado" required>
+                    <option value="">Seleccione...</option>
+                    <option value="Vivo">Vivo</option>
+                    <option value="Crecimiento">Crecimiento</option>
+                    <option value="Floración">Floración</option>
+                    <option value="Cosechado">Cosechado</option>
+                </select>
+            </div>
+            <div class="col-4 mb-3">
+                <label class="form-label">Categoría</label>
+                <select class="form-select" name="categoria">
+                    <option value="">Sin categoría</option>
+                    <option value="germinado">Germinado</option>
+                    <option value="en_crecimiento">En Crecimiento</option>
+                    <option value="para_cosechar">Para Cosechar</option>
+                    <option value="maduro">Maduro</option>
+                </select>
+            </div>
+            <div class="col-4 mb-3">
+                <label class="form-label">Origen</label>
+                <select class="form-select" name="origen" required>
+                    <option value="">Seleccione...</option>
+                    <option value="Siembra">Siembra</option>
+                    <option value="Ampliación">Ampliación</option>
+                    <option value="Donación">Donación</option>
+                    <option value="Compra">Compra</option>
+                </select>
+            </div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Observación</label>
+            <textarea class="form-control" name="observacion" rows="2" placeholder="Opcional" maxlength="500"></textarea>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Imagen del Lote</label>
+            <input type="file" class="form-control" name="imagen" accept="image/jpeg,image/png,image/gif,image/webp" id="addBatchImage">
+            <small class="text-muted">Formatos: jpg, png, gif, webp. Máx 5MB.</small>
+            <div class="mt-2">
+                <img id="addBatchPreview" class="img-preview">
+            </div>
+        </div>
+    <?php modal_form_end('addBatchForm'); ?>
 
     <!-- Edit Lote Modal -->
-    <div class="modal fade" id="editBatchModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form id="editBatchForm">
-                    <input type="hidden" name="id" id="editBatchId">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Editar Lote</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label">Planta</label>
-                            <select class="form-select" name="id_planta" id="editBatchPlant" required>
-                                <option value="">Seleccione una planta...</option>
-                                <?php foreach ($plants as $p): ?>
-                                <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['nombre_comun']) ?><?= $p['especie_nombre'] ? ' (' . htmlspecialchars($p['especie_nombre']) . ')' : '' ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Ubicación</label>
-                            <select class="form-select" name="id_ubicacion" id="editBatchLocation" required>
-                                <option value="">Seleccione una ubicación...</option>
-                                <?php foreach ($locations as $l): ?>
-                                <option value="<?= $l['id'] ?>"><?= htmlspecialchars($l['nombre_ubicacion']) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Fecha de Siembra</label>
-                            <input type="date" class="form-control" name="fecha_siembra" id="editBatchDate" required>
-                        </div>
-                        <div class="row">
-                            <div class="col-6 mb-3">
-                                <label class="form-label">Cantidad Inicial</label>
-                                <input type="number" class="form-control" name="cantidad_inicial" id="editBatchQtyInit" min="1" required>
-                            </div>
-                            <div class="col-6 mb-3">
-                                <label class="form-label">Cantidad Actual</label>
-                                <input type="number" class="form-control" name="cantidad_actual" id="editBatchQtyCurr" min="0" required>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-4 mb-3">
-                                <label class="form-label">Estado</label>
-                                <select class="form-select" name="estado" id="editBatchStatus" required>
-                                    <option value="">Seleccione...</option>
-                                    <option value="Vivo">Vivo</option>
-                                    <option value="Crecimiento">Crecimiento</option>
-                                    <option value="Floración">Floración</option>
-                                    <option value="Cosechado">Cosechado</option>
-                                </select>
-                            </div>
-                            <div class="col-4 mb-3">
-                                <label class="form-label">Categoría</label>
-                                <select class="form-select" name="categoria" id="editBatchCategoria">
-                                    <option value="">Sin categoría</option>
-                                    <option value="germinado">Germinado</option>
-                                    <option value="en_crecimiento">En Crecimiento</option>
-                                    <option value="para_cosechar">Para Cosechar</option>
-                                    <option value="maduro">Maduro</option>
-                                </select>
-                            </div>
-                            <div class="col-4 mb-3">
-                                <label class="form-label">Origen</label>
-                                <select class="form-select" name="origen" id="editBatchOrigen" required>
-                                    <option value="">Seleccione...</option>
-                                    <option value="Siembra">Siembra</option>
-                                    <option value="Ampliación">Ampliación</option>
-                                    <option value="Donación">Donación</option>
-                                    <option value="Compra">Compra</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Observación</label>
-                            <textarea class="form-control" name="observacion" id="editBatchObs" rows="2" placeholder="Opcional" maxlength="500"></textarea>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Imagen del Lote</label>
-                            <div id="editImageCurrent" class="mb-2" style="display:none;">
-                                <img src="" alt="Imagen actual" style="width:100px;height:100px;object-fit:cover;border-radius:8px;border:2px solid var(--color-primary);">
-                            </div>
-                            <input type="file" class="form-control" name="imagen" accept="image/jpeg,image/png,image/gif,image/webp" id="editBatchImage">
-                            <small class="text-muted">Dejar vacío para mantener la imagen actual.</small>
-                            <div class="mt-2">
-                                <img id="editBatchPreview" class="img-preview">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Actualizar</button>
-                    </div>
-                </form>
+    <?php modal_form(['id' => 'editBatchModal', 'title' => 'Editar Lote', 'formId' => 'editBatchForm', 'hasHiddenId' => true, 'hiddenId' => 'editBatchId', 'saveText' => 'Actualizar']); ?>
+        <div class="mb-3">
+            <label class="form-label">Planta</label>
+            <select class="form-select" name="id_planta" id="editBatchPlant" required>
+                <option value="">Seleccione una planta...</option>
+                <?php foreach ($plants as $p): ?>
+                <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['nombre_comun']) ?><?= $p['especie_nombre'] ? ' (' . htmlspecialchars($p['especie_nombre']) . ')' : '' ?></option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Ubicación</label>
+            <select class="form-select" name="id_ubicacion" id="editBatchLocation" required>
+                <option value="">Seleccione una ubicación...</option>
+                <?php foreach ($locations as $l): ?>
+                <option value="<?= $l['id'] ?>"><?= htmlspecialchars($l['nombre_ubicacion']) ?></option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Fecha de Siembra</label>
+            <input type="date" class="form-control" name="fecha_siembra" id="editBatchDate" required>
+        </div>
+        <div class="row">
+            <div class="col-6 mb-3">
+                <label class="form-label">Cantidad Inicial</label>
+                <input type="number" class="form-control" name="cantidad_inicial" id="editBatchQtyInit" min="1" required>
+            </div>
+            <div class="col-6 mb-3">
+                <label class="form-label">Cantidad Actual</label>
+                <input type="number" class="form-control" name="cantidad_actual" id="editBatchQtyCurr" min="0" required>
             </div>
         </div>
-    </div>
+        <div class="row">
+            <div class="col-4 mb-3">
+                <label class="form-label">Estado</label>
+                <select class="form-select" name="estado" id="editBatchStatus" required>
+                    <option value="">Seleccione...</option>
+                    <option value="Vivo">Vivo</option>
+                    <option value="Crecimiento">Crecimiento</option>
+                    <option value="Floración">Floración</option>
+                    <option value="Cosechado">Cosechado</option>
+                </select>
+            </div>
+            <div class="col-4 mb-3">
+                <label class="form-label">Categoría</label>
+                <select class="form-select" name="categoria" id="editBatchCategoria">
+                    <option value="">Sin categoría</option>
+                    <option value="germinado">Germinado</option>
+                    <option value="en_crecimiento">En Crecimiento</option>
+                    <option value="para_cosechar">Para Cosechar</option>
+                    <option value="maduro">Maduro</option>
+                </select>
+            </div>
+            <div class="col-4 mb-3">
+                <label class="form-label">Origen</label>
+                <select class="form-select" name="origen" id="editBatchOrigen" required>
+                    <option value="">Seleccione...</option>
+                    <option value="Siembra">Siembra</option>
+                    <option value="Ampliación">Ampliación</option>
+                    <option value="Donación">Donación</option>
+                    <option value="Compra">Compra</option>
+                </select>
+            </div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Observación</label>
+            <textarea class="form-control" name="observacion" id="editBatchObs" rows="2" placeholder="Opcional" maxlength="500"></textarea>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Imagen del Lote</label>
+            <div id="editImageCurrent" class="mb-2" style="display:none;">
+                <img src="" alt="Imagen actual" style="width:100px;height:100px;object-fit:cover;border-radius:8px;border:2px solid var(--color-primary);">
+            </div>
+            <input type="file" class="form-control" name="imagen" accept="image/jpeg,image/png,image/gif,image/webp" id="editBatchImage">
+            <small class="text-muted">Dejar vacío para mantener la imagen actual.</small>
+            <div class="mt-2">
+                <img id="editBatchPreview" class="img-preview">
+            </div>
+        </div>
+    <?php modal_form_end('editBatchForm'); ?>
 
     <!-- Lightbox Modal -->
     <div class="modal fade" id="imageLightbox" tabindex="-1">

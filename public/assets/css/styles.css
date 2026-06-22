@@ -461,7 +461,7 @@ table.dataTable {
   font-size: 0.875rem;
 }
 
-table.dataTable thead th {
+table.dataTable.table > thead > tr > th {
   padding: var(--space-3) var(--space-4);
   font-size: 0.75rem;
   font-weight: 600;
@@ -473,17 +473,17 @@ table.dataTable thead th {
   text-align: left;
 }
 
-table.dataTable thead th:first-child {
+table.dataTable.table > thead > tr > th:first-child {
   border-top-left-radius: var(--radius-md);
 }
 
-table.dataTable thead th:last-child {
+table.dataTable.table > thead > tr > th:last-child {
   border-top-right-radius: var(--radius-md);
 }
 
-table.dataTable thead th.sorting:hover,
-table.dataTable thead th.sorting_asc,
-table.dataTable thead th.sorting_desc {
+table.dataTable.table > thead > tr > th.sorting:hover,
+table.dataTable.table > thead > tr > th.sorting_asc,
+table.dataTable.table > thead > tr > th.sorting_desc {
   background-color: var(--color-gray-800);
 }
 
@@ -508,7 +508,7 @@ table.dataTable tbody tr {
 }
 
 table.dataTable tbody tr:hover {
-  background-color: rgba(46, 125, 50, 0.06);
+  background-color: var(--color-gray-100);
 }
 
 table.dataTable tbody tr:nth-child(even) {
@@ -516,7 +516,7 @@ table.dataTable tbody tr:nth-child(even) {
 }
 
 table.dataTable tbody tr:nth-child(even):hover {
-  background-color: rgba(46, 125, 50, 0.06);
+  background-color: var(--color-gray-100);
 }
 
 table.dataTable.stripe tbody tr.odd,
@@ -526,7 +526,7 @@ table.dataTable.display tbody tr.odd {
 
 table.dataTable.stripe tbody tr.odd:hover,
 table.dataTable.display tbody tr.odd:hover {
-  background-color: rgba(46, 125, 50, 0.06);
+  background-color: var(--color-gray-100);
 }
 
 table.dataTable tbody tr.selected {
@@ -581,9 +581,9 @@ div.dataTables_wrapper .dataTables_paginate .paginate_button:active {
   box-shadow: none;
 }
 
-table.dataTable thead > tr > th.sorting_asc,
-table.dataTable thead > tr > th.sorting_desc,
-table.dataTable thead > tr > th.sorting {
+table.dataTable.table > thead > tr > th.sorting_asc,
+table.dataTable.table > thead > tr > th.sorting_desc,
+table.dataTable.table > thead > tr > th.sorting {
   padding-right: var(--space-7);
 }
 

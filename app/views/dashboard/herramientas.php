@@ -1,5 +1,6 @@
 <?php
 include_once __DIR__ . '/../common/links.php';
+include_once __DIR__ . '/../common/modal.php';
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -57,109 +58,76 @@ include_once __DIR__ . '/../common/links.php';
     </main>
 
     <!-- Add Herramienta Modal -->
-    <div class="modal fade" id="addToolModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form id="addToolForm">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Agregar Herramienta</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label">Nombre de la Herramienta</label>
-                            <input type="text" class="form-control" name="nombre_herramienta" required placeholder="Ej: Pala, Rastrillo, Tijeras de podar" maxlength="50">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Tipo</label>
-                            <input type="text" class="form-control" name="tipo" placeholder="Ej: Manual, Eléctrica, Mecánica" maxlength="50">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Estado</label>
-                            <select class="form-select" name="estado">
-                                <option value="disponible">Disponible</option>
-                                <option value="en_uso">En Uso</option>
-                                <option value="mantenimiento">En Mantenimiento</option>
-                                <option value="danada">Dañada</option>
-                                <option value="baja">De Baja</option>
-                            </select>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Fecha de Adquisición</label>
-                                <input type="date" class="form-control" name="fecha_adquisicion">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Último Mantenimiento</label>
-                                <input type="date" class="form-control" name="fecha_ultimo_mantenimiento">
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Observación</label>
-                            <textarea class="form-control" name="observacion" rows="2" placeholder="Notas adicionales..." maxlength="500"></textarea>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Guardar</button>
-                    </div>
-                </form>
+    <?php modal_form(['id' => 'addToolModal', 'title' => 'Agregar Herramienta', 'formId' => 'addToolForm']); ?>
+        <div class="mb-3">
+            <label class="form-label">Nombre de la Herramienta</label>
+            <input type="text" class="form-control" name="nombre_herramienta" required placeholder="Ej: Pala, Rastrillo, Tijeras de podar" maxlength="50">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Tipo</label>
+            <input type="text" class="form-control" name="tipo" placeholder="Ej: Manual, Eléctrica, Mecánica" maxlength="50">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Estado</label>
+            <select class="form-select" name="estado">
+                <option value="disponible">Disponible</option>
+                <option value="en_uso">En Uso</option>
+                <option value="mantenimiento">En Mantenimiento</option>
+                <option value="danada">Dañada</option>
+                <option value="baja">De Baja</option>
+            </select>
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Fecha de Adquisición</label>
+                <input type="date" class="form-control" name="fecha_adquisicion">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Último Mantenimiento</label>
+                <input type="date" class="form-control" name="fecha_ultimo_mantenimiento">
             </div>
         </div>
-    </div>
+        <div class="mb-3">
+            <label class="form-label">Observación</label>
+            <textarea class="form-control" name="observacion" rows="2" placeholder="Notas adicionales..." maxlength="500"></textarea>
+        </div>
+    <?php modal_form_end('addToolForm'); ?>
 
     <!-- Edit Herramienta Modal -->
-    <div class="modal fade" id="editToolModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form id="editToolForm">
-                    <input type="hidden" name="id" id="editToolId">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Editar Herramienta</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label">Nombre de la Herramienta</label>
-                            <input type="text" class="form-control" name="nombre_herramienta" id="editToolName" required maxlength="50">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Tipo</label>
-                            <input type="text" class="form-control" name="tipo" id="editToolType" placeholder="Ej: Manual, Eléctrica, Mecánica" maxlength="50">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Estado</label>
-                            <select class="form-select" name="estado" id="editToolStatus">
-                                <option value="disponible">Disponible</option>
-                                <option value="en_uso">En Uso</option>
-                                <option value="mantenimiento">En Mantenimiento</option>
-                                <option value="danada">Dañada</option>
-                                <option value="baja">De Baja</option>
-                            </select>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Fecha de Adquisición</label>
-                                <input type="date" class="form-control" name="fecha_adquisicion" id="editToolAcqDate">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Último Mantenimiento</label>
-                                <input type="date" class="form-control" name="fecha_ultimo_mantenimiento" id="editToolMaintDate">
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Observación</label>
-                            <textarea class="form-control" name="observacion" id="editToolObs" rows="2" placeholder="Notas adicionales..." maxlength="500"></textarea>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Actualizar</button>
-                    </div>
-                </form>
+    <?php modal_form(['id' => 'editToolModal', 'title' => 'Editar Herramienta', 'formId' => 'editToolForm', 'hasHiddenId' => true, 'hiddenId' => 'editToolId', 'saveText' => 'Actualizar']); ?>
+        <div class="mb-3">
+            <label class="form-label">Nombre de la Herramienta</label>
+            <input type="text" class="form-control" name="nombre_herramienta" id="editToolName" required maxlength="50">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Tipo</label>
+            <input type="text" class="form-control" name="tipo" id="editToolType" placeholder="Ej: Manual, Eléctrica, Mecánica" maxlength="50">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Estado</label>
+            <select class="form-select" name="estado" id="editToolStatus">
+                <option value="disponible">Disponible</option>
+                <option value="en_uso">En Uso</option>
+                <option value="mantenimiento">En Mantenimiento</option>
+                <option value="danada">Dañada</option>
+                <option value="baja">De Baja</option>
+            </select>
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Fecha de Adquisición</label>
+                <input type="date" class="form-control" name="fecha_adquisicion" id="editToolAcqDate">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Último Mantenimiento</label>
+                <input type="date" class="form-control" name="fecha_ultimo_mantenimiento" id="editToolMaintDate">
             </div>
         </div>
-    </div>
+        <div class="mb-3">
+            <label class="form-label">Observación</label>
+            <textarea class="form-control" name="observacion" id="editToolObs" rows="2" placeholder="Notas adicionales..." maxlength="500"></textarea>
+        </div>
+    <?php modal_form_end('editToolForm'); ?>
 
     <script src="<?= BASE_URL ?>public/assets/js/dashboard/notifications.js"></script>
     <?= $scripts_links ?>

@@ -1,5 +1,6 @@
 import * as Helpers from '../utils/helpers.js';
 import * as Ajax from '../utils/ajax-handler.js';
+import * as C from '../utils/components.js';
 
 $(document).ready(function () {
   const urlBase = `${window.BASE_URL || '/'}CuentasPagar`;
@@ -55,18 +56,10 @@ $(document).ready(function () {
           orderable: false,
           render: (data) => {
             const tieneSaldo = parseFloat(data.saldo_pendiente) > 0;
-            return `
-              <div class="d-flex gap-1">
-                <button class="btn btn-sm btn-outline-info btn-detalle">
-                    <i class="fas fa-eye"></i>
-                </button>
-                ${tieneSaldo ? `
-                <button class="btn btn-sm btn-outline-success btn-pagar">
-                    <i class="fas fa-money-bill"></i>
-                </button>
-                ` : ''}
-              </div>
-            `;
+            return C.btnGroup(
+              C.btnView('btn-detalle'),
+              ...(tieneSaldo ? [C.btnPay('btn-pagar')] : []),
+            );
           },
         },
       ],

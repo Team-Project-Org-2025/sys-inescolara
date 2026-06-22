@@ -1,6 +1,7 @@
 import * as Helpers from '../utils/helpers.js';
 import * as Ajax from '../utils/ajax-handler.js';
 import { setupRealTimeValidation, validateForm } from '../utils/validation.js';
+import * as C from '../utils/components.js';
 
 $(document).ready(function () {
   const trazabilidadRules = {
@@ -60,26 +61,17 @@ $(document).ready(function () {
           orderable: false,
           render: (data) => {
             const perms = window.userPermisos || [];
-            let html = '<div class="d-flex gap-1">';
+            const btns = [];
 
             if (perms.includes('TRAZABILIDAD_EDIT')) {
-              html += `
-                <button class="btn btn-sm btn-outline-primary btn-edit">
-                  <i class="fas fa-edit"></i>
-                </button>
-              `;
+              btns.push(C.btnEdit('btn-edit'));
             }
 
             if (perms.includes('TRAZABILIDAD_DELETE')) {
-              html += `
-                <button class="btn btn-sm btn-outline-danger btn-delete">
-                  <i class="fas fa-trash"></i>
-                </button>
-              `;
+              btns.push(C.btnDelete('btn-delete'));
             }
 
-            html += '</div>';
-            return html;
+            return C.btnGroup(...btns);
           },
         },
       ],

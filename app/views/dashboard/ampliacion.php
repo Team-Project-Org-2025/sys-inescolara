@@ -1,6 +1,7 @@
 <?php
 $permisos = \SysInescolara\helpers\Auth::permisos();
 include_once __DIR__ . '/../common/links.php';
+include_once __DIR__ . '/../common/modal.php';
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -59,121 +60,90 @@ include_once __DIR__ . '/../common/links.php';
     </main>
 
     <!-- Modal Registrar Ampliación -->
-    <div class="modal fade" id="ampliacionModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog modal-xl modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Nueva Ampliación de Especies</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <form id="ampliacionForm">
-                    <div class="modal-body">
-                        <div class="row g-3 mb-4">
-                            <div class="col-md-4">
-                                <label class="form-label" for="id_cliente">Cliente</label>
-                                <select class="form-select" name="id_cliente" id="id_cliente">
-                                    <option value="">Seleccione (opcional)</option>
-                                    <?php foreach ($clientes as $c): ?>
-                                        <option value="<?= (int)$c['id'] ?>">
-                                            <?= htmlspecialchars($c['nombre_cliente'] ?? '') ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label" for="id_trabajador_gestor">Gestor <span class="text-danger">*</span></label>
-                                <select class="form-select" name="id_trabajador_gestor" id="id_trabajador_gestor" required>
-                                    <option value="">Seleccione</option>
-                                    <?php foreach ($trabajadores as $t): ?>
-                                        <option value="<?= (int)$t['id'] ?>">
-                                            <?= htmlspecialchars(($t['nombre_trabajador'] ?? '') . ' ' . ($t['apellido_trabajador'] ?? '')) ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label" for="fecha_movimiento">Fecha <span class="text-danger">*</span></label>
-                                <input type="date" class="form-control" name="fecha_movimiento" id="fecha_movimiento" required>
-                            </div>
-                            <div class="col-md-12">
-                                <label class="form-label" for="observacion">Observación</label>
-                                <textarea class="form-control" name="observacion" id="observacion" rows="2" maxlength="500"></textarea>
-                            </div>
-                        </div>
-
-                        <hr class="my-4">
-
-                        <div class="border rounded-3 p-3 mb-3" style="border-color: #dc3545 !important; border-width: 2px !important;">
-                            <h5 class="mb-3 text-danger fw-bold"><i class="fas fa-arrow-right"></i> Plantas que salen</h5>
-                            <div class="table-responsive">
-                                <table class="table table-bordered mb-0" id="salidaTable">
-                                    <thead class="table-danger">
-                                        <tr>
-                                            <th>Lote</th>
-                                            <th>Stock</th>
-                                            <th>Cantidad</th>
-                                            <th style="width:40px"></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="salidaTableBody"></tbody>
-                                </table>
-                            </div>
-                            <button type="button" class="btn btn-sm btn-outline-danger mt-2" id="btnAddSalidaRow">
-                                <i class="fas fa-plus"></i> Agregar salida
-                            </button>
-                        </div>
-
-                        <div class="border rounded-3 p-3 mb-3" style="border-color: #198754 !important; border-width: 2px !important;">
-                            <h5 class="mb-3 text-success fw-bold"><i class="fas fa-arrow-left"></i> Plantas que entran</h5>
-                            <div class="table-responsive">
-                                <table class="table table-bordered mb-0" id="entradaTable">
-                                    <thead class="table-success">
-                                        <tr>
-                                            <th>Planta</th>
-                                            <th>Ubicación</th>
-                                            <th>Cantidad</th>
-                                            <th style="width:40px"></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="entradaTableBody"></tbody>
-                                </table>
-                            </div>
-                            <button type="button" class="btn btn-sm btn-outline-success mt-2" id="btnAddEntradaRow">
-                                <i class="fas fa-plus"></i> Agregar entrada
-                            </button>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary" id="ampliacionSubmitBtn">
-                            <i class="fas fa-save"></i> Guardar
-                        </button>
-                    </div>
-                </form>
+    <?php modal_form(['id' => 'ampliacionModal', 'title' => 'Nueva Ampliación de Especies', 'formId' => 'ampliacionForm', 'size' => 'modal-xl modal-dialog-centered']); ?>
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <label class="form-label" for="id_cliente">Cliente</label>
+                <select class="form-select" name="id_cliente" id="id_cliente">
+                    <option value="">Seleccione (opcional)</option>
+                    <?php foreach ($clientes as $c): ?>
+                        <option value="<?= (int)$c['id'] ?>">
+                            <?= htmlspecialchars($c['nombre_cliente'] ?? '') ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="id_trabajador_gestor">Gestor <span class="text-danger">*</span></label>
+                <select class="form-select" name="id_trabajador_gestor" id="id_trabajador_gestor" required>
+                    <option value="">Seleccione</option>
+                    <?php foreach ($trabajadores as $t): ?>
+                        <option value="<?= (int)$t['id'] ?>">
+                            <?= htmlspecialchars(($t['nombre_trabajador'] ?? '') . ' ' . ($t['apellido_trabajador'] ?? '')) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="fecha_movimiento">Fecha <span class="text-danger">*</span></label>
+                <input type="date" class="form-control" name="fecha_movimiento" id="fecha_movimiento" required>
+            </div>
+            <div class="col-md-12">
+                <label class="form-label" for="observacion">Observación</label>
+                <textarea class="form-control" name="observacion" id="observacion" rows="2" maxlength="500"></textarea>
             </div>
         </div>
-    </div>
+
+        <hr class="my-4">
+
+        <div class="border rounded-3 p-3 mb-3" style="border-color: #dc3545 !important; border-width: 2px !important;">
+            <h5 class="mb-3 text-danger fw-bold"><i class="fas fa-arrow-right"></i> Plantas que salen</h5>
+            <div class="table-responsive">
+                <table class="table table-bordered mb-0" id="salidaTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Lote</th>
+                            <th>Stock</th>
+                            <th>Cantidad</th>
+                            <th style="width:40px"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="salidaTableBody"></tbody>
+                </table>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-danger mt-2" id="btnAddSalidaRow">
+                <i class="fas fa-plus"></i> Agregar salida
+            </button>
+        </div>
+
+        <div class="border rounded-3 p-3 mb-3" style="border-color: #198754 !important; border-width: 2px !important;">
+            <h5 class="mb-3 text-success fw-bold"><i class="fas fa-arrow-left"></i> Plantas que entran</h5>
+            <div class="table-responsive">
+                <table class="table table-bordered mb-0" id="entradaTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Planta</th>
+                            <th>Ubicación</th>
+                            <th>Cantidad</th>
+                            <th style="width:40px"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="entradaTableBody"></tbody>
+                </table>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-success mt-2" id="btnAddEntradaRow">
+                <i class="fas fa-plus"></i> Agregar entrada
+            </button>
+        </div>
+    <?php modal_form_end('ampliacionForm'); ?>
 
     <!-- Modal Detalle -->
-    <div class="modal fade" id="detalleModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Detalle de Ampliación</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body" id="detalleModalBody">
-                    <div class="text-center py-4">
-                        <div class="spinner-border text-primary"></div>
-                        <p class="mt-2">Cargando...</p>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                </div>
-            </div>
+    <?php modal_detail_start(['id' => 'detalleModal', 'title' => 'Detalle de Ampliación', 'size' => 'modal-lg', 'bodyId' => 'detalleModalBody']); ?>
+        <div class="text-center py-4">
+            <div class="spinner-border text-primary"></div>
+            <p class="mt-2">Cargando...</p>
         </div>
-    </div>
+    <?php modal_detail_end(); ?>
 
     <!-- Templates -->
     <template id="salidaRowTemplate">

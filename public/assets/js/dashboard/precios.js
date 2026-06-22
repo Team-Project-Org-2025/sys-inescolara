@@ -1,6 +1,7 @@
 import * as Helpers from '../utils/helpers.js';
 import * as Ajax from '../utils/ajax-handler.js';
 import { validateField, validateSelect } from '../utils/validation.js';
+import * as C from '../utils/components.js';
 
 $(document).ready(function () {
   const baseUrl = `${window.BASE_URL || '/'}precios`;
@@ -253,18 +254,10 @@ $(document).ready(function () {
           { data: 'porcentaje_ganancia', render: (data) => `${parseFloat(data).toFixed(1)}%` },
           { data: 'precio_final_sugerido', className: 'text-center', render: (data) => `<strong>${Helpers.formatCurrencyBs(data)}</strong>` },
           { data: 'fecha_calculo', className: 'text-center', render: (data) => data || '<span class="text-muted">&mdash;</span>' },
-          { data: null, orderable: false, render: () => {
-              return `
-                <div class="d-flex gap-1">
-                  <button class="btn btn-sm btn-outline-primary btn-edit">
-                      <i class="fas fa-edit"></i>
-                  </button>
-                  <button class="btn btn-sm btn-outline-danger btn-delete">
-                      <i class="fas fa-trash"></i>
-                  </button>
-                </div>
-              `;
-            },
+          { data: null, orderable: false, render: () => C.btnGroup(
+              C.btnEdit('btn-edit'),
+              C.btnDelete('btn-delete'),
+            ),
           },
         ],
         pageLength: 10,
