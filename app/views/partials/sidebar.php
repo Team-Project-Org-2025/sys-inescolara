@@ -8,7 +8,7 @@ function hasPermiso(string $codigo): bool
 $current = $currentPage ?? '';
 
 $isPlanta = in_array($current, ['plantas', 'especies', 'ubicaciones']);
-$isActivos = in_array($current, ['inventario', 'lotes', 'trazabilidad', 'insumos', 'herramientas', 'unit-measures', 'mermas']);
+$isActivos = in_array($current, ['inventario', 'lotes', 'trazabilidad', 'insumos', 'herramientas', 'unidades-medida', 'mermas']);
 $isVenta = in_array($current, ['ventas', 'precios', 'clientes', 'cuentas-cobrar', 'cuentas-pagar', 'compras']);
 $isServicios = in_array($current, ['ornatos', 'ampliacion', 'proveedores']);
 $isTarea = in_array($current, ['tareas', 'empleados', 'seed-collection']);
@@ -153,7 +153,7 @@ $showSistema = hasPermiso('USUARIOS_MANAGE');
                     <?php endif; ?>
                     <?php if (hasPermiso('UNIDADES_MEDIDA_VIEW')): ?>
                     <li>
-                        <a href="<?= BASE_URL ?>dashboard/unit-measures" class="nav-link <?= $current === 'unit-measures' ? 'active' : '' ?>">
+                        <a href="<?= BASE_URL ?>dashboard/unidades-medida" class="nav-link <?= $current === 'unidades-medida' ? 'active' : '' ?>">
                             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
                             <span>Unidad de medida</span>
                         </a>

@@ -24,7 +24,7 @@ function index(): void
         return;
     }
 
-    $view = ROOT_PATH . 'app/views/dashboard/unit-measures.php';
+    $view = ROOT_PATH . 'app/views/dashboard/unidades-medida.php';
     if (!is_file($view)) {
         http_response_code(500);
         echo 'Vista de unidades de medida no encontrada.';

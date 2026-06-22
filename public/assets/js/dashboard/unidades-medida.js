@@ -3,8 +3,8 @@ import * as Ajax from '../utils/ajax-handler.js';
 import { setupRealTimeValidation, validateForm } from '../utils/validation.js';
 
 $(document).ready(function () {
-  const baseUrl = `${window.BASE_URL || '/'}unit-measures`;
-  let unitsTable = null;
+  const baseUrl = `${window.BASE_URL || '/'}unidades-medida`;
+  let unidadesMedidaTable = null;
 
   const unitValidationRules = {
     nombre: 'nombrePlanta',
@@ -12,9 +12,9 @@ $(document).ready(function () {
 
   const initDataTable = () => {
     if (typeof SkeletonHelper !== 'undefined') {
-      SkeletonHelper.showTableSkeleton('unitsTable', 5, 2);
+      SkeletonHelper.showTableSkeleton('unidadesMedidaTable', 5, 2);
     }
-    unitsTable = $('#unitsTable').DataTable({
+    unidadesMedidaTable = $('#unidadesMedidaTable').DataTable({
       ajax: {
         url: `${baseUrl}?action=get_units`,
         method: 'GET',
@@ -54,9 +54,9 @@ $(document).ready(function () {
           className: 'btn btn-outline-secondary btn-sm',
           action: () => {
             if (typeof SkeletonHelper !== 'undefined') {
-              SkeletonHelper.showTableSkeleton('unitsTable', 5, 2);
+              SkeletonHelper.showTableSkeleton('unidadesMedidaTable', 5, 2);
             }
-            unitsTable.ajax.reload(null, false);
+            unidadesMedidaTable.ajax.reload(null, false);
           },
         },
       ],
@@ -94,7 +94,7 @@ $(document).ready(function () {
         if (response.success) {
           Helpers.toast('success', 'Unidad agregada correctamente');
           $('#addUnitModal').modal('hide');
-          unitsTable.ajax.reload(null, false);
+          unidadesMedidaTable.ajax.reload(null, false);
         } else {
           Helpers.toast('error', response.message);
         }
@@ -105,7 +105,7 @@ $(document).ready(function () {
   });
 
   $(document).on('click', '.btn-edit', function () {
-    const row = unitsTable.row($(this).closest('tr')).data();
+    const row = unidadesMedidaTable.row($(this).closest('tr')).data();
 
     const $addModal = $('#addUnitModal');
     if ($addModal.hasClass('show')) {
@@ -141,7 +141,7 @@ $(document).ready(function () {
         if (response.success) {
           Helpers.toast('success', 'Unidad actualizada correctamente');
           $('#editUnitModal').modal('hide');
-          unitsTable.ajax.reload(null, false);
+          unidadesMedidaTable.ajax.reload(null, false);
         } else {
           Helpers.toast('error', response.message);
         }
@@ -152,7 +152,7 @@ $(document).ready(function () {
   });
 
   $(document).on('click', '.btn-delete', function () {
-    const row = unitsTable.row($(this).closest('tr')).data();
+    const row = unidadesMedidaTable.row($(this).closest('tr')).data();
     const id = row.id;
     const nombre = row.nombre_unidad_medida;
 
@@ -164,7 +164,7 @@ $(document).ready(function () {
           .then((response) => {
             if (response.success) {
               Helpers.toast('success', 'Unidad eliminada correctamente');
-              unitsTable.ajax.reload(null, false);
+              unidadesMedidaTable.ajax.reload(null, false);
             } else {
               Helpers.toast('error', response.message);
             }
