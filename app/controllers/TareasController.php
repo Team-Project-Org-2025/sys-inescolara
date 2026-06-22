@@ -6,7 +6,7 @@ use SysInescolara\models\Tarea;
 use SysInescolara\models\AuditLog;
 use SysInescolara\models\Empleado;
 use SysInescolara\models\Lote;
-use SysInescolara\models\Supplies;
+use SysInescolara\models\Insumo;
 use SysInescolara\models\Herramienta;
 
 function index(): void
@@ -34,7 +34,7 @@ function index(): void
     $trabajadores = $employeeModel->getAll();
     $batchModel = new Lote();
     $lotes = $batchModel->getAll();
-    $suppliesModel = new Supplies();
+    $suppliesModel = new Insumo();
     $insumos = $suppliesModel->getAll();
     $toolModel = new Herramienta();
     $herramientas = $toolModel->getAll();
@@ -86,7 +86,7 @@ function tasks_assignAjax(): void
 
     $rawConsumos = $data['consumptions'] ?? [];
     $consumptions = [];
-    $suppliesModel = new Supplies();
+    $suppliesModel = new Insumo();
     foreach ($rawConsumos as $c) {
         $idInsumo = (int)($c['id_insumo'] ?? 0);
         $cantidad = (float)($c['cantidad_usada'] ?? 0);
@@ -184,7 +184,7 @@ function tasks_editAjax(): void
 
     $rawConsumos = $data['consumptions'] ?? [];
     $consumptions = [];
-    $suppliesModel = new Supplies();
+    $suppliesModel = new Insumo();
     foreach ($rawConsumos as $c) {
         $idInsumo = (int)($c['id_insumo'] ?? 0);
         $cantidad = (float)($c['cantidad_usada'] ?? 0);

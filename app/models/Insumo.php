@@ -9,7 +9,7 @@ use SysInescolara\traits\ValidationTrait;
 use PDO;
 use Exception;
 
-class Supplies extends Database implements ReadableInterface, DeletableInterface
+class Insumo extends Database implements ReadableInterface, DeletableInterface
 {
     use ValidationTrait;
 

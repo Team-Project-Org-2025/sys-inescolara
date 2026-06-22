@@ -8,7 +8,7 @@ function hasPermiso(string $codigo): bool
 $current = $currentPage ?? '';
 
 $isPlanta = in_array($current, ['plantas', 'especies', 'ubicaciones']);
-$isActivos = in_array($current, ['inventario', 'lotes', 'trazabilidad', 'supplies', 'herramientas', 'unit-measures', 'mermas']);
+$isActivos = in_array($current, ['inventario', 'lotes', 'trazabilidad', 'insumos', 'herramientas', 'unit-measures', 'mermas']);
 $isVenta = in_array($current, ['ventas', 'prices', 'clientes', 'cuentas-cobrar', 'cuentas-pagar', 'compras']);
 $isServicios = in_array($current, ['ornatos', 'ampliacion', 'proveedores']);
 $isTarea = in_array($current, ['tareas', 'empleados', 'seed-collection']);
@@ -137,7 +137,7 @@ $showSistema = hasPermiso('USUARIOS_MANAGE');
                     <?php endif; ?>
                     <?php if (hasPermiso('INSUMOS_VIEW')): ?>
                     <li>
-                        <a href="<?= BASE_URL ?>dashboard/supplies" class="nav-link <?= $current === 'supplies' ? 'active' : '' ?>">
+                        <a href="<?= BASE_URL ?>dashboard/insumos" class="nav-link <?= $current === 'insumos' ? 'active' : '' ?>">
                             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>
                             <span>Insumos</span>
                         </a>
