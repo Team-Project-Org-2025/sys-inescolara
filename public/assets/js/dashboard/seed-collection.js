@@ -238,7 +238,7 @@ $(document).ready(function () {
     const formData = new FormData(this);
 
     $.ajax({
-      url: `${window.BASE_URL || '/'}locations?action=add_ajax`,
+      url: `${window.BASE_URL || '/'}ubicaciones?action=add_ajax`,
       method: 'POST',
       data: formData,
       processData: false,
@@ -250,12 +250,12 @@ $(document).ready(function () {
         if (response.success) {
           Helpers.toast('success', 'Ubicación agregada correctamente');
           $('#ubicacionQuickModal').modal('hide');
-          $.getJSON(`${window.BASE_URL || '/'}locations?action=get_locations`, { 'X-Requested-With': 'XMLHttpRequest' })
+          $.getJSON(`${window.BASE_URL || '/'}ubicaciones?action=get_locations`, { 'X-Requested-With': 'XMLHttpRequest' })
             .done((res) => {
               if (res.success) {
                 const $select = $('#id_ubicacion');
                 $select.find('option:not(:first)').remove();
-                res.locations.forEach((loc) => {
+                res.ubicaciones.forEach((loc) => {
                   $select.append(`<option value="${loc.id}">${Helpers.escapeHtml(loc.nombre_ubicacion)}</option>`);
                 });
                 $select.val(response.id || '');

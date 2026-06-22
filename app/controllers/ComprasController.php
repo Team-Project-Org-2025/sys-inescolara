@@ -5,7 +5,7 @@ require_once __DIR__ . '/controller_helpers.php';
 use SysInescolara\models\Purchase;
 use SysInescolara\models\Proveedor;
 use SysInescolara\models\Supplies;
-use SysInescolara\models\Location;
+use SysInescolara\models\Ubicacion;
 use SysInescolara\models\Planta;
 use SysInescolara\models\CuentaPagar;
 use SysInescolara\models\AuditLog;
@@ -37,7 +37,7 @@ function index(): void
     $proveedores = $modeloProveedor->getAll();
     $modeloInsumo = new Supplies();
     $insumos = $modeloInsumo->getAll();
-    $modeloUbicacion = new Location();
+    $modeloUbicacion = new Ubicacion();
     $ubicaciones = $modeloUbicacion->getAll();
 
     $vista = ROOT_PATH . 'app/views/dashboard/compras.php';

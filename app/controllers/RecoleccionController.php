@@ -3,7 +3,7 @@
 require_once __DIR__ . '/controller_helpers.php';
 
 use SysInescolara\models\SeedCollection;//no lo borre
-use SysInescolara\models\Location;
+use SysInescolara\models\Ubicacion;
 use SysInescolara\models\Employee;//no lo borre
 use SysInescolara\models\Planta;
 use SysInescolara\models\Supplies;

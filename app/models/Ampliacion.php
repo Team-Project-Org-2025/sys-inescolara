@@ -162,7 +162,7 @@ class Ampliacion extends Database implements ReadableInterface
 
     public function getLocations(): array
     {
-        $loc = new Location();
+        $loc = new Ubicacion();
         return $loc->getAll();
     }
 

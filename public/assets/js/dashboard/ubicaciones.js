@@ -3,8 +3,8 @@ import * as Ajax from '../utils/ajax-handler.js';
 import { setupRealTimeValidation, validateForm } from '../utils/validation.js';
 
 $(document).ready(function () {
-  const baseUrl = `${window.BASE_URL || '/'}locations`;
-  let locationsTable = null;
+  const baseUrl = `${window.BASE_URL || '/'}ubicaciones`;
+  let ubicacionesTable = null;
 
   const locationValidationRules = {
     nombre_ubicacion: 'nombrePlanta'
@@ -13,15 +13,15 @@ $(document).ready(function () {
   
   const initDataTable = () => {
     if (typeof SkeletonHelper !== 'undefined') {
-SkeletonHelper.showTableSkeleton('locationsTable', 5, 5);
+      SkeletonHelper.showTableSkeleton('ubicacionesTable', 5, 5);
     }
-    locationsTable = $('#locationsTable').DataTable({
+    ubicacionesTable = $('#ubicacionesTable').DataTable({
       ajax: {
         url: `${baseUrl}?action=get_locations`,
         method: 'GET',
         dataType: 'json',
         headers: { 'X-Requested-With': 'XMLHttpRequest' },
-        dataSrc: 'locations',
+        dataSrc: 'ubicaciones',
       },
       columns: [
         { 
@@ -77,9 +77,9 @@ SkeletonHelper.showTableSkeleton('locationsTable', 5, 5);
           className: 'btn btn-outline-secondary btn-sm',
           action: () => {
             if (typeof SkeletonHelper !== 'undefined') {
-              SkeletonHelper.showTableSkeleton('locationsTable', 5, 3);
+              SkeletonHelper.showTableSkeleton('ubicacionesTable', 5, 3);
             }
-            locationsTable.ajax.reload(null, false);
+            ubicacionesTable.ajax.reload(null, false);
           },
         },
       ],
@@ -117,7 +117,7 @@ SkeletonHelper.showTableSkeleton('locationsTable', 5, 5);
         if (response.success) {
           Helpers.toast('success', 'Ubicación agregada correctamente');
           $('#addLocationModal').modal('hide');
-          locationsTable.ajax.reload(null, false);
+          ubicacionesTable.ajax.reload(null, false);
         } else {
           Helpers.toast('error', response.message);
         }
@@ -128,7 +128,7 @@ SkeletonHelper.showTableSkeleton('locationsTable', 5, 5);
   });
 
   $(document).on('click', '.btn-edit', function () {
-    const row = locationsTable.row($(this).closest('tr')).data();
+    const row = ubicacionesTable.row($(this).closest('tr')).data();
 
     const $addModal = $('#addLocationModal');
     if ($addModal.hasClass('show')) {
@@ -167,7 +167,7 @@ SkeletonHelper.showTableSkeleton('locationsTable', 5, 5);
         if (response.success) {
           Helpers.toast('success', 'Ubicación actualizada correctamente');
           $('#editLocationModal').modal('hide');
-          locationsTable.ajax.reload(null, false);
+          ubicacionesTable.ajax.reload(null, false);
         } else {
           Helpers.toast('error', response.message);
         }
@@ -178,7 +178,7 @@ SkeletonHelper.showTableSkeleton('locationsTable', 5, 5);
   });
 
   $(document).on('click', '.btn-delete', function () {
-    const row = locationsTable.row($(this).closest('tr')).data();
+    const row = ubicacionesTable.row($(this).closest('tr')).data();
     const id = row.id;
     const nombre = row.nombre_ubicacion;
 
@@ -190,7 +190,7 @@ SkeletonHelper.showTableSkeleton('locationsTable', 5, 5);
           .then((response) => {
             if (response.success) {
               Helpers.toast('success', 'Ubicación eliminada correctamente');
-              locationsTable.ajax.reload(null, false);
+              ubicacionesTable.ajax.reload(null, false);
             } else {
               Helpers.toast('error', response.message);
             }

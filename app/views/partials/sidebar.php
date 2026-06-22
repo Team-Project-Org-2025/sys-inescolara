@@ -7,7 +7,7 @@ function hasPermiso(string $codigo): bool
 
 $current = $currentPage ?? '';
 
-$isPlanta = in_array($current, ['plantas', 'especies', 'locations']);
+$isPlanta = in_array($current, ['plantas', 'especies', 'ubicaciones']);
 $isActivos = in_array($current, ['inventario', 'lotes', 'trazabilidad', 'supplies', 'tools', 'unit-measures', 'mermas']);
 $isVenta = in_array($current, ['ventas', 'prices', 'clientes', 'cuentas-cobrar', 'cuentas-pagar', 'compras']);
 $isServicios = in_array($current, ['ornatos', 'ampliacion', 'proveedores']);
@@ -91,7 +91,7 @@ $showSistema = hasPermiso('USUARIOS_MANAGE');
                     <?php endif; ?>
                     <?php if (hasPermiso('UBICACIONES_VIEW')): ?>
                     <li>
-                        <a href="<?= BASE_URL ?>dashboard/locations" class="nav-link <?= $current === 'locations' ? 'active' : '' ?>">
+                        <a href="<?= BASE_URL ?>dashboard/ubicaciones" class="nav-link <?= $current === 'ubicaciones' ? 'active' : '' ?>">
                             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
                             <span>Administrar ubicacion</span>
                         </a>
