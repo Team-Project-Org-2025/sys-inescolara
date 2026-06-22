@@ -24,8 +24,8 @@ Control de inventario, ventas, producción, lotes, insumos, trabajadores, tareas
 
 ### Controladores
 - **Función global:** Todos los controladores usan funciones globales (sin clases ni namespace)
-- **Lista:** SuppliesController, TasksController, BatchesController, ClientsController, EmployeesController, PlantsController, SpeciesController, LocationsController, SuppliersController, UserController, RolesController, AuditLogController, BackupsController, ReportsController, NotificationsController, LoginController, DashboardController, RecuperarpasswordController, PublicController, InicioController, AuthController, InventarioController
-- **Helpers compartidos:** `app/controllers/controller_helpers.php` (jsonResponse, checkModuleAuth, checkPermisoOrFail, isAjaxRequest, handleError, getRequestData, validateAndSanitize)
+- **Lista:** SuppliesController, TasksController, BatchesController, ClientsController, EmployeesController, PlantsController, SpeciesController, LocationsController, SuppliersController, UserController, RolesController, AuditlogController, BackupsController, ReportsController, NotificationsController, LoginController, DashboardController, RecuperarpasswordController, PublicController, InicioController, AuthController, InventarioController, UnitmeasuresController, OrnatosController, Cuentas_cobrarController, MermasController, ComprasController, Cuentas_pagarController, VentasController, PricesController, AmpliacionController, ToolsController
+- **Helpers compartidos:** `app/controllers/controller_helpers.php` (jsonResponse, checkModuleAuth, checkPermisoOrFail, isAjaxRequest, handleError, getRequestData, validateAndSanitize, checkCsrf)
 - **Ubicación:** `app/controllers/`
 
 ### Modelos
@@ -47,7 +47,7 @@ Control de inventario, ventas, producción, lotes, insumos, trabajadores, tareas
 
 ### Assets
 - CSS: `public/assets/css/styles.css` + `sidebar.css`
-- JS: `public/assets/js/` (sidebar.js, dashboard/*.js)
+- JS: `public/assets/js/` (sidebar.js, dashboard/*.js, utils/validation.js, utils/ajax-handler.js, utils/helpers.js, utils/components.js)
 - Imágenes: `public/assets/images/`
 
 ## Bases de Datos
@@ -120,6 +120,41 @@ Tablas: usuarios, roles, permisos, rol_permisos, usuario_permisos, auditoria_log
 - **Vistas migradas (7):** `ampliacion.php`, `seed-collection.php`, `trazabilidad.php`, `reports.php`, `index.php`, `usuarios.php`, `dashboard-header.php`
 - **AuditLog.php:** `record()` migrado a `Auth::check()` + `Auth::id()`
 
+### Rama `testing` (integración previa a `develop`)
+- Creada como rama de integración para PRs antes de mergear a `develop`
+- **PRs procesados:** `feature/pruebas` (CSRF), `feature/validaciones-js` (validaciones), `feature/notificacion` (stock crítico campana)
+- **Bugfixes integrados:** `bugfix/cuentas-por-cobrar`, `bugfix/herramientas`, `bugfix/monitoreo`, `bugfix/Lote`, `bugfix/Ventas`, `bugfix/Cuentas-por-pagar`, `bugfix/empleados`, `bugfix/tareas`
+- **Estandarización UI (develop):** `fix/standardize-buttons-tables` — botones icono+texto, tablas thead negro, modales Bootstrap componentizados, botones DataTables en `components.js`
+
+### Migración JS `data-*` → `row().data()` (PR #151, #153)
+- 24 archivos JS del dashboard migrados de `data-<campo>` HTML a `tabla.row($(this).closest('tr')).data()`
+- **Cat A:** `ampliacion.js`, `auditlog.js`
+- **Cat B1:** `plants.js`, `usuarios.js`, `roles.js`, `supplies.js`, `tools.js`, `unit-measures.js`, `employees.js`, `locations.js`
+- **Cat B2:** `clients.js`, `species.js`, `suppliers.js`, `prices.js`, `mermas.js`
+- **Cat B3:** `ornatos.js`, `cuentas-cobrar.js`, `compras.js`, `cuentas-pagar.js`, `seed-collection.js`
+- **Cat C:** `ventas.js`
+- **Cat D:** `task.js`, `batches.js`, `trazabilidad.js`
+- Se mantiene `Helpers.escapeHtml()` en renders (XSS prevention)
+
+### Bugfix Trazabilidad (PR #152)
+- Validación de fecha futura en módulo trazabilidad
+- Reglas añadidas a `validation.js` (`validateNoFutureDate`, `fechaFuturaCheck`)
+
+### Validaciones JS Centralizadas (PR de `feature/validaciones-js`)
+- `public/assets/js/utils/validation.js` con `REGEX`, `MESSAGES`, `validateField`, `validateSelect`, `validateNoFutureDate`, `setupRealTimeValidation`, `validateForm`, `clearValidation`, `hoy`
+- Reglas actualizadas en 8 módulos: `supplies.js`, `suppliers.js`, `mermas.js`, `cuentas-pagar.js`, `ventas.js`, `ornatos.js`, `task.js`, `prices.js`
+- Validaciones JS coinciden con backend PHP (referencias 6 dígitos, stock usa `'cantidad'`, RIF sin regex, fechas con `fechaFuturaCheck`)
+
+### CSRF Protection (PR #170)
+- `app/helpers/Csrf.php` creado con namespace `SysInescolara\helpers`
+  - `generate(): string` — token 64 hex chars en `$_SESSION['_csrf_token']`
+  - `validate(string $token): void` — `hash_equals()`, HTTP 419 en fallo
+  - `render(): string` — `<input type="hidden" name="_csrf_token" value="...">`
+- `checkCsrf()` eliminado de `LoginController` (protegido por reCAPTCHA)
+- `checkCsrf()` eliminado de `checkModuleAuth()` (dashboard usa AJAX con cookie+header)
+- `checkCsrf()` definido en `controller_helpers.php` como función standalone para uso futuro
+- `Csrf::render()` añadido al formulario de login
+
 ### Pendiente (Fases 3‑6 del PLAN_MEJORAS)
 - **Fase 3 — MÓDULO VENTAS / POS:** tablas (venta, detalle_venta, crédito, cuentas_cobrar, pago_venta), flujo POS, PDF, ventas crédito/contado
 - **Fase 4 — MÓDULO COMPRAS:** migración compra_detalle a FKs reales, fecha_recepcion, validación duplicados, actualizaciones automáticas
@@ -134,7 +169,8 @@ Tablas: usuarios, roles, permisos, rol_permisos, usuario_permisos, auditoria_log
 - `app/controllers/controller_helpers.php` — centraliza validación y helper functions
 - `app/helpers/Validation.php` — helper de validación centralizado (Fase 1.1)
 - `app/helpers/Auth.php` — clase estática para acceso a sesión (Refactor Encapsulamiento)
-- `public/assets/js/utils/validation.js` — validation helper del lado del cliente (Fase 1.2)
+- `public/assets/js/utils/validation.js` — validation helper del lado del cliente (REGEX, MESSAGES, validateForm, setupRealTimeValidation, validateNoFutureDate)
+- `app/helpers/Csrf.php` — CSRF token generation/validation/render (PR #170)
 - `app/controllers/FrontController.php` — router de patrón MVC, patrones de rutas predefinidas
 - `app/models/Plant.php`, `DashboardData.php`, `PriceCalculation.php`, `PurchasesController.php` — fixes de la FASE 2 (Linux case‑sensitive, planta_precio_vigente removal, lastInsertId, duplicate batch validation)
 
@@ -160,14 +196,16 @@ Tablas: usuarios, roles, permisos, rol_permisos, usuario_permisos, auditoria_log
 
 ### Patterns de Código
 - **Transacción consistente:** Operaciones multi‑tabla envuelven inserciones/actualizaciones en transacciones atómicas (`beginTransaction()` + `commit()` de Database). Implementado en `Task.assignTaskWithConsumptions` + `Tool.recordUsageWithStateUpdate`.
-- **Validation centralizado:** Regex por tipo de campo (`cedula`, `rif`, `telefono`, `email`, `nombre`, `precio`, `codigo`, `fecha`, `direccion`). Aplica sanitización + validación en `validateAndSanitize()`.
+- **Validation centralizado (JS + PHP):** Regex por tipo de campo en `validation.js` (texto, correo, password, telefono, fechaFormato, decimal, entero, alfanumerico, codigo, rif, cedula, referencia) y en `Validacion.php` server-side. `setupRealTimeValidation()` + `validateForm()` en cliente; `validateAndSanitize()` en servidor.
+- **CSRF via token de sesión:** `Csrf.php` genera token con `random_bytes(32)` almacenado en `$_SESSION['_csrf_token']`. Se renderiza como hidden input en formularios. Validación con `hash_equals()`. No se exige en login (reCAPTCHA) ni en AJAX (cookie+header).
 - **Ajuste automático de esquemas:** `bootstrapDefaults()` en cada modelo migra automáticamente las columnas de la tabla al primer acceso. Sin necesidad de migraciones manuales.
 
 ### Principios de Operación
 - **Timezone:** `America/Caracas` para toda la app.
 - **Case‑sensitive:** Linux (Render) sistemas de archivos son case‑sensitive. Nombres de controlador/vista deben coincidir exactamente con `ucfirst(sanitize(ruta))`.
-- **AJAX:** Chequea `X-Requested-With: XMLHttpRequest` header (en `isAjaxRequest()`).
+- **AJAX:** Chequea `X-Requested-With: XMLHttpRequest` header (en `isAjaxRequest()`). Protegido por cookie de sesión + header, no por CSRF token.
 - **Permisos granulares:** Constantes `MODULO_ACCION` (PLANTAS_VIEW, PLANTAS_CREATE, etc.). `checkPermisoOrFail()` en cada controlador.
+- **Flujo de ramas:** `feature/*` o `bugfix/*` → PR a `testing` → PR a `develop`. No se hace commit directo a `develop`.
 
 ### Referencias Externas
 - **BarkiOS:** Referencia para estructura y templates. Nuestros módulos siguen patrón similar pero agregamos sistema de permisos granular.
@@ -176,7 +214,11 @@ Tablas: usuarios, roles, permisos, rol_permisos, usuario_permisos, auditoria_log
 ### Resúmenes
 - **Fase 1.1‑1.4:** Helper functions centralizados + validación + transacciones.
 - **Fase 2:** Soft deletes (11 modelos + 14 controladores).
-- **Fase 3‑6:** Próximos módulos (Ventas, Compras, Exchange rate, mejoras transversales).
+- **Migración JS `data-*` → `row().data()`:** 24 archivos (PR #151, #153).
+- **Validaciones JS centralizadas:** `validation.js` con REGEX/MESSAGES, reglas en 8 módulos.
+- **CSRF Protection:** `Csrf.php` creado, login sin checkCsrf (reCAPTCHA), dashboard sin checkCsrf (AJAX).
+- **Estandarización UI:** botones icono+texto, tablas thead negro, modales/components Bootstrap.
+- **Rama `testing`:** flujo de integración feature/bugfix → testing → develop.
 
 ## Datos Críticos
 - Admin: `admin@inecolara.gob.ve` / `Admin123!`
