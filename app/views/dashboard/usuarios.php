@@ -36,7 +36,7 @@ include_once __DIR__ . '/../common/links.php';
             <div class="card shadow-sm">
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table id="usersTable" class="table table-striped table-hover w-100">
+                        <table id="usuariosTable" class="table table-striped table-hover w-100">
                             <thead>
                                 <tr>
                                     <th>Nombre de Usuario</th>

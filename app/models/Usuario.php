@@ -1,5 +1,5 @@
 <?php
-// app/models/User.php
+// app/models/Usuario.php
 namespace SysInescolara\models;
 
 use SysInescolara\core\Database;
@@ -7,7 +7,7 @@ use SysInescolara\traits\ValidationTrait;
 use PDO;
 use Exception;
 
-class User extends Database
+class Usuario extends Database
 {
     use ValidationTrait;
 

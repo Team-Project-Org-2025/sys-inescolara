@@ -64,7 +64,7 @@ class Auth
     public static function attempt(string $username, string $password): bool
     {
         session_start();
-        $userModel = new \SysInescolara\models\User();
+        $userModel = new \SysInescolara\models\Usuario();
         $user = $userModel->authenticate($username, $password);
         if ($user) {
             self::set([

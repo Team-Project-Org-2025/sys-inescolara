@@ -1,6 +1,6 @@
 <?php
 
-use SysInescolara\models\User;
+use SysInescolara\models\Usuario;
 use SysInescolara\models\PasswordReset;
 use SysInescolara\helpers\Mailer;
 
@@ -61,7 +61,7 @@ function enviar(): void
         return;
     }
 
-    $userModel = new User();
+    $userModel = new Usuario();
     $user = $userModel->getUserByEmail($correo);
 
     if (!$user) {
@@ -205,7 +205,7 @@ function restablecer(): void
         return;
     }
 
-    $userModel = new User();
+    $userModel = new Usuario();
     $success = $userModel->updatePassword((int)$data['usuario_id'], $password);
 
     if (!$success) {

@@ -2,7 +2,7 @@
 
 require_once __DIR__ . '/controller_helpers.php';
 
-use SysInescolara\models\User;
+use SysInescolara\models\Usuario;
 use SysInescolara\models\AuditLog;
 use SysInescolara\models\Empleado;
 
@@ -25,7 +25,7 @@ function index(): void
         return;
     }
 
-    $model = new User();
+    $model = new Usuario();
     $roles = $model->getRoles();
     $allPermisos = $model->getAllPermissions();
     $employeeModel = new Empleado();
@@ -65,7 +65,7 @@ function users_validateUserData(array $data, string $mode): void
 
 function users_handleAddEdit(string $mode): void
 {
-    $model = new User();
+    $model = new Usuario();
     users_validateUserData($_POST, $mode);
 
     $id = (int)($_POST['id'] ?? 0);
@@ -146,7 +146,7 @@ function users_handleAddEdit(string $mode): void
 
 function users_handleDelete(): void
 {
-    $model = new User();
+    $model = new Usuario();
     $id = (int)($_POST['id'] ?? 0);
     if ($id <= 0) throw new \Exception('ID inválido');
     if ($id === 1) {
@@ -177,7 +177,7 @@ function users_handleDelete(): void
 
 function users_getUsersAjax(): void
 {
-    $model = new User();
+    $model = new Usuario();
     $users = $model->getAll();
     foreach ($users as &$u) {
         $u['permisos'] = ($u['rol_id'] ?? 0) !== 1 ? $model->getUserPermissions((int)$u['id']) : [];
