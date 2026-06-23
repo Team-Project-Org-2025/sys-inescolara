@@ -98,7 +98,7 @@ $(document).ready(function () {
   };
 
   const loadBatches = (selectedId = null) => {
-    return $.getJSON(`${baseUrl}?action=get_batches`, {
+    return $.getJSON(`${baseUrl}?action=get_batches${selectedId ? '&include_id=' + selectedId : ''}`, {
       'X-Requested-With': 'XMLHttpRequest',
     }).done((res) => {
       const $select = $('#id_lote');
@@ -174,7 +174,11 @@ $(document).ready(function () {
     $('#trazabilidadModalTitle').text('Editar Cuarentena');
     $('#trazabilidadId').val(row.id);
     $('#cantidad').val(row.cantidad);
-    $('#estado_salud').val(row.estado_salud);
+    const $estado = $('#estado_salud');
+    $estado.val(row.estado_salud);
+    if ($estado.val() !== row.estado_salud) {
+      $estado.append(`<option value="${Helpers.escapeHtml(row.estado_salud)}" selected>${Helpers.escapeHtml(row.estado_salud)}</option>`);
+    }
     $('#fecha_registro').val(row.fecha_registro);
     $('#observacion').val(row.observacion);
     $('#trazabilidadSubmitBtn').text('Actualizar');
