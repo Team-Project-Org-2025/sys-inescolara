@@ -251,7 +251,7 @@ $(document).ready(function () {
           { data: 'id_lote', render: (data) => `#${data}` },
           { data: 'planta_nombre', render: (data) => data || '<span class="text-muted">&mdash;</span>' },
           { data: 'costo_total_insumo', className: 'text-end', render: (data) => Helpers.formatCurrencyBs(data) },
-          { data: 'porcentaje_ganancia', render: (data) => `${parseFloat(data).toFixed(1)}%` },
+          { data: 'porcentaje_ganancia', render: (data) => `${parseFloat(data).toFixed(2)}%` },
           { data: 'precio_final_sugerido', className: 'text-center', render: (data) => `<strong>${Helpers.formatCurrencyBs(data)}</strong>` },
           { data: 'fecha_calculo', className: 'text-center', render: (data) => data || '<span class="text-muted">&mdash;</span>' },
           { data: null, orderable: false, render: () => C.btnGroup(
