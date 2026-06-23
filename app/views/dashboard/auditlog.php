@@ -38,10 +38,9 @@ include_once __DIR__ . '/../common/modal.php';
                                 <thead>
                                     <tr>
                                         <th style="width:160px">Fecha</th>
-                                        <th style="width:130px">Usuario</th>
-                                        <th style="width:140px">Acción</th>
-                                        <th>Descripción</th>
-                                        <th style="width:110px">Tabla</th>
+                                        <th style="width:140px">Usuario</th>
+                                        <th style="width:130px">Acción</th>
+                                        <th style="width:140px">Tabla</th>
                                         <th style="width:80px">ID</th>
                                         <th style="width:60px" data-orderable="false">Detalle</th>
                                     </tr>
