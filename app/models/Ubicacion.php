@@ -6,6 +6,7 @@ use SysInescolara\core\Database;
 use SysInescolara\interfaces\ReadableInterface;
 use SysInescolara\interfaces\DeletableInterface;
 use SysInescolara\traits\ValidationTrait;
+use SysInescolara\models\AuditLog;
 use PDO;
 
 class Ubicacion extends Database implements ReadableInterface, DeletableInterface
@@ -73,11 +74,14 @@ class Ubicacion extends Database implements ReadableInterface, DeletableInterfac
     public function delete(int $id): bool
     {
         try {
+            $oldData = $this->getById($id);
             if ($this->hasAssociatedLots($id)) {
                 throw new \Exception("No se puede desactivar la ubicación: Existen lotes vinculados en el inventario activo.");
             }
-            $stmt = $this->db()->prepare("UPDATE ubicacion SET activo = 0 WHERE id_ubicacion = :id");
-            return $stmt->execute([':id' => $id]);
+            $stmt = $this->db()->prepare("UPDATE ubicacion SET activo = 0 WHERE id_ubicacion = ?");
+            $stmt->execute([$id]);
+            AuditLog::record('DEACTIVATE', 'ubicacion', $id, $oldData, null);
+            return true;
         } catch (\Throwable $e) {
             error_log('Error al desactivar ubicación: ' . $e->getMessage());
             throw $e;
@@ -112,12 +116,18 @@ class Ubicacion extends Database implements ReadableInterface, DeletableInterfac
             'zona' => $zona,
         ]);
         try {
-            $stmt = $this->db()->prepare("INSERT INTO ubicacion (nombre_ubicacion, descripcion, zona) VALUES (:nombre_ubicacion, :descripcion, :zona)");
-            return $stmt->execute([
-                ':nombre_ubicacion' => trim($nombreUbicacion),
-                ':descripcion' => $descripcion,
-                ':zona' => $zona,
+            $stmt = $this->db()->prepare("INSERT INTO ubicacion (nombre_ubicacion, descripcion, zona) VALUES (?, ?, ?)");
+            $stmt->execute([trim($nombreUbicacion), $descripcion, $zona]);
+
+            $newId = (int) $this->db()->lastInsertId();
+
+            AuditLog::record('CREATE', 'ubicacion', $newId, null, [
+                'nombre_ubicacion' => $nombreUbicacion,
+                'descripcion'      => $descripcion,
+                'zona'             => $zona,
             ]);
+
+            return true;
         } catch (\Throwable $e) {
             error_log('Error al agregar ubicación: ' . $e->getMessage());
             return false;
@@ -135,13 +145,19 @@ class Ubicacion extends Database implements ReadableInterface, DeletableInterfac
             if (!$this->exists($id)) {
                 throw new \Exception("No existe la ubicación con ID: $id");
             }
-            $stmt = $this->db()->prepare("UPDATE ubicacion SET nombre_ubicacion = :nombre_ubicacion, descripcion = :descripcion, zona = :zona WHERE id_ubicacion = :id");
-            return $stmt->execute([
-                ':id' => $id,
-                ':nombre_ubicacion' => trim($nombreUbicacion),
-                ':descripcion' => $descripcion,
-                ':zona' => $zona,
+
+            $oldData = $this->getById($id);
+
+            $stmt = $this->db()->prepare("UPDATE ubicacion SET nombre_ubicacion = ?, descripcion = ?, zona = ? WHERE id_ubicacion = ?");
+            $stmt->execute([trim($nombreUbicacion), $descripcion, $zona, $id]);
+
+            AuditLog::record('UPDATE', 'ubicacion', $id, $oldData, [
+                'nombre_ubicacion' => $nombreUbicacion,
+                'descripcion'      => $descripcion,
+                'zona'             => $zona,
             ]);
+
+            return true;
         } catch (\Throwable $e) {
             error_log('Error al actualizar ubicación: ' . $e->getMessage());
             throw $e;
