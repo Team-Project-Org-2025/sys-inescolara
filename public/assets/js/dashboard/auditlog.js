@@ -44,7 +44,7 @@ $(document).ready(function () {
 
   const initDataTable = () => {
     if (typeof SkeletonHelper !== 'undefined') {
-      SkeletonHelper.showTableSkeleton('auditlogTable', 10, 6);
+      SkeletonHelper.showTableSkeleton('auditlogTable', 10, 7);
     }
     auditlogTable = $('#auditlogTable').DataTable({
       ajax: {
@@ -55,17 +55,19 @@ $(document).ready(function () {
         dataSrc: 'auditlogs',
       },
       columns: [
-        {
-          data: 'fecha_accion',
-          render: (data) => formatDate(data),
-        },
+        { data: 'fecha_accion', render: (data) => formatDate(data) },
         { data: 'nombre_usuario' },
+        { data: 'accion', render: (data) => actionBadge(data) },
         {
-          data: 'accion',
-          render: (data) => actionBadge(data),
+          data: null,
+          render: (data) => {
+            const actionLabels = { CREATE: 'creó', UPDATE: 'actualizó', DELETE: 'eliminó', LOGIN: 'inició sesión', LOGOUT: 'cerró sesión' };
+            if (data.accion === 'LOGIN' || data.accion === 'LOGOUT') return `${actionLabels[data.accion] || data.accion}`;
+            return `${actionLabels[data.accion] || data.accion} ${tableLabel(data.tabla_afectada).toLowerCase()}`;
+          },
         },
         { data: 'tabla_afectada', render: (data) => tableLabel(data) },
-        { data: 'id_registro_afectado' },
+        { data: 'id_registro_afectado', render: (data) => data ? `<span class="badge bg-dark bg-opacity-10 text-dark">#${data}</span>` : '—' },
         {
           data: null,
           orderable: false,
