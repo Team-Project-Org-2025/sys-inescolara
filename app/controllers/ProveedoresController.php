@@ -3,7 +3,6 @@
 require_once __DIR__ . '/controller_helpers.php';
 
 use SysInescolara\models\Proveedor;
-use SysInescolara\models\AuditLog;
 
 function index(): void
 {
@@ -61,16 +60,13 @@ function suppliers_handleAddEdit(string $mode): void
     if ($mode === 'add') {
         $model->add($nombre, $rif, $contacto, $telefono);
         $newId = $model->getLastInsertId() ?? 0;
-        AuditLog::record('CREATE', 'proveedores', $newId, null, compact('nombre', 'rif', 'contacto', 'telefono'));
         jsonResponse(['success' => true, 'message' => 'Proveedor agregado correctamente', 'proveedor' => ['id' => $newId, 'nombre_proveedor' => $nombre, 'rif_proveedor' => $rif, 'contacto_vendedor' => $contacto, 'telefono_proveedor' => $telefono]]);
     }
 
     $id = (int)($_POST['id'] ?? 0);
     if ($id <= 0) throw new \Exception('ID inválido');
 
-    $oldData = $model->getById($id);
     $model->update($id, $nombre, $rif, $contacto, $telefono);
-    AuditLog::record('UPDATE', 'proveedores', $id, $oldData, compact('nombre', 'rif', 'contacto', 'telefono'));
     jsonResponse(['success' => true, 'message' => 'Proveedor actualizado correctamente', 'proveedor' => ['id' => $id, 'nombre_proveedor' => $nombre, 'rif_proveedor' => $rif, 'contacto_vendedor' => $contacto, 'telefono_proveedor' => $telefono]]);
 }
 
@@ -81,9 +77,7 @@ function suppliers_handleDelete(): void
     if ($id <= 0) throw new \Exception('ID inválido');
     if (!$model->exists($id)) throw new \Exception('No existe el proveedor');
 
-    $oldData = $model->getById($id);
     $model->delete($id);
-    AuditLog::record('DEACTIVATE', 'proveedores', $id, $oldData, null);
     jsonResponse(['success' => true, 'message' => 'Proveedor desactivado correctamente', 'supplierId' => $id]);
 }
 
