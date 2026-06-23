@@ -193,5 +193,6 @@ function trazabilidad_getTrazabilidadAjax(): void
 function trazabilidad_getBatchesAjax(): void
 {
     $model = new Trazabilidad();
-    jsonResponse(['success' => true, 'batches' => $model->getAvailableBatches()]);
+    $includeId = isset($_GET['include_id']) && $_GET['include_id'] !== '' ? (int)$_GET['include_id'] : null;
+    jsonResponse(['success' => true, 'batches' => $model->getAvailableBatches($includeId)]);
 }
