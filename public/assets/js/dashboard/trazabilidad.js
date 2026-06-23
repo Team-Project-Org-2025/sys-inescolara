@@ -134,6 +134,16 @@ $(document).ready(function () {
 
   $(document).on('change', '#id_lote', updateLoteInfo);
 
+  $(document).on('input change', '#cantidad', function () {
+    const $input = $(this);
+    const max = parseInt($input.attr('max'), 10);
+    const val = parseInt($input.val(), 10);
+    if (max && val > max) {
+      Helpers.toast('warning', `La cantidad no puede ser mayor a ${max} ejemplares disponibles en el lote.`);
+      $input.val(max);
+    }
+  });
+
   $('#btnAddTrazabilidad').on('click', function () {
     $('#trazabilidadModalTitle').text('Registrar Cuarentena');
     $('#trazabilidadId').val('0');
@@ -149,6 +159,12 @@ $(document).ready(function () {
   $('#trazabilidadForm').on('submit', function (e) {
     e.preventDefault();
     if (!validateForm($(this), trazabilidadRules)) return;
+    const max = parseInt($('#cantidad').attr('max'), 10);
+    const val = parseInt($('#cantidad').val(), 10);
+    if (max && val > max) {
+      Helpers.toast('warning', `La cantidad no puede ser mayor a ${max} ejemplares disponibles.`);
+      return;
+    }
     const id = $('#trazabilidadId').val();
     const action = id && id !== '0' ? 'edit_ajax' : 'add_ajax';
     const formData = new FormData(this);
