@@ -34,11 +34,9 @@ $(document).ready(function () {
           data: 'estado_salud',
           render: (data) => {
             const badges = {
-              Sano: 'badge bg-success',
               Sospechoso: 'badge bg-warning text-dark',
               Enfermo: 'badge bg-danger',
               Plaga: 'badge bg-danger',
-              Cuarentena: 'badge bg-info text-dark',
               'Bajo observación': 'badge bg-secondary',
             };
             const cls = badges[data] || 'badge bg-secondary';
@@ -98,8 +96,14 @@ $(document).ready(function () {
   };
 
   const loadBatches = (selectedId = null) => {
-    return $.getJSON(`${baseUrl}?action=get_batches${selectedId ? '&include_id=' + selectedId : ''}`, {
-      'X-Requested-With': 'XMLHttpRequest',
+    const data = { action: 'get_batches' };
+    if (selectedId) data.include_id = selectedId;
+    return $.ajax({
+      url: baseUrl,
+      method: 'GET',
+      data,
+      dataType: 'json',
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
     }).done((res) => {
       const $select = $('#id_lote');
       $select.find('option:not(:first)').remove();
@@ -118,10 +122,13 @@ $(document).ready(function () {
     const $option = $select.find('option:selected');
     const stock = $option.data('stock');
     const $info = $('#loteInfo');
+    const $cantidad = $('#cantidad');
     if (stock !== undefined) {
       $info.text(`Ejemplares disponibles en este lote: ${stock}`).css('color', stock > 0 ? 'var(--text-secondary)' : '#dc3545');
+      $cantidad.attr('max', stock);
     } else {
       $info.text('');
+      $cantidad.removeAttr('max');
     }
   };
 
