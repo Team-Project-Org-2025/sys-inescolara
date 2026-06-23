@@ -1,5 +1,15 @@
 const urlBaseVentas = `${window.BASE_URL || '/'}ventas`;
 
+import { setupRealTimeValidation, validateForm } from '../utils/validation.js';
+import * as C from '../utils/components.js';
+
+const ventasRules = {
+  id_cliente: 'select',
+  id_trabajador: 'select',
+  tipo_venta: 'select',
+  observaciones: null,
+};
+
 const Ventas = {
     tabla: null,
 
@@ -11,6 +21,7 @@ const Ventas = {
         this.initPagarCompleto();
         this.initForm();
         this.initAcciones();
+        setupRealTimeValidation($('#ventaForm'), ventasRules);
     },
 
     fechaAutomatica() {
@@ -71,11 +82,11 @@ const Ventas = {
                     orderable: false,
                     render: (r) => {
                         const btns = [
-                            `<button class="btn btn-sm btn-info ver-detalle" title="Ver"><i class="fas fa-eye"></i></button>`,
-                            `<a href="${urlBaseVentas}?accion=comprobante&id=${r.id_venta}" class="btn btn-sm btn-success btn-pdf-download" title="PDF"><i class="fas fa-file-pdf"></i></a>`
+                            C.btnView('ver-detalle'),
+                            C.btnLink({ label: 'PDF', icon: 'fa-file-pdf', href: `${urlBaseVentas}?accion=comprobante&id=${r.id_venta}`, className: 'btn-pdf-download', btnClass: 'btn-outline-success', extraAttrs: 'title="PDF"' }),
                         ];
                         if (r.estado === 'pendiente') {
-                            btns.push(`<button class="btn btn-sm btn-danger cancelar-venta" title="Anular"><i class="fas fa-ban"></i></button>`);
+                            btns.push(C.btnCustom({ label: 'Anular', icon: 'fa-ban', className: 'cancelar-venta', btnClass: 'btn-outline-danger' }));
                         }
                         return `<div class="d-flex gap-1 justify-content-center">${btns.join('')}</div>`;
                     }
@@ -184,7 +195,7 @@ const Ventas = {
                     </div>
                     <div class="col-4">
                         <small class="text-muted d-block" style="font-size:.7rem;line-height:1;letter-spacing:.5px;">PRECIO UNIT.</small>
-                        <input type="number" class="form-control form-control-sm precio-producto text-end mt-1" value="${parseFloat(lote.precio_unitario || 0).toFixed(2)}" step="0.01" min="0">
+                            <input type="text" class="form-control form-control-sm precio-producto text-end mt-1" value="${parseFloat(lote.precio_unitario || 0).toFixed(2)}" inputmode="decimal">
                     </div>
                     <div class="col-4 text-end">
                         <small class="text-muted d-block" style="font-size:.7rem;line-height:1;letter-spacing:.5px;">SUBTOTAL</small>
@@ -206,7 +217,10 @@ const Ventas = {
         };
 
         cant.addEventListener('input', recalcular);
-        precio.addEventListener('input', recalcular);
+        precio.addEventListener('input', () => {
+            precio.value = precio.value.replace(/[^0-9.,]/g, '').replace(/,/g, '.');
+            recalcular();
+        });
         div.querySelector('.quitar-producto').addEventListener('click', () => {
             div.remove();
             this.calcularTotales();
@@ -326,6 +340,7 @@ const Ventas = {
     initForm() {
         document.getElementById('ventaForm').addEventListener('submit', (e) => {
             e.preventDefault();
+            if (!validateForm($('#ventaForm'), ventasRules)) return;
             this.guardarVenta();
         });
     },
@@ -435,7 +450,7 @@ const Ventas = {
                         </select>
                     </div>
                     <div class="col-4">
-                        <input type="number" class="form-control form-control-sm monto-pago" placeholder="Monto" step="0.01" min="0">
+                        <input type="text" class="form-control form-control-sm monto-pago" placeholder="Monto" inputmode="decimal">
                     </div>
                     <div class="col-2">
                         <input type="text" class="form-control form-control-sm ref-pago" placeholder="Ref.">

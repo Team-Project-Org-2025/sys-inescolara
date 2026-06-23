@@ -199,9 +199,45 @@ class CuentaCobrar extends Database
                 ':id_trabajador' => $idTrabajador,
                 ':observaciones' => $observaciones,
             ]);
+            $this->actualizarEstadoVenta($idVenta);
             return (int)$this->db()->lastInsertId();
         } catch (\Throwable $e) {
             error_log('Error en CuentaCobrar::registrarPago: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    public function actualizarEstadoVenta(int $idVenta): void
+    {
+        try {
+            $stmt = $this->db()->prepare("
+                SELECT
+                    COALESCE(det.monto_total, 0) AS monto_total,
+                    COALESCE(pag.total_pagado, 0) AS total_pagado
+                FROM venta v
+                LEFT JOIN (
+                    SELECT id_venta, SUM(cantidad * precio_unitario) AS monto_total
+                    FROM detalle_venta
+                    GROUP BY id_venta
+                ) det ON v.id_venta = det.id_venta
+                LEFT JOIN (
+                    SELECT id_venta, SUM(monto) AS total_pagado
+                    FROM pago_venta
+                    WHERE estado_pago != 'rechazado'
+                    GROUP BY id_venta
+                ) pag ON v.id_venta = pag.id_venta
+                WHERE v.id_venta = :id
+            ");
+            $stmt->execute([':id' => $idVenta]);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($row) {
+                $nuevoEstado = ((float)$row['total_pagado'] >= (float)$row['monto_total']) ? 'completada' : 'pendiente';
+                $upd = $this->db()->prepare("UPDATE venta SET estado = :estado WHERE id_venta = :id");
+                $upd->execute([':estado' => $nuevoEstado, ':id' => $idVenta]);
+            }
+        } catch (\Throwable $e) {
+            error_log('Error en CuentaCobrar::actualizarEstadoVenta: ' . $e->getMessage());
             throw $e;
         }
     }

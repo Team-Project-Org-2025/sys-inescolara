@@ -90,6 +90,17 @@ class Notification extends Database
         }
     }
 
+    public function markAllWarningsAsRead(int $userId): bool
+    {
+        try {
+            $stmt = $this->db()->prepare("UPDATE notificaciones SET leida = 1 WHERE id_usuario = :uid AND tipo = 'warning' AND leida = 0");
+            return $stmt->execute([':uid' => $userId]);
+        } catch (\Throwable $e) {
+            error_log('Error al marcar warnings como leídas: ' . $e->getMessage());
+            return false;
+        }
+    }
+
     public function create(int $userId, string $titulo, ?string $mensaje = null, string $tipo = 'info', ?string $link = null): bool
     {
         try {
@@ -106,6 +117,21 @@ class Notification extends Database
             ]);
         } catch (\Throwable $e) {
             error_log('Error al crear notificación: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function existsByTitle(int $userId, string $titulo): bool
+    {
+        try {
+            $stmt = $this->db()->prepare("
+                SELECT COUNT(*) FROM notificaciones
+                WHERE id_usuario = :uid AND titulo = :titulo AND leida = 0
+            ");
+            $stmt->execute([':uid' => $userId, ':titulo' => $titulo]);
+            return (int) $stmt->fetchColumn() > 0;
+        } catch (\Throwable $e) {
+            error_log('Error al verificar notificación: ' . $e->getMessage());
             return false;
         }
     }

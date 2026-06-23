@@ -1,5 +1,6 @@
 <?php
 include_once __DIR__ . '/../common/links.php';
+include_once __DIR__ . '/../common/modal.php';
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -56,96 +57,79 @@ include_once __DIR__ . '/../common/links.php';
     </main>
 
     <!-- Modal de Ornato (Agregar / Editar) -->
-    <div class="modal fade" id="modalOrnato" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <form id="formOrnato">
-                    <input type="hidden" name="id" id="inputId">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="tituloModal">Agregar Ornato</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <!-- Cabecera -->
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Cliente *</label>
-                                <select class="form-select" name="id_cliente" id="inputCliente" required>
-                                    <option value="">Seleccione un cliente...</option>
-                                    <?php if (isset($clientes)): foreach ($clientes as $c): ?>
-                                    <option value="<?= $c['id'] ?>"><?= htmlspecialchars($c['nombre_cliente']) ?></option>
-                                    <?php endforeach; endif; ?>
-                                </select>
-                            </div>
-                            <div class="col-md-3 mb-3">
-                                <label class="form-label">Tipo de ornato *</label>
-                                <select class="form-select" name="tipo_ornato" id="inputTipo" required>
-                                    <option value="Venta">Venta</option>
-                                    <option value="Donacion">Donación</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3 mb-3">
-                                <label class="form-label">Fecha *</label>
-                                <input type="date" class="form-control" name="fecha" id="inputFecha" required>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Ubicación</label>
-                                <input type="text" class="form-control" name="ubicacion" id="inputUbicacion" placeholder="Ej: Jardín frontal, Área de recepción">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Monto Total</label>
-                                <input type="text" class="form-control" id="inputMontoTotal" readonly style="font-weight:bold;font-size:1.1rem;" value="0.00">
-                                <input type="hidden" name="monto_total" id="inputMontoTotalHidden" value="0.00">
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Descripción</label>
-                            <textarea class="form-control" name="descripcion" id="inputDescripcion" rows="2" placeholder="Detalles del servicio de ornato..."></textarea>
-                        </div>
-
-                        <hr>
-
-                        <!-- Detalle: Plantas Asignadas -->
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <h6 class="mb-0">Plantas Asignadas</h6>
-                            <button type="button" class="btn btn-sm btn-outline-success" id="btnAgregarPlanta">
-                                <i class="fas fa-plus"></i> Agregar planta
-                            </button>
-                        </div>
-                        <div class="table-responsive">
-                            <table class="table table-sm table-bordered" id="tablaDetalle">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th style="min-width:200px;">Lote</th>
-                                        <th style="width:100px;">Cantidad</th>
-                                        <th style="width:130px;">Precio Unit.</th>
-                                        <th style="width:130px;">Subtotal</th>
-                                        <th style="width:50px;"></th>
-                                    </tr>
-                                </thead>
-                                <tbody id="cuerpoDetalle">
-                                    <!-- filas insertadas por JS -->
-                                </tbody>
-                                <tfoot>
-                                    <tr class="fw-bold">
-                                        <td colspan="3" class="text-end">TOTAL</td>
-                                        <td id="totalDetalle">$0.00</td>
-                                        <td></td>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Guardar</button>
-                    </div>
-                </form>
+    <?php modal_form(['id' => 'modalOrnato', 'title' => 'Agregar Ornato', 'formId' => 'formOrnato', 'size' => 'modal-lg', 'hasHiddenId' => true, 'titleId' => 'tituloModal', 'hiddenId' => 'inputId']); ?>
+        <!-- Cabecera -->
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Cliente *</label>
+                <select class="form-select" name="id_cliente" id="inputCliente" required>
+                    <option value="">Seleccione un cliente...</option>
+                    <?php if (isset($clientes)): foreach ($clientes as $c): ?>
+                    <option value="<?= $c['id'] ?>"><?= htmlspecialchars($c['nombre_cliente']) ?></option>
+                    <?php endforeach; endif; ?>
+                </select>
+            </div>
+            <div class="col-md-3 mb-3">
+                <label class="form-label">Tipo de ornato *</label>
+                <select class="form-select" name="tipo_ornato" id="inputTipo" required>
+                    <option value="Venta">Venta</option>
+                    <option value="Donacion">Donación</option>
+                </select>
+            </div>
+            <div class="col-md-3 mb-3">
+                <label class="form-label">Fecha *</label>
+                <input type="date" class="form-control" name="fecha" id="inputFecha" required>
             </div>
         </div>
-    </div>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Ubicación</label>
+                <input type="text" class="form-control" name="ubicacion" id="inputUbicacion" placeholder="Ej: Jardín frontal, Área de recepción" maxlength="50">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Monto Total</label>
+                <input type="text" class="form-control" id="inputMontoTotal" readonly style="font-weight:bold;font-size:1.1rem;" value="0.00">
+                <input type="hidden" name="monto_total" id="inputMontoTotalHidden" value="0.00">
+            </div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Descripción</label>
+            <textarea class="form-control" name="descripcion" id="inputDescripcion" rows="2" placeholder="Detalles del servicio de ornato..." maxlength="500"></textarea>
+        </div>
+
+        <hr>
+
+        <!-- Detalle: Plantas Asignadas -->
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="mb-0">Plantas Asignadas</h6>
+            <button type="button" class="btn btn-sm btn-outline-success" id="btnAgregarPlanta">
+                <i class="fas fa-plus"></i> Agregar planta
+            </button>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-sm table-bordered" id="tablaDetalle">
+                <thead class="table-light">
+                    <tr>
+                        <th style="min-width:200px;">Lote</th>
+                        <th style="width:100px;">Cantidad</th>
+                        <th style="width:130px;">Precio Unit.</th>
+                        <th style="width:130px;">Subtotal</th>
+                        <th style="width:50px;"></th>
+                    </tr>
+                </thead>
+                <tbody id="cuerpoDetalle">
+                    <!-- filas insertadas por JS -->
+                </tbody>
+                <tfoot>
+                    <tr class="fw-bold">
+                        <td colspan="3" class="text-end">TOTAL</td>
+                        <td id="totalDetalle">$0.00</td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    <?php modal_form_end('formOrnato'); ?>
 
     <!-- Template oculto para fila de detalle -->
     <template id="templateFilaDetalle">

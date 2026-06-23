@@ -302,11 +302,11 @@ $userAvatar = \SysInescolara\helpers\Auth::avatar();
 
             <!-- Quick Actions -->
             <div class="quick-actions">
-                <a href="<?= BASE_URL ?>dashboard/plants" class="quick-action-btn"><i class="fas fa-plus-circle" style="color:var(--color-secondary);"></i> Nueva Planta</a>
-                <a href="<?= BASE_URL ?>dashboard/batches" class="quick-action-btn"><i class="fas fa-plus-circle" style="color:#e5a835;"></i> Nuevo Lote</a>
-                <a href="<?= BASE_URL ?>dashboard/supplies" class="quick-action-btn"><i class="fas fa-plus-circle" style="color:#f59e0b;"></i> Nuevo Insumo</a>
-                <a href="<?= BASE_URL ?>dashboard/clients" class="quick-action-btn"><i class="fas fa-plus-circle" style="color:#2e7d32;"></i> Nuevo Cliente</a>
-                <a href="<?= BASE_URL ?>dashboard/tasks" class="quick-action-btn"><i class="fas fa-plus-circle" style="color:#0ea5e9;"></i> Nueva Tarea</a>
+                <a href="<?= BASE_URL ?>dashboard/plantas" class="quick-action-btn"><i class="fas fa-plus-circle" style="color:var(--color-secondary);"></i> Nueva Planta</a>
+                <a href="<?= BASE_URL ?>dashboard/lotes" class="quick-action-btn"><i class="fas fa-plus-circle" style="color:#e5a835;"></i> Nuevo Lote</a>
+                <a href="<?= BASE_URL ?>dashboard/insumos" class="quick-action-btn"><i class="fas fa-plus-circle" style="color:#f59e0b;"></i> Nuevo Insumo</a>
+                <a href="<?= BASE_URL ?>dashboard/clientes" class="quick-action-btn"><i class="fas fa-plus-circle" style="color:#2e7d32;"></i> Nuevo Cliente</a>
+                <a href="<?= BASE_URL ?>dashboard/tareas" class="quick-action-btn"><i class="fas fa-plus-circle" style="color:#0ea5e9;"></i> Nueva Tarea</a>
                 <a href="<?= BASE_URL ?>dashboard/ventas" class="quick-action-btn"><i class="fas fa-shopping-cart" style="color:#2e7d32;"></i> Nueva Venta</a>
                 <a href="<?= BASE_URL ?>dashboard/reports" class="quick-action-btn"><i class="fas fa-chart-bar" style="color:#8b5cf6;"></i> Reportes</a>
             </div>
@@ -316,7 +316,7 @@ $userAvatar = \SysInescolara\helpers\Auth::avatar();
 
                 <div class="section-divider"><i class="fas fa-seedling"></i> Producción</div>
 
-                <a href="<?= BASE_URL ?>dashboard/plants" class="text-decoration-none">
+                <a href="<?= BASE_URL ?>dashboard/plantas" class="text-decoration-none">
                 <div class="kpi-card">
                     <div class="kpi-card-header">
                         <span class="kpi-card-title">Plantas</span>
@@ -329,7 +329,7 @@ $userAvatar = \SysInescolara\helpers\Auth::avatar();
                 </div>
                 </a>
 
-                <a href="<?= BASE_URL ?>dashboard/species" class="text-decoration-none">
+                <a href="<?= BASE_URL ?>dashboard/especies" class="text-decoration-none">
                 <div class="kpi-card">
                     <div class="kpi-card-header">
                         <span class="kpi-card-title">Especies</span>
@@ -342,7 +342,7 @@ $userAvatar = \SysInescolara\helpers\Auth::avatar();
                 </div>
                 </a>
 
-                <a href="<?= BASE_URL ?>dashboard/batches" class="text-decoration-none">
+                <a href="<?= BASE_URL ?>dashboard/lotes" class="text-decoration-none">
                 <div class="kpi-card">
                     <div class="kpi-card-header">
                         <span class="kpi-card-title">Lotes</span>
@@ -355,7 +355,7 @@ $userAvatar = \SysInescolara\helpers\Auth::avatar();
                 </div>
                 </a>
 
-                <a href="<?= BASE_URL ?>dashboard/tasks" class="text-decoration-none">
+                <a href="<?= BASE_URL ?>dashboard/tareas" class="text-decoration-none">
                 <div class="kpi-card">
                     <div class="kpi-card-header">
                         <span class="kpi-card-title">Tareas Pendientes</span>
@@ -370,7 +370,7 @@ $userAvatar = \SysInescolara\helpers\Auth::avatar();
 
                 <div class="section-divider"><i class="fas fa-boxes-stacked"></i> Inventario y Suministros</div>
 
-                <a href="<?= BASE_URL ?>dashboard/supplies" class="text-decoration-none">
+                <a href="<?= BASE_URL ?>dashboard/insumos" class="text-decoration-none">
                 <div class="kpi-card">
                     <div class="kpi-card-header">
                         <span class="kpi-card-title">Insumos</span>
@@ -383,7 +383,7 @@ $userAvatar = \SysInescolara\helpers\Auth::avatar();
                 </div>
                 </a>
 
-                <a href="<?= BASE_URL ?>dashboard/tools" class="text-decoration-none">
+                <a href="<?= BASE_URL ?>dashboard/herramientas" class="text-decoration-none">
                 <div class="kpi-card">
                     <div class="kpi-card-header">
                         <span class="kpi-card-title">Herramientas</span>
@@ -411,7 +411,7 @@ $userAvatar = \SysInescolara\helpers\Auth::avatar();
 
                 <div class="section-divider"><i class="fas fa-handshake"></i> Comercial</div>
 
-                <a href="<?= BASE_URL ?>dashboard/clients" class="text-decoration-none">
+                <a href="<?= BASE_URL ?>dashboard/clientes" class="text-decoration-none">
                 <div class="kpi-card">
                     <div class="kpi-card-header">
                         <span class="kpi-card-title">Clientes</span>
@@ -468,7 +468,7 @@ $userAvatar = \SysInescolara\helpers\Auth::avatar();
 
                 <div class="section-divider"><i class="fas fa-cog"></i> Personal y Configuración</div>
 
-                <a href="<?= BASE_URL ?>dashboard/employees" class="text-decoration-none">
+                <a href="<?= BASE_URL ?>dashboard/empleados" class="text-decoration-none">
                 <div class="kpi-card">
                     <div class="kpi-card-header">
                         <span class="kpi-card-title">Empleados</span>
@@ -481,7 +481,7 @@ $userAvatar = \SysInescolara\helpers\Auth::avatar();
                 </div>
                 </a>
 
-                <a href="<?= BASE_URL ?>dashboard/suppliers" class="text-decoration-none">
+                <a href="<?= BASE_URL ?>dashboard/proveedores" class="text-decoration-none">
                 <div class="kpi-card">
                     <div class="kpi-card-header">
                         <span class="kpi-card-title">Proveedores</span>
@@ -494,7 +494,7 @@ $userAvatar = \SysInescolara\helpers\Auth::avatar();
                 </div>
                 </a>
 
-                <a href="<?= BASE_URL ?>dashboard/prices" class="text-decoration-none">
+                <a href="<?= BASE_URL ?>dashboard/precios" class="text-decoration-none">
                 <div class="kpi-card">
                     <div class="kpi-card-header">
                         <span class="kpi-card-title">Precios Vigentes</span>

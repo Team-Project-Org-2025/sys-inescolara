@@ -1,5 +1,6 @@
 <?php
 include_once __DIR__ . '/../common/links.php';
+include_once __DIR__ . '/../common/modal.php';
 
 $modulos = [
     'Dashboard' => ['DASHBOARD_VIEW' => 'Ver'],
@@ -101,75 +102,42 @@ function renderPermisosChecklist(array $modulos, array $codigoToId): void
     </main>
 
     <!-- Add Role Modal -->
-    <div class="modal fade" id="addRoleModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form id="addRoleForm">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Agregar Rol</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label">Nombre del Rol</label>
-                            <input type="text" class="form-control" name="nombre_rol" required placeholder="Ej: Supervisor, Vendedor">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Descripción</label>
-                            <textarea class="form-control" name="descripcion_rol" rows="2" placeholder="Descripción opcional del rol"></textarea>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Módulos y acciones permitidas</label>
-                            <div style="padding:8px 12px;border:1px solid var(--color-gray-200);border-radius:var(--radius-md);background:var(--bg-secondary);max-height:300px;overflow-y:auto;">
-                                <?php renderPermisosChecklist($modulos, $codigoToId); ?>
-                            </div>
-                            <small class="text-muted">Selecciona los permisos que tendrá este rol.</small>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Guardar</button>
-                    </div>
-                </form>
-            </div>
+    <?php modal_form(['id' => 'addRoleModal', 'title' => 'Agregar Rol', 'formId' => 'addRoleForm']); ?>
+        <div class="mb-3">
+            <label class="form-label">Nombre del Rol</label>
+            <input type="text" class="form-control" name="nombre_rol" required placeholder="Ej: Supervisor, Vendedor" maxlength="50">
         </div>
-    </div>
+        <div class="mb-3">
+            <label class="form-label">Descripción</label>
+            <textarea class="form-control" name="descripcion_rol" rows="2" placeholder="Descripción opcional del rol" maxlength="500"></textarea>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Módulos y acciones permitidas</label>
+            <div style="padding:8px 12px;border:1px solid var(--color-gray-200);border-radius:var(--radius-md);background:var(--bg-secondary);max-height:300px;overflow-y:auto;">
+                <?php renderPermisosChecklist($modulos, $codigoToId); ?>
+            </div>
+            <small class="text-muted">Selecciona los permisos que tendrá este rol.</small>
+        </div>
+    <?php modal_form_end('addRoleForm'); ?>
 
     <!-- Edit Role Modal -->
-    <div class="modal fade" id="editRoleModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form id="editRoleForm">
-                    <input type="hidden" name="id" id="editRoleId">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Editar Rol</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label">Nombre del Rol</label>
-                            <input type="text" class="form-control" name="nombre_rol" id="editRoleName" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Descripción</label>
-                            <textarea class="form-control" name="descripcion_rol" id="editRoleDesc" rows="2"></textarea>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Módulos y acciones permitidas</label>
-                            <div style="padding:8px 12px;border:1px solid var(--color-gray-200);border-radius:var(--radius-md);background:var(--bg-secondary);max-height:300px;overflow-y:auto;">
-                                <?php renderPermisosChecklist($modulos, $codigoToId); ?>
-                            </div>
-                            <small class="text-muted">Selecciona los permisos que tendrá este rol.</small>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Actualizar</button>
-                    </div>
-                </form>
-            </div>
+    <?php modal_form(['id' => 'editRoleModal', 'title' => 'Editar Rol', 'formId' => 'editRoleForm', 'hasHiddenId' => true, 'hiddenId' => 'editRoleId', 'saveText' => 'Actualizar']); ?>
+        <div class="mb-3">
+            <label class="form-label">Nombre del Rol</label>
+            <input type="text" class="form-control" name="nombre_rol" id="editRoleName" required maxlength="50">
         </div>
-    </div>
+        <div class="mb-3">
+            <label class="form-label">Descripción</label>
+            <textarea class="form-control" name="descripcion_rol" id="editRoleDesc" rows="2" maxlength="500"></textarea>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Módulos y acciones permitidas</label>
+            <div style="padding:8px 12px;border:1px solid var(--color-gray-200);border-radius:var(--radius-md);background:var(--bg-secondary);max-height:300px;overflow-y:auto;">
+                <?php renderPermisosChecklist($modulos, $codigoToId); ?>
+            </div>
+            <small class="text-muted">Selecciona los permisos que tendrá este rol.</small>
+        </div>
+    <?php modal_form_end('editRoleForm'); ?>
 
     <script src="<?= BASE_URL ?>public/assets/js/dashboard/notifications.js"></script>
     <?= $scripts_links ?>

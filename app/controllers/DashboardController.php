@@ -17,7 +17,7 @@ function dashboardCheckAuth(): void
 
     // Recargar permisos del usuario desde la BD (para reflejar cambios en tiempo real)
     require_once ROOT_PATH . 'vendor/autoload.php';
-    $userModel = new \SysInescolara\models\User();
+    $userModel = new \SysInescolara\models\Usuario();
     \SysInescolara\helpers\Auth::setField('user_permisos', $userModel->getRolePermissions(\SysInescolara\helpers\Auth::roleId(), \SysInescolara\helpers\Auth::id()));
 }
 
@@ -45,7 +45,7 @@ function index(): void
 
     $stats = $dashboardData->getStats();
     $recentActivity = $dashboardData->getRecentActivity(10);
-    $lowStockLots = $dashboardData->getLowStockLots(20);
+    $lowStockLots = $dashboardData->getLowStockLots(10);
     $lowStockSupplies = $dashboardData->getLowStockSupplies(10);
     $plantsBySpecies = $dashboardData->getPlantsBySpecies();
     $inventorySummary = $dashboardData->getInventorySummary();
@@ -82,14 +82,6 @@ function inventario(): void
 {
     dashboardCheckPermiso('INVENTARIO_VIEW');
 
-    require_once ROOT_PATH . 'vendor/autoload.php';
-    $supplyModel = new \SysInescolara\models\Supplies();
-    $supplies = $supplyModel->getAll();
-    $employeeModel = new \SysInescolara\models\Employee();
-    $employees = $employeeModel->getAll();
-
-    $showAdjustBtn = \SysInescolara\helpers\Auth::hasPermiso('INVENTARIO_ADJUST');
-
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'inventario.php';
 
@@ -107,9 +99,9 @@ function ventas(): void
     dashboardCheckPermiso('VENTAS_ACCESS');
 
     require_once ROOT_PATH . 'vendor/autoload.php';
-    $modeloCliente = new \SysInescolara\models\Client();
+    $modeloCliente = new \SysInescolara\models\Cliente();
     $clientes = $modeloCliente->getAll();
-    $modeloTrabajador = new \SysInescolara\models\Employee();
+    $modeloTrabajador = new \SysInescolara\models\Empleado();
     $trabajadores = $modeloTrabajador->getAll();
 
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
@@ -129,7 +121,7 @@ function cuentas_cobrar(): void
     dashboardCheckPermiso('CUENTAS_COBRAR_VIEW');
 
     require_once ROOT_PATH . 'vendor/autoload.php';
-    $employeeModel = new \SysInescolara\models\Employee();
+    $employeeModel = new \SysInescolara\models\Empleado();
     $employees = $employeeModel->getAll();
 
     $canPay = \SysInescolara\helpers\Auth::hasPermiso('CUENTAS_COBRAR_PAY');
@@ -151,9 +143,11 @@ function usuarios(): void
     dashboardCheckPermiso('USUARIOS_MANAGE');
 
     require_once ROOT_PATH . 'vendor/autoload.php';
-    $userModel = new \SysInescolara\models\User();
+    $userModel = new \SysInescolara\models\Usuario();
     $roles = $userModel->getRoles();
     $allPermisos = $userModel->getAllPermissions();
+    $employeeModel = new \SysInescolara\models\Empleado();
+    $trabajadores = $employeeModel->getAll();
 
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'usuarios.php';
@@ -167,16 +161,16 @@ function usuarios(): void
     require $view;
 }
 
-function plants(): void
+function plantas(): void
 {
     dashboardCheckPermiso('PLANTAS_VIEW');
 
     require_once ROOT_PATH . 'vendor/autoload.php';
-    $speciesModel = new \SysInescolara\models\Species();
+    $speciesModel = new \SysInescolara\models\Especie();
     $species = $speciesModel->getAll();
 
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
-        . 'dashboard' . DIRECTORY_SEPARATOR . 'plants.php';
+        . 'dashboard' . DIRECTORY_SEPARATOR . 'plantas.php';
 
     if (!is_file($view)) {
         http_response_code(500);
@@ -187,18 +181,18 @@ function plants(): void
     require $view;
 }
 
-function batches(): void
+function lotes(): void
 {
     dashboardCheckPermiso('PLANTAS_VIEW');
 
     require_once ROOT_PATH . 'vendor/autoload.php';
-    $plantModel = new \SysInescolara\models\Plant();
+    $plantModel = new \SysInescolara\models\Planta();
     $plants = $plantModel->getAll();
-    $locationModel = new \SysInescolara\models\Location();
+    $locationModel = new \SysInescolara\models\Ubicacion();
     $locations = $locationModel->getAll();
 
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
-        . 'dashboard' . DIRECTORY_SEPARATOR . 'batches.php';
+        . 'dashboard' . DIRECTORY_SEPARATOR . 'lotes.php';
 
     if (!is_file($view)) {
         http_response_code(500);
@@ -209,11 +203,43 @@ function batches(): void
     require $view;
 }
 
-function suppliers(): void
+function ubicaciones(): void
+{
+    dashboardCheckPermiso('UBICACIONES_VIEW');
+
+    $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
+        . 'dashboard' . DIRECTORY_SEPARATOR . 'ubicaciones.php';
+
+    if (!is_file($view)) {
+        http_response_code(500);
+        echo 'Vista de ubicaciones no encontrada.';
+        return;
+    }
+
+    require $view;
+}
+
+function herramientas(): void
+{
+    dashboardCheckPermiso('HERRAMIENTAS_VIEW');
+
+    $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
+        . 'dashboard' . DIRECTORY_SEPARATOR . 'herramientas.php';
+
+    if (!is_file($view)) {
+        http_response_code(500);
+        echo 'Vista de herramientas no encontrada.';
+        return;
+    }
+
+    require $view;
+}
+
+function proveedores(): void
 {
     dashboardCheckPermiso('PROVEEDORES_VIEW');
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
-        . 'dashboard' . DIRECTORY_SEPARATOR . 'suppliers.php';
+        . 'dashboard' . DIRECTORY_SEPARATOR . 'proveedores.php';
 
     if (!is_file($view)) {
         http_response_code(500);
@@ -224,7 +250,7 @@ function suppliers(): void
     require $view;
 }
 
-function supplies(): void
+function insumos(): void
 {
     dashboardCheckPermiso('INSUMOS_VIEW');
 
@@ -233,7 +259,7 @@ function supplies(): void
     $unidades = $unidadMedidaModel->getAll();
 
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
-        . 'dashboard' . DIRECTORY_SEPARATOR . 'supplies.php';
+        . 'dashboard' . DIRECTORY_SEPARATOR . 'insumos.php';
 
     if (!is_file($view)) {
         http_response_code(500);
@@ -249,11 +275,11 @@ function compras(): void
     dashboardCheckPermiso('COMPRAS_VIEW');
 
     require_once ROOT_PATH . 'vendor/autoload.php';
-    $supplierModel = new \SysInescolara\models\Supplier();
+    $supplierModel = new \SysInescolara\models\Proveedor();
     $proveedores = $supplierModel->getAll();
-    $supplyModel = new \SysInescolara\models\Supplies();
+    $supplyModel = new \SysInescolara\models\Insumo();
     $insumos = $supplyModel->getAll();
-    $locationModel = new \SysInescolara\models\Location();
+    $locationModel = new \SysInescolara\models\Ubicacion();
     $ubicaciones = $locationModel->getAll();
 
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
@@ -271,13 +297,13 @@ function compras(): void
 function tasks(): void
 {
     dashboardCheckPermiso('TAREAS_VIEW');
-    $employeeModel = new \SysInescolara\models\Employee();
+    $employeeModel = new \SysInescolara\models\Empleado();
     $trabajadores = $employeeModel->getAll();
-    $batchModel = new \SysInescolara\models\Batch();
+    $batchModel = new \SysInescolara\models\Lote();
     $lotes = $batchModel->getAll();
-    $suppliesModel = new \SysInescolara\models\Supplies();
+    $suppliesModel = new \SysInescolara\models\Insumo();
     $insumos = $suppliesModel->getAll();
-    $toolModel = new \SysInescolara\models\Tool();
+    $toolModel = new \SysInescolara\models\Herramienta();
     $herramientas = $toolModel->getAll();
     $view = ROOT_PATH . 'app/views/dashboard/task.php';
     if (!is_file($view)) {
@@ -288,11 +314,22 @@ function tasks(): void
     require $view;
 }
 
-function employees(): void
+function empleados(): void
 {
     dashboardCheckPermiso('TRABAJADORES_VIEW');
+
+    require_once ROOT_PATH . 'vendor/autoload.php';
+    try {
+        $roleModel = new \SysInescolara\models\Role();
+        $roles = $roleModel->getAll();
+        $cargoOptions = array_map(fn($r) => $r['nombre_rol'], $roles);
+        sort($cargoOptions);
+    } catch (\Throwable $e) {
+        $cargoOptions = [];
+    }
+
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
-        . 'dashboard' . DIRECTORY_SEPARATOR . 'employees.php';
+        . 'dashboard' . DIRECTORY_SEPARATOR . 'empleados.php';
 
     if (!is_file($view)) {
         http_response_code(500);
@@ -303,11 +340,37 @@ function employees(): void
     require $view;
 }
 
-function clients(): void
+function tareas(): void
+{
+    dashboardCheckPermiso('TAREAS_VIEW');
+
+    require_once ROOT_PATH . 'vendor/autoload.php';
+    $employeeModel = new \SysInescolara\models\Empleado();
+    $trabajadores = $employeeModel->getAll();
+    $batchModel = new \SysInescolara\models\Lote();
+    $lotes = $batchModel->getAll();
+    $suppliesModel = new \SysInescolara\models\Insumo();
+    $insumos = $suppliesModel->getAll();
+    $toolModel = new \SysInescolara\models\Herramienta();
+    $herramientas = $toolModel->getAll();
+
+    $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
+        . 'dashboard' . DIRECTORY_SEPARATOR . 'tareas.php';
+
+    if (!is_file($view)) {
+        http_response_code(500);
+        echo 'Vista de tareas no encontrada.';
+        return;
+    }
+
+    require $view;
+}
+
+function clientes(): void
 {
     dashboardCheckPermiso('CLIENTES_VIEW');
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
-        . 'dashboard' . DIRECTORY_SEPARATOR . 'clients.php';
+        . 'dashboard' . DIRECTORY_SEPARATOR . 'clientes.php';
 
     if (!is_file($view)) {
         http_response_code(500);
@@ -317,12 +380,12 @@ function clients(): void
 
     require $view;
 }
-
-function species(): void
+function especies(): void
 {
     dashboardCheckPermiso('PLANTAS_VIEW');
+
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
-        . 'dashboard' . DIRECTORY_SEPARATOR . 'species.php';
+        . 'dashboard' . DIRECTORY_SEPARATOR . 'especies.php';
 
     if (!is_file($view)) {
         http_response_code(500);
@@ -367,7 +430,7 @@ function perfil(): void
 {
     dashboardCheckAuth();
     require_once ROOT_PATH . 'vendor/autoload.php';
-    $userModel = new \SysInescolara\models\User();
+    $userModel = new \SysInescolara\models\Usuario();
     $userId = \SysInescolara\helpers\Auth::id();
     $user = $userModel->getById($userId);
 
@@ -460,9 +523,9 @@ function ornatos(): void
     dashboardCheckPermiso('ORNATOS_VIEW');
 
     require_once ROOT_PATH . 'vendor/autoload.php';
-    $modeloCliente = new \SysInescolara\models\Client();
+    $modeloCliente = new \SysInescolara\models\Cliente();
     $clientes = $modeloCliente->getAll();
-    $modeloLote = new \SysInescolara\models\Batch();
+    $modeloLote = new \SysInescolara\models\Lote();
     $lotes = $modeloLote->getAll();
 
     $vista = ROOT_PATH . 'app/views/dashboard/ornatos.php';
@@ -525,17 +588,17 @@ function tools(): void
     require $view;
 }
 
-function prices(): void
+function precios(): void
 {
     dashboardCheckPermiso('PRECIOS_VIEW');
 
     require_once ROOT_PATH . 'vendor/autoload.php';
 
-    $plantModel = new \SysInescolara\models\Plant();
+    $plantModel = new \SysInescolara\models\Planta();
     $plants = $plantModel->getAll();
 
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
-        . 'dashboard' . DIRECTORY_SEPARATOR . 'prices.php';
+        . 'dashboard' . DIRECTORY_SEPARATOR . 'precios.php';
 
     if (!is_file($view)) {
         http_response_code(500);
@@ -546,12 +609,12 @@ function prices(): void
     require $view;
 }
 
-function unitMeasures(): void
+function unidadesMedida(): void
 {
     dashboardCheckPermiso('UNIDADES_MEDIDA_VIEW');
 
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
-        . 'dashboard' . DIRECTORY_SEPARATOR . 'unit-measures.php';
+        . 'dashboard' . DIRECTORY_SEPARATOR . 'unidades-medida.php';
 
     if (!is_file($view)) {
         http_response_code(500);
@@ -567,11 +630,11 @@ function seedcollection(): void
     dashboardCheckPermiso('RECOLECCION_VIEW');
 
     require_once ROOT_PATH . 'vendor/autoload.php';
-    $locationModel = new \SysInescolara\models\Location();
+    $locationModel = new \SysInescolara\models\Ubicacion();
     $ubicaciones = $locationModel->getAll();
-    $employeeModel = new \SysInescolara\models\Employee();
+    $employeeModel = new \SysInescolara\models\Empleado();
     $trabajadores = $employeeModel->getAll();
-    $plantModel = new \SysInescolara\models\Plant();
+    $plantModel = new \SysInescolara\models\Planta();
     $plantas = $plantModel->getAll();
     $unidadMedidaModel = new \SysInescolara\models\UnidadMedida();
     $unidades = $unidadMedidaModel->getAll();
@@ -592,9 +655,9 @@ function ampliacion(): void
     dashboardCheckPermiso('AMPLIACION_VIEW');
 
     require_once ROOT_PATH . 'vendor/autoload.php';
-    $clientModel = new \SysInescolara\models\Client();
+    $clientModel = new \SysInescolara\models\Cliente();
     $clientes = $clientModel->getAll();
-    $employeeModel = new \SysInescolara\models\Employee();
+    $employeeModel = new \SysInescolara\models\Empleado();
     $trabajadores = $employeeModel->getAll();
 
     $view = ROOT_PATH . 'app/views/dashboard/ampliacion.php';

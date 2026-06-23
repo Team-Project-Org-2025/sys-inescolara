@@ -217,7 +217,7 @@ class SeedCollection extends Database implements ReadableInterface, DeletableInt
 
     public function registerSeedsWithTransaction(int $idRecoleccion, array $items): int
     {
-        $suppliesModel = new Supplies();
+        $suppliesModel = new Insumo();
         $createdCount = 0;
 
         try {

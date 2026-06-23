@@ -1,6 +1,7 @@
 import * as Helpers from '../utils/helpers.js';
 import * as Ajax from '../utils/ajax-handler.js';
 import { setupRealTimeValidation, validateForm } from '../utils/validation.js';
+import * as C from '../utils/components.js';
 
 $(document).ready(function () {
   const baseUrl = `${window.BASE_URL || '/'}roles`;
@@ -26,7 +27,13 @@ $(document).ready(function () {
         { data: 'nombre_rol' },
         {
           data: 'descripcion_rol',
-          render: (data) => data || '<span class="text-muted">—</span>',
+          render: (data) => {
+            if (!data) return '<span class="text-muted">—</span>';
+            const escaped = Helpers.escapeHtml(data);
+            return escaped.length > 80
+              ? `<span title="${escaped}">${Helpers.truncateText(escaped, 80)}</span>`
+              : escaped;
+          },
         },
         {
           data: 'total_permisos',
@@ -40,17 +47,10 @@ $(document).ready(function () {
               return `<span class="text-muted small">—</span>`;
             }
             const canDelete = data.id > 2;
-            return `
-              <div class="d-flex gap-1">
-                <button class="btn btn-sm btn-outline-primary btn-edit">
-                    <i class="fas fa-edit"></i>
-                </button>
-                <button class="btn btn-sm btn-outline-danger btn-delete"
-                        ${!canDelete ? 'disabled' : ''}>
-                    <i class="fas fa-trash"></i>
-                </button>
-              </div>
-            `;
+            return C.btnGroup(
+              C.btnEdit('btn-edit'),
+              C.btnDelete('btn-delete', `${!canDelete ? 'disabled' : ''}`),
+            );
           },
         },
       ],

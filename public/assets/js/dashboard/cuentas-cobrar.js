@@ -1,13 +1,14 @@
 import * as Helpers from '../utils/helpers.js';
 import * as Ajax from '../utils/ajax-handler.js';
 import { setupRealTimeValidation, validateForm } from '../utils/validation.js';
+import * as C from '../utils/components.js';
 
 $(document).ready(function () {
   const urlBase = `${window.BASE_URL || '/'}cuentas_cobrar`;
   let tablaCuentas = null;
 
   const reglasPago = {
-    monto: 'cantidad',
+    monto: 'precio',
     metodo: 'select',
     fecha_pago: 'fechaFuturaCheck'
   };
@@ -28,7 +29,7 @@ $(document).ready(function () {
         {
           data: 'referencia',
           render: (data, type, row) => type === 'display'
-            ? `<a href="#" class="ver-detalle"><strong>${data}</strong></a>\`
+            ? `<a href="#" class="ver-detalle"><strong>${data}</strong></a>`
             : data
         },
         { data: 'nombre_cliente' },
@@ -65,9 +66,9 @@ $(document).ready(function () {
           data: null,
           orderable: false,
           render: (data) => {
-            let html = `<button class="btn btn-sm btn-outline-info ver-detalle me-1" title="Ver detalle"><i class="fas fa-eye"></i></button>`;
+            let html = C.btnView('ver-detalle', 'title="Ver detalle"');
             if (data.estado_cuenta !== 'pagado') {
-              html += `<button class="btn btn-sm btn-success btn-pagar" title="Registrar pago"><i class="fas fa-money-bill-wave"></i></button>`;
+              html += C.btnPay('btn-pagar', 'title="Registrar pago"');
             }
             return html;
           }

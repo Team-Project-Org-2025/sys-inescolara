@@ -24,10 +24,6 @@ class CuentaPagar extends Database implements ReadableInterface, DeletableInterf
         parent::__construct();
     }
 
-    // ============================================================
-    //  Interfaces (wrappers)
-    // ============================================================
-
     public function getAll(): array
     {
         return $this->obtenerTodas();
@@ -48,9 +44,6 @@ class CuentaPagar extends Database implements ReadableInterface, DeletableInterf
         return $this->existe($id);
     }
 
-    // ============================================================
-    //  Transacciones
-    // ============================================================
 
     protected function iniciarTransaccion(): bool
     {
@@ -67,16 +60,19 @@ class CuentaPagar extends Database implements ReadableInterface, DeletableInterf
         return $this->db()->rollBack();
     }
 
-    // ============================================================
-    //  Consultas
-    // ============================================================
-
     public function obtenerTodas(): array
     {
         try {
             $sql = "SELECT
                         cp.id_cuenta_pagar AS id, cp.id_cuenta_pagar, cp.id_compra, cp.monto_total,
-                        cp.saldo_pendiente, cp.fecha_vencimiento, cp.estado, cp.observacion,
+                        ROUND(cp.monto_total - COALESCE(pag.total_pagado, 0), 2) AS saldo_pendiente,
+                        cp.fecha_vencimiento,
+                        CASE
+                            WHEN COALESCE(pag.total_pagado, 0) >= cp.monto_total THEN 'pagada'
+                            WHEN COALESCE(pag.total_pagado, 0) > 0 THEN 'parcial'
+                            ELSE 'pendiente'
+                        END AS estado,
+                        cp.observacion,
                         c.fecha_compra, c.total AS compra_total,
                         p.nombre_proveedor AS proveedor_nombre,
                         p.rif_proveedor,
@@ -84,6 +80,12 @@ class CuentaPagar extends Database implements ReadableInterface, DeletableInterf
                     FROM cuentas_pagar cp
                     JOIN compra c ON cp.id_compra = c.id_compra
                     LEFT JOIN proveedores p ON c.id_proveedor = p.id_proveedor
+                    LEFT JOIN (
+                        SELECT id_cuenta_pagar, SUM(monto) AS total_pagado
+                        FROM pago_compra
+                        WHERE estado IN ('registrado', 'confirmado') AND activo = 1
+                        GROUP BY id_cuenta_pagar
+                    ) pag ON cp.id_cuenta_pagar = pag.id_cuenta_pagar
                     WHERE cp.activo = 1
                     ORDER BY cp.created_at DESC";
             $stmt = $this->db()->query($sql);
@@ -98,11 +100,27 @@ class CuentaPagar extends Database implements ReadableInterface, DeletableInterf
     {
         try {
             $stmt = $this->db()->prepare("
-                SELECT cp.*, c.fecha_compra, c.total AS compra_total,
-                       p.nombre_proveedor, p.rif_proveedor
+                SELECT
+                    cp.id_cuenta_pagar, cp.id_compra, cp.monto_total,
+                    ROUND(cp.monto_total - COALESCE(pag.total_pagado, 0), 2) AS saldo_pendiente,
+                    cp.fecha_vencimiento,
+                    CASE
+                        WHEN COALESCE(pag.total_pagado, 0) >= cp.monto_total THEN 'pagada'
+                        WHEN COALESCE(pag.total_pagado, 0) > 0 THEN 'parcial'
+                        ELSE 'pendiente'
+                    END AS estado,
+                    cp.observacion, cp.activo, cp.created_at,
+                    c.fecha_compra, c.total AS compra_total,
+                    p.nombre_proveedor, p.rif_proveedor
                 FROM cuentas_pagar cp
                 JOIN compra c ON cp.id_compra = c.id_compra
                 LEFT JOIN proveedores p ON c.id_proveedor = p.id_proveedor
+                LEFT JOIN (
+                    SELECT id_cuenta_pagar, SUM(monto) AS total_pagado
+                    FROM pago_compra
+                    WHERE estado IN ('registrado', 'confirmado') AND activo = 1
+                    GROUP BY id_cuenta_pagar
+                ) pag ON cp.id_cuenta_pagar = pag.id_cuenta_pagar
                 WHERE cp.id_cuenta_pagar = :id AND cp.activo = 1
             ");
             $stmt->execute([':id' => $id]);
@@ -117,8 +135,23 @@ class CuentaPagar extends Database implements ReadableInterface, DeletableInterf
     {
         try {
             $stmt = $this->db()->prepare("
-                SELECT cp.*
+                SELECT
+                    cp.id_cuenta_pagar, cp.id_compra, cp.monto_total,
+                    ROUND(cp.monto_total - COALESCE(pag.total_pagado, 0), 2) AS saldo_pendiente,
+                    cp.fecha_vencimiento,
+                    CASE
+                        WHEN COALESCE(pag.total_pagado, 0) >= cp.monto_total THEN 'pagada'
+                        WHEN COALESCE(pag.total_pagado, 0) > 0 THEN 'parcial'
+                        ELSE 'pendiente'
+                    END AS estado,
+                    cp.observacion, cp.activo, cp.created_at
                 FROM cuentas_pagar cp
+                LEFT JOIN (
+                    SELECT id_cuenta_pagar, SUM(monto) AS total_pagado
+                    FROM pago_compra
+                    WHERE estado IN ('registrado', 'confirmado') AND activo = 1
+                    GROUP BY id_cuenta_pagar
+                ) pag ON cp.id_cuenta_pagar = pag.id_cuenta_pagar
                 WHERE cp.id_compra = :id_compra AND cp.activo = 1
                 ORDER BY cp.created_at DESC
                 LIMIT 1
@@ -155,10 +188,6 @@ class CuentaPagar extends Database implements ReadableInterface, DeletableInterf
         }
     }
 
-    // ============================================================
-    //  CRUD
-    // ============================================================
-
     public function eliminar(int $id): bool
     {
         $stmt = $this->db()->prepare("UPDATE cuentas_pagar SET activo = 0 WHERE id_cuenta_pagar = :id");
@@ -177,9 +206,6 @@ class CuentaPagar extends Database implements ReadableInterface, DeletableInterf
         return $id !== false ? (int) $id : null;
     }
 
-    // ============================================================
-    //  Cuentas
-    // ============================================================
 
     public function crear(int $idCompra, float $montoTotal, ?string $fechaVencimiento = null, ?string $observacion = null): bool
     {
@@ -202,34 +228,6 @@ class CuentaPagar extends Database implements ReadableInterface, DeletableInterf
         ]);
     }
 
-    private function actualizarSaldo(int $idCuentaPagar): bool
-    {
-        $stmt = $this->db()->prepare("
-            UPDATE cuentas_pagar cp
-            SET cp.saldo_pendiente = cp.monto_total - (
-                SELECT COALESCE(SUM(pg.monto), 0)
-                FROM pago_compra pg
-                WHERE pg.id_cuenta_pagar = cp.id_cuenta_pagar
-                  AND pg.estado = 'confirmado'
-                  AND pg.activo = 1
-            )
-            WHERE cp.id_cuenta_pagar = :id_cuenta_pagar
-        ");
-        $stmt->execute([':id_cuenta_pagar' => $idCuentaPagar]);
-
-        // Actualizar estado según saldo
-        $stmt2 = $this->db()->prepare("
-            UPDATE cuentas_pagar cp
-            SET cp.estado = CASE
-                WHEN cp.saldo_pendiente <= 0 THEN 'pagada'
-                WHEN cp.saldo_pendiente < cp.monto_total THEN 'parcial'
-                ELSE 'pendiente'
-            END
-            WHERE cp.id_cuenta_pagar = :id_cuenta_pagar
-        ");
-        return $stmt2->execute([':id_cuenta_pagar' => $idCuentaPagar]);
-    }
-
     private function actualizarEstadoCompra(int $idCompra): void
     {
         $stmt = $this->db()->prepare("
@@ -240,7 +238,7 @@ class CuentaPagar extends Database implements ReadableInterface, DeletableInterf
                     FROM cuentas_pagar cp
                     JOIN pago_compra pg ON pg.id_cuenta_pagar = cp.id_cuenta_pagar
                     WHERE cp.id_compra = c.id_compra
-                      AND pg.estado = 'confirmado'
+                  AND pg.estado IN ('registrado', 'confirmado')
                       AND pg.activo = 1
                       AND cp.activo = 1
                 ) >= c.total THEN 'pagada'
@@ -251,9 +249,6 @@ class CuentaPagar extends Database implements ReadableInterface, DeletableInterf
         $stmt->execute([':id_compra' => $idCompra]);
     }
 
-    // ============================================================
-    //  Pagos
-    // ============================================================
 
     public function registrarPago(
         int $idCuentaPagar,
@@ -282,7 +277,6 @@ class CuentaPagar extends Database implements ReadableInterface, DeletableInterf
                 ':observacion' => $observacion,
             ]);
 
-            $this->actualizarSaldo($idCuentaPagar);
             $this->actualizarEstadoCompra($cuenta['id_compra']);
 
             $this->confirmarTransaccion();
@@ -296,17 +290,6 @@ class CuentaPagar extends Database implements ReadableInterface, DeletableInterf
     public function anularPago(int $idPagoCompra): bool
     {
         $stmt = $this->db()->prepare("UPDATE pago_compra SET estado = 'anulado', activo = 0 WHERE id_pago_compra = :id_pago_compra AND activo = 1");
-        $stmt->execute([':id_pago_compra' => $idPagoCompra]);
-
-        // Obtener cuenta asociada
-        $stmt2 = $this->db()->prepare("SELECT id_cuenta_pagar FROM pago_compra WHERE id_pago_compra = :id_pago_compra");
-        $stmt2->execute([':id_pago_compra' => $idPagoCompra]);
-        $row = $stmt2->fetch(PDO::FETCH_ASSOC);
-
-        if ($row) {
-            $this->actualizarSaldo((int)$row['id_cuenta_pagar']);
-        }
-
-        return true;
+        return $stmt->execute([':id_pago_compra' => $idPagoCompra]);
     }
 }

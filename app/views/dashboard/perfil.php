@@ -27,7 +27,12 @@ $currentPage = 'perfil';
                         </div>
                     <?php endif; ?>
                     <div>
-                        <h1 style="font-size:1.5rem;font-weight:600;margin:0 0 4px 0;"><?= htmlspecialchars($user['nombre_usuario'] ?? '') ?></h1>
+                        <h1 style="font-size:1.5rem;font-weight:600;margin:0 0 4px 0;">
+                            <?= htmlspecialchars($user['nombre_usuario'] ?? '') ?>
+                            <?php if (!empty($user['trabajador_nombre'])): ?>
+                                <span style="font-size:0.9rem;color:var(--text-muted);font-weight:400;">— <?= htmlspecialchars($user['trabajador_nombre']) ?></span>
+                            <?php endif; ?>
+                        </h1>
                         <p style="margin:0;color:var(--text-muted);font-size:0.875rem;"><?= htmlspecialchars($user['correo_electronico'] ?? '') ?></p>
                     </div>
                 </div>
@@ -47,24 +52,24 @@ $currentPage = 'perfil';
                     </div>
                     <div class="perfil-field">
                         <label for="nombre">Nombre de usuario</label>
-                        <input type="text" id="nombre" name="nombre" value="<?= htmlspecialchars($user['nombre_usuario'] ?? '') ?>" required>
+                        <input type="text" id="nombre" name="nombre" value="<?= htmlspecialchars($user['nombre_usuario'] ?? '') ?>" required maxlength="50">
                     </div>
                     <div class="perfil-field">
                         <label for="email">Correo electrónico</label>
-                        <input type="email" id="email" name="email" value="<?= htmlspecialchars($user['correo_electronico'] ?? '') ?>">
+                        <input type="email" id="email" name="email" value="<?= htmlspecialchars($user['correo_electronico'] ?? '') ?>" maxlength="254">
                     </div>
                     <div class="perfil-field">
                         <label for="current_password">Contraseña actual</label>
-                        <input type="password" id="current_password" name="current_password" required autocomplete="current-password">
+                        <input type="password" id="current_password" name="current_password" required autocomplete="current-password" maxlength="30">
                     </div>
                     <hr style="border:none;border-top:1px solid var(--color-gray-200);margin:var(--space-2) 0;">
                     <div class="perfil-field">
                         <label for="password">Nueva contraseña <span style="color:var(--text-muted);font-weight:400;font-size:0.8rem;">(dejar vacío para mantener la actual)</span></label>
-                        <input type="password" id="password" name="password" autocomplete="new-password">
+                        <input type="password" id="password" name="password" autocomplete="new-password" maxlength="30">
                     </div>
                     <div class="perfil-field">
                         <label for="password2">Confirmar contraseña</label>
-                        <input type="password" id="password2" name="password2" autocomplete="new-password">
+                        <input type="password" id="password2" name="password2" autocomplete="new-password" maxlength="30">
                     </div>
                     <button type="submit" class="perfil-btn">Guardar cambios</button>
                 </form>

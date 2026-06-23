@@ -90,6 +90,7 @@
             <?php endif; ?>
             
             <form action="<?= BASE_URL ?>login" method="POST" class="auth-form" id="loginForm">
+                <?= \SysInescolara\helpers\Csrf::render() ?>
                 <div class="form-group">
                     <label for="email" class="form-label">Usuario o Correo Electrónico</label>
                     <div class="input-wrapper">
@@ -106,10 +107,11 @@
                             value="<?= htmlspecialchars($old['email'] ?? '') ?>"
                             required
                             autocomplete="username"
+                            maxlength="254"
                         >
                     </div>
                 </div>
-                
+
                 <div class="form-group">
                     <label for="password" class="form-label">Contraseña</label>
                     <div class="input-wrapper">
@@ -125,6 +127,7 @@
                             placeholder="Ingresa tu contraseña"
                             required
                             autocomplete="current-password"
+                            maxlength="30"
                         >
                         <button type="button" class="password-toggle" id="passwordToggle" aria-label="Mostrar contraseña">
                             <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

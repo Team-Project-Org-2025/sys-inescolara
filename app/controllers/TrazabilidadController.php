@@ -3,7 +3,7 @@
 require_once __DIR__ . '/controller_helpers.php';
 
 use SysInescolara\models\Trazabilidad;
-use SysInescolara\models\Batch;
+use SysInescolara\models\Lote;
 use SysInescolara\models\AuditLog;
 
 function index(): void
@@ -44,7 +44,7 @@ function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('TRAZABILID
 function trazabilidad_handleAddEdit(string $mode): void
 {
     $model = new Trazabilidad();
-    $batchModel = new Batch();
+    $batchModel = new Lote();
 
     $idLote = (int)($_POST['id_lote'] ?? 0);
     if ($idLote <= 0) throw new \Exception('Debe seleccionar un lote.');
@@ -148,7 +148,7 @@ function trazabilidad_handleAddEdit(string $mode): void
 function trazabilidad_handleDelete(): void
 {
     $model = new Trazabilidad();
-    $batchModel = new Batch();
+    $batchModel = new Lote();
 
     $id = (int)($_POST['id'] ?? 0);
     if ($id <= 0) throw new \Exception('ID inválido');

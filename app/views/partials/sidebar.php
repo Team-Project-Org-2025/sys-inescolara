@@ -7,11 +7,11 @@ function hasPermiso(string $codigo): bool
 
 $current = $currentPage ?? '';
 
-$isPlanta = in_array($current, ['plants', 'species', 'locations']);
-$isActivos = in_array($current, ['inventario', 'batches', 'trazabilidad', 'supplies', 'tools', 'unit-measures', 'mermas']);
-$isVenta = in_array($current, ['ventas', 'prices', 'clients', 'cuentas-cobrar', 'cuentas-pagar', 'compras']);
-$isServicios = in_array($current, ['ornatos', 'ampliacion', 'suppliers']);
-$isTarea = in_array($current, ['tasks', 'employees', 'seed-collection']);
+$isPlanta = in_array($current, ['plantas', 'especies', 'ubicaciones']);
+$isActivos = in_array($current, ['inventario', 'lotes', 'trazabilidad', 'insumos', 'herramientas', 'unidades-medida', 'mermas']);
+$isVenta = in_array($current, ['ventas', 'precios', 'clientes', 'cuentas-cobrar', 'cuentas-pagar', 'compras']);
+$isServicios = in_array($current, ['ornatos', 'ampliacion', 'proveedores']);
+$isTarea = in_array($current, ['tareas', 'empleados', 'seed-collection']);
 $isConfiguracion = in_array($current, ['usuarios', 'roles', 'auditlog', 'backups']);
 
 $showInventario = hasPermiso('PLANTAS_VIEW') || hasPermiso('UBICACIONES_VIEW')
@@ -75,7 +75,7 @@ $showSistema = hasPermiso('USUARIOS_MANAGE');
                 <ul class="submenu-inner">
                     <?php if (hasPermiso('PLANTAS_VIEW')): ?>
                     <li>
-                        <a href="<?= BASE_URL ?>dashboard/plants" class="nav-link <?= $current === 'plants' ? 'active' : '' ?>">
+                        <a href="<?= BASE_URL ?>dashboard/plantas" class="nav-link <?= $current === 'plantas' ? 'active' : '' ?>">
                             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-9"></path><path d="M12 13c2.5-2.5 6-3 7.5-1.5s1 5-1.5 7.5"></path><path d="M12 10c-2.5-2.5-6-3-7.5-1.5s-1 5 1.5 7.5"></path></svg>
                             <span>Administrar planta</span>
                         </a>
@@ -83,7 +83,7 @@ $showSistema = hasPermiso('USUARIOS_MANAGE');
                     <?php endif; ?>
                     <?php if (hasPermiso('PLANTAS_VIEW')): ?>
                     <li>
-                        <a href="<?= BASE_URL ?>dashboard/species" class="nav-link <?= $current === 'species' ? 'active' : '' ?>">
+                        <a href="<?= BASE_URL ?>dashboard/especies" class="nav-link <?= $current === 'especies' ? 'active' : '' ?>">
                             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="3" x2="6" y2="15"></line><circle cx="18" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><path d="M18 9a9 9 0 0 1-9 9"></path></svg>
                             <span>Administrar especie</span>
                         </a>
@@ -91,7 +91,7 @@ $showSistema = hasPermiso('USUARIOS_MANAGE');
                     <?php endif; ?>
                     <?php if (hasPermiso('UBICACIONES_VIEW')): ?>
                     <li>
-                        <a href="<?= BASE_URL ?>dashboard/locations" class="nav-link <?= $current === 'locations' ? 'active' : '' ?>">
+                        <a href="<?= BASE_URL ?>dashboard/ubicaciones" class="nav-link <?= $current === 'ubicaciones' ? 'active' : '' ?>">
                             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
                             <span>Administrar ubicacion</span>
                         </a>
@@ -121,7 +121,7 @@ $showSistema = hasPermiso('USUARIOS_MANAGE');
                     <?php endif; ?>
                     <?php if (hasPermiso('PLANTAS_VIEW')): ?>
                     <li>
-                        <a href="<?= BASE_URL ?>dashboard/batches" class="nav-link <?= $current === 'batches' ? 'active' : '' ?>">
+                        <a href="<?= BASE_URL ?>dashboard/lotes" class="nav-link <?= $current === 'lotes' ? 'active' : '' ?>">
                             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5"></polygon><line x1="12" y1="22" x2="12" y2="15.5"></line><polyline points="2 8.5 12 15.5 22 8.5"></polyline></svg>
                             <span>Lote</span>
                         </a>
@@ -131,13 +131,13 @@ $showSistema = hasPermiso('USUARIOS_MANAGE');
                     <li>
                         <a href="<?= BASE_URL ?>dashboard/trazabilidad" class="nav-link <?= $current === 'trazabilidad' ? 'active' : '' ?>">
                             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                            <span>Monitoreo</span>
+                            <span>Trazabilidad</span>
                         </a>
                     </li>
                     <?php endif; ?>
                     <?php if (hasPermiso('INSUMOS_VIEW')): ?>
                     <li>
-                        <a href="<?= BASE_URL ?>dashboard/supplies" class="nav-link <?= $current === 'supplies' ? 'active' : '' ?>">
+                        <a href="<?= BASE_URL ?>dashboard/insumos" class="nav-link <?= $current === 'insumos' ? 'active' : '' ?>">
                             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>
                             <span>Insumos</span>
                         </a>
@@ -145,7 +145,7 @@ $showSistema = hasPermiso('USUARIOS_MANAGE');
                     <?php endif; ?>
                     <?php if (hasPermiso('HERRAMIENTAS_VIEW')): ?>
                     <li>
-                        <a href="<?= BASE_URL ?>dashboard/tools" class="nav-link <?= $current === 'tools' ? 'active' : '' ?>">
+                        <a href="<?= BASE_URL ?>dashboard/herramientas" class="nav-link <?= $current === 'herramientas' ? 'active' : '' ?>">
                             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
                             <span>Herramientas</span>
                         </a>
@@ -153,7 +153,7 @@ $showSistema = hasPermiso('USUARIOS_MANAGE');
                     <?php endif; ?>
                     <?php if (hasPermiso('UNIDADES_MEDIDA_VIEW')): ?>
                     <li>
-                        <a href="<?= BASE_URL ?>dashboard/unit-measures" class="nav-link <?= $current === 'unit-measures' ? 'active' : '' ?>">
+                        <a href="<?= BASE_URL ?>dashboard/unidades-medida" class="nav-link <?= $current === 'unidades-medida' ? 'active' : '' ?>">
                             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
                             <span>Unidad de medida</span>
                         </a>
@@ -195,7 +195,7 @@ $showSistema = hasPermiso('USUARIOS_MANAGE');
                     <?php endif; ?>
                     <?php if (hasPermiso('PRECIOS_VIEW')): ?>
                     <li>
-                        <a href="<?= BASE_URL ?>dashboard/prices" class="nav-link <?= $current === 'prices' ? 'active' : '' ?>">
+                        <a href="<?= BASE_URL ?>dashboard/precios" class="nav-link <?= $current === 'precios' ? 'active' : '' ?>">
                             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
                             <span>Gestionar precio</span>
                         </a>
@@ -203,7 +203,7 @@ $showSistema = hasPermiso('USUARIOS_MANAGE');
                     <?php endif; ?>
                     <?php if (hasPermiso('CLIENTES_VIEW')): ?>
                     <li>
-                        <a href="<?= BASE_URL ?>dashboard/clients" class="nav-link <?= $current === 'clients' ? 'active' : '' ?>">
+                        <a href="<?= BASE_URL ?>dashboard/clientes" class="nav-link <?= $current === 'clientes' ? 'active' : '' ?>">
                             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                             <span>Gestionar cliente</span>
                         </a>
@@ -265,7 +265,7 @@ $showSistema = hasPermiso('USUARIOS_MANAGE');
                     <?php endif; ?>
                     <?php if (hasPermiso('PROVEEDORES_VIEW')): ?>
                     <li>
-                        <a href="<?= BASE_URL ?>dashboard/suppliers" class="nav-link <?= $current === 'suppliers' ? 'active' : '' ?>">
+                        <a href="<?= BASE_URL ?>dashboard/proveedores" class="nav-link <?= $current === 'proveedores' ? 'active' : '' ?>">
                             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
                             <span>Gestionar proveedor</span>
                         </a>
@@ -291,7 +291,7 @@ $showSistema = hasPermiso('USUARIOS_MANAGE');
                 <ul class="submenu-inner">
                     <?php if (hasPermiso('TAREAS_VIEW')): ?>
                     <li>
-                        <a href="<?= BASE_URL ?>dashboard/tasks" class="nav-link <?= $current === 'tasks' ? 'active' : '' ?>">
+                        <a href="<?= BASE_URL ?>dashboard/tareas" class="nav-link <?= $current === 'tareas' ? 'active' : '' ?>">
                             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
                             <span>Asignar tarea</span>
                         </a>
@@ -299,7 +299,7 @@ $showSistema = hasPermiso('USUARIOS_MANAGE');
                     <?php endif; ?>
                     <?php if (hasPermiso('TRABAJADORES_VIEW')): ?>
                     <li>
-                        <a href="<?= BASE_URL ?>dashboard/employees" class="nav-link <?= $current === 'employees' ? 'active' : '' ?>">
+                        <a href="<?= BASE_URL ?>dashboard/empleados" class="nav-link <?= $current === 'empleados' ? 'active' : '' ?>">
                             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
                             <span>Gestionar Empleados</span>
                         </a>

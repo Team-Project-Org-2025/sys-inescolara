@@ -51,6 +51,15 @@ function checkPermisoOrFail(string $codigo): void
     }
 }
 
+function checkCsrf(): void
+{
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
+    if (isAjaxRequest()) return;
+    $data = getRequestData();
+    $token = $data['_csrf_token'] ?? '';
+    \SysInescolara\helpers\Csrf::validate($token);
+}
+
 function getRequestData(): array
 {
     $contentType = $_SERVER['CONTENT_TYPE'] ?? $_SERVER['HTTP_CONTENT_TYPE'] ?? '';

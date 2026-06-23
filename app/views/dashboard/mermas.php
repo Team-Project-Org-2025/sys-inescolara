@@ -1,5 +1,6 @@
 <?php
 include_once __DIR__ . '/../common/links.php';
+include_once __DIR__ . '/../common/modal.php';
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -85,58 +86,42 @@ include_once __DIR__ . '/../common/links.php';
     </main>
 
     <!-- Add Merma Modal -->
-    <div class="modal fade" id="addMermaModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form id="addMermaForm">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Registrar Merma desde Cuarentena</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label">Registro de Cuarentena</label>
-                            <select class="form-select" name="id_trazabilidad" id="mermaQuarantine" required>
-                                <option value="">Seleccione una cuarentena...</option>
-                            </select>
-                            <div class="form-text">Solo se muestran cuarentenas con ejemplares disponibles.</div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Cantidad de ejemplares perdidos</label>
-                            <input type="number" class="form-control" name="cantidad" id="mermaCantidad" min="1" required placeholder="Ej: 5">
-                            <div class="form-text" id="quarantineStockInfo"></div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Motivo</label>
-                            <select class="form-select" name="motivo" required>
-                                <option value="">Seleccione un motivo...</option>
-                                <option value="plaga">Plaga</option>
-                                <option value="enfermedad">Enfermedad</option>
-                                <option value="daño_mecanico">Daño Mecánico</option>
-                                <option value="factor_climatico">Factor Climático</option>
-                                <option value="otro">Otro</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Fecha de la merma</label>
-                            <input type="date" class="form-control" name="fecha_merma" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Descripción (opcional)</label>
-                            <textarea class="form-control" name="descripcion" rows="3" placeholder="Detalles adicionales sobre la pérdida..."></textarea>
-                        </div>
-                        <div class="alert alert-info mb-0" id="impactoPreview" style="display:none;">
-                            Impacto económico estimado: <strong id="impactoValue">$0.00</strong>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-danger">Registrar Merma</button>
-                    </div>
-                </form>
-            </div>
+    <?php modal_form(['id' => 'addMermaModal', 'title' => 'Registrar Merma desde Cuarentena', 'formId' => 'addMermaForm', 'saveText' => 'Registrar Merma', 'saveClass' => 'danger']); ?>
+        <div class="mb-3">
+            <label class="form-label">Registro de Cuarentena</label>
+            <select class="form-select" name="id_trazabilidad" id="mermaQuarantine" required>
+                <option value="">Seleccione una cuarentena...</option>
+            </select>
+            <div class="form-text">Solo se muestran cuarentenas con ejemplares disponibles.</div>
         </div>
-    </div>
+        <div class="mb-3">
+            <label class="form-label">Cantidad de ejemplares perdidos</label>
+            <input type="number" class="form-control" name="cantidad" id="mermaCantidad" min="1" required placeholder="Ej: 5">
+            <div class="form-text" id="quarantineStockInfo"></div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Motivo</label>
+            <select class="form-select" name="motivo" required>
+                <option value="">Seleccione un motivo...</option>
+                <option value="plaga">Plaga</option>
+                <option value="enfermedad">Enfermedad</option>
+                <option value="daño_mecanico">Daño Mecánico</option>
+                <option value="factor_climatico">Factor Climático</option>
+                <option value="otro">Otro</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Fecha de la merma</label>
+            <input type="date" class="form-control" name="fecha_merma" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Descripción (opcional)</label>
+            <textarea class="form-control" name="descripcion" rows="3" placeholder="Detalles adicionales sobre la pérdida..." maxlength="500"></textarea>
+        </div>
+        <div class="alert alert-info mb-0" id="impactoPreview" style="display:none;">
+            Impacto económico estimado: <strong id="impactoValue">$0.00</strong>
+        </div>
+    <?php modal_form_end('addMermaForm'); ?>
 
     <script src="<?= BASE_URL ?>public/assets/js/dashboard/notifications.js"></script>
     <?= $scripts_links ?>

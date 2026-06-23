@@ -6,8 +6,8 @@ trait ValidationTrait
 {
 
     private static array $patterns = [
-        'nombre'          => '/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]{2,100}$/',
-        'nombreProducto'  => '/^[A-Za-zÁÉÍÓÚáéíóúÑñ0-9\s\-\.\,]{1,60}$/',
+        'nombre'          => '/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]{2,50}$/',
+        'nombreProducto'  => '/^[A-Za-zÁÉÍÓÚáéíóúÑñ0-9\s\-\.\,]{1,50}$/',
         'cedula'          => '/^\d{7,10}$/',
         'telefono'        => '/^\d{11}$/',
         'rif'             => '/^[JGCVEPjgcvep]-?\d{8}-?\d$/',
@@ -21,8 +21,8 @@ trait ValidationTrait
     ];
 
     private static array $messages = [
-        'nombre'          => 'Debe contener solo letras (2-100 caracteres)',
-        'nombreProducto'  => 'Nombre inválido (1-60 caracteres)',
+        'nombre'          => 'Debe contener solo letras (2-50 caracteres)',
+        'nombreProducto'  => 'Nombre inválido (1-50 caracteres)',
         'cedula'          => 'Cédula inválida (7-10 dígitos)',
         'telefono'        => 'Teléfono inválido (11 dígitos)',
         'rif'             => 'RIF inválido (formato: J-12345678-9)',

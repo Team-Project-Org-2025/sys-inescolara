@@ -1,6 +1,7 @@
 import * as Helpers from '../utils/helpers.js';
 import * as Ajax from '../utils/ajax-handler.js';
 import { setupRealTimeValidation, validateForm, clearValidation } from '../utils/validation.js';
+import * as C from '../utils/components.js';
 
 $(document).ready(function () {
   const baseUrl = `${window.BASE_URL || '/'}recoleccion`;
@@ -55,36 +56,27 @@ $(document).ready(function () {
           data: null,
           orderable: false,
           render: (data) => {
-            let html = '<div class="d-flex gap-1">';
+            const btns = [];
 
             if (data.estatus === 'Pendiente') {
-              html += `
-                <button class="btn btn-sm btn-outline-primary btn-edit">
-                  <i class="fas fa-edit"></i> Editar
-                </button>
-                <button class="btn btn-sm btn-outline-success btn-completar">
-                  <i class="fas fa-check"></i> Completar
-                </button>
-                <button class="btn btn-sm btn-outline-danger btn-delete">
-                  <i class="fas fa-trash"></i> Eliminar
-                </button>
-              `;
+              btns.push(
+                C.btnEdit('btn-edit'),
+                C.btnComplete('btn-completar'),
+                C.btnDelete('btn-delete'),
+              );
             }
 
             if (data.estatus === 'Realizada' && (!data.total_detalles || parseInt(data.total_detalles) === 0)) {
-              html += `
-                <button class="btn btn-sm btn-outline-info btn-registrar-insumo">
-                  <i class="fas fa-seedling"></i> Registrar Insumo
-                </button>
-              `;
+              btns.push(
+                C.btnCustom({ label: 'Registrar Insumo', icon: 'fa-seedling', className: 'btn-registrar-insumo', btnClass: 'btn-outline-info' }),
+              );
             }
 
             if (data.total_detalles && parseInt(data.total_detalles) > 0) {
-              html += `<span class="text-success" style="font-size:0.85rem;"><i class="fas fa-check-circle"></i> ${data.total_detalles} tipo(s)</span>`;
+              btns.push(`<span class="text-success" style="font-size:0.85rem;"><i class="fas fa-check-circle"></i> ${data.total_detalles} tipo(s)</span>`);
             }
 
-            html += '</div>';
-            return html;
+            return `<div class="d-flex gap-1">${btns.join('')}</div>`;
           },
         },
       ],
@@ -238,7 +230,7 @@ $(document).ready(function () {
     const formData = new FormData(this);
 
     $.ajax({
-      url: `${window.BASE_URL || '/'}locations?action=add_ajax`,
+      url: `${window.BASE_URL || '/'}ubicaciones?action=add_ajax`,
       method: 'POST',
       data: formData,
       processData: false,
@@ -250,12 +242,12 @@ $(document).ready(function () {
         if (response.success) {
           Helpers.toast('success', 'Ubicación agregada correctamente');
           $('#ubicacionQuickModal').modal('hide');
-          $.getJSON(`${window.BASE_URL || '/'}locations?action=get_locations`, { 'X-Requested-With': 'XMLHttpRequest' })
+          $.getJSON(`${window.BASE_URL || '/'}ubicaciones?action=get_locations`, { 'X-Requested-With': 'XMLHttpRequest' })
             .done((res) => {
               if (res.success) {
                 const $select = $('#id_ubicacion');
                 $select.find('option:not(:first)').remove();
-                res.locations.forEach((loc) => {
+                res.ubicaciones.forEach((loc) => {
                   $select.append(`<option value="${loc.id}">${Helpers.escapeHtml(loc.nombre_ubicacion)}</option>`);
                 });
                 $select.val(response.id || '');

@@ -1,10 +1,11 @@
 import * as Validations from '../utils/validation.js';
 import * as Helpers from '../utils/helpers.js';
 import * as Ajax from '../utils/ajax-handler.js';
+import * as C from '../utils/components.js';
 
 $(document).ready(function () {
-  const baseUrl = `${window.BASE_URL || '/'}user`;
-  let usersTable = null;
+  const baseUrl = `${window.BASE_URL || '/'}usuarios`;
+  let usuariosTable = null;
 
   const updateSidebarUser = (avatarUrl, userName) => {
     const $avatar = $('.sidebar-user-avatar').first();
@@ -23,9 +24,9 @@ $(document).ready(function () {
 
   const initDataTable = () => {
     if (typeof SkeletonHelper !== 'undefined') {
-      SkeletonHelper.showTableSkeleton('usersTable', 5, 4);
+      SkeletonHelper.showTableSkeleton('usuariosTable', 5, 4);
     }
-    usersTable = $('#usersTable').DataTable({
+    usuariosTable = $('#usuariosTable').DataTable({
       ajax: {
         url: `${baseUrl}?action=get_users`,
         method: 'GET',
@@ -41,21 +42,17 @@ $(document).ready(function () {
         },
         { data: 'nombre_rol' },
         {
+          data: 'trabajador_nombre',
+          render: (data) => data || '<span class="text-muted">—</span>',
+        },
+        {
           data: null,
           orderable: false,
           render: (data) => {
             const isSuper = data.id == 1;
-            return `
-              <div class="d-flex gap-1">
-                <button class="btn btn-sm btn-outline-primary btn-edit">
-                    <i class="fas fa-edit"></i> Editar
-                </button>
-                ${isSuper ? '' : `
-                <button class="btn btn-sm btn-outline-danger btn-delete">
-                    <i class="fas fa-trash"></i> Eliminar
-                </button>`}
-              </div>
-            `;
+            const btns = [C.btnEdit('btn-edit')];
+            if (!isSuper) btns.push(C.btnDelete('btn-delete'));
+            return C.btnGroup(...btns);
           },
         },
       ],
@@ -71,8 +68,8 @@ $(document).ready(function () {
           text: '<i class="fas fa-sync-alt"></i> Actualizar',
           className: 'btn btn-outline-secondary btn-sm',
           action: () => {
-            SkeletonHelper.showTableSkeleton('usersTable', 5, 4);
-            usersTable.ajax.reload(null, false);
+            SkeletonHelper.showTableSkeleton('usuariosTable', 5, 4);
+            usuariosTable.ajax.reload(null, false);
           },
         },
       ],
@@ -131,7 +128,7 @@ $(document).ready(function () {
         if (response.success) {
           Helpers.toast('success', 'Usuario agregado correctamente');
           $('#addUserModal').modal('hide');
-          usersTable.ajax.reload(null, false);
+          usuariosTable.ajax.reload(null, false);
         } else {
           Helpers.toast('error', response.message);
         }
@@ -142,7 +139,7 @@ $(document).ready(function () {
   });
 
   $(document).on('click', '.btn-edit', function () {
-    const row = usersTable.row($(this).closest('tr')).data();
+    const row = usuariosTable.row($(this).closest('tr')).data();
 
     const $addModal = $('#addUserModal');
     if ($addModal.hasClass('show')) {
@@ -160,6 +157,7 @@ $(document).ready(function () {
     $('#editUserName').val(row.nombre_usuario);
     $('#editUserEmail').val(row.correo_electronico);
     $('#editUserRole').val(row.rol_id).prop('disabled', false).css('pointerEvents', isSuper ? 'none' : '').toggleClass('readonly-look', isSuper);
+    $('#editTrabajadorRef').val(row.id_trabajador_ref || '');
     $('#editUserPassword').val('');
     $('#editCurrentPassword').val('');
     $('#editUserRoleNote').toggle(isSuper);
@@ -238,7 +236,7 @@ $(document).ready(function () {
         if (response.success) {
           Helpers.toast('success', 'Usuario actualizado correctamente');
           $('#editUserModal').modal('hide');
-          usersTable.ajax.reload(null, false);
+          usuariosTable.ajax.reload(null, false);
 
           // Si el usuario editado es el mismo de la sesión, actualizar el sidebar
           if (response.user && response.user.id == $('#currentUserId').val()) {
@@ -258,7 +256,7 @@ $(document).ready(function () {
   });
 
   $(document).on('click', '.btn-delete', function () {
-    const row = usersTable.row($(this).closest('tr')).data();
+    const row = usuariosTable.row($(this).closest('tr')).data();
     const id = row.id;
     const nombre = row.nombre_usuario;
 
@@ -299,7 +297,7 @@ $(document).ready(function () {
         .then((response) => {
           if (response.success) {
             Helpers.toast('success', 'Usuario eliminado correctamente');
-            usersTable.ajax.reload(null, false);
+            usuariosTable.ajax.reload(null, false);
           } else {
             Helpers.toast('error', response.message);
           }

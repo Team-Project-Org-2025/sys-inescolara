@@ -717,7 +717,8 @@ ALTER TABLE `sesiones_activas`
 -- Filtros para la tabla `usuarios`
 --
 ALTER TABLE `usuarios`
-  ADD CONSTRAINT `usuarios_ibfk_1` FOREIGN KEY (`id_rol`) REFERENCES `roles` (`id_rol`);
+  ADD CONSTRAINT `usuarios_ibfk_1` FOREIGN KEY (`id_rol`) REFERENCES `roles` (`id_rol`),
+  ADD CONSTRAINT `usuarios_ibfk_trabajador` FOREIGN KEY (`id_trabajador_ref`) REFERENCES `sysinescolara`.`trabajadores` (`id_trabajador`) ON DELETE SET NULL;
 
 --
 -- Filtros para la tabla `usuario_permisos`

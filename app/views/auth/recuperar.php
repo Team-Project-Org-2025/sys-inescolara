@@ -48,7 +48,7 @@
                     <label for="correo">Correo Electrónico</label>
                     <input type="email" id="correo" name="correo" placeholder="tu-correo@ejemplo.com"
                            value="<?= htmlspecialchars($old['correo'] ?? '') ?>"
-                           required autocomplete="email">
+                           required autocomplete="email" maxlength="254">
                 </div>
 
                 <button type="submit" class="btn btn-primary btn-block btn-lg">

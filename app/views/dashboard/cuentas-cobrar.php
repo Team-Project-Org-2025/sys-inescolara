@@ -1,5 +1,6 @@
 <?php
 include_once __DIR__ . '/../common/links.php';
+include_once __DIR__ . '/../common/modal.php';
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -123,100 +124,70 @@ include_once __DIR__ . '/../common/links.php';
     </main>
 
     <!-- Detail Modal -->
-    <div class="modal fade" id="detailModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Detalle de Venta a Crédito</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body" id="detailModalBody">
-                    <div class="text-center py-4">
-                        <div class="spinner-border" role="status"></div>
-                        <p class="mt-2 text-muted">Cargando detalle...</p>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                </div>
-            </div>
+    <?php modal_detail_start(['id' => 'detailModal', 'title' => 'Detalle de Venta a Crédito', 'size' => 'modal-lg', 'bodyId' => 'detailModalBody']); ?>
+        <div class="text-center py-4">
+            <div class="spinner-border" role="status"></div>
+            <p class="mt-2 text-muted">Cargando detalle...</p>
         </div>
-    </div>
+    <?php modal_detail_end(); ?>
 
     <!-- Payment Modal -->
-    <div class="modal fade" id="paymentModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form id="paymentForm">
-                    <input type="hidden" name="id_venta" id="payIdVenta">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Registrar Pago</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="alert alert-info" id="payInfo"></div>
-                        <div class="mb-3">
-                            <label class="form-label">Monto <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" name="monto" step="0.01" min="0.01" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Método de Pago <span class="text-danger">*</span></label>
-                            <select class="form-select" name="metodo" id="payMetodo" required>
-                                <option value="">Seleccione...</option>
-                                <option value="efectivo">Efectivo</option>
-                                <option value="transferencia">Transferencia</option>
-                                <option value="punto">Punto de Venta</option>
-                                <option value="pago_movil">Pago Móvil</option>
-                                <option value="otro">Otro</option>
-                            </select>
-                        </div>
-                        <div id="payReferenceGroup" style="display:none;">
-                            <div class="mb-3">
-                                <label class="form-label">Banco</label>
-                                <select class="form-select" name="banco" id="payBanco">
-                                    <option value="">Seleccione...</option>
-                                    <option value="banesco">Banesco</option>
-                                    <option value="mercantil">Mercantil</option>
-                                    <option value="provincial">Provincial</option>
-                                    <option value="venezuela">Banco de Venezuela</option>
-                                    <option value="exterior">Banco Exterior</option>
-                                    <option value="nacional">Banco Nacional de Crédito</option>
-                                    <option value="occidental">Banco Occidental de Descuento</option>
-                                    <option value="caroni">Banco Caroní</option>
-                                    <option value="otro">Otro</option>
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Referencia (6 dígitos)</label>
-                                <input type="text" class="form-control" name="referencia" id="payReferencia" maxlength="6" pattern="[0-9]{6}" inputmode="numeric">
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Fecha de Pago <span class="text-danger">*</span></label>
-                            <input type="date" class="form-control" name="fecha_pago" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Cobrado por <span class="text-danger">*</span></label>
-                            <select class="form-select" name="id_trabajador" required>
-                                <option value="">Seleccione...</option>
-                                <?php foreach ($employees as $e): ?>
-                                <option value="<?= $e['id'] ?>"><?= htmlspecialchars($e['nombre_trabajador'] . ' ' . $e['apellido_trabajador']) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Observaciones</label>
-                            <textarea class="form-control" name="observaciones" rows="2"></textarea>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-success">Registrar Pago</button>
-                    </div>
-                </form>
+    <?php modal_form(['id' => 'paymentModal', 'title' => 'Registrar Pago', 'formId' => 'paymentForm', 'hasHiddenId' => true, 'hiddenId' => 'payIdVenta', 'saveText' => 'Registrar Pago', 'saveClass' => 'success']); ?>
+        <div class="alert alert-info" id="payInfo"></div>
+        <div class="mb-3">
+            <label class="form-label">Monto <span class="text-danger">*</span></label>
+            <input type="number" class="form-control" name="monto" step="0.01" min="0.01" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Método de Pago <span class="text-danger">*</span></label>
+            <select class="form-select" name="metodo" id="payMetodo" required>
+                <option value="">Seleccione...</option>
+                <option value="efectivo">Efectivo</option>
+                <option value="transferencia">Transferencia</option>
+                <option value="punto">Punto de Venta</option>
+                <option value="pago_movil">Pago Móvil</option>
+                <option value="otro">Otro</option>
+            </select>
+        </div>
+        <div id="payReferenceGroup" style="display:none;">
+            <div class="mb-3">
+                <label class="form-label">Banco</label>
+                <select class="form-select" name="banco" id="payBanco">
+                    <option value="">Seleccione...</option>
+                    <option value="banesco">Banesco</option>
+                    <option value="mercantil">Mercantil</option>
+                    <option value="provincial">Provincial</option>
+                    <option value="venezuela">Banco de Venezuela</option>
+                    <option value="exterior">Banco Exterior</option>
+                    <option value="nacional">Banco Nacional de Crédito</option>
+                    <option value="occidental">Banco Occidental de Descuento</option>
+                    <option value="caroni">Banco Caroní</option>
+                    <option value="otro">Otro</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Referencia (6 dígitos)</label>
+                <input type="text" class="form-control" name="referencia" id="payReferencia" maxlength="6" pattern="[0-9]{6}" inputmode="numeric">
             </div>
         </div>
-    </div>
+        <div class="mb-3">
+            <label class="form-label">Fecha de Pago <span class="text-danger">*</span></label>
+            <input type="date" class="form-control" name="fecha_pago" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Cobrado por <span class="text-danger">*</span></label>
+            <select class="form-select" name="id_trabajador" required>
+                <option value="">Seleccione...</option>
+                <?php foreach ($employees as $e): ?>
+                <option value="<?= $e['id'] ?>"><?= htmlspecialchars($e['nombre_trabajador'] . ' ' . $e['apellido_trabajador']) ?></option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Observaciones</label>
+            <textarea class="form-control" name="observaciones" rows="2" maxlength="500"></textarea>
+        </div>
+    <?php modal_form_end('paymentForm'); ?>
 
     <script src="<?= BASE_URL ?>public/assets/js/dashboard/notifications.js"></script>
     <script type="module" src="<?= BASE_URL ?>public/assets/js/dashboard/cuentas-cobrar.js?v=<?= filemtime(__DIR__ . '/../../../public/assets/js/dashboard/cuentas-cobrar.js') ?>"></script>

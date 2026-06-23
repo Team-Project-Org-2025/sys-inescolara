@@ -1,5 +1,6 @@
 <?php
 include_once __DIR__ . '/../common/links.php';
+include_once __DIR__ . '/../common/modal.php';
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -118,166 +119,138 @@ include_once __DIR__ . '/../common/links.php';
     </main>
 
     <!-- Modal: Nueva Venta -->
-    <div class="modal fade" id="ventaModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog modal-xl">
-            <div class="modal-content">
-                <form id="ventaForm">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Registrar Nueva Venta</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    <?php modal_form(['id' => 'ventaModal', 'title' => 'Registrar Nueva Venta', 'formId' => 'ventaForm', 'size' => 'modal-xl', 'saveText' => 'Guardar Venta']); ?>
+        <div class="row g-3">
+            <div class="col-lg-6">
+
+            <div class="row g-2 mb-3">
+                <div class="col-sm-6">
+                    <label class="form-label small mb-0">Cliente</label>
+                    <select class="form-select" name="id_cliente" required>
+                        <option value="">Seleccione...</option>
+                        <?php foreach ($clientes as $c): ?>
+                        <option value="<?= $c['id'] ?>"><?= htmlspecialchars($c['nombre_cliente']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="col-sm-6">
+                    <label class="form-label small mb-0">Vendedor</label>
+                    <select class="form-select" name="id_trabajador" required>
+                        <option value="">Seleccione...</option>
+                        <?php foreach ($trabajadores as $t): ?>
+                        <option value="<?= $t['id'] ?>"><?= htmlspecialchars($t['nombre_trabajador'] . ' ' . ($t['apellido_trabajador'] ?? '')) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="col-5 col-sm-4">
+                    <label class="form-label small mb-0">Tipo</label>
+                    <select class="form-select" name="tipo_venta" id="tipoVenta">
+                        <option value="contado">Contado</option>
+                        <option value="credito">Crédito</option>
+                    </select>
+                </div>
+                <div class="col-7 col-sm-7">
+                    <label class="form-label small mb-0">Fecha</label>
+                    <input type="text" class="form-control" name="fecha_venta" id="fechaVenta" readonly>
+                </div>
+            </div>
+
+            <label class="form-label small fw-semibold mb-1">Buscar Planta</label>
+            <div class="input-group mb-2">
+                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                <input type="text" class="form-control" id="buscarLote" placeholder="Escriba nombre de la planta..." minlength="2" maxlength="100">
+            </div>
+            <div id="resultadosLotes" class="list-group mb-2" style="display:none;"></div>
+
+            <div id="productosContainer"></div>
+            <div id="sinProductos" class="alert alert-info text-center py-2 mb-3">
+                <i class="fas fa-info-circle me-1"></i>Busque y seleccione plantas para agregar a la venta
+            </div>
+
+            <div class="mb-2">
+                <label class="form-label small fw-semibold mb-1">Observaciones</label>
+                <textarea class="form-control" name="observaciones" rows="2" placeholder="Opcional" maxlength="500"></textarea>
+            </div>
+            </div>
+
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body py-3 px-3" style="background:#f8f9fa;border-radius:0.5rem;">
+                    <h6 class="fw-bold text-center mb-3 pb-2 border-bottom">Resumen de Venta</h6>
+
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>Subtotal (sin IVA):</span>
+                        <strong id="resumenSubtotal">Bs. 0,00</strong>
                     </div>
-                    <div class="modal-body">
-                        <div class="row g-3">
-                            <div class="col-lg-6">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>IVA (16%):</span>
+                        <strong id="resumenIva">Bs. 0,00</strong>
+                    </div>
+                    <hr class="my-2">
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="fw-bold fs-6">Total a Pagar:</span>
+                        <strong class="fs-4 text-primary" id="resumenTotal">Bs. 0,00</strong>
+                    </div>
 
-                            <div class="row g-2 mb-3">
-                                <div class="col-sm-6">
-                                    <label class="form-label small mb-0">Cliente</label>
-                                    <select class="form-select" name="id_cliente" required>
-                                        <option value="">Seleccione...</option>
-                                        <?php foreach ($clientes as $c): ?>
-                                        <option value="<?= $c['id'] ?>"><?= htmlspecialchars($c['nombre_cliente']) ?></option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </div>
-                                <div class="col-sm-6">
-                                    <label class="form-label small mb-0">Vendedor</label>
-                                    <select class="form-select" name="id_trabajador" required>
-                                        <option value="">Seleccione...</option>
-                                        <?php foreach ($trabajadores as $t): ?>
-                                        <option value="<?= $t['id'] ?>"><?= htmlspecialchars($t['nombre_trabajador'] . ' ' . ($t['apellido_trabajador'] ?? '')) ?></option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </div>
-                                <div class="col-5 col-sm-4">
-                                    <label class="form-label small mb-0">Tipo</label>
-                                    <select class="form-select" name="tipo_venta" id="tipoVenta">
-                                        <option value="contado">Contado</option>
-                                        <option value="credito">Crédito</option>
-                                    </select>
-                                </div>
-                                <div class="col-7 col-sm-7">
-                                    <label class="form-label small mb-0">Fecha</label>
-                                    <input type="text" class="form-control" name="fecha_venta" id="fechaVenta" readonly>
-                                </div>
-                            </div>
+                    <div>
+                        <h6 class="fw-bold mb-2 d-flex align-items-center gap-1">
+                            <i class="fas fa-credit-card"></i> Pago
+                        </h6>
 
-                            <label class="form-label small fw-semibold mb-1">Buscar Planta</label>
-                            <div class="input-group mb-2">
-                                <span class="input-group-text"><i class="fas fa-search"></i></span>
-                                <input type="text" class="form-control" id="buscarLote" placeholder="Escriba nombre de la planta..." minlength="2">
-                            </div>
-                            <div id="resultadosLotes" class="list-group mb-2" style="display:none;"></div>
-
-                            <div id="productosContainer"></div>
-                            <div id="sinProductos" class="alert alert-info text-center py-2 mb-3">
-                                <i class="fas fa-info-circle me-1"></i>Busque y seleccione plantas para agregar a la venta
-                            </div>
-
-                            <div class="mb-2">
-                                <label class="form-label small fw-semibold mb-1">Observaciones</label>
-                                <textarea class="form-control" name="observaciones" rows="2" placeholder="Opcional"></textarea>
-                            </div>
-                            </div>
-
-                        <div class="col-lg-6">
-                            <div class="card border-0 shadow-sm">
-                                <div class="card-body py-3 px-3" style="background:#f8f9fa;border-radius:0.5rem;">
-                                    <h6 class="fw-bold text-center mb-3 pb-2 border-bottom">Resumen de Venta</h6>
-
-                                    <div class="d-flex justify-content-between mb-1">
-                                        <span>Subtotal (sin IVA):</span>
-                                        <strong id="resumenSubtotal">Bs. 0,00</strong>
-                                    </div>
-                                    <div class="d-flex justify-content-between mb-1">
-                                        <span>IVA (16%):</span>
-                                        <strong id="resumenIva">Bs. 0,00</strong>
-                                    </div>
-                                    <hr class="my-2">
-                                    <div class="d-flex justify-content-between mb-3">
-                                        <span class="fw-bold fs-6">Total a Pagar:</span>
-                                        <strong class="fs-4 text-primary" id="resumenTotal">Bs. 0,00</strong>
-                                    </div>
-
-                                    <div>
-                                        <h6 class="fw-bold mb-2 d-flex align-items-center gap-1">
-                                            <i class="fas fa-credit-card"></i> Pago
-                                        </h6>
-
-                                            <div id="pagosContainer">
-                                                <div class="pago-row mb-2 pb-2 border-bottom">
-                                                    <div class="row g-1 align-items-center">
-                                                        <div class="col-5">
-                                                            <select class="form-select form-select-sm metodo-pago">
-                                                                 <option value="efectivo">Efectivo</option>
-                                                                 <option value="transferencia">Transferencia</option>
-                                                                 <option value="pago_movil">Pago Móvil</option>
-                                                                 <option value="punto">Punto</option>
-                                                            </select>
-                                                        </div>
-                                                        <div class="col-4">
-                                                            <input type="number" class="form-control form-control-sm monto-pago" placeholder="Monto" step="0.01" min="0">
-                                                        </div>
-                                                        <div class="col-2">
-                                                            <input type="text" class="form-control form-control-sm ref-pago" placeholder="Ref.">
-                                                        </div>
-                                                        <div class="col-1 text-end">
-                                                            <button type="button" class="btn btn-sm btn-outline-danger quitar-pago py-0 px-1" style="display:none;"><i class="fas fa-times"></i></button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div class="d-flex gap-1 mb-2">
-                                                <button type="button" class="btn btn-sm btn-outline-primary" id="pagarCompleto">
-                                                    <i class="fas fa-check-circle me-1"></i>Pagar completo
-                                                </button>
-                                                <button type="button" class="btn btn-sm btn-outline-secondary" id="agregarPago">
-                                                    <i class="fas fa-plus me-1"></i>Dividir pago
-                                                </button>
-                                            </div>
-
-                                            <div class="d-flex justify-content-between pt-2 border-top mb-1">
-                                                <span class="fw-bold">Total Pagado:</span>
-                                                <strong class="text-success" id="totalPagado">Bs. 0,00</strong>
-                                            </div>
-                                            <div class="d-flex justify-content-between small text-danger" id="saldoPendienteRow">
-                                                <span>Pendiente:</span>
-                                                <strong id="saldoPendiente">Bs. 0,00</strong>
-                                            </div>
+                            <div id="pagosContainer">
+                                <div class="pago-row mb-2 pb-2 border-bottom">
+                                    <div class="row g-1 align-items-center">
+                                        <div class="col-5">
+                                            <select class="form-select form-select-sm metodo-pago">
+                                                 <option value="efectivo">Efectivo</option>
+                                                 <option value="transferencia">Transferencia</option>
+                                                 <option value="pago_movil">Pago Móvil</option>
+                                                 <option value="punto">Punto</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-4">
+                                            <input type="text" class="form-control form-control-sm monto-pago" placeholder="Monto" inputmode="decimal">
+                                        </div>
+                                        <div class="col-2">
+                                            <input type="text" class="form-control form-control-sm ref-pago" placeholder="Ref." maxlength="100">
+                                        </div>
+                                        <div class="col-1 text-end">
+                                            <button type="button" class="btn btn-sm btn-outline-danger quitar-pago py-0 px-1" style="display:none;"><i class="fas fa-times"></i></button>
                                         </div>
                                     </div>
                                 </div>
-                        </div>
+                            </div>
+
+                            <div class="d-flex gap-1 mb-2">
+                                <button type="button" class="btn btn-sm btn-outline-primary" id="pagarCompleto">
+                                    <i class="fas fa-check-circle me-1"></i>Pagar completo
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" id="agregarPago">
+                                    <i class="fas fa-plus me-1"></i>Dividir pago
+                                </button>
+                            </div>
+
+                            <div class="d-flex justify-content-between pt-2 border-top mb-1">
+                                <span class="fw-bold">Total Pagado:</span>
+                                <strong class="text-success" id="totalPagado">Bs. 0,00</strong>
+                            </div>
+                            <div class="d-flex justify-content-between small text-danger" id="saldoPendienteRow">
+                                <span>Pendiente:</span>
+                                <strong id="saldoPendiente">Bs. 0,00</strong>
+                            </div>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary px-4">Guardar Venta</button>
-                    </div>
-                </form>
-            </div>
+                </div>
         </div>
-    </div>
+        </div>
+    <?php modal_form_end('ventaForm'); ?>
 
     <!-- Modal: Ver Detalle -->
-    <div class="modal fade" id="detalleModal" tabindex="-1" data-bs-backdrop="static">
-        <div class="modal-dialog modal-lg modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Detalle de Venta</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body" id="detalleContenido"></div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                    <a href="#" class="btn btn-primary" id="btnDescargarPdf">
-                        <i class="fas fa-file-pdf me-1"></i> Descargar Comprobante
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
+    <?php modal_detail_start(['id' => 'detalleModal', 'title' => 'Detalle de Venta', 'size' => 'modal-lg modal-dialog-scrollable', 'bodyId' => 'detalleContenido']); ?>
+        <a href="#" class="btn btn-primary" id="btnDescargarPdf">
+            <i class="fas fa-file-pdf me-1"></i> Descargar Comprobante
+        </a>
+    <?php modal_detail_end(); ?>
 
     <script src="<?= BASE_URL ?>public/assets/js/dashboard/notifications.js"></script>
     <?= $scripts_links ?>

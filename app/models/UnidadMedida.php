@@ -14,7 +14,6 @@ class UnidadMedida extends Database implements ReadableInterface, DeletableInter
 
     protected array $validationRules = [
         'nombre'  => ['type' => 'nombre', 'required' => true],
-        'simbolo' => ['type' => null,     'required' => false],
     ];
 
     public function __construct()
@@ -25,7 +24,7 @@ class UnidadMedida extends Database implements ReadableInterface, DeletableInter
     public function getAll(): array
     {
         try {
-            $sql = "SELECT id_unidad_medida AS id, nombre_unidad_medida, simbolo, activo FROM unidad_medida WHERE activo = 1 ORDER BY nombre_unidad_medida ASC";
+            $sql = "SELECT id_unidad_medida AS id, nombre_unidad_medida, activo FROM unidad_medida WHERE activo = 1 ORDER BY nombre_unidad_medida ASC";
             $stmt = $this->db()->query($sql);
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
         } catch (\Throwable $e) {
@@ -36,7 +35,7 @@ class UnidadMedida extends Database implements ReadableInterface, DeletableInter
 
     public function getById(int $id): ?array
     {
-        $stmt = $this->db()->prepare("SELECT id_unidad_medida AS id, nombre_unidad_medida, simbolo FROM unidad_medida WHERE id_unidad_medida = :id");
+        $stmt = $this->db()->prepare("SELECT id_unidad_medida AS id, nombre_unidad_medida FROM unidad_medida WHERE id_unidad_medida = :id");
         $stmt->execute([':id' => $id]);
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
@@ -48,33 +47,29 @@ class UnidadMedida extends Database implements ReadableInterface, DeletableInter
         return $stmt->fetchColumn() > 0;
     }
 
-    public function add(string $nombre, ?string $simbolo = null): bool
+    public function add(string $nombre): bool
     {
         $this->validateData([
             'nombre' => $nombre,
-            'simbolo' => $simbolo,
         ]);
-        $stmt = $this->db()->prepare("INSERT INTO unidad_medida (nombre_unidad_medida, simbolo) VALUES (:nombre, :simbolo)");
+        $stmt = $this->db()->prepare("INSERT INTO unidad_medida (nombre_unidad_medida) VALUES (:nombre)");
         return $stmt->execute([
             ':nombre' => trim($nombre),
-            ':simbolo' => $simbolo ? trim($simbolo) : null,
         ]);
     }
 
-    public function update(int $id, string $nombre, ?string $simbolo = null): bool
+    public function update(int $id, string $nombre): bool
     {
         $this->validateData([
             'nombre' => $nombre,
-            'simbolo' => $simbolo,
         ]);
         if (!$this->exists($id)) {
             throw new \Exception("No existe la unidad de medida con ID: $id");
         }
-        $stmt = $this->db()->prepare("UPDATE unidad_medida SET nombre_unidad_medida = :nombre, simbolo = :simbolo WHERE id_unidad_medida = :id");
+        $stmt = $this->db()->prepare("UPDATE unidad_medida SET nombre_unidad_medida = :nombre WHERE id_unidad_medida = :id");
         return $stmt->execute([
             ':id' => $id,
             ':nombre' => trim($nombre),
-            ':simbolo' => $simbolo ? trim($simbolo) : null,
         ]);
     }
 

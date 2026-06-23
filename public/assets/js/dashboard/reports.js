@@ -338,7 +338,7 @@ function exportPdf() {
   const tr = getCurrentTimeRange();
   if (tr.d) params.set('fecha_desde', tr.d);
   if (tr.h) params.set('fecha_hasta', tr.h);
-  window.location.href = `${baseUrl}?${params}`;
+  window.open(`${baseUrl}?${params}`, '_blank');
 }
 
 function clearFilters() {
@@ -376,8 +376,8 @@ $(document).ready(function () {
     reloadWithTime();
   });
 
-  $('#btnApplyFilters').on('click', reloadWithTime);
-  $('#btnClearFilters').on('click', clearFilters);
+  $('#filtersBar').on('click', '#btnApplyFilters', reloadWithTime);
+  $('#filtersBar').on('click', '#btnClearFilters', clearFilters);
   $('#chartTypeSelector').on('change', function () { if (currentChartData) renderChart(currentChartData, $(this).val()); });
   $('#btnRefresh').on('click', reloadWithTime);
   $('#btnCsv').on('click', exportCsv);

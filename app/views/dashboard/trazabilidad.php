@@ -1,6 +1,7 @@
 <?php
 $permisos = \SysInescolara\helpers\Auth::permisos();
 include_once __DIR__ . '/../common/links.php';
+include_once __DIR__ . '/../common/modal.php';
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -60,59 +61,42 @@ include_once __DIR__ . '/../common/links.php';
     </main>
 
     <!-- Modal Registrar/Editar Cuarentena -->
-    <div class="modal fade" id="trazabilidadModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="trazabilidadModalTitle">Registrar Cuarentena</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <form id="trazabilidadForm">
-                    <input type="hidden" name="id" id="trazabilidadId" value="0">
-                    <div class="modal-body">
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label" for="id_lote">Lote <span class="text-danger">*</span></label>
-                                <select class="form-select" name="id_lote" id="id_lote" required>
-                                    <option value="">Seleccione un lote</option>
-                                </select>
-                                <div class="form-text" id="loteInfo"></div>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label" for="cantidad">Cantidad a Apartar <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control" name="cantidad" id="cantidad" min="1" required>
-                                <div class="form-text">Cantidad de ejemplares que pasarán a cuarentena.</div>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label" for="estado_salud">Estado de Salud <span class="text-danger">*</span></label>
-                                <select class="form-select" name="estado_salud" id="estado_salud" required>
-                                    <option value="">Seleccione un estado</option>
-                                    <option value="Sano">Sano</option>
-                                    <option value="Sospechoso">Sospechoso</option>
-                                    <option value="Enfermo">Enfermo</option>
-                                    <option value="Plaga">Plaga</option>
-                                    <option value="Cuarentena">Cuarentena</option>
-                                    <option value="Bajo observación">Bajo observación</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label" for="fecha_registro">Fecha de Cuarentena <span class="text-danger">*</span></label>
-                                <input type="date" class="form-control" name="fecha_registro" id="fecha_registro" required>
-                            </div>
-                            <div class="col-md-12">
-                                <label class="form-label" for="observacion">Observación</label>
-                                <textarea class="form-control" name="observacion" id="observacion" rows="2" placeholder="Motivo de la cuarentena, síntomas observados, etc."></textarea>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary" id="trazabilidadSubmitBtn">Guardar</button>
-                    </div>
-                </form>
+    <?php modal_form(['id' => 'trazabilidadModal', 'title' => 'Registrar Cuarentena', 'formId' => 'trazabilidadForm', 'size' => 'modal-lg', 'hasHiddenId' => true, 'titleId' => 'trazabilidadModalTitle', 'hiddenId' => 'trazabilidadId', 'submitId' => 'trazabilidadSubmitBtn']); ?>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label" for="id_lote">Lote <span class="text-danger">*</span></label>
+                <select class="form-select" name="id_lote" id="id_lote" required>
+                    <option value="">Seleccione un lote</option>
+                </select>
+                <div class="form-text" id="loteInfo"></div>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="cantidad">Cantidad a Apartar <span class="text-danger">*</span></label>
+                <input type="number" class="form-control" name="cantidad" id="cantidad" min="1" required>
+                <div class="form-text">Cantidad de ejemplares que pasarán a cuarentena.</div>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="estado_salud">Estado de Salud <span class="text-danger">*</span></label>
+                <select class="form-select" name="estado_salud" id="estado_salud" required>
+                    <option value="">Seleccione un estado</option>
+                    <option value="Sano">Sano</option>
+                    <option value="Sospechoso">Sospechoso</option>
+                    <option value="Enfermo">Enfermo</option>
+                    <option value="Plaga">Plaga</option>
+                    <option value="Cuarentena">Cuarentena</option>
+                    <option value="Bajo observación">Bajo observación</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="fecha_registro">Fecha de Cuarentena <span class="text-danger">*</span></label>
+                <input type="date" class="form-control" name="fecha_registro" id="fecha_registro" required>
+            </div>
+            <div class="col-md-12">
+                <label class="form-label" for="observacion">Observación</label>
+                <textarea class="form-control" name="observacion" id="observacion" rows="2" placeholder="Motivo de la cuarentena, síntomas observados, etc." maxlength="500"></textarea>
             </div>
         </div>
-    </div>
+    <?php modal_form_end('trazabilidadForm'); ?>
 
     <script>
         window.userPermisos = <?= json_encode($permisos) ?>;
