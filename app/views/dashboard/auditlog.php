@@ -41,7 +41,6 @@ include_once __DIR__ . '/../common/modal.php';
                                         <th style="width:140px">Usuario</th>
                                         <th style="width:130px">Acción</th>
                                         <th style="width:140px">Tabla</th>
-                                        <th style="width:80px">ID</th>
                                         <th style="width:60px" data-orderable="false">Detalle</th>
                                     </tr>
                                 </thead>

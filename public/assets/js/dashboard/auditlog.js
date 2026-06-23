@@ -44,7 +44,7 @@ $(document).ready(function () {
 
   const initDataTable = () => {
     if (typeof SkeletonHelper !== 'undefined') {
-      SkeletonHelper.showTableSkeleton('auditlogTable', 10, 6);
+              SkeletonHelper.showTableSkeleton('auditlogTable', 10, 5);
     }
     auditlogTable = $('#auditlogTable').DataTable({
       ajax: {
@@ -59,7 +59,6 @@ $(document).ready(function () {
         { data: 'nombre_usuario' },
         { data: 'accion', render: (data) => actionBadge(data) },
         { data: 'tabla_afectada', render: (data) => tableLabel(data) },
-        { data: 'id_registro_afectado', render: (data) => data ? `<span class="badge bg-dark bg-opacity-10 text-dark">#${data}</span>` : '—' },
         {
           data: null,
           orderable: false,
@@ -85,7 +84,7 @@ $(document).ready(function () {
           className: 'btn btn-outline-secondary btn-sm',
           action: () => {
             if (typeof SkeletonHelper !== 'undefined') {
-              SkeletonHelper.showTableSkeleton('auditlogTable', 10, 6);
+      SkeletonHelper.showTableSkeleton('auditlogTable', 10, 5);
             }
             auditlogTable.ajax.reload(null, false);
           },
