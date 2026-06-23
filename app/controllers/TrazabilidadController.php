@@ -127,6 +127,13 @@ function trazabilidad_handleAddEdit(string $mode): void
     } elseif ($oldCantidad !== $cantidad) {
         $diff = $cantidad - $oldCantidad;
 
+        if ($diff > 0) {
+            $currentLote = $batchModel->getById($idLote);
+            if ($diff > (int)$currentLote['cantidad_actual']) {
+                throw new \Exception("El lote solo tiene {$currentLote['cantidad_actual']} ejemplares disponibles adicionales.");
+            }
+        }
+
         $model->beginTransaction();
         try {
             if ($diff > 0) {
