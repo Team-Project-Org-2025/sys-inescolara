@@ -93,10 +93,29 @@ $(document).ready(function () {
     });
   };
 
+  const fieldLabels = {
+    id: 'ID', nombre: 'Nombre', nombre_cientifico: 'Nombre Científico', nombre_comun: 'Nombre Común',
+    descripcion: 'Descripción', cantidad: 'Cantidad', precio: 'Precio', costo: 'Costo',
+    total: 'Total', fecha: 'Fecha', fecha_creacion: 'Fecha de Creación', fecha_actualizacion: 'Fecha de Actualización',
+    activo: 'Activo', estado: 'Estado', tipo: 'Tipo', stock: 'Stock', unidad: 'Unidad',
+    medida: 'Medida', telefono: 'Teléfono', email: 'Correo Electrónico', direccion: 'Dirección',
+    rif: 'RIF', cedula: 'Cédula', usuario_id: 'Usuario', username: 'Nombre de Usuario',
+    password: 'Contraseña', rol_id: 'Rol', nota: 'Nota', observacion: 'Observación',
+    motivo: 'Motivo', referencia: 'Referencia', lote_id: 'Lote', planta_id: 'Planta',
+    proveedor_id: 'Proveedor', cliente_id: 'Cliente', trabajador_id: 'Trabajador',
+    imagen: 'Imagen', codigo: 'Código', porcentaje: 'Porcentaje',
+  };
+
   // Ver detalle
   $(document).on('click', '.btn-detail', function () {
     const row = auditlogTable.row($(this).closest('tr')).data();
     if (!row) return;
+
+    const actionLabels = { CREATE: 'creó', UPDATE: 'actualizó', DELETE: 'eliminó', LOGIN: 'inició sesión', LOGOUT: 'cerró sesión' };
+    let html = `<div class="alert alert-info py-2 mb-3 small">${Helpers.escapeHtml(row.nombre_usuario)} ${actionLabels[row.accion] || row.accion}`;
+    if (row.tabla_afectada) html += ` un registro en <strong>${tableLabel(row.tabla_afectada)}</strong>`;
+    if (row.id_registro_afectado) html += ` (ID #${Helpers.escapeHtml(row.id_registro_afectado)})`;
+    html += ` el ${formatDate(row.fecha_accion)}</div>`;
 
     const renderJsonTable = (jsonStr, label) => {
       if (!jsonStr || jsonStr === 'null') return '';
@@ -106,27 +125,45 @@ $(document).ready(function () {
 
       let fields = '';
       for (const [key, val] of Object.entries(parsed)) {
-        const displayKey = key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        const displayKey = fieldLabels[key] || key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
         const displayVal = val !== null && val !== '' ? Helpers.escapeHtml(String(val)) : '<span class="text-muted">—</span>';
         fields += `<tr><td class="text-nowrap" style="width:35%;font-weight:500;">${displayKey}</td><td>${displayVal}</td></tr>`;
       }
 
       return `
-        <h6 class="${label === 'Anterior' ? 'text-danger' : 'text-success'} mb-2">Valor ${label}</h6>
+        <h6 class="mt-3 mb-2">${label === 'Anterior' ? '<i class="fas fa-arrow-left text-danger me-1"></i>Valor anterior' : '<i class="fas fa-arrow-right text-success me-1"></i>Valor nuevo'}</h6>
         <div class="table-responsive">
           <table class="table table-sm table-bordered mb-0">
             <tbody>${fields}</tbody>
           </table>
-        </div>
-        <details class="mt-2">
-          <summary class="text-muted small" style="cursor:pointer;">Ver JSON original</summary>
-          <pre class="bg-light p-2 rounded mt-1 mb-0" style="font-size:0.75rem;max-height:150px;overflow-y:auto;">${Helpers.escapeHtml(JSON.stringify(parsed, null, 2))}</pre>
-        </details>`;
+        </div>`;
     };
 
-    let html = renderJsonTable(row.valor_anterior, 'Anterior');
-    html += renderJsonTable(row.valor_nuevo, 'Nuevo');
-    if (!html) html = '<p class="text-muted">No hay datos de cambio registrados.</p>';
+    const oldHtml = renderJsonTable(row.valor_anterior, 'Anterior');
+    const newHtml = renderJsonTable(row.valor_nuevo, 'Nuevo');
+
+    if (oldHtml || newHtml) {
+      if (oldHtml && newHtml) {
+        html += '<div class="row"><div class="col-md-6">' + oldHtml + '</div><div class="col-md-6">' + newHtml + '</div></div>';
+      } else {
+        html += oldHtml || newHtml;
+      }
+    } else {
+      html += '<p class="text-muted">No hay datos de cambio registrados.</p>';
+    }
+
+    const formatJson = (str) => {
+      if (!str || str === 'null') return null;
+      try { return JSON.stringify(JSON.parse(str), null, 2); } catch { return str; }
+    };
+    const oldJson = formatJson(row.valor_anterior);
+    const newJson = formatJson(row.valor_nuevo);
+    if (oldJson || newJson) {
+      html += '<details class="mt-3"><summary class="text-muted small" style="cursor:pointer;">Ver JSON original</summary>';
+      if (oldJson) html += '<div class="mb-1"><strong class="small text-danger">Valor anterior</strong><pre class="bg-light p-2 rounded mt-1 mb-2" style="font-size:0.75rem;max-height:150px;overflow-y:auto;">' + Helpers.escapeHtml(oldJson) + '</pre></div>';
+      if (newJson) html += '<div><strong class="small text-success">Valor nuevo</strong><pre class="bg-light p-2 rounded mt-1 mb-0" style="font-size:0.75rem;max-height:150px;overflow-y:auto;">' + Helpers.escapeHtml(newJson) + '</pre></div>';
+      html += '</details>';
+    }
 
     $('#detailModalBody').html(html);
     $('#detailModal').modal({ focus: false }).modal('show');
