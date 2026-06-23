@@ -117,11 +117,11 @@ $(document).ready(function () {
     if (row.id_registro_afectado) html += ` (ID #${Helpers.escapeHtml(row.id_registro_afectado)})`;
     html += ` el ${formatDate(row.fecha_accion)}</div>`;
 
-    const renderJsonTable = (jsonStr, label) => {
-      if (!jsonStr || jsonStr === 'null') return '';
+    const renderTable = (jsonStr) => {
+      if (!jsonStr || jsonStr === 'null') return null;
       let parsed;
-      try { parsed = JSON.parse(jsonStr); } catch { return ''; }
-      if (!parsed || typeof parsed !== 'object') return '';
+      try { parsed = JSON.parse(jsonStr); } catch { return null; }
+      if (!parsed || typeof parsed !== 'object') return null;
 
       let fields = '';
       for (const [key, val] of Object.entries(parsed)) {
@@ -129,39 +129,35 @@ $(document).ready(function () {
         const displayVal = val !== null && val !== '' ? Helpers.escapeHtml(String(val)) : '<span class="text-muted">—</span>';
         fields += `<tr><td class="text-nowrap" style="width:35%;font-weight:500;">${displayKey}</td><td>${displayVal}</td></tr>`;
       }
-
-      return `
-        <h6 class="mt-3 mb-2">${label === 'Anterior' ? '<i class="fas fa-arrow-left text-danger me-1"></i>Valor anterior' : '<i class="fas fa-arrow-right text-success me-1"></i>Valor nuevo'}</h6>
-        <div class="table-responsive">
-          <table class="table table-sm table-bordered mb-0">
-            <tbody>${fields}</tbody>
-          </table>
-        </div>`;
+      return `<div class="table-responsive"><table class="table table-sm table-bordered mb-0"><tbody>${fields}</tbody></table></div>`;
     };
 
-    const oldHtml = renderJsonTable(row.valor_anterior, 'Anterior');
-    const newHtml = renderJsonTable(row.valor_nuevo, 'Nuevo');
+    const currentTable = renderTable(row.valor_nuevo);
+    const oldTable = renderTable(row.valor_anterior);
 
-    if (oldHtml || newHtml) {
-      if (oldHtml && newHtml) {
-        html += '<div class="row"><div class="col-md-6">' + oldHtml + '</div><div class="col-md-6">' + newHtml + '</div></div>';
-      } else {
-        html += oldHtml || newHtml;
-      }
-    } else {
-      html += '<p class="text-muted">No hay datos de cambio registrados.</p>';
+    if (currentTable) {
+      html += `<h6 class="mt-3 mb-2"><i class="fas fa-check-circle text-success me-1"></i>Valor actual (después del cambio)</h6>${currentTable}`;
+    }
+
+    if (oldTable) {
+      html += `<details class="mt-2"><summary class="text-muted small" style="cursor:pointer;"><i class="fas fa-history me-1"></i>Ver valor anterior</summary>
+        <div class="mt-2">${oldTable}</div></details>`;
+    }
+
+    if (!currentTable && !oldTable) {
+      html += '<p class="text-muted mt-2 mb-0">No hay datos de cambio registrados.</p>';
     }
 
     const formatJson = (str) => {
       if (!str || str === 'null') return null;
       try { return JSON.stringify(JSON.parse(str), null, 2); } catch { return str; }
     };
-    const oldJson = formatJson(row.valor_anterior);
-    const newJson = formatJson(row.valor_nuevo);
-    if (oldJson || newJson) {
-      html += '<details class="mt-3"><summary class="text-muted small" style="cursor:pointer;">Ver JSON original</summary>';
-      if (oldJson) html += '<div class="mb-1"><strong class="small text-danger">Valor anterior</strong><pre class="bg-light p-2 rounded mt-1 mb-2" style="font-size:0.75rem;max-height:150px;overflow-y:auto;">' + Helpers.escapeHtml(oldJson) + '</pre></div>';
-      if (newJson) html += '<div><strong class="small text-success">Valor nuevo</strong><pre class="bg-light p-2 rounded mt-1 mb-0" style="font-size:0.75rem;max-height:150px;overflow-y:auto;">' + Helpers.escapeHtml(newJson) + '</pre></div>';
+    const rawOld = formatJson(row.valor_anterior);
+    const rawNew = formatJson(row.valor_nuevo);
+    if (rawOld || rawNew) {
+      html += '<details class="mt-3"><summary class="text-muted small" style="cursor:pointer;">JSON original</summary>';
+      if (rawOld) html += '<div class="mb-1"><strong class="small text-danger">Anterior</strong><pre class="bg-light p-2 rounded mt-1 mb-2" style="font-size:0.75rem;max-height:150px;overflow-y:auto;">' + Helpers.escapeHtml(rawOld) + '</pre></div>';
+      if (rawNew) html += '<div><strong class="small text-success">Nuevo</strong><pre class="bg-light p-2 rounded mt-1 mb-0" style="font-size:0.75rem;max-height:150px;overflow-y:auto;">' + Helpers.escapeHtml(rawNew) + '</pre></div>';
       html += '</details>';
     }
 
