@@ -34,17 +34,16 @@ include_once __DIR__ . '/../common/modal.php';
             <div class="card shadow-sm">
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table id="auditlogTable" class="table table-striped table-hover w-100">
-                            <thead>
-                                <tr>
-                                    <th>Fecha</th>
-                                    <th>Usuario</th>
-                                    <th>Acción</th>
-                                    <th>Tabla</th>
-                                    <th>ID Registro</th>
-                                    <th>Detalle</th>
-                                </tr>
-                            </thead>
+                            <table id="auditlogTable" class="table table-striped table-hover w-100">
+                                <thead>
+                                    <tr>
+                                        <th style="width:160px">Fecha</th>
+                                        <th style="width:140px">Usuario</th>
+                                        <th style="width:130px">Acción</th>
+                                        <th style="width:140px">Tabla</th>
+                                        <th style="width:60px" data-orderable="false">Detalle</th>
+                                    </tr>
+                                </thead>
                             <tbody></tbody>
                         </table>
                     </div>
