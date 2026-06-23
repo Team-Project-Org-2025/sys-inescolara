@@ -6,6 +6,7 @@ use SysInescolara\core\Database;
 use SysInescolara\interfaces\ReadableInterface;
 use SysInescolara\interfaces\DeletableInterface;
 use SysInescolara\traits\ValidationTrait;
+use SysInescolara\models\AuditLog;
 use PDO;
 
 class Especie extends Database implements ReadableInterface, DeletableInterface
@@ -50,8 +51,11 @@ class Especie extends Database implements ReadableInterface, DeletableInterface
 
     public function delete(int $id): bool
     {
-        $stmt = $this->db()->prepare("UPDATE especie SET activo = 0 WHERE id_especie = :id");
-        return $stmt->execute([':id' => $id]);
+        $oldData = $this->getById($id);
+        $stmt = $this->db()->prepare("UPDATE especie SET activo = 0 WHERE id_especie = ?");
+        $stmt->execute([$id]);
+        AuditLog::record('DEACTIVATE', 'especie', $id, $oldData, null);
+        return true;
     }
 
     public function restore(int $id): bool
@@ -75,11 +79,17 @@ class Especie extends Database implements ReadableInterface, DeletableInterface
             'nombre_especie' => $nombreEspecie,
             'descripcion' => $descripcion,
         ]);
-        $stmt = $this->db()->prepare("INSERT INTO especie (nombre_especie, descripcion) VALUES (:nombre_especie, :descripcion)");
-        return $stmt->execute([
-            ':nombre_especie' => $nombreEspecie,
-            ':descripcion' => $descripcion,
+        $stmt = $this->db()->prepare("INSERT INTO especie (nombre_especie, descripcion) VALUES (?, ?)");
+        $stmt->execute([$nombreEspecie, $descripcion]);
+
+        $newId = (int) $this->db()->lastInsertId();
+
+        AuditLog::record('CREATE', 'especie', $newId, null, [
+            'nombre_especie' => $nombreEspecie,
+            'descripcion'    => $descripcion,
         ]);
+
+        return true;
     }
 
     public function update(int $id, string $nombreEspecie, ?string $descripcion = null)
@@ -91,11 +101,17 @@ class Especie extends Database implements ReadableInterface, DeletableInterface
         if (!$this->exists($id)) {
             throw new \Exception("No existe la especie con ID: $id");
         }
-        $stmt = $this->db()->prepare("UPDATE especie SET nombre_especie = :nombre_especie, descripcion = :descripcion WHERE id_especie = :id");
-        return $stmt->execute([
-            ':id' => $id,
-            ':nombre_especie' => $nombreEspecie,
-            ':descripcion' => $descripcion,
+
+        $oldData = $this->getById($id);
+
+        $stmt = $this->db()->prepare("UPDATE especie SET nombre_especie = ?, descripcion = ? WHERE id_especie = ?");
+        $stmt->execute([$nombreEspecie, $descripcion, $id]);
+
+        AuditLog::record('UPDATE', 'especie', $id, $oldData, [
+            'nombre_especie' => $nombreEspecie,
+            'descripcion'    => $descripcion,
         ]);
+
+        return true;
     }
 }

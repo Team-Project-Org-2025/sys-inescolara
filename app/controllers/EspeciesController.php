@@ -3,7 +3,6 @@
 require_once __DIR__ . '/controller_helpers.php';
 
 use SysInescolara\models\Especie;
-use SysInescolara\models\AuditLog;
 
 function index(): void
 {
@@ -49,16 +48,13 @@ function species_handleAddEdit(string $mode): void
     if ($mode === 'add') {
         $model->add($nombreEspecie, $descripcion);
         $newId = $model->getLastInsertId() ?? 0;
-        AuditLog::record('CREATE', 'especie', $newId, null, compact('nombreEspecie', 'descripcion'));
         jsonResponse(['success' => true, 'message' => 'Especie agregada correctamente', 'especie' => ['id' => $newId, 'nombre_especie' => $nombreEspecie, 'descripcion' => $descripcion]]);
     }
 
     $id = (int)($_POST['id'] ?? 0);
     if ($id <= 0) throw new \Exception('ID inválido');
 
-    $oldData = $model->getById($id);
     $model->update($id, $nombreEspecie, $descripcion);
-    AuditLog::record('UPDATE', 'especie', $id, $oldData, compact('nombreEspecie', 'descripcion'));
     jsonResponse(['success' => true, 'message' => 'Especie actualizada correctamente', 'especie' => ['id' => $id, 'nombre_especie' => $nombreEspecie, 'descripcion' => $descripcion]]);
 }
 
@@ -69,9 +65,7 @@ function species_handleDelete(): void
     if ($id <= 0) throw new \Exception('ID inválido');
     if (!$model->exists($id)) throw new \Exception('No existe la especie');
 
-    $oldData = $model->getById($id);
     $model->delete($id);
-    AuditLog::record('DEACTIVATE', 'especie', $id, $oldData, null);
     jsonResponse(['success' => true, 'message' => 'Especie desactivada correctamente', 'especieId' => $id]);
 }
 
