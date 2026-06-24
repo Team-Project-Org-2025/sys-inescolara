@@ -75,9 +75,6 @@ include_once __DIR__ . '/../common/modal.php';
                                     <th>Imagen</th>
                                     <th>Nombre Común</th>
                                     <th>Nombre Técnico</th>
-                                    <th>Especie</th>
-                                    <th>Stock en Lotes</th>
-                                    <th>Precio Vigente</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
@@ -162,6 +159,39 @@ include_once __DIR__ . '/../common/modal.php';
             </div>
         </div>
     </div>
+
+    <!-- View Plant Detail Modal -->
+    <?php modal_detail_start(['id' => 'viewPlantModal', 'title' => 'Detalle de Planta', 'size' => 'modal-lg']); ?>
+        <div class="text-center mb-4">
+            <img id="viewPlantImage" src="" alt="Imagen de planta" class="plant-thumb" style="width:120px;height:120px;cursor:default;">
+        </div>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label fw-semibold text-muted small text-uppercase">Nombre Común</label>
+                <p class="fs-5 fw-medium" id="viewPlantNombre">—</p>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-semibold text-muted small text-uppercase">Nombre Técnico</label>
+                <p class="fs-5 fw-medium" id="viewPlantTecnico">—</p>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-semibold text-muted small text-uppercase">Especie / Grupo Familiar</label>
+                <p class="fs-5 fw-medium" id="viewPlantEspecie">—</p>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-semibold text-muted small text-uppercase">Stock en Lotes</label>
+                <p class="fs-5 fw-medium" id="viewPlantStock">—</p>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-semibold text-muted small text-uppercase">Cantidad Total</label>
+                <p class="fs-5 fw-medium" id="viewPlantCantidad">—</p>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-semibold text-muted small text-uppercase">Precio Vigente</label>
+                <p class="fs-5 fw-medium" id="viewPlantPrecio">—</p>
+            </div>
+        </div>
+    <?php modal_detail_end(); ?>
 
     <script src="<?= BASE_URL ?>public/assets/js/dashboard/notifications.js"></script>
     <?= $scripts_links ?>
