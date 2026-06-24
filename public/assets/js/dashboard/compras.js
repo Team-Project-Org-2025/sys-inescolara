@@ -37,7 +37,7 @@ $(document).ready(function () {
               <select class="form-select form-select-sm item-select flex-grow-1" required>
                 <option value="">Seleccione...</option>
               </select>
-              <button type="button" class="btn btn-success btn-add-item-quick d-none" title="Crear nueva planta" style="line-height:1; flex-shrink: 0;">
+              <button type="button" class="btn btn-success btn-add-item-quick d-none" title="Crear nuevo" style="line-height:1; flex-shrink: 0;">
                 <i class="fas fa-plus"></i>
               </button>
             </div>
@@ -69,11 +69,11 @@ $(document).ready(function () {
     $('#itemsBody').append(fila);
 
     const $fila = $('#itemsBody tr:last');
-    $fila.find('.btn-add-item-quick').addClass('d-none');
-    if (tipo === 'planta') $fila.find('.btn-add-item-quick').removeClass('d-none');
+    $fila.find('.btn-add-item-quick').removeClass('d-none');
     alternarCamposPlanta($fila, tipo === 'planta');
-    cargarOpcionesItem($fila, tipo);
-    if (idItem) $fila.find('.item-select').val(idItem);
+    cargarOpcionesItem($fila, tipo, () => {
+      if (idItem) $fila.find('.item-select').val(idItem);
+    });
     actualizarSubtotalItem($fila);
   }
 
@@ -102,7 +102,7 @@ $(document).ready(function () {
       headers: { 'X-Requested-With': 'XMLHttpRequest' },
     }).done((r) => {
       if (!r.success) return;
-      const mapaLista = { insumo: 'insumos', herramienta: 'herramientas', planta: 'plantas' };
+      const mapaLista = { insumo: 'supplies', herramienta: 'tools', planta: 'plantas' };
       const lista = r[mapaLista[tipo]] || [];
       lista.forEach((item) => {
         const mapaEtiqueta = { insumo: 'nombre_insumo', herramienta: 'nombre_herramienta', planta: 'nombre_comun' };
@@ -164,8 +164,7 @@ $(document).ready(function () {
     const $fila = $(this).closest('tr');
     const tipo = $(this).val();
     cargarOpcionesItem($fila, tipo);
-    $fila.find('.btn-add-item-quick').addClass('d-none');
-    if (tipo === 'planta') $fila.find('.btn-add-item-quick').removeClass('d-none');
+    $fila.find('.btn-add-item-quick').removeClass('d-none');
     alternarCamposPlanta($fila, tipo === 'planta');
   });
 
@@ -182,60 +181,102 @@ $(document).ready(function () {
     const $fila = $(this).closest('tr');
     const $select = $fila.find('.item-select');
     const $btn = $(this);
+    const tipo = $fila.find('.item-tipo').val();
 
     $select.hide();
     $btn.hide();
-    const $inputEnLinea = $(`<input type="text" class="form-control form-control-sm flex-grow-1 inline-plant-input" placeholder="Nombre común..." autofocus>`);
+
+    const placeholders = {
+      insumo: 'Nombre del insumo...',
+      herramienta: 'Nombre de la herramienta...',
+      planta: 'Nombre común...',
+    };
+    const $inputEnLinea = $(`<input type="text" class="form-control form-control-sm flex-grow-1 inline-plant-input" placeholder="${placeholders[tipo] || 'Nombre...'}" autofocus>`);
     const $btnGuardar = $(`<button type="button" class="btn btn-sm btn-success flex-shrink-0 inline-plant-save" title="Guardar"><i class="fas fa-check"></i></button>`);
     const $btnCancelar = $(`<button type="button" class="btn btn-sm btn-outline-secondary flex-shrink-0 inline-plant-cancel" title="Cancelar"><i class="fas fa-times"></i></button>`);
-    $btn.parent().append($inputEnLinea, $btnGuardar, $btnCancelar);
+
+    const $wrapper = $btn.parent();
+    $wrapper.append($inputEnLinea);
+    if (tipo === 'insumo') {
+      const $unidadSelect = $(`<select class="form-select form-select-sm inline-unidad" style="min-width:110px">
+        <option value="">Unidad...</option>
+        ${(window.UNIDADES_MEDIDA || []).map(u => `<option value="${u.id}">${Helpers.escapeHtml(u.nombre)}</option>`).join('')}
+      </select>`);
+      $wrapper.append($unidadSelect);
+    }
+    $wrapper.append($btnGuardar, $btnCancelar);
     $inputEnLinea.focus();
 
     function revertirEnLinea() {
       $inputEnLinea.remove();
+      $wrapper.find('.inline-unidad').remove();
       $btnGuardar.remove();
       $btnCancelar.remove();
       $select.show();
       $btn.show();
     }
 
-    function crearPlanta() {
+    function crearItem() {
       const nombre = $inputEnLinea.val().trim();
       if (!nombre) {
         $inputEnLinea.focus();
         return;
       }
+      if (tipo === 'insumo') {
+        const idUnidad = parseInt($wrapper.find('.inline-unidad').val()) || 0;
+        if (!idUnidad) {
+          Helpers.toast('error', 'Debe seleccionar una unidad de medida.');
+          return;
+        }
+      }
+
+      const actionMap = {
+        insumo: 'agregar_insumo_rapido',
+        herramienta: 'agregar_herramienta_rapido',
+        planta: 'agregar_planta_rapido',
+      };
+      const postData = {
+        insumo: { nombre_insumo: nombre, id_unidad_medida: parseInt($wrapper.find('.inline-unidad').val()) || 0 },
+        herramienta: { nombre_herramienta: nombre },
+        planta: { nombre_comun: nombre },
+      };
+      const responseKey = { insumo: 'insumo', herramienta: 'herramienta', planta: 'planta' }[tipo];
+
       $btnGuardar.prop('disabled', true);
       $inputEnLinea.prop('disabled', true);
+      if (tipo === 'insumo') $wrapper.find('.inline-unidad').prop('disabled', true);
+
       $.ajax({
-        url: `${urlBase}?action=agregar_planta_rapido`,
+        url: `${urlBase}?action=${actionMap[tipo]}`,
         method: 'POST',
-        data: { nombre_comun: nombre },
+        data: postData[tipo],
         headers: { 'X-Requested-With': 'XMLHttpRequest' },
         dataType: 'json',
       }).done((r) => {
-        if (r.success && r.planta) {
-          Helpers.toast('success', `"${Helpers.escapeHtml(nombre)}" creada`);
+        if (r.success && r[responseKey]) {
+          Helpers.toast('success', `"${Helpers.escapeHtml(nombre)}" creado`);
           revertirEnLinea();
-          cargarOpcionesItem($fila, 'planta', () => {
-            $select.val(String(r.planta.id)).trigger('change');
+          cargarOpcionesItem($fila, tipo, () => {
+            $select.val(String(r[responseKey].id)).trigger('change');
           });
         } else {
-          Helpers.toast('error', r.message || 'Error al crear la planta');
+          Helpers.toast('error', r.message || 'Error al crear');
           $btnGuardar.prop('disabled', false);
           $inputEnLinea.prop('disabled', false).focus();
+          if (tipo === 'insumo') $wrapper.find('.inline-unidad').prop('disabled', false);
         }
       }).fail(() => {
-        Helpers.toast('error', 'Error de conexión al crear la planta');
+        Helpers.toast('error', 'Error de conexión al crear');
         $btnGuardar.prop('disabled', false);
         $inputEnLinea.prop('disabled', false).focus();
+        if (tipo === 'insumo') $wrapper.find('.inline-unidad').prop('disabled', false);
       });
     }
 
-    $btnGuardar.on('click', crearPlanta);
+    $btnGuardar.on('click', crearItem);
     $btnCancelar.on('click', revertirEnLinea);
     $inputEnLinea.on('keydown', (e) => {
-      if (e.key === 'Enter') { e.preventDefault(); crearPlanta(); }
+      if (e.key === 'Enter') { e.preventDefault(); crearItem(); }
       if (e.key === 'Escape') { e.preventDefault(); revertirEnLinea(); }
     });
   });
@@ -289,13 +330,13 @@ $(document).ready(function () {
           orderable: false,
           render: (data) => {
             const esPendiente = data.estado === 'pendiente';
+            const sinPagos = parseInt(data.pagos_count) === 0;
             return C.btnGroup(
               C.btnView('btn-detail'),
               ...(esPendiente ? [
                 C.btnEdit('btn-edit'),
                 C.btnReceive('btn-recibir'),
-                C.btnCancel('btn-cancelar'),
-                C.btnDelete('btn-delete'),
+                ...(sinPagos ? [C.btnDelete('btn-delete')] : []),
               ] : []),
             );
           },
@@ -530,32 +571,6 @@ $(document).ready(function () {
           }).catch((err) => Helpers.toast('error', err));
       },
       'Sí, recibir'
-    );
-  });
-
-  // ============================================================
-  //  Cancelar
-  // ============================================================
-
-  $(document).on('click', '.btn-cancelar', function () {
-    const row = tablaCompras.row($(this).closest('tr')).data();
-    const id = row.id_compra;
-    const info = `#${row.id_compra} - ${row.proveedor_nombre || ''}`;
-    Helpers.confirmDialog(
-      '¿Cancelar compra?',
-      `¿Deseas cancelar la compra <strong>${Helpers.escapeHtml(info)}</strong>?`,
-      () => {
-        Ajax.post(`${urlBase}?action=cancelar_ajax`, { id })
-          .then((response) => {
-            if (response.success) {
-              Helpers.toast('success', response.message);
-              tablaCompras.ajax.reload(null, false);
-            } else {
-              Helpers.toast('error', response.message);
-            }
-          }).catch((err) => Helpers.toast('error', err));
-      },
-      'Sí, cancelar'
     );
   });
 

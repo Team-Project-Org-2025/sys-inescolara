@@ -87,6 +87,8 @@ class CuentaPagar extends Database implements ReadableInterface, DeletableInterf
                         GROUP BY id_cuenta_pagar
                     ) pag ON cp.id_cuenta_pagar = pag.id_cuenta_pagar
                     WHERE cp.activo = 1
+                      AND c.activo = 1
+                      AND c.estado != 'cancelada'
                     ORDER BY cp.created_at DESC";
             $stmt = $this->db()->query($sql);
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];

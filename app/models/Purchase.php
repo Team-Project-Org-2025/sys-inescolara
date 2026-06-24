@@ -84,7 +84,16 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
                         c.subtotal, c.iva, c.total, c.estado, c.observacion,
                         p.nombre_proveedor AS proveedor_nombre,
                         p.rif_proveedor,
-                        (SELECT COUNT(*) FROM compra_detalle d WHERE d.id_compra = c.id_compra AND d.activo = 1) AS items_count
+                        (SELECT COUNT(*) FROM compra_detalle d WHERE d.id_compra = c.id_compra AND d.activo = 1) AS items_count,
+                        (
+                            SELECT COUNT(*)
+                            FROM cuentas_pagar cp
+                            JOIN pago_compra pg ON cp.id_cuenta_pagar = pg.id_cuenta_pagar
+                            WHERE cp.id_compra = c.id_compra
+                              AND pg.estado IN ('registrado','confirmado')
+                              AND pg.activo = 1
+                              AND cp.activo = 1
+                        ) AS pagos_count
                     FROM compra c
                     LEFT JOIN proveedores p ON c.id_proveedor = p.id_proveedor
                     WHERE c.activo = 1
@@ -279,6 +288,55 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
     {
         $stmt = $this->db()->prepare("UPDATE compra_detalle SET activo = 0 WHERE id_compra = :id_compra");
         return $stmt->execute([':id_compra' => $idCompra]);
+    }
+
+    // ============================================================
+    //  Cuenta por pagar (misma conexión, misma TX)
+    // ============================================================
+
+    public function crearCuentaPagar(int $idCompra, float $total): bool
+    {
+        $stmt = $this->db()->prepare("
+            INSERT INTO cuentas_pagar (id_compra, monto_total, saldo_pendiente)
+            VALUES (:id_compra, :monto_total, :saldo_pendiente)
+        ");
+        return $stmt->execute([
+            ':id_compra' => $idCompra,
+            ':monto_total' => $total,
+            ':saldo_pendiente' => $total,
+        ]);
+    }
+
+    public function actualizarCuentaPagar(int $idCompra, float $total): bool
+    {
+        $stmt = $this->db()->prepare("
+            UPDATE cuentas_pagar
+            SET monto_total = :total, saldo_pendiente = :saldo_pendiente
+            WHERE id_compra = :id_compra AND activo = 1
+        ");
+        $stmt->execute([':total' => $total, ':saldo_pendiente' => $total, ':id_compra' => $idCompra]);
+        return $stmt->rowCount() > 0;
+    }
+
+    public function eliminarCuentaPagarPorCompra(int $idCompra): bool
+    {
+        $stmt = $this->db()->prepare("UPDATE cuentas_pagar SET activo = 0 WHERE id_compra = :id_compra");
+        return $stmt->execute([':id_compra' => $idCompra]);
+    }
+
+    public function tienePagosCuentaPagar(int $idCompra): bool
+    {
+        $stmt = $this->db()->prepare("
+            SELECT COUNT(*)
+            FROM cuentas_pagar cp
+            JOIN pago_compra pg ON cp.id_cuenta_pagar = pg.id_cuenta_pagar
+            WHERE cp.id_compra = :id_compra
+              AND pg.estado IN ('registrado','confirmado')
+              AND pg.activo = 1
+              AND cp.activo = 1
+        ");
+        $stmt->execute([':id_compra' => $idCompra]);
+        return $stmt->fetchColumn() > 0;
     }
 
     // ============================================================

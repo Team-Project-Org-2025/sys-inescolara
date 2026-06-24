@@ -281,6 +281,8 @@ function compras(): void
     $insumos = $supplyModel->getAll();
     $locationModel = new \SysInescolara\models\Ubicacion();
     $ubicaciones = $locationModel->getAll();
+    $unitModel = new \SysInescolara\models\UnidadMedida();
+    $unidadesMedida = $unitModel->getAll();
 
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'compras.php';
