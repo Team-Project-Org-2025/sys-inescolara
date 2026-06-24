@@ -471,7 +471,7 @@ table.dataTable.table > thead > tr > th {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--text-light);
-  background-color: var(--color-secondary);
+  background-color: var(--bg-dark);
   border-bottom: none;
   text-align: left;
 }
@@ -487,7 +487,7 @@ table.dataTable.table > thead > tr > th:last-child {
 table.dataTable.table > thead > tr > th.sorting:hover,
 table.dataTable.table > thead > tr > th.sorting_asc,
 table.dataTable.table > thead > tr > th.sorting_desc {
-  background-color: var(--color-secondary-dark);
+  background-color: var(--color-gray-800);
 }
 
 table.dataTable thead .sorting:before,
@@ -4472,7 +4472,7 @@ div.dataTables_wrapper .dt-buttons .btn {
 #consolidatedTable thead th,
 #movementsTable thead th,
 #adjustmentsTable thead th {
-  background-color: var(--color-secondary);
+  background-color: var(--bg-dark);
   color: var(--text-light);
   font-weight: 600;
   font-size: 0.8125rem;

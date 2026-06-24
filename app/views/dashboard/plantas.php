@@ -11,8 +11,8 @@ include_once __DIR__ . '/../common/modal.php';
     <?= $css_links ?>
     <style>
         .plant-thumb {
-            width: 60px;
-            height: 60px;
+            width: 80px;
+            height: 80px;
             object-fit: cover;
             border-radius: 8px;
             cursor: pointer;
@@ -21,8 +21,8 @@ include_once __DIR__ . '/../common/modal.php';
         }
         .plant-thumb:hover { transform: scale(1.1); }
         .plant-thumb-placeholder {
-            width: 60px;
-            height: 60px;
+            width: 80px;
+            height: 80px;
             border-radius: 8px;
             background: #f3f4f6;
             display: flex;
