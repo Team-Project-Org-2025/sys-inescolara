@@ -8,7 +8,6 @@ let tablaOrnatos = null;
 let editando = false;
 
 const ornatoRules = {
-  id_cliente: 'select',
   tipo_ornato: 'select',
   fecha: 'fechaFuturaCheck',
   ubicacion: null,
@@ -17,6 +16,7 @@ const ornatoRules = {
 
 $(document).ready(function () {
     inicializarTabla();
+    initBuscarCliente();
     configurarEventos();
 });
 
@@ -33,6 +33,10 @@ function inicializarTabla()
         columns: [
             { data: 'id_ornato' },
             { data: 'nombre_cliente', render: (d) => d || '<span class="text-muted">--</span>' },
+            {
+                data: null,
+                render: (r) => r.tipo_cedula_cliente ? `${r.tipo_cedula_cliente}-${r.cedula_cliente}` : '—'
+            },
             {
                 data: 'tipo_ornato',
                 render: (d) => {
@@ -72,6 +76,91 @@ function inicializarTabla()
             },
         ],
     });
+}
+
+// ==================== CLIENTE ====================
+
+let clienteInput, clienteResultados, clienteHidden, clienteSeleccionado, clienteSeleccionadoTexto, limpiarClienteBtn;
+
+function initBuscarCliente() {
+    clienteInput = document.getElementById('buscarClienteOrnato');
+    clienteResultados = document.getElementById('clienteResultadosOrnato');
+    clienteHidden = document.getElementById('idClienteOrnato');
+    clienteSeleccionado = document.getElementById('clienteSeleccionadoOrnato');
+    clienteSeleccionadoTexto = document.getElementById('clienteSeleccionadoTextoOrnato');
+    limpiarClienteBtn = document.getElementById('limpiarClienteOrnato');
+    if (!clienteInput) return;
+    let timeout;
+
+    clienteInput.addEventListener('input', () => {
+        clearTimeout(timeout);
+        const q = clienteInput.value.trim();
+        if (q.length < 2) {
+            clienteResultados.style.display = 'none';
+            return;
+        }
+        timeout = setTimeout(() => buscarClientes(q), 300);
+    });
+
+    clienteInput.addEventListener('blur', () => setTimeout(() => clienteResultados.style.display = 'none', 300));
+    clienteInput.addEventListener('focus', () => {
+        if (clienteResultados.children.length > 0) clienteResultados.style.display = 'block';
+    });
+
+    if (limpiarClienteBtn) {
+        limpiarClienteBtn.addEventListener('click', () => limpiarCliente());
+    }
+}
+
+async function buscarClientes(q) {
+    try {
+        const urlBase = `${window.BASE_URL || '/'}ornatos`;
+        const res = await fetch(`${urlBase}?accion=buscar_clientes&q=${encodeURIComponent(q)}`, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        const data = await res.json();
+        const cont = clienteResultados;
+        cont.innerHTML = '';
+        cont.style.display = 'none';
+
+        if (!data.success || !data.clientes?.length) return;
+
+        data.clientes.forEach(cl => {
+            const item = document.createElement('button');
+            item.type = 'button';
+            item.className = 'list-group-item list-group-item-action py-1 d-flex justify-content-between align-items-center';
+            const cedula = cl.tipo_cedula_cliente ? `${cl.tipo_cedula_cliente}-${cl.cedula_cliente}` : '';
+            item.innerHTML = `
+                <div><strong>${cl.nombre_cliente}</strong> <small class="text-muted">${cedula}</small></div>
+            `;
+            item.addEventListener('click', () => {
+                seleccionarCliente(cl.id_cliente, cl.nombre_cliente, cedula);
+                cont.style.display = 'none';
+            });
+            cont.appendChild(item);
+        });
+        cont.style.display = 'block';
+    } catch (e) {
+        console.error('Error buscando clientes:', e);
+    }
+}
+
+function seleccionarCliente(id, nombre, cedula) {
+    clienteHidden.value = id;
+    clienteInput.value = '';
+    clienteInput.placeholder = nombre;
+    clienteInput.classList.add('is-valid');
+    clienteSeleccionadoTexto.textContent = cedula ? `${nombre} — ${cedula}` : nombre;
+    clienteSeleccionado.classList.remove('d-none');
+    clienteResultados.style.display = 'none';
+}
+
+function limpiarCliente() {
+    clienteHidden.value = '';
+    clienteInput.value = '';
+    clienteInput.placeholder = 'Buscar por C.I., nombre o apellido...';
+    clienteInput.classList.remove('is-valid');
+    clienteSeleccionado.classList.add('d-none');
 }
 
 function configurarEventos()
@@ -153,6 +242,7 @@ function configurarEventos()
     // Reset modal al cerrar
     $('#modalOrnato').on('hidden.bs.modal', function () {
         Ayuda.resetForm($('#formOrnato'));
+        limpiarCliente();
         $('#cuerpoDetalle').empty();
         editando = false;
         $('#inputMontoTotal').val('0.00');
@@ -167,6 +257,7 @@ function abrirModalParaAgregar()
 {
     editando = false;
     $('#tituloModal').text('Agregar Ornato');
+    limpiarCliente();
     $('#inputFecha').val(new Date().toISOString().split('T')[0]);
     $('#inputMontoTotal').val('0.00');
     $('#inputMontoTotalHidden').val('0.00');
@@ -182,7 +273,8 @@ function abrirModalParaEditar(row)
     editando = true;
     $('#tituloModal').text('Editar Ornato');
     $('#inputId').val(row.id_ornato);
-    $('#inputCliente').val(row.id_cliente);
+    const cedulaCompleta = row.tipo_cedula_cliente ? `${row.tipo_cedula_cliente}-${row.cedula_cliente}` : '';
+    seleccionarCliente(row.id_cliente, row.nombre_cliente, cedulaCompleta);
     $('#inputTipo').val(row.tipo_ornato);
     $('#inputFecha').val(row.fecha);
     $('#inputUbicacion').val(row.ubicacion || '');
@@ -255,6 +347,12 @@ function recalcularTotal()
 
 function guardarOrnato($form)
 {
+    if (!clienteHidden?.value) {
+        Ayuda.toast('error', 'Debe seleccionar un cliente.');
+        clienteInput?.focus();
+        return;
+    }
+
     const formData = new FormData($form[0]);
 
     // Recorrer las filas de detalle y construir el array de items
