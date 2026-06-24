@@ -304,7 +304,7 @@ class DashboardData extends Database
     {
         try {
             return $this->db()->query("
-                SELECT mp.id_movimiento_planta, c.nombre_cliente, mpd.sub_total AS monto_total, mp.fecha_movimiento AS fecha_venta
+                SELECT mp.id_movimiento_planta, CONCAT(c.nombre_cliente, ' ', c.apellido_cliente) AS nombre_cliente, mpd.sub_total AS monto_total, mp.fecha_movimiento AS fecha_venta
                 FROM movimiento_planta mp
                 LEFT JOIN cliente c ON mp.id_cliente = c.id_cliente AND c.activo = 1
                 LEFT JOIN movimiento_planta_detalle mpd ON mp.id_movimiento_planta = mpd.id_movimiento_planta
