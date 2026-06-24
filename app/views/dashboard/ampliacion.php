@@ -30,7 +30,7 @@ include_once __DIR__ . '/../common/modal.php';
                     <h1>Ampliación de Especies</h1>
                     <p style="color: var(--text-secondary);">Registro de intercambios de plantas: salida y entrada sin venta.</p>
                 </div>
-                <?php if (in_array('AMPLIACION_CREATE', $permisos)): ?>
+                <?php if (\SysInescolara\helpers\Auth::hasModuleAccess('ampliacion', 'crear')): ?>
                 <button class="btn btn-primary" id="btnAddAmpliacion">
                     <i class="fas fa-exchange-alt"></i> Nueva Ampliación
                 </button>
