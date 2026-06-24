@@ -3,7 +3,6 @@
 require_once __DIR__ . '/controller_helpers.php';
 
 use SysInescolara\models\Ampliacion;
-use SysInescolara\models\AuditLog;
 
 function index(): void
 {
@@ -90,14 +89,6 @@ function ampliacion_handleAdd(): void
 
     $newId = $model->registerExchange($payload);
 
-    AuditLog::record('CREATE', 'movimiento_planta', $newId, null, [
-        'tipo' => 'intercambio',
-        'id_cliente' => $idCliente,
-        'id_trabajador' => $idTrabajador,
-        'salida_items' => $salidaItems,
-        'entrada_items' => $entradaItems,
-    ]);
-
     jsonResponse(['success' => true, 'message' => 'Ampliación de especies registrada correctamente', 'id' => $newId]);
 }
 
@@ -109,9 +100,7 @@ function ampliacion_handleDelete(): void
     if ($id <= 0) throw new \Exception('ID inválido');
     if (!$model->exists($id)) throw new \Exception('No existe la ampliación');
 
-    $oldData = $model->getById($id);
     $model->delete($id);
-    AuditLog::record('DEACTIVATE', 'movimiento_planta', $id, $oldData, null);
     jsonResponse(['success' => true, 'message' => 'Ampliación desactivada correctamente']);
 }
 
