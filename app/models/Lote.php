@@ -6,6 +6,7 @@ use SysInescolara\core\Database;
 use SysInescolara\interfaces\ReadableInterface;
 use SysInescolara\interfaces\DeletableInterface;
 use SysInescolara\traits\ValidationTrait;
+use SysInescolara\models\AuditLog;
 use PDO;
 
 class Lote extends Database implements ReadableInterface, DeletableInterface
@@ -77,8 +78,11 @@ class Lote extends Database implements ReadableInterface, DeletableInterface
 
     public function delete(int $id): bool
     {
-        $stmt = $this->db()->prepare("UPDATE lote SET activo = 0 WHERE id_lote = :id");
-        return $stmt->execute([':id' => $id]);
+        $oldData = $this->getById($id);
+        $stmt = $this->db()->prepare("UPDATE lote SET activo = 0 WHERE id_lote = ?");
+        $stmt->execute([$id]);
+        AuditLog::record('DEACTIVATE', 'lote', $id, $oldData, null);
+        return true;
     }
 
     public function restore(int $id): bool
@@ -110,7 +114,7 @@ class Lote extends Database implements ReadableInterface, DeletableInterface
             'observacion' => $observacion,
         ]);
         $stmt = $this->db()->prepare("INSERT INTO lote (id_planta, id_ubicacion, fecha_siembra, cantidad_inicial, cantidad_actual, estado, categoria, origen, observacion, imagen) VALUES (:id_planta, :id_ubicacion, :fecha_siembra, :cantidad_inicial, :cantidad_actual, :estado, :categoria, :origen, :observacion, :imagen)");
-        return $stmt->execute([
+        $stmt->execute([
             ':id_planta' => $id_planta,
             ':id_ubicacion' => $id_ubicacion,
             ':fecha_siembra' => $fecha_siembra,
@@ -122,6 +126,21 @@ class Lote extends Database implements ReadableInterface, DeletableInterface
             ':observacion' => $observacion,
             ':imagen' => $imagen,
         ]);
+
+        $newId = (int) $this->db()->lastInsertId();
+
+        AuditLog::record('CREATE', 'lote', $newId, null, [
+            'id_planta'        => $id_planta,
+            'id_ubicacion'     => $id_ubicacion,
+            'fecha_siembra'    => $fecha_siembra,
+            'cantidad_inicial' => $cantidad_inicial,
+            'cantidad_actual'  => $cantidad_actual,
+            'estado'           => $estado,
+            'origen'           => $origen,
+            'observacion'      => $observacion,
+        ]);
+
+        return true;
     }
 
     public function update($id, $id_planta, $id_ubicacion, $fecha_siembra, $cantidad_inicial, $cantidad_actual, $estado = 'Activo', $categoria = null, $origen = 'Siembra', $observacion = null, $imagen = null)
@@ -140,8 +159,11 @@ class Lote extends Database implements ReadableInterface, DeletableInterface
         if (!$this->exists($id)) {
             throw new \Exception("No existe el lote con ID: $id");
         }
+
+        $oldData = $this->getById($id);
+
         $stmt = $this->db()->prepare("UPDATE lote SET id_planta = :id_planta, id_ubicacion = :id_ubicacion, fecha_siembra = :fecha_siembra, cantidad_inicial = :cantidad_inicial, cantidad_actual = :cantidad_actual, estado = :estado, categoria = :categoria, origen = :origen, observacion = :observacion, imagen = :imagen WHERE id_lote = :id");
-        return $stmt->execute([
+        $stmt->execute([
             ':id' => $id,
             ':id_planta' => $id_planta,
             ':id_ubicacion' => $id_ubicacion,
@@ -154,6 +176,19 @@ class Lote extends Database implements ReadableInterface, DeletableInterface
             ':observacion' => $observacion,
             ':imagen' => $imagen,
         ]);
+
+        AuditLog::record('UPDATE', 'lote', $id, $oldData, [
+            'id_planta'        => $id_planta,
+            'id_ubicacion'     => $id_ubicacion,
+            'fecha_siembra'    => $fecha_siembra,
+            'cantidad_inicial' => $cantidad_inicial,
+            'cantidad_actual'  => $cantidad_actual,
+            'estado'           => $estado,
+            'origen'           => $origen,
+            'observacion'      => $observacion,
+        ]);
+
+        return true;
     }
 
     protected function deductStock(int $id, int $cantidad): bool

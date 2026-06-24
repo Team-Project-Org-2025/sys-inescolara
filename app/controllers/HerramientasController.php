@@ -3,7 +3,6 @@
 require_once __DIR__ . '/controller_helpers.php';
 
 use SysInescolara\models\Herramienta;
-use SysInescolara\models\AuditLog;
 
 function index(): void
 {
@@ -90,7 +89,6 @@ function tools_handleAddEdit(string $mode): void
     if ($mode === 'add') {
         $model->add($nombre, $tipo, $estado, $fechaAdquisicion, $fechaUltimoMantenimiento, $observacion);
         $newId = $model->getLastInsertId() ?? 0;
-        AuditLog::record('CREATE', 'herramienta', $newId, null, compact('nombre', 'tipo', 'estado', 'fechaAdquisicion', 'fechaUltimoMantenimiento', 'observacion'));
         jsonResponse([
             'success' => true, 'message' => 'Herramienta agregada correctamente',
             'herramienta' => ['id' => $newId, 'nombre_herramienta' => $nombre, 'tipo' => $tipo, 'estado' => $estado],
@@ -100,9 +98,7 @@ function tools_handleAddEdit(string $mode): void
     $id = (int)($_POST['id'] ?? 0);
     if ($id <= 0) throw new \Exception('ID inválido');
 
-    $oldData = $model->getById($id);
     $model->update($id, $nombre, $tipo, $estado, $fechaAdquisicion, $fechaUltimoMantenimiento, $observacion);
-    AuditLog::record('UPDATE', 'herramienta', $id, $oldData, compact('nombre', 'tipo', 'estado', 'fechaAdquisicion', 'fechaUltimoMantenimiento', 'observacion'));
     jsonResponse([
         'success' => true, 'message' => 'Herramienta actualizada correctamente',
         'herramienta' => ['id' => $id],
@@ -116,9 +112,7 @@ function tools_handleDelete(): void
     if ($id <= 0) throw new \Exception('ID inválido');
     if (!$model->exists($id)) throw new \Exception('No existe la herramienta');
 
-    $oldData = $model->getById($id);
     $model->delete($id);
-    AuditLog::record('DEACTIVATE', 'herramienta', $id, $oldData, null);
     jsonResponse(['success' => true, 'message' => 'Herramienta desactivada correctamente', 'herramientaId' => $id]);
 }
 
@@ -149,8 +143,6 @@ function tools_recordUsageAjax(): void
 
     $model = new Herramienta();
     $usoId = $model->recordUsageWithStateUpdate($usageData);
-
-    AuditLog::record('CREATE', 'uso_herramienta', $usoId, null, $usageData);
 
     jsonResponse(['success' => true, 'message' => 'Uso de herramienta registrado', 'id_uso' => $usoId]);
 }

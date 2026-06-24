@@ -3,7 +3,6 @@
 require_once __DIR__ . '/controller_helpers.php';
 
 use SysInescolara\models\UnidadMedida;
-use SysInescolara\models\AuditLog;
 
 function index(): void
 {
@@ -47,16 +46,13 @@ function units_handleAddEdit(string $mode): void
     if ($mode === 'add') {
         $model->add($nombre);
         $newId = $model->getLastInsertId() ?? 0;
-        AuditLog::record('CREATE', 'unidad_medida', $newId, null, ['nombre' => $nombre]);
         jsonResponse(['success' => true, 'message' => 'Unidad agregada correctamente', 'unit' => ['id' => $newId, 'nombre_unidad_medida' => $nombre]]);
     }
 
     $id = (int)($_POST['id'] ?? 0);
     if ($id <= 0) throw new \Exception('ID inválido');
 
-    $oldData = $model->getById($id);
     $model->update($id, $nombre);
-    AuditLog::record('UPDATE', 'unidad_medida', $id, $oldData, ['nombre' => $nombre]);
     jsonResponse(['success' => true, 'message' => 'Unidad actualizada correctamente', 'unit' => ['id' => $id, 'nombre_unidad_medida' => $nombre]]);
 }
 
@@ -68,9 +64,7 @@ function units_handleDelete(): void
     if (!$model->exists($id)) throw new \Exception('No existe la unidad de medida');
 
     try {
-        $oldData = $model->getById($id);
         $model->delete($id);
-        AuditLog::record('DEACTIVATE', 'unidad_medida', $id, $oldData, null);
         jsonResponse(['success' => true, 'message' => 'Unidad desactivada correctamente', 'unitId' => $id]);
     } catch (\PDOException $e) {
         if ($e->getCode() == 23000 || str_contains($e->getMessage(), '1451')) {

@@ -3,7 +3,6 @@
 require_once __DIR__ . '/controller_helpers.php';
 
 use SysInescolara\models\Cliente;
-use SysInescolara\models\AuditLog;
 
 function index(): void
 {
@@ -50,16 +49,13 @@ function clients_handleAddEdit(string $mode): void
     if ($mode === 'add') {
         $model->add($nombreCliente, $contactoCliente);
         $newId = $model->getLastInsertId() ?? 0;
-        AuditLog::record('CREATE', 'cliente', $newId, null, ['nombre_cliente' => $nombreCliente, 'contacto_cliente' => $contactoCliente]);
         jsonResponse(['success' => true, 'message' => 'Cliente agregado correctamente', 'client' => ['id' => $newId, 'nombre_cliente' => $nombreCliente, 'contacto_cliente' => $contactoCliente]]);
     }
 
     $id = (int)($_POST['id'] ?? 0);
     if ($id <= 0) throw new \Exception('ID inválido');
 
-    $oldData = $model->getById($id);
     $model->update($id, $nombreCliente, $contactoCliente);
-    AuditLog::record('UPDATE', 'cliente', $id, $oldData, ['nombre_cliente' => $nombreCliente, 'contacto_cliente' => $contactoCliente]);
     jsonResponse(['success' => true, 'message' => 'Cliente actualizado correctamente', 'client' => ['id' => $id, 'nombre_cliente' => $nombreCliente, 'contacto_cliente' => $contactoCliente]]);
 }
 
@@ -70,9 +66,7 @@ function clients_handleDelete(): void
     if ($id <= 0) throw new \Exception('ID inválido');
     if (!$model->exists($id)) throw new \Exception('No existe el cliente');
 
-    $oldData = $model->getById($id);
     $model->delete($id);
-    AuditLog::record('DEACTIVATE', 'cliente', $id, $oldData, null);
     jsonResponse(['success' => true, 'message' => 'Cliente desactivado correctamente', 'clientId' => $id]);
 }
 
