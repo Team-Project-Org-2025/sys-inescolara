@@ -126,12 +126,15 @@ include_once __DIR__ . '/../common/modal.php';
             <div class="row g-2 mb-3">
                 <div class="col-sm-6">
                     <label class="form-label small mb-0">Cliente</label>
-                    <select class="form-select" name="id_cliente" required>
-                        <option value="">Seleccione...</option>
-                        <?php foreach ($clientes as $c): ?>
-                        <option value="<?= $c['id'] ?>"><?= htmlspecialchars($c['nombre_cliente']) ?></option>
-                        <?php endforeach; ?>
-                    </select>
+                    <div class="position-relative">
+                        <input type="text" class="form-control" id="buscarClienteInput" placeholder="Buscar por C.I., nombre o apellido..." autocomplete="off">
+                        <input type="hidden" name="id_cliente" id="idClienteHidden">
+                        <div id="clienteSearchResults" class="dropdown-menu w-100"></div>
+                    </div>
+                    <div id="clienteSeleccionado" class="d-none mt-1">
+                        <span class="badge bg-success" id="clienteSeleccionadoTexto"></span>
+                        <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-1" id="limpiarCliente" title="Cambiar cliente">&times;</button>
+                    </div>
                 </div>
                 <div class="col-sm-6">
                     <label class="form-label small mb-0">Vendedor</label>
