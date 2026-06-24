@@ -18,6 +18,7 @@ function index(): void
                 'GET_get_plantas'        => get_plantas(),
                 'GET_get_ubicaciones'    => get_ubicaciones(),
                 'GET_get_especies'       => get_especies(),
+                'GET_buscar_clientes'    => buscar_clientes(),
                 'POST_add_ajax'          => add_ajax(),
                 'POST_delete_ajax'       => delete_ajax(),
                 default                  => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
@@ -38,6 +39,7 @@ function get_lotes(): void { checkModuleAuth(); ampliacion_getLotesAjax(); }
 function get_plantas(): void { checkModuleAuth(); ampliacion_getPlantasAjax(); }
 function get_ubicaciones(): void { checkModuleAuth(); ampliacion_getUbicacionesAjax(); }
 function get_especies(): void { checkModuleAuth(); ampliacion_getEspeciesAjax(); }
+function buscar_clientes(): void { checkModuleAuth(); ampliacion_buscarClientesAjax(); }
 function add_ajax(): void { checkModuleAuth(); checkPermisoOrFail('ampliacion:crear'); ampliacion_handleAdd(); }
 function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('ampliacion:eliminar'); ampliacion_handleDelete(); }
 
@@ -164,4 +166,17 @@ function ampliacion_getEspeciesAjax(): void
     $model = new Ampliacion();
     $especies = $model->getSpecies();
     jsonResponse(['success' => true, 'especies' => $especies]);
+}
+
+function ampliacion_buscarClientesAjax(): void
+{
+    $query = trim((string)($_GET['q'] ?? ''));
+    if (strlen($query) < 2) {
+        jsonResponse(['success' => true, 'clientes' => []]);
+        return;
+    }
+
+    $model = new Ampliacion();
+    $clientes = $model->buscarClientes($query);
+    jsonResponse(['success' => true, 'clientes' => $clientes]);
 }
