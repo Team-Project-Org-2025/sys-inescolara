@@ -7,7 +7,6 @@ use SysInescolara\models\Proveedor;
 use SysInescolara\models\Insumo;
 use SysInescolara\models\Ubicacion;
 use SysInescolara\models\Planta;
-use SysInescolara\models\CuentaPagar;
 use SysInescolara\models\AuditLog;
 
 function index(): void
@@ -110,14 +109,11 @@ function compras_manejarAgregarEditar(string $modo): void
                 $modelo->agregarDetalle($nuevoId, $tipoItem, $idItem, $cantidad, $costoUnitario, $subtotalItem, $categoriaLote, $idUbicacionItem);
             }
 
-            $modelo->confirmarTransaccion();
-
-            try {
-                $cuentaPagar = new CuentaPagar();
-                $cuentaPagar->crear($nuevoId, $total);
-            } catch (\Throwable $e) {
-                error_log('Error al crear cuenta por pagar: ' . $e->getMessage());
+            if (!$modelo->crearCuentaPagar($nuevoId, $total)) {
+                throw new \Exception('Error al crear la cuenta por pagar.');
             }
+
+            $modelo->confirmarTransaccion();
 
             AuditLog::record('CREATE', 'compra', $nuevoId, null, [
                 'id_proveedor' => $idProveedor, 'total' => $total, 'items' => count($items),
@@ -146,6 +142,13 @@ function compras_manejarAgregarEditar(string $modo): void
             $modelo->agregarDetalle($id, $tipoItem, $idItem, $cantidad, $costoUnitario, $subtotalItem, $categoriaLote, $idUbicacionItem);
         }
 
+        if (!$modelo->actualizarCuentaPagar($id, $total)) {
+            // No existe — créala (cura la inconsistencia de datos anteriores con CuentaPagar faltante)
+            if (!$modelo->crearCuentaPagar($id, $total)) {
+                throw new \Exception('No se pudo crear la cuenta por pagar.');
+            }
+        }
+
         $modelo->confirmarTransaccion();
 
         AuditLog::record('UPDATE', 'compra', $id, $datosViejos, [
@@ -168,7 +171,20 @@ function compras_manejarEliminar(): void
     $datosViejos = $modelo->obtenerPorId($id);
     if (!$datosViejos) throw new \Exception('No existe la compra');
 
-    $modelo->eliminar($id);
+    if ($modelo->tienePagosCuentaPagar($id)) {
+        throw new \Exception('No se puede eliminar una compra que ya tiene pagos registrados.');
+    }
+
+    $modelo->iniciarTransaccion();
+    try {
+        $modelo->eliminar($id);
+        $modelo->eliminarCuentaPagarPorCompra($id);
+        $modelo->confirmarTransaccion();
+    } catch (\Exception $e) {
+        $modelo->revertirTransaccion();
+        throw $e;
+    }
+
     AuditLog::record('DEACTIVATE', 'compra', $id, $datosViejos, null);
     jsonResponse(['success' => true, 'message' => 'Compra eliminada correctamente.']);
 }
@@ -196,7 +212,15 @@ function compras_manejarCancelar(): void
     if (!$compra) throw new \Exception('No existe la compra');
     if ($compra['estado'] !== 'pendiente') throw new \Exception('Solo se pueden cancelar compras pendientes.');
 
-    $modelo->actualizarEstado($id, 'cancelada');
+    $modelo->iniciarTransaccion();
+    try {
+        $modelo->actualizarEstado($id, 'cancelada');
+        $modelo->eliminarCuentaPagarPorCompra($id);
+        $modelo->confirmarTransaccion();
+    } catch (\Exception $e) {
+        $modelo->revertirTransaccion();
+        throw $e;
+    }
 
     AuditLog::record('UPDATE', 'compra', $id, ['estado' => 'pendiente'], ['estado' => 'cancelada']);
     jsonResponse(['success' => true, 'message' => 'Compra cancelada.']);
