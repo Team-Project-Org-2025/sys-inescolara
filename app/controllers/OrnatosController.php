@@ -3,7 +3,6 @@
 require_once __DIR__ . '/controller_helpers.php';
 
 use SysInescolara\models\Ornato;
-use SysInescolara\models\AuditLog;
 
 function index(): void
 {
@@ -112,14 +111,12 @@ function ornatos_manejarGuardar(string $modo): void
             }
         }
 
-        AuditLog::record('CREATE', 'ornatos', $nuevoId, null, $datos);
         jsonResponse(['success' => true, 'message' => 'Ornato registrado correctamente', 'id' => $nuevoId]);
     }
 
     $id = (int)($_POST['id'] ?? 0);
     if ($id <= 0) throw new \Exception('ID inválido');
 
-    $datosViejos = $modelo->getById($id);
     $ok = $modelo->actualizar($id, $datos);
     if (!$ok) throw new \Exception('Error al actualizar el ornato.');
 
@@ -128,7 +125,6 @@ function ornatos_manejarGuardar(string $modo): void
         throw new \Exception('Error al actualizar los detalles del ornato.');
     }
 
-    AuditLog::record('UPDATE', 'ornatos', $id, $datosViejos, $datos);
     jsonResponse(['success' => true, 'message' => 'Ornato actualizado correctamente', 'id' => $id]);
 }
 
@@ -141,8 +137,6 @@ function ornatos_manejarEliminar(): void
         throw new \Exception('No existe el ornato solicitado.');
     }
 
-    $datosViejos = $modelo->getById($id);
     $modelo->delete($id);
-    AuditLog::record('DEACTIVATE', 'ornatos', $id, $datosViejos, null);
     jsonResponse(['success' => true, 'message' => 'Ornato eliminado correctamente', 'id' => $id]);
 }

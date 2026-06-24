@@ -6,6 +6,7 @@ use SysInescolara\core\Database;
 use SysInescolara\interfaces\ReadableInterface;
 use SysInescolara\interfaces\DeletableInterface;
 use PDO;
+use SysInescolara\models\AuditLog;
 
 class Merma extends Database implements ReadableInterface, DeletableInterface
 {
@@ -81,8 +82,11 @@ class Merma extends Database implements ReadableInterface, DeletableInterface
 
     public function delete(int $id): bool
     {
+        $oldData = $this->getById($id);
         $stmt = $this->db()->prepare("UPDATE mermas_historico SET activo = 0 WHERE id_merma = :id");
-        return $stmt->execute([':id' => $id]);
+        $result = $stmt->execute([':id' => $id]);
+        AuditLog::record('DEACTIVATE', 'mermas_historico', $id, $oldData, null);
+        return $result;
     }
 
     public function restore(int $id): bool
@@ -165,6 +169,14 @@ class Merma extends Database implements ReadableInterface, DeletableInterface
             $this->deductQuarantineStock($idTrazabilidad, $cantidad);
 
             $this->commit();
+
+            AuditLog::record('CREATE', 'mermas_historico', $newId, null, [
+                'id_trazabilidad' => $idTrazabilidad,
+                'cantidad'        => $cantidad,
+                'motivo'          => $motivo,
+                'descripcion'     => $descripcion,
+                'fecha_merma'     => $fecha,
+            ]);
 
             return $newId;
         } catch (\Exception $e) {

@@ -7,6 +7,7 @@ use SysInescolara\interfaces\ReadableInterface;
 use SysInescolara\interfaces\DeletableInterface;
 use SysInescolara\traits\ValidationTrait;
 use PDO;
+use SysInescolara\models\AuditLog;
 
 class Ornato extends Database implements ReadableInterface, DeletableInterface
 {
@@ -84,8 +85,11 @@ class Ornato extends Database implements ReadableInterface, DeletableInterface
     public function delete(int $id): bool
     {
         try {
+            $oldData = $this->getById($id);
             $stmt = $this->db()->prepare("UPDATE ornatos SET activo = 0 WHERE id_ornato = :id");
-            return $stmt->execute([':id' => $id]);
+            $result = $stmt->execute([':id' => $id]);
+            AuditLog::record('DEACTIVATE', 'ornatos', $id, $oldData, null);
+            return $result;
         } catch (\Throwable $e) {
             error_log('Error al eliminar ornato: ' . $e->getMessage());
             return false;
@@ -126,7 +130,7 @@ class Ornato extends Database implements ReadableInterface, DeletableInterface
             $stmt = $this->db()->prepare("INSERT INTO ornatos
                 (id_cliente, tipo_ornato, descripcion, ubicacion, monto_total, fecha)
                 VALUES (:id_cliente, :tipo_ornato, :descripcion, :ubicacion, :monto_total, :fecha)");
-            return $stmt->execute([
+            $result = $stmt->execute([
                 ':id_cliente'  => $datos['id_cliente'],
                 ':tipo_ornato' => $datos['tipo_ornato'] ?? 'Venta',
                 ':descripcion' => $datos['descripcion'] ?? null,
@@ -134,6 +138,10 @@ class Ornato extends Database implements ReadableInterface, DeletableInterface
                 ':monto_total' => $datos['monto_total'] ?? 0.00,
                 ':fecha'       => $datos['fecha'],
             ]);
+            if ($result) {
+                AuditLog::record('CREATE', 'ornatos', $this->db()->lastInsertId(), null, $datos);
+            }
+            return $result;
         } catch (\Throwable $e) {
             error_log('Error al agregar ornato: ' . $e->getMessage());
             return false;
@@ -189,7 +197,8 @@ class Ornato extends Database implements ReadableInterface, DeletableInterface
                 monto_total = :monto_total,
                 fecha       = :fecha
                 WHERE id_ornato = :id");
-            return $stmt->execute([
+            $oldData = $this->getById($id);
+            $result = $stmt->execute([
                 ':id'          => $id,
                 ':id_cliente'  => $datos['id_cliente'],
                 ':tipo_ornato' => $datos['tipo_ornato'] ?? 'Venta',
@@ -198,6 +207,8 @@ class Ornato extends Database implements ReadableInterface, DeletableInterface
                 ':monto_total' => $datos['monto_total'] ?? 0.00,
                 ':fecha'       => $datos['fecha'],
             ]);
+            AuditLog::record('UPDATE', 'ornatos', $id, $oldData, $datos);
+            return $result;
         } catch (\Throwable $e) {
             error_log('Error al actualizar ornato: ' . $e->getMessage());
             return false;
