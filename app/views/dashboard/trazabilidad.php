@@ -72,20 +72,18 @@ include_once __DIR__ . '/../common/modal.php';
             </div>
             <div class="col-md-6">
                 <label class="form-label" for="cantidad">Cantidad a Apartar <span class="text-danger">*</span></label>
-                <input type="number" class="form-control" name="cantidad" id="cantidad" min="1" required>
+                <input type="number" class="form-control" name="cantidad" id="cantidad" min="1" step="1" required>
                 <div class="form-text">Cantidad de ejemplares que pasarán a cuarentena.</div>
             </div>
             <div class="col-md-6">
                 <label class="form-label" for="estado_salud">Estado de Salud <span class="text-danger">*</span></label>
-                <select class="form-select" name="estado_salud" id="estado_salud" required>
-                    <option value="">Seleccione un estado</option>
-                    <option value="Sano">Sano</option>
-                    <option value="Sospechoso">Sospechoso</option>
-                    <option value="Enfermo">Enfermo</option>
-                    <option value="Plaga">Plaga</option>
-                    <option value="Cuarentena">Cuarentena</option>
-                    <option value="Bajo observación">Bajo observación</option>
-                </select>
+                    <select class="form-select" name="estado_salud" id="estado_salud" required>
+                        <option value="">Seleccione un estado</option>
+                        <option value="Sospechoso">Sospechoso</option>
+                        <option value="Enfermo">Enfermo</option>
+                        <option value="Plaga">Plaga</option>
+                        <option value="Bajo observación">Bajo observación</option>
+                    </select>
             </div>
             <div class="col-md-6">
                 <label class="form-label" for="fecha_registro">Fecha de Cuarentena <span class="text-danger">*</span></label>
