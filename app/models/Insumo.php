@@ -17,7 +17,7 @@ class Insumo extends Database implements ReadableInterface, DeletableInterface
         'nombre'            => ['type' => 'nombreProducto', 'required' => true],
         'id_unidad_medida'  => ['type' => null,            'required' => true],
         'categoria'         => ['type' => null,            'required' => false],
-        'stock'             => ['type' => 'cantidad',      'required' => false],
+        'stock'             => ['type' => 'precio',        'required' => false],
         'costo'             => ['type' => 'precio',        'required' => false],
     ];
 
