@@ -103,6 +103,7 @@ include_once __DIR__ . '/../common/modal.php';
                                     <th>#</th>
                                     <th>Referencia</th>
                                     <th>Cliente</th>
+                                    <th>C.I.</th>
                                     <th>Vendedor</th>
                                     <th>Fecha</th>
                                     <th class="text-end">Total</th>
