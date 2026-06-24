@@ -17,14 +17,14 @@ function index(): void
     if (isAjaxRequest() && $action !== '') {
         try {
             match ($_SERVER['REQUEST_METHOD'] . '_' . $action) {
-                'GET_obtener_compras'        => compras_obtenerComprasAjax(),
-                'GET_obtener_detalles'       => compras_obtenerDetallesAjax(),
-                'POST_agregar_ajax'          => compras_manejarAgregarEditar('add'),
-                'POST_editar_ajax'           => compras_manejarAgregarEditar('edit'),
-                'POST_eliminar_ajax'         => compras_manejarEliminar(),
-                'POST_recibir_ajax'           => compras_manejarRecibir(),
-                'POST_cancelar_ajax'         => compras_manejarCancelar(),
-                'POST_agregar_planta_rapido' => compras_agregarPlantaRapido(),
+                'GET_obtener_compras'        => obtener_compras(),
+                'GET_obtener_detalles'       => obtener_detalles(),
+                'POST_agregar_ajax'          => agregar_ajax(),
+                'POST_editar_ajax'           => editar_ajax(),
+                'POST_eliminar_ajax'         => eliminar_ajax(),
+                'POST_recibir_ajax'           => recibir_ajax(),
+                'POST_cancelar_ajax'         => cancelar_ajax(),
+                'POST_agregar_planta_rapido' => agregar_planta_rapido(),
                 default                      => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
             };
         } catch (\Exception $e) {
@@ -51,11 +51,11 @@ function index(): void
 
 function obtener_compras(): void { checkModuleAuth(); compras_obtenerComprasAjax(); }
 function obtener_detalles(): void { checkModuleAuth(); compras_obtenerDetallesAjax(); }
-function agregar_ajax(): void { checkModuleAuth(); checkPermisoOrFail('COMPRAS_CREATE'); compras_manejarAgregarEditar('add'); }
-function editar_ajax(): void { checkModuleAuth(); checkPermisoOrFail('COMPRAS_EDIT'); compras_manejarAgregarEditar('edit'); }
-function eliminar_ajax(): void { checkModuleAuth(); checkPermisoOrFail('COMPRAS_DELETE'); compras_manejarEliminar(); }
-function recibir_ajax(): void { checkModuleAuth(); checkPermisoOrFail('COMPRAS_COMPLETE'); compras_manejarRecibir(); }
-function cancelar_ajax(): void { checkModuleAuth(); checkPermisoOrFail('COMPRAS_COMPLETE'); compras_manejarCancelar(); }
+function agregar_ajax(): void { checkModuleAuth(); checkPermisoOrFail('compras:crear'); compras_manejarAgregarEditar('add'); }
+function editar_ajax(): void { checkModuleAuth(); checkPermisoOrFail('compras:editar'); compras_manejarAgregarEditar('edit'); }
+function eliminar_ajax(): void { checkModuleAuth(); checkPermisoOrFail('compras:eliminar'); compras_manejarEliminar(); }
+function recibir_ajax(): void { checkModuleAuth(); checkPermisoOrFail('compras:editar'); compras_manejarRecibir(); }
+function cancelar_ajax(): void { checkModuleAuth(); checkPermisoOrFail('compras:editar'); compras_manejarCancelar(); }
 function agregar_planta_rapido(): void { checkModuleAuth(); compras_agregarPlantaRapido(); }
 
 function compras_manejarAgregarEditar(string $modo): void

@@ -13,10 +13,10 @@ function index(): void
     if (isAjaxRequest() && $action !== '') {
         try {
             match ($_SERVER['REQUEST_METHOD'] . '_' . $action) {
-                'GET_get_supplies'  => supplies_getSuppliesAjax(),
-                'POST_add_ajax'     => supplies_handleAddEdit('add'),
-                'POST_edit_ajax'    => supplies_handleAddEdit('edit'),
-                'POST_delete_ajax'  => supplies_handleDelete(),
+                'GET_get_supplies'  => get_supplies(),
+                'POST_add_ajax'     => add_ajax(),
+                'POST_edit_ajax'    => edit_ajax(),
+                'POST_delete_ajax'  => delete_ajax(),
                 default             => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
             };
         } catch (\Exception $e) {
@@ -38,9 +38,9 @@ function index(): void
 }
 
 function get_supplies(): void { checkModuleAuth(); supplies_getSuppliesAjax(); }
-function add_ajax(): void { checkModuleAuth(); checkPermisoOrFail('INSUMOS_CREATE'); supplies_handleAddEdit('add'); }
-function edit_ajax(): void { checkModuleAuth(); checkPermisoOrFail('INSUMOS_EDIT'); supplies_handleAddEdit('edit'); }
-function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('INSUMOS_DELETE'); supplies_handleDelete(); }
+function add_ajax(): void { checkModuleAuth(); checkPermisoOrFail('insumos:crear'); supplies_handleAddEdit('add'); }
+function edit_ajax(): void { checkModuleAuth(); checkPermisoOrFail('insumos:editar'); supplies_handleAddEdit('edit'); }
+function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('insumos:eliminar'); supplies_handleDelete(); }
 
 function supplies_handleAddEdit(string $mode): void
 {

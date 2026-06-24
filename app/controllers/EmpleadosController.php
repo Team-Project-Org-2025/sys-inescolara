@@ -13,10 +13,10 @@ function index(): void
     if (isAjaxRequest() && $action !== '') {
         try {
             match ($_SERVER['REQUEST_METHOD'] . '_' . $action) {
-                'GET_get_employees' => employees_getEmployeesAjax(),
-                'POST_add_ajax'     => employees_handleAddEdit('add'),
-                'POST_edit_ajax'    => employees_handleAddEdit('edit'),
-                'POST_delete_ajax'  => employees_handleDelete(),
+                'GET_get_employees' => get_employees(),
+                'POST_add_ajax'     => add_ajax(),
+                'POST_edit_ajax'    => edit_ajax(),
+                'POST_delete_ajax'  => delete_ajax(),
                 default             => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
             };
         } catch (\Exception $e) {
@@ -44,9 +44,9 @@ function index(): void
 }
 
 function get_employees(): void { checkModuleAuth(); employees_getEmployeesAjax(); }
-function add_ajax(): void { checkModuleAuth(); checkPermisoOrFail('TRABAJADORES_CREATE'); employees_handleAddEdit('add'); }
-function edit_ajax(): void { checkModuleAuth(); checkPermisoOrFail('TRABAJADORES_EDIT'); employees_handleAddEdit('edit'); }
-function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('TRABAJADORES_DELETE'); employees_handleDelete(); }
+function add_ajax(): void { checkModuleAuth(); checkPermisoOrFail('empleados:crear'); employees_handleAddEdit('add'); }
+function edit_ajax(): void { checkModuleAuth(); checkPermisoOrFail('empleados:editar'); employees_handleAddEdit('edit'); }
+function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('empleados:eliminar'); employees_handleDelete(); }
 
 function employees_handleAddEdit(string $mode): void
 {

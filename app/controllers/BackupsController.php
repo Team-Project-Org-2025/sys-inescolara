@@ -13,14 +13,14 @@ function index(): void
         try {
             if (isAjaxRequest()) {
                 match ($_SERVER['REQUEST_METHOD'] . '_' . $action) {
-                    'GET_get_backups'      => backups_getBackupsAjax(),
-                    'POST_create_backup'   => backups_createBackupAjax(),
-                    'POST_restore_backup'  => backups_restoreBackupAjax(),
-                    'POST_delete_backup'   => backups_deleteBackupAjax(),
+                    'GET_get_backups'      => get_backups(),
+                    'POST_create_backup'   => create_backup(),
+                    'POST_restore_backup'  => restore_backup(),
+                    'POST_delete_backup'   => delete_backup(),
                     default                => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
                 };
             } elseif ($_SERVER['REQUEST_METHOD'] === 'GET' && $action === 'download_backup') {
-                checkPermisoOrFail('BACKUPS_CREATE');
+                checkPermisoOrFail('backups:crear');
                 backups_downloadBackup();
             }
         } catch (\Exception $e) {
@@ -39,9 +39,9 @@ function index(): void
 }
 
 function get_backups(): void { checkModuleAuth(); backups_getBackupsAjax(); }
-function create_backup(): void { checkModuleAuth(); checkPermisoOrFail('BACKUPS_CREATE'); backups_createBackupAjax(); }
-function restore_backup(): void { checkModuleAuth(); checkPermisoOrFail('BACKUPS_DELETE'); backups_restoreBackupAjax(); }
-function delete_backup(): void { checkModuleAuth(); checkPermisoOrFail('BACKUPS_DELETE'); backups_deleteBackupAjax(); }
+function create_backup(): void { checkModuleAuth(); checkPermisoOrFail('backups:crear'); backups_createBackupAjax(); }
+function restore_backup(): void { checkModuleAuth(); checkPermisoOrFail('backups:eliminar'); backups_restoreBackupAjax(); }
+function delete_backup(): void { checkModuleAuth(); checkPermisoOrFail('backups:eliminar'); backups_deleteBackupAjax(); }
 
 function backups_getBackupsAjax(): void
 {

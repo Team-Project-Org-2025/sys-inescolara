@@ -13,10 +13,10 @@ function index(): void
     if (isAjaxRequest() && $action !== '') {
         try {
             match ($_SERVER['REQUEST_METHOD'] . '_' . $action) {
-                'GET_get_plants'   => plants_getPlantsAjax(),
-                'POST_add_ajax'    => plants_handleAddEdit('add'),
-                'POST_edit_ajax'   => plants_handleAddEdit('edit'),
-                'POST_delete_ajax' => plants_handleDelete(),
+                'GET_get_plants'   => get_plants(),
+                'POST_add_ajax'    => add_ajax(),
+                'POST_edit_ajax'   => edit_ajax(),
+                'POST_delete_ajax' => delete_ajax(),
                 default            => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
             };
         } catch (\Exception $e) {
@@ -39,9 +39,9 @@ function index(): void
 }
 
 function get_plants(): void { checkModuleAuth(); plants_getPlantsAjax(); }
-function add_ajax(): void { checkModuleAuth(); checkPermisoOrFail('PLANTAS_CREATE'); plants_handleAddEdit('add'); }
-function edit_ajax(): void { checkModuleAuth(); checkPermisoOrFail('PLANTAS_EDIT'); plants_handleAddEdit('edit'); }
-function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('PLANTAS_DELETE'); plants_handleDelete(); }
+function add_ajax(): void { checkModuleAuth(); checkPermisoOrFail('plantas:crear'); plants_handleAddEdit('add'); }
+function edit_ajax(): void { checkModuleAuth(); checkPermisoOrFail('plantas:editar'); plants_handleAddEdit('edit'); }
+function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('plantas:eliminar'); plants_handleDelete(); }
 
 function plants_handleAddEdit(string $mode): void
 {

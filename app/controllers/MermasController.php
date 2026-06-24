@@ -12,10 +12,10 @@ function index(): void
     if (isAjaxRequest() && $action !== '') {
         try {
             match ($_SERVER['REQUEST_METHOD'] . '_' . $action) {
-                'GET_get_mermas'        => mermas_getAllAjax(),
-                'GET_get_quarantine'    => mermas_getQuarantineAjax(),
-                'POST_add_ajax'         => mermas_handleAdd(),
-                'POST_delete_ajax'      => mermas_handleDelete(),
+                'GET_get_mermas'        => get_mermas(),
+                'GET_get_quarantine'    => get_quarantine(),
+                'POST_add_ajax'         => add_ajax(),
+                'POST_delete_ajax'      => delete_ajax(),
                 default                 => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
             };
         } catch (\Exception $e) {
@@ -35,7 +35,7 @@ function index(): void
 
 function get_mermas(): void { checkModuleAuth(); mermas_getAllAjax(); }
 function get_quarantine(): void { checkModuleAuth(); mermas_getQuarantineAjax(); }
-function add_ajax(): void { checkModuleAuth(); checkPermisoOrFail('MERMAS_CREATE'); mermas_handleAdd(); }
+function add_ajax(): void { checkModuleAuth(); checkPermisoOrFail('mermas:crear'); mermas_handleAdd(); }
 function delete_ajax(): void { checkModuleAuth(); mermas_handleDelete(); }
 
 function mermas_handleAdd(): void

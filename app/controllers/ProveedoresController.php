@@ -12,10 +12,10 @@ function index(): void
     if (isAjaxRequest() && $action !== '') {
         try {
             match ($_SERVER['REQUEST_METHOD'] . '_' . $action) {
-                'GET_get_suppliers' => suppliers_getSuppliersAjax(),
-                'POST_add_ajax'    => suppliers_handleAddEdit('add'),
-                'POST_edit_ajax'   => suppliers_handleAddEdit('edit'),
-                'POST_delete_ajax' => suppliers_handleDelete(),
+                'GET_get_suppliers' => get_suppliers(),
+                'POST_add_ajax'    => add_ajax(),
+                'POST_edit_ajax'   => edit_ajax(),
+                'POST_delete_ajax' => delete_ajax(),
                 default            => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
             };
         } catch (\Exception $e) {
@@ -34,9 +34,9 @@ function index(): void
 }
 
 function get_suppliers(): void { checkModuleAuth(); suppliers_getSuppliersAjax(); }
-function add_ajax(): void { checkModuleAuth(); checkPermisoOrFail('PROVEEDORES_CREATE'); suppliers_handleAddEdit('add'); }
-function edit_ajax(): void { checkModuleAuth(); checkPermisoOrFail('PROVEEDORES_EDIT'); suppliers_handleAddEdit('edit'); }
-function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('PROVEEDORES_DELETE'); suppliers_handleDelete(); }
+function add_ajax(): void { checkModuleAuth(); checkPermisoOrFail('proveedores:crear'); suppliers_handleAddEdit('add'); }
+function edit_ajax(): void { checkModuleAuth(); checkPermisoOrFail('proveedores:editar'); suppliers_handleAddEdit('edit'); }
+function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('proveedores:eliminar'); suppliers_handleDelete(); }
 
 function suppliers_handleAddEdit(string $mode): void
 {

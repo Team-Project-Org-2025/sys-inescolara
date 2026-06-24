@@ -18,9 +18,9 @@ function index(): void
     if (isAjaxRequest() && $action !== '') {
         try {
             match ($_SERVER['REQUEST_METHOD'] . '_' . $action) {
-                'GET_get_modules'     => reports_handleGetModules(),
-                'GET_get_filters'     => reports_handleGetFilters(),
-                'GET_get_report_data' => reports_handleGetReportData(),
+                'GET_get_modules'     => get_modules(),
+                'GET_get_filters'     => get_filters(),
+                'GET_get_report_data' => get_report_data(),
                 default               => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
             };
         } catch (\Throwable $e) {

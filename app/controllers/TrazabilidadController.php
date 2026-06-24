@@ -13,11 +13,11 @@ function index(): void
     if (isAjaxRequest() && $action !== '') {
         try {
             match ($_SERVER['REQUEST_METHOD'] . '_' . $action) {
-                'GET_get_trazabilidad'     => trazabilidad_getTrazabilidadAjax(),
-                'GET_get_batches'          => trazabilidad_getBatchesAjax(),
-                'POST_add_ajax'            => trazabilidad_handleAddEdit('add'),
-                'POST_edit_ajax'           => trazabilidad_handleAddEdit('edit'),
-                'POST_delete_ajax'         => trazabilidad_handleDelete(),
+                'GET_get_trazabilidad'     => get_trazabilidad(),
+                'GET_get_batches'          => get_batches(),
+                'POST_add_ajax'            => add_ajax(),
+                'POST_edit_ajax'           => edit_ajax(),
+                'POST_delete_ajax'         => delete_ajax(),
                 default                    => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
             };
         } catch (\Exception $e) {
@@ -37,9 +37,9 @@ function index(): void
 
 function get_trazabilidad(): void { checkModuleAuth(); trazabilidad_getTrazabilidadAjax(); }
 function get_batches(): void { checkModuleAuth(); trazabilidad_getBatchesAjax(); }
-function add_ajax(): void { checkModuleAuth(); checkPermisoOrFail('TRAZABILIDAD_CREATE'); trazabilidad_handleAddEdit('add'); }
-function edit_ajax(): void { checkModuleAuth(); checkPermisoOrFail('TRAZABILIDAD_EDIT'); trazabilidad_handleAddEdit('edit'); }
-function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('TRAZABILIDAD_DELETE'); trazabilidad_handleDelete(); }
+function add_ajax(): void { checkModuleAuth(); checkPermisoOrFail('trazabilidad:crear'); trazabilidad_handleAddEdit('add'); }
+function edit_ajax(): void { checkModuleAuth(); checkPermisoOrFail('trazabilidad:editar'); trazabilidad_handleAddEdit('edit'); }
+function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('trazabilidad:eliminar'); trazabilidad_handleDelete(); }
 
 function trazabilidad_handleAddEdit(string $mode): void
 {

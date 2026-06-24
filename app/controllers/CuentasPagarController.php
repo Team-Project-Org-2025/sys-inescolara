@@ -12,11 +12,11 @@ function index(): void
     if (isAjaxRequest() && $action !== '') {
         try {
             match ($_SERVER['REQUEST_METHOD'] . '_' . $action) {
-                'GET_obtener_cuentas'      => cuentas_obtenerCuentasAjax(),
-                'GET_obtener_detalle'      => cuentas_obtenerDetalleAjax(),
-                'GET_obtener_pagos'        => cuentas_obtenerPagosAjax(),
-                'POST_registrar_pago'      => cuentas_registrarPago(),
-                'POST_anular_pago'         => cuentas_anularPago(),
+                'GET_obtener_cuentas'      => obtener_cuentas(),
+                'GET_obtener_detalle'      => obtener_detalle(),
+                'GET_obtener_pagos'        => obtener_pagos(),
+                'POST_registrar_pago'      => registrar_pago(),
+                'POST_anular_pago'         => anular_pago(),
                 default                    => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
             };
         } catch (\Exception $e) {
@@ -37,8 +37,8 @@ function index(): void
 function obtener_cuentas(): void { checkModuleAuth(); cuentas_obtenerCuentasAjax(); }
 function obtener_detalle(): void { checkModuleAuth(); cuentas_obtenerDetalleAjax(); }
 function obtener_pagos(): void { checkModuleAuth(); cuentas_obtenerPagosAjax(); }
-function registrar_pago(): void { checkModuleAuth(); checkPermisoOrFail('CUENTAS_PAGAR'); cuentas_registrarPago(); }
-function anular_pago(): void { checkModuleAuth(); checkPermisoOrFail('CUENTAS_DELETE'); cuentas_anularPago(); }
+function registrar_pago(): void { checkModuleAuth(); checkPermisoOrFail('cuentas_pagar:editar'); cuentas_registrarPago(); }
+function anular_pago(): void { checkModuleAuth(); checkPermisoOrFail('cuentas_pagar:eliminar'); cuentas_anularPago(); }
 
 function cuentas_obtenerCuentasAjax(): void
 {

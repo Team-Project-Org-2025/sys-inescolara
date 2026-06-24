@@ -13,7 +13,7 @@ $(document).ready(function () {
 
   const initDataTable = () => {
     if (typeof SkeletonHelper !== 'undefined') {
-      SkeletonHelper.showTableSkeleton('rolesTable', 5, 4);
+      SkeletonHelper.showTableSkeleton('rolesTable', 5, 3);
     }
     rolesTable = $('#rolesTable').DataTable({
       ajax: {
@@ -34,10 +34,6 @@ $(document).ready(function () {
               ? `<span title="${escaped}">${Helpers.truncateText(escaped, 80)}</span>`
               : escaped;
           },
-        },
-        {
-          data: 'total_permisos',
-          render: (data) => `<span class="badge bg-info">${data || 0}</span>`,
         },
         {
           data: null,
@@ -67,7 +63,7 @@ $(document).ready(function () {
           className: 'btn btn-outline-secondary btn-sm',
           action: () => {
             if (typeof SkeletonHelper !== 'undefined') {
-              SkeletonHelper.showTableSkeleton('rolesTable', 5, 4);
+              SkeletonHelper.showTableSkeleton('rolesTable', 5, 3);
             }
             rolesTable.ajax.reload(null, false);
           },
@@ -128,14 +124,6 @@ $(document).ready(function () {
     $('#editRoleId').val(row.id);
     $('#editRoleName').val(row.nombre_rol);
     $('#editRoleDesc').val(row.descripcion_rol);
-
-    const permIds = row.permisos;
-    $('#editRoleModal input[name="permisos[]"]').prop('checked', false);
-    if (permIds && Array.isArray(permIds)) {
-      permIds.forEach((pid) => {
-        $(`#editRoleModal input[name="permisos[]"][value="${pid}"]`).prop('checked', true);
-      });
-    }
 
     $('#editRoleModal').modal({ focus: false }).modal('show');
   });

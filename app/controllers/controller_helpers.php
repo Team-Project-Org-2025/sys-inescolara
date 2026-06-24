@@ -46,7 +46,16 @@ function checkModuleAuth(): void
 
 function checkPermisoOrFail(string $codigo): void
 {
+    if (\SysInescolara\helpers\Auth::isAdmin()) return;
     if (!\SysInescolara\helpers\Auth::hasPermiso($codigo)) {
+        jsonResponse(['success' => false, 'message' => 'No tienes permiso para realizar esta acción.'], 403);
+    }
+}
+
+function checkModuleAccess(string $modulo, string $accion): void
+{
+    if (\SysInescolara\helpers\Auth::isAdmin()) return;
+    if (!\SysInescolara\helpers\Auth::hasModuleAccess($modulo, $accion)) {
         jsonResponse(['success' => false, 'message' => 'No tienes permiso para realizar esta acción.'], 403);
     }
 }

@@ -49,6 +49,12 @@ class Auth
         return in_array($codigo, self::permisos(), true);
     }
 
+    public static function hasModuleAccess(string $modulo, string $accion): bool
+    {
+        if (self::isAdmin()) return true;
+        return self::hasPermiso("$modulo:$accion");
+    }
+
     public static function set(array $data): void
     {
         foreach ($data as $key => $value) {
@@ -68,12 +74,12 @@ class Auth
         $user = $userModel->authenticate($username, $password);
         if ($user) {
             self::set([
-                'user_id' => $user['id_usuario'],
+                'user_id' => $user['id'],
                 'user_nombre' => $user['nombre_usuario'],
                 'user_email' => $user['correo_electronico'] ?? null,
                 'user_avatar' => $user['avatar'] ?? null,
-                'user_rol_id' => $user['id_rol'],
-                'user_permisos' => $userModel->getRolePermissions((int)$user['id_rol'], (int)$user['id_usuario']),
+                'user_rol_id' => $user['rol_id'],
+                'user_permisos' => $userModel->getRolePermissions((int)$user['rol_id'], $user['id']),
             ]);
             return true;
         }

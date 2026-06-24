@@ -16,12 +16,12 @@ function index(): void
     if (isAjaxRequest() && $action !== '') {
         try {
             match ($_SERVER['REQUEST_METHOD'] . '_' . $action) {
-                'GET_get_assignments' => tasks_getAssignmentsAjax(),
-                'GET_get_assignment'  => tasks_getAssignmentDetailAjax(),
-                'POST_assign_ajax'    => tasks_assignAjax(),
-                'POST_edit_ajax'      => tasks_editAjax(),
-                'POST_complete_ajax'  => tasks_completeAssignmentAjax(),
-                'POST_cancel_ajax'    => tasks_cancelAssignmentAjax(),
+                'GET_get_assignments' => get_assignments(),
+                'GET_get_assignment'  => get_assignment(),
+                'POST_assign_ajax'    => assign_ajax(),
+                'POST_edit_ajax'      => edit_ajax(),
+                'POST_complete_ajax'  => complete_ajax(),
+                'POST_cancel_ajax'    => cancel_ajax(),
                 default               => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
             };
         } catch (\Exception $e) {
@@ -50,10 +50,10 @@ function index(): void
 
 function get_assignments(): void { checkModuleAuth(); tasks_getAssignmentsAjax(); }
 function get_assignment(): void { checkModuleAuth(); tasks_getAssignmentDetailAjax(); }
-function assign_ajax(): void { checkModuleAuth(); checkPermisoOrFail('TAREAS_ASSIGN'); tasks_assignAjax(); }
-function complete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('TAREAS_EDIT'); tasks_completeAssignmentAjax(); }
-function cancel_ajax(): void { checkModuleAuth(); checkPermisoOrFail('TAREAS_DELETE'); tasks_cancelAssignmentAjax(); }
-function edit_ajax(): void { checkModuleAuth(); checkPermisoOrFail('TAREAS_EDIT'); tasks_editAjax(); }
+function assign_ajax(): void { checkModuleAuth(); checkPermisoOrFail('tareas:crear'); tasks_assignAjax(); }
+function complete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('tareas:editar'); tasks_completeAssignmentAjax(); }
+function cancel_ajax(): void { checkModuleAuth(); checkPermisoOrFail('tareas:eliminar'); tasks_cancelAssignmentAjax(); }
+function edit_ajax(): void { checkModuleAuth(); checkPermisoOrFail('tareas:editar'); tasks_editAjax(); }
 
 // -- Asignación de tareas --
 
