@@ -3,7 +3,6 @@
 require_once __DIR__ . '/controller_helpers.php';
 
 use SysInescolara\models\Tarea;
-use SysInescolara\models\AuditLog;
 use SysInescolara\models\Empleado;
 use SysInescolara\models\Lote;
 use SysInescolara\models\Insumo;
@@ -116,15 +115,9 @@ function tasks_assignAjax(): void
     $model = new Tarea();
     $asignacionId = $model->assignTaskWithConsumptions($assignmentData, $consumptions);
 
-    AuditLog::record('CREATE', 'asignar_tarea', $asignacionId, null, $assignmentData);
-    if (!empty($consumptions)) {
-        AuditLog::record('CREATE', 'consumo_insumos', $asignacionId, null, ['count' => count($consumptions)]);
-    }
-
     // Save tool usages
     $rawTools = $data['tools'] ?? [];
     $toolModel = new Herramienta();
-    $toolCount = 0;
     foreach ($rawTools as $t) {
         $idHerramienta = (int)($t['id_herramienta'] ?? 0);
         if ($idHerramienta <= 0) continue;
@@ -142,10 +135,6 @@ function tasks_assignAjax(): void
             'observacion'                 => $t['observacion'] ?? '',
             'estado_herramienta_post_uso' => 'ok',
         ]);
-        $toolCount++;
-    }
-    if ($toolCount > 0) {
-        AuditLog::record('CREATE', 'uso_herramienta', $asignacionId, null, ['count' => $toolCount]);
     }
 
     jsonResponse(['success' => true, 'message' => 'Tarea asignada correctamente', 'id_asignacion' => $asignacionId]);
@@ -220,14 +209,6 @@ function tasks_editAjax(): void
     $model = new Tarea();
     $model->updateAssignmentWithConsumptions($idAsignacion, $assignmentData, $consumptions, $tools);
 
-    AuditLog::record('UPDATE', 'asignar_tarea', $idAsignacion, null, $assignmentData);
-    if (!empty($consumptions)) {
-        AuditLog::record('UPDATE', 'consumo_insumos', $idAsignacion, null, ['count' => count($consumptions)]);
-    }
-    if (!empty($tools)) {
-        AuditLog::record('UPDATE', 'uso_herramienta', $idAsignacion, null, ['count' => count($tools)]);
-    }
-
     jsonResponse(['success' => true, 'message' => 'Tarea actualizada correctamente', 'id_asignacion' => $idAsignacion]);
 }
 
@@ -240,8 +221,8 @@ function tasks_completeAssignmentAjax(): void
     $fechaCumplimiento = $data['fecha_cumplimiento'] ?? date('Y-m-d');
 
     $model = new Tarea();
-    $oldData = $model->getAssignmentById($id);
-    if (!$oldData) jsonResponse(['success' => false, 'message' => 'Asignación no encontrada'], 404);
+    $assignment = $model->getAssignmentById($id);
+    if (!$assignment) jsonResponse(['success' => false, 'message' => 'Asignación no encontrada'], 404);
 
     $model->completeAssignment($id, $fechaCumplimiento);
 
@@ -250,10 +231,6 @@ function tasks_completeAssignmentAjax(): void
         $model->updateToolEstados($id, $toolEstados);
     }
 
-    AuditLog::record('UPDATE', 'asignar_tarea', $id, $oldData, [
-        'estatus_tarea' => 'completada',
-        'fecha_cumplimiento' => $fechaCumplimiento,
-    ]);
     jsonResponse(['success' => true, 'message' => 'Tarea completada correctamente']);
 }
 
@@ -263,11 +240,10 @@ function tasks_cancelAssignmentAjax(): void
     if ($id <= 0) jsonResponse(['success' => false, 'message' => 'ID inválido'], 400);
 
     $model = new Tarea();
-    $oldData = $model->getAssignmentById($id);
-    if (!$oldData) jsonResponse(['success' => false, 'message' => 'Asignación no encontrada'], 404);
+    $assignment = $model->getAssignmentById($id);
+    if (!$assignment) jsonResponse(['success' => false, 'message' => 'Asignación no encontrada'], 404);
 
     $model->cancelAssignment($id);
-    AuditLog::record('UPDATE', 'asignar_tarea', $id, $oldData, ['estatus_tarea' => 'cancelada']);
     jsonResponse(['success' => true, 'message' => 'Tarea cancelada correctamente']);
 }
 
