@@ -4,7 +4,6 @@ require_once __DIR__ . '/controller_helpers.php';
 
 use SysInescolara\models\Insumo;
 use SysInescolara\models\UnidadMedida;
-use SysInescolara\models\AuditLog;
 
 function index(): void
 {
@@ -67,10 +66,6 @@ function supplies_handleAddEdit(string $mode): void
     if ($mode === 'add') {
         $model->add($nombre, $id_unidad_medida, $categoria, $stock, $costo);
         $newId = $model->getLastInsertId() ?? 0;
-        AuditLog::record('CREATE', 'insumo', $newId, null, [
-            'nombre_insumo' => $nombre, 'id_unidad_medida' => $id_unidad_medida,
-            'categoria' => $categoria, 'stock_actual' => $stock, 'costo_unitario_actual' => $costo,
-        ]);
         jsonResponse([
             'success' => true, 'message' => 'Insumo agregado correctamente',
             'supply' => ['id' => $newId, 'nombre_insumo' => $nombre, 'id_unidad_medida' => $id_unidad_medida, 'stock_actual' => $stock, 'costo_unitario_actual' => $costo],
@@ -80,12 +75,7 @@ function supplies_handleAddEdit(string $mode): void
     $id = (int)($_POST['id'] ?? 0);
     if ($id <= 0) throw new \Exception('ID inválido');
 
-    $oldData = $model->getById($id);
     $model->update($id, $nombre, $id_unidad_medida, $categoria, $stock, $costo);
-    AuditLog::record('UPDATE', 'insumo', $id, $oldData, [
-        'nombre_insumo' => $nombre, 'id_unidad_medida' => $id_unidad_medida,
-        'categoria' => $categoria, 'stock_actual' => $stock, 'costo_unitario_actual' => $costo,
-    ]);
     jsonResponse([
         'success' => true, 'message' => 'Insumo actualizado correctamente',
         'supply' => ['id' => $id, 'nombre_insumo' => $nombre, 'id_unidad_medida' => $id_unidad_medida, 'stock_actual' => $stock, 'costo_unitario_actual' => $costo],
@@ -99,9 +89,7 @@ function supplies_handleDelete(): void
     if ($id <= 0) throw new \Exception('ID inválido');
     if (!$model->exists($id)) throw new \Exception('No existe el insumo');
 
-    $oldData = $model->getById($id);
     $model->delete($id);
-    AuditLog::record('DEACTIVATE', 'insumo', $id, $oldData, null);
     jsonResponse(['success' => true, 'message' => 'Insumo desactivado correctamente', 'supplyId' => $id]);
 }
 

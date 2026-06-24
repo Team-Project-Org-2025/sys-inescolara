@@ -6,6 +6,7 @@ use SysInescolara\core\Database;
 use SysInescolara\interfaces\ReadableInterface;
 use SysInescolara\interfaces\DeletableInterface;
 use SysInescolara\traits\ValidationTrait;
+use SysInescolara\models\AuditLog;
 use PDO;
 
 class Cliente extends Database implements ReadableInterface, DeletableInterface
@@ -78,8 +79,11 @@ class Cliente extends Database implements ReadableInterface, DeletableInterface
 
     public function delete(int $id): bool
     {
-        $stmt = $this->db()->prepare("UPDATE cliente SET activo = 0 WHERE id_cliente = :id");
-        return $stmt->execute([':id' => $id]);
+        $oldData = $this->getById($id);
+        $stmt = $this->db()->prepare("UPDATE cliente SET activo = 0 WHERE id_cliente = ?");
+        $stmt->execute([$id]);
+        AuditLog::record('DEACTIVATE', 'cliente', $id, $oldData, null);
+        return true;
     }
 
     public function restore(int $id): bool
@@ -103,11 +107,17 @@ class Cliente extends Database implements ReadableInterface, DeletableInterface
             'nombre_cliente' => $nombreCliente,
             'contacto_cliente' => $contactoCliente,
         ]);
-        $stmt = $this->db()->prepare("INSERT INTO cliente (nombre_cliente, contacto_cliente) VALUES (:nombre_cliente, :contacto_cliente)");
-        return $stmt->execute([
-            ':nombre_cliente' => $nombreCliente,
-            ':contacto_cliente' => $contactoCliente,
+        $stmt = $this->db()->prepare("INSERT INTO cliente (nombre_cliente, contacto_cliente) VALUES (?, ?)");
+        $stmt->execute([$nombreCliente, $contactoCliente]);
+
+        $newId = (int) $this->db()->lastInsertId();
+
+        AuditLog::record('CREATE', 'cliente', $newId, null, [
+            'nombre_cliente'  => $nombreCliente,
+            'contacto_cliente' => $contactoCliente,
         ]);
+
+        return true;
     }
 
     public function update(int $id, string $nombreCliente, ?string $contactoCliente = null)
@@ -119,11 +129,17 @@ class Cliente extends Database implements ReadableInterface, DeletableInterface
         if (!$this->exists($id)) {
             throw new \Exception("No existe el cliente con ID: $id");
         }
-        $stmt = $this->db()->prepare("UPDATE cliente SET nombre_cliente = :nombre_cliente, contacto_cliente = :contacto_cliente WHERE id_cliente = :id");
-        return $stmt->execute([
-            ':id' => $id,
-            ':nombre_cliente' => $nombreCliente,
-            ':contacto_cliente' => $contactoCliente,
+
+        $oldData = $this->getById($id);
+
+        $stmt = $this->db()->prepare("UPDATE cliente SET nombre_cliente = ?, contacto_cliente = ? WHERE id_cliente = ?");
+        $stmt->execute([$nombreCliente, $contactoCliente, $id]);
+
+        AuditLog::record('UPDATE', 'cliente', $id, $oldData, [
+            'nombre_cliente'  => $nombreCliente,
+            'contacto_cliente' => $contactoCliente,
         ]);
+
+        return true;
     }
 }

@@ -6,6 +6,7 @@ use SysInescolara\core\Database;
 use SysInescolara\interfaces\ReadableInterface;
 use SysInescolara\interfaces\DeletableInterface;
 use SysInescolara\traits\ValidationTrait;
+use SysInescolara\models\AuditLog;
 use PDO;
 
 class Herramienta extends Database implements ReadableInterface, DeletableInterface
@@ -79,16 +80,22 @@ class Herramienta extends Database implements ReadableInterface, DeletableInterf
         ]);
         $stmt = $this->db()->prepare("
             INSERT INTO herramienta (nombre_herramienta, tipo, estado, fecha_adquisicion, fecha_ultimo_mantenimiento, observacion)
-            VALUES (:nombre, :tipo, :estado, :fecha_adquisicion, :fecha_ultimo_mantenimiento, :observacion)
+            VALUES (?, ?, ?, ?, ?, ?)
         ");
-        return $stmt->execute([
-            ':nombre' => $nombre,
-            ':tipo' => $tipo,
-            ':estado' => $estado,
-            ':fecha_adquisicion' => $fechaAdquisicion,
-            ':fecha_ultimo_mantenimiento' => $fechaUltimoMantenimiento,
-            ':observacion' => $observacion,
+        $stmt->execute([$nombre, $tipo, $estado, $fechaAdquisicion, $fechaUltimoMantenimiento, $observacion]);
+
+        $newId = (int) $this->db()->lastInsertId();
+
+        AuditLog::record('CREATE', 'herramienta', $newId, null, [
+            'nombre' => $nombre,
+            'tipo' => $tipo,
+            'estado' => $estado,
+            'fecha_adquisicion' => $fechaAdquisicion,
+            'fecha_ultimo_mantenimiento' => $fechaUltimoMantenimiento,
+            'observacion' => $observacion,
         ]);
+
+        return true;
     }
 
     public function update(int $id, string $nombre, ?string $tipo = null, string $estado = 'disponible', ?string $fechaAdquisicion = null, ?string $fechaUltimoMantenimiento = null, ?string $observacion = null): bool
@@ -104,31 +111,40 @@ class Herramienta extends Database implements ReadableInterface, DeletableInterf
         if (!$this->exists($id)) {
             throw new \Exception('No existe la herramienta solicitada para modificar.');
         }
+
+        $oldData = $this->getById($id);
+
         $stmt = $this->db()->prepare("
             UPDATE herramienta
-            SET nombre_herramienta = :nombre,
-                tipo = :tipo,
-                estado = :estado,
-                fecha_adquisicion = :fecha_adquisicion,
-                fecha_ultimo_mantenimiento = :fecha_ultimo_mantenimiento,
-                observacion = :observacion
-            WHERE id_herramienta = :id
+            SET nombre_herramienta = ?,
+                tipo = ?,
+                estado = ?,
+                fecha_adquisicion = ?,
+                fecha_ultimo_mantenimiento = ?,
+                observacion = ?
+            WHERE id_herramienta = ?
         ");
-        return $stmt->execute([
-            ':id' => $id,
-            ':nombre' => $nombre,
-            ':tipo' => $tipo,
-            ':estado' => $estado,
-            ':fecha_adquisicion' => $fechaAdquisicion,
-            ':fecha_ultimo_mantenimiento' => $fechaUltimoMantenimiento,
-            ':observacion' => $observacion,
+        $stmt->execute([$nombre, $tipo, $estado, $fechaAdquisicion, $fechaUltimoMantenimiento, $observacion, $id]);
+
+        AuditLog::record('UPDATE', 'herramienta', $id, $oldData, [
+            'nombre' => $nombre,
+            'tipo' => $tipo,
+            'estado' => $estado,
+            'fecha_adquisicion' => $fechaAdquisicion,
+            'fecha_ultimo_mantenimiento' => $fechaUltimoMantenimiento,
+            'observacion' => $observacion,
         ]);
+
+        return true;
     }
 
     public function delete(int $id): bool
     {
-        $stmt = $this->db()->prepare("UPDATE herramienta SET activo = 0 WHERE id_herramienta = :id");
-        return $stmt->execute([':id' => $id]);
+        $oldData = $this->getById($id);
+        $stmt = $this->db()->prepare("UPDATE herramienta SET activo = 0 WHERE id_herramienta = ?");
+        $stmt->execute([$id]);
+        AuditLog::record('DEACTIVATE', 'herramienta', $id, $oldData, null);
+        return true;
     }
 
     public function restore(int $id): bool
@@ -169,6 +185,7 @@ class Herramienta extends Database implements ReadableInterface, DeletableInterf
             ]);
 
             $this->db()->commit();
+            AuditLog::record('CREATE', 'uso_herramienta', $usoId, null, $usageData);
             return $usoId;
         } catch (\Exception $e) {
             $this->db()->rollBack();

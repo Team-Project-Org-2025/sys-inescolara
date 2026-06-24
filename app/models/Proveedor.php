@@ -6,6 +6,7 @@ use SysInescolara\core\Database;
 use SysInescolara\interfaces\ReadableInterface;
 use SysInescolara\interfaces\DeletableInterface;
 use SysInescolara\traits\ValidationTrait;
+use SysInescolara\models\AuditLog;
 use PDO;
 
 class Proveedor extends Database implements ReadableInterface, DeletableInterface
@@ -100,8 +101,11 @@ class Proveedor extends Database implements ReadableInterface, DeletableInterfac
 
     public function delete(int $id): bool
     {
-        $stmt = $this->db()->prepare("UPDATE proveedores SET activo = 0 WHERE id_proveedor = :id");
-        return $stmt->execute([':id' => $id]);
+        $oldData = $this->getById($id);
+        $stmt = $this->db()->prepare("UPDATE proveedores SET activo = 0 WHERE id_proveedor = ?");
+        $stmt->execute([$id]);
+        AuditLog::record('DEACTIVATE', 'proveedores', $id, $oldData, null);
+        return true;
     }
 
     public function restore(int $id): bool
@@ -127,13 +131,19 @@ class Proveedor extends Database implements ReadableInterface, DeletableInterfac
             'contacto_vendedor' => $contactoVendedor,
             'telefono_proveedor' => $telefonoProveedor,
         ]);
-        $stmt = $this->db()->prepare("INSERT INTO proveedores (nombre_proveedor, rif_proveedor, contacto_vendedor, telefono_proveedor) VALUES (:nombre_proveedor, :rif_proveedor, :contacto_vendedor, :telefono_proveedor)");
-        return $stmt->execute([
-            ':nombre_proveedor' => $nombreProveedor,
-            ':rif_proveedor' => $rifProveedor,
-            ':contacto_vendedor' => $contactoVendedor,
-            ':telefono_proveedor' => $telefonoProveedor,
+        $stmt = $this->db()->prepare("INSERT INTO proveedores (nombre_proveedor, rif_proveedor, contacto_vendedor, telefono_proveedor) VALUES (?, ?, ?, ?)");
+        $stmt->execute([$nombreProveedor, $rifProveedor, $contactoVendedor, $telefonoProveedor]);
+
+        $newId = (int) $this->db()->lastInsertId();
+
+        AuditLog::record('CREATE', 'proveedores', $newId, null, [
+            'nombre_proveedor'   => $nombreProveedor,
+            'rif_proveedor'      => $rifProveedor,
+            'contacto_vendedor'  => $contactoVendedor,
+            'telefono_proveedor' => $telefonoProveedor,
         ]);
+
+        return true;
     }
 
     public function update(int $id, string $nombreProveedor, ?string $rifProveedor = null, ?string $contactoVendedor = null, ?string $telefonoProveedor = null)
@@ -147,13 +157,19 @@ class Proveedor extends Database implements ReadableInterface, DeletableInterfac
         if (!$this->exists($id)) {
             throw new \Exception("No existe el proveedor con ID: $id");
         }
-        $stmt = $this->db()->prepare("UPDATE proveedores SET nombre_proveedor = :nombre_proveedor, rif_proveedor = :rif_proveedor, contacto_vendedor = :contacto_vendedor, telefono_proveedor = :telefono_proveedor WHERE id_proveedor = :id");
-        return $stmt->execute([
-            ':id' => $id,
-            ':nombre_proveedor' => $nombreProveedor,
-            ':rif_proveedor' => $rifProveedor,
-            ':contacto_vendedor' => $contactoVendedor,
-            ':telefono_proveedor' => $telefonoProveedor,
+
+        $oldData = $this->getById($id);
+
+        $stmt = $this->db()->prepare("UPDATE proveedores SET nombre_proveedor = ?, rif_proveedor = ?, contacto_vendedor = ?, telefono_proveedor = ? WHERE id_proveedor = ?");
+        $stmt->execute([$nombreProveedor, $rifProveedor, $contactoVendedor, $telefonoProveedor, $id]);
+
+        AuditLog::record('UPDATE', 'proveedores', $id, $oldData, [
+            'nombre_proveedor'   => $nombreProveedor,
+            'rif_proveedor'      => $rifProveedor,
+            'contacto_vendedor'  => $contactoVendedor,
+            'telefono_proveedor' => $telefonoProveedor,
         ]);
+
+        return true;
     }
 }

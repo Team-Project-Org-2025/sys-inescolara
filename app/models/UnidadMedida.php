@@ -6,6 +6,7 @@ use SysInescolara\core\Database;
 use SysInescolara\interfaces\ReadableInterface;
 use SysInescolara\interfaces\DeletableInterface;
 use SysInescolara\traits\ValidationTrait;
+use SysInescolara\models\AuditLog;
 use PDO;
 
 class UnidadMedida extends Database implements ReadableInterface, DeletableInterface
@@ -52,10 +53,14 @@ class UnidadMedida extends Database implements ReadableInterface, DeletableInter
         $this->validateData([
             'nombre' => $nombre,
         ]);
-        $stmt = $this->db()->prepare("INSERT INTO unidad_medida (nombre_unidad_medida) VALUES (:nombre)");
-        return $stmt->execute([
-            ':nombre' => trim($nombre),
-        ]);
+        $stmt = $this->db()->prepare("INSERT INTO unidad_medida (nombre_unidad_medida) VALUES (?)");
+        $stmt->execute([trim($nombre)]);
+
+        $newId = (int) $this->db()->lastInsertId();
+
+        AuditLog::record('CREATE', 'unidad_medida', $newId, null, ['nombre' => $nombre]);
+
+        return true;
     }
 
     public function update(int $id, string $nombre): bool
@@ -66,17 +71,24 @@ class UnidadMedida extends Database implements ReadableInterface, DeletableInter
         if (!$this->exists($id)) {
             throw new \Exception("No existe la unidad de medida con ID: $id");
         }
-        $stmt = $this->db()->prepare("UPDATE unidad_medida SET nombre_unidad_medida = :nombre WHERE id_unidad_medida = :id");
-        return $stmt->execute([
-            ':id' => $id,
-            ':nombre' => trim($nombre),
-        ]);
+
+        $oldData = $this->getById($id);
+
+        $stmt = $this->db()->prepare("UPDATE unidad_medida SET nombre_unidad_medida = ? WHERE id_unidad_medida = ?");
+        $stmt->execute([trim($nombre), $id]);
+
+        AuditLog::record('UPDATE', 'unidad_medida', $id, $oldData, ['nombre' => $nombre]);
+
+        return true;
     }
 
     public function delete(int $id): bool
     {
-        $stmt = $this->db()->prepare("UPDATE unidad_medida SET activo = 0 WHERE id_unidad_medida = :id");
-        return $stmt->execute([':id' => $id]);
+        $oldData = $this->getById($id);
+        $stmt = $this->db()->prepare("UPDATE unidad_medida SET activo = 0 WHERE id_unidad_medida = ?");
+        $stmt->execute([$id]);
+        AuditLog::record('DEACTIVATE', 'unidad_medida', $id, $oldData, null);
+        return true;
     }
 
     public function restore(int $id): bool

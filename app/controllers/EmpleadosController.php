@@ -3,7 +3,6 @@
 require_once __DIR__ . '/controller_helpers.php';
 
 use SysInescolara\models\Empleado;
-use SysInescolara\models\AuditLog;
 use SysInescolara\models\Role;
 
 function index(): void
@@ -67,16 +66,13 @@ function employees_handleAddEdit(string $mode): void
     if ($mode === 'add') {
         $model->add($nombre, $apellido, $cedula, $telefono, $cargo, $activo);
         $newId = $model->getLastInsertId() ?? 0;
-        AuditLog::record('CREATE', 'trabajadores', $newId, null, compact('nombre', 'apellido', 'cedula', 'telefono', 'cargo', 'activo'));
         jsonResponse(['success' => true, 'message' => 'Trabajador agregado correctamente', 'employee' => ['id' => $newId, 'nombre_trabajador' => $nombre, 'apellido_trabajador' => $apellido, 'cedula_trabajador' => $cedula, 'telefono_trabajador' => $telefono, 'cargo' => $cargo, 'activo' => $activo]]);
     }
 
     $id = (int)($_POST['id'] ?? 0);
     if ($id <= 0) throw new \Exception('ID inválido');
 
-    $oldData = $model->getById($id);
     $model->update($id, $nombre, $apellido, $cedula, $telefono, $cargo, $activo);
-    AuditLog::record('UPDATE', 'trabajadores', $id, $oldData, compact('nombre', 'apellido', 'cedula', 'telefono', 'cargo', 'activo'));
     jsonResponse(['success' => true, 'message' => 'Trabajador actualizado correctamente', 'employee' => ['id' => $id, 'nombre_trabajador' => $nombre, 'apellido_trabajador' => $apellido, 'cedula_trabajador' => $cedula, 'telefono_trabajador' => $telefono, 'cargo' => $cargo, 'activo' => $activo]]);
 }
 
@@ -87,9 +83,7 @@ function employees_handleDelete(): void
     if ($id <= 0) throw new \Exception('ID inválido');
     if (!$model->exists($id)) throw new \Exception('No existe el trabajador');
 
-    $oldData = $model->getById($id);
     $model->delete($id);
-    AuditLog::record('DEACTIVATE', 'trabajadores', $id, $oldData, null);
     jsonResponse(['success' => true, 'message' => 'Trabajador desactivado correctamente', 'employeeId' => $id]);
 }
 

@@ -8,6 +8,7 @@ use SysInescolara\interfaces\DeletableInterface;
 use SysInescolara\traits\ValidationTrait;
 use PDO;
 use Throwable;
+use SysInescolara\models\AuditLog;
 
 class Planta extends Database implements ReadableInterface, DeletableInterface
 {
@@ -104,14 +105,22 @@ class Planta extends Database implements ReadableInterface, DeletableInterface
                 
                 if ($success) {
                     $this->id = (int) $this->db()->lastInsertId();
+                    AuditLog::record('CREATE', 'plantas', $this->id, null, [
+                        'nombre_comun'   => $this->nombreComun,
+                        'nombre_tecnico' => $this->nombreTecnico,
+                        'id_especie'     => $this->idEspecie,
+                        'imagen'         => $this->imagen,
+                        'cantidad_total' => $this->cantidadTotal,
+                    ]);
                 }
                 return $success;
             } else {
+                $oldData = $this->getById($this->id);
                 $sql = "UPDATE plantas SET nombre_comun = :nombre_comun, nombre_tecnico = :nombre_tecnico, 
                         id_especie = :id_especie, imagen = :imagen, cantidad_total = :cantidad_total 
                         WHERE id_planta = :id";
                 $stmt = $this->db()->prepare($sql);
-                return $stmt->execute([
+                $success = $stmt->execute([
                     ':id'             => $this->id,
                     ':nombre_comun'   => $this->nombreComun,
                     ':nombre_tecnico' => $this->nombreTecnico,
@@ -119,6 +128,16 @@ class Planta extends Database implements ReadableInterface, DeletableInterface
                     ':imagen'         => $this->imagen,
                     ':cantidad_total' => $this->cantidadTotal,
                 ]);
+                if ($success) {
+                    AuditLog::record('UPDATE', 'plantas', $this->id, $oldData, [
+                        'nombre_comun'   => $this->nombreComun,
+                        'nombre_tecnico' => $this->nombreTecnico,
+                        'id_especie'     => $this->idEspecie,
+                        'imagen'         => $this->imagen,
+                        'cantidad_total' => $this->cantidadTotal,
+                    ]);
+                }
+                return $success;
             }
         } catch (Throwable $e) {
             error_log('Error al guardar planta: ' . $e->getMessage());
@@ -194,8 +213,13 @@ class Planta extends Database implements ReadableInterface, DeletableInterface
 
     public function delete(int $id): bool
     {
+        $oldData = $this->getById($id);
         $stmt = $this->db()->prepare("UPDATE plantas SET activo = 0 WHERE id_planta = :id");
-        return $stmt->execute([':id' => $id]);
+        $success = $stmt->execute([':id' => $id]);
+        if ($success) {
+            AuditLog::record('DEACTIVATE', 'plantas', $id, $oldData, null);
+        }
+        return $success;
     }
 
     public function restore(int $id): bool

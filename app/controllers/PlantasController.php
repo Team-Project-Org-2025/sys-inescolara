@@ -3,7 +3,6 @@ require_once __DIR__ . '/controller_helpers.php';
 
 use SysInescolara\models\Planta;
 use SysInescolara\models\Especie;
-use SysInescolara\models\AuditLog;
 
 function index(): void
 {
@@ -79,8 +78,6 @@ function plants_handleAddEdit(string $mode): void
         
         $newId = $planta->getId(); 
         
-        AuditLog::record('CREATE', 'plantas', $newId, null, compact('nombreComun', 'nombreTecnico', 'especieId', 'imagen'));
-        
         jsonResponse([
             'success' => true, 
             'message' => 'Planta agregada correctamente', 
@@ -97,19 +94,11 @@ function plants_handleAddEdit(string $mode): void
         throw new \Exception('No existe la planta con ID: ' . $id);
     }
     
-    $oldData = [
-        'nombre_comun'   => $planta->getNombreComun(),
-        'nombre_tecnico' => $planta->getNombreTecnico(),
-        'id_especie'     => $planta->getIdEspecie(),
-        'imagen'         => $planta->getImagen(),
-        'cantidad_total' => $planta->getCantidadTotal()
-    ];
-    
     if ($imagen === null) {
-        $imagen = $oldData['imagen'];
+        $imagen = $planta->getImagen();
     } else {
-        if (!empty($oldData['imagen'])) {
-            (new \SysInescolara\helpers\ImageUploader())->delete($oldData['imagen']);
+        if (!empty($planta->getImagen())) {
+            (new \SysInescolara\helpers\ImageUploader())->delete($planta->getImagen());
         }
     }
     
@@ -121,8 +110,6 @@ function plants_handleAddEdit(string $mode): void
     if (!$planta->save()) {
         throw new \Exception('Error al actualizar la planta.');
     }
-    
-    AuditLog::record('UPDATE', 'plantas', $id, $oldData, compact('nombreComun', 'nombreTecnico', 'especieId', 'imagen'));
     
     jsonResponse([
         'success' => true, 
@@ -144,14 +131,6 @@ function plants_handleDelete(): void
         throw new \Exception('No existe la planta');
     }
     
-    $oldData = [
-        'nombre_comun'   => $planta->getNombreComun(),
-        'nombre_tecnico' => $planta->getNombreTecnico(),
-        'id_especie'     => $planta->getIdEspecie(),
-        'imagen'         => $planta->getImagen(),
-        'cantidad_total' => $planta->getCantidadTotal()
-    ];
-    
     try {
         if (!$planta->delete($id)) {
             throw new \Exception('Error al desactivar la planta.');
@@ -168,11 +147,9 @@ function plants_handleDelete(): void
         throw $e;
     }
     
-    if (!empty($oldData['imagen'])) {
-        (new \SysInescolara\helpers\ImageUploader())->delete($oldData['imagen']);
+    if (!empty($planta->getImagen())) {
+        (new \SysInescolara\helpers\ImageUploader())->delete($planta->getImagen());
     }
-    
-    AuditLog::record('DEACTIVATE', 'plantas', $id, $oldData, null);
     
     jsonResponse([
         'success' => true, 

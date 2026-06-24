@@ -3,7 +3,6 @@
 require_once __DIR__ . '/controller_helpers.php';
 
 use SysInescolara\models\Ubicacion;
-use SysInescolara\models\AuditLog;
 
 function index(): void
 {
@@ -60,9 +59,6 @@ function locations_handleAddEdit(string $mode): void
     if ($mode === 'add') {
         $model->add($nombreUbicacion, $descripcion, $zona);
         $newId = $model->getLastInsertId() ?? 0;
-        AuditLog::record('CREATE', 'ubicacion', $newId, null, [
-            'nombre_ubicacion' => $nombreUbicacion, 'descripcion' => $descripcion, 'zona' => $zona,
-        ]);
         jsonResponse([
             'success' => true,
             'message' => 'Ubicación agregada correctamente',
@@ -76,12 +72,9 @@ function locations_handleAddEdit(string $mode): void
 
     $id = (int)($_POST['id'] ?? 0);
     if ($id <= 0) throw new \Exception('ID inválido');
-    $oldData = $model->getById($id);
-    if (!$oldData) throw new \Exception('La ubicación que intenta editar no existe.');
+    $data = $model->getById($id);
+    if (!$data) throw new \Exception('La ubicación que intenta editar no existe.');
     $model->update($id, $nombreUbicacion, $descripcion, $zona);
-    AuditLog::record('UPDATE', 'ubicacion', $id, $oldData, [
-        'nombre_ubicacion' => $nombreUbicacion, 'descripcion' => $descripcion, 'zona' => $zona,
-    ]);
     jsonResponse([
         'success' => true,
         'message' => 'Ubicación actualizada correctamente',
@@ -94,10 +87,9 @@ function locations_handleDelete(): void
     $model = new Ubicacion();
     $id = (int)($_POST['id'] ?? 0);
     if ($id <= 0) throw new \Exception('ID de ubicación inválido');
-    $oldData = $model->getById($id);
-    if (!$oldData) throw new \Exception('No existe la ubicación solicitada.');
+    $data = $model->getById($id);
+    if (!$data) throw new \Exception('No existe la ubicación solicitada.');
     $model->delete($id);
-    AuditLog::record('DEACTIVATE', 'ubicacion', $id, $oldData, null);
     jsonResponse([
         'success' => true,
         'message' => 'Ubicación desactivada correctamente',
