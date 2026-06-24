@@ -11,7 +11,7 @@ function index(): void
     if (isAjaxRequest() && $action !== '') {
         try {
             match ($_SERVER['REQUEST_METHOD'] . '_' . $action) {
-                'GET_get_consolidated'  => inventory_getConsolidatedAjax(),
+                'GET_get_consolidated'  => get_consolidated(),
                 default                 => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
             };
         } catch (\Exception $e) {

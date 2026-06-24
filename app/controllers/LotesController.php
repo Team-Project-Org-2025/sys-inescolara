@@ -13,10 +13,10 @@ function index(): void
     if (isAjaxRequest() && $action !== '') {
         try {
             match ($_SERVER['REQUEST_METHOD'] . '_' . $action) {
-                'GET_get_batches'  => batches_getBatchesAjax(),
-                'POST_add_ajax'    => batches_handleAddEdit('add'),
-                'POST_edit_ajax'   => batches_handleAddEdit('edit'),
-                'POST_delete_ajax' => batches_handleDelete(),
+                'GET_get_batches'  => get_batches(),
+                'POST_add_ajax'    => add_ajax(),
+                'POST_edit_ajax'   => edit_ajax(),
+                'POST_delete_ajax' => delete_ajax(),
                 default            => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
             };
         } catch (\Exception $e) {
@@ -45,9 +45,9 @@ function index(): void
 }
 
 function get_batches(): void { checkModuleAuth(); batches_getBatchesAjax(); }
-function add_ajax(): void { checkModuleAuth(); checkPermisoOrFail('PLANTAS_CREATE'); batches_handleAddEdit('add'); }
-function edit_ajax(): void { checkModuleAuth(); checkPermisoOrFail('PLANTAS_EDIT'); batches_handleAddEdit('edit'); }
-function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('PLANTAS_DELETE'); batches_handleDelete(); }
+function add_ajax(): void { checkModuleAuth(); checkPermisoOrFail('lotes:crear'); batches_handleAddEdit('add'); }
+function edit_ajax(): void { checkModuleAuth(); checkPermisoOrFail('lotes:editar'); batches_handleAddEdit('edit'); }
+function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('lotes:eliminar'); batches_handleDelete(); }
 
 function batches_handleAddEdit(string $mode): void
 {

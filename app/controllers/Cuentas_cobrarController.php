@@ -13,12 +13,12 @@ function index(): void
     if (isAjaxRequest() && $action !== '') {
         try {
             match ($_SERVER['REQUEST_METHOD'] . '_' . $action) {
-                'GET_obtener_lista'          => cc_obtenerListaAjax(),
-                'GET_obtener_estadisticas'   => cc_obtenerEstadisticasAjax(),
-                'GET_obtener_detalle'        => cc_obtenerDetalleAjax(),
-                'GET_obtener_pagos'          => cc_obtenerPagosAjax(),
-                'GET_obtener_clientes'       => cc_obtenerClientesAjax(),
-                'POST_registrar_pago'        => cc_registrarPagoAjax(),
+                'GET_obtener_lista'          => obtener_lista(),
+                'GET_obtener_estadisticas'   => obtener_estadisticas(),
+                'GET_obtener_detalle'        => obtener_detalle(),
+                'GET_obtener_pagos'          => obtener_pagos(),
+                'GET_obtener_clientes'       => obtener_clientes(),
+                'POST_registrar_pago'        => registrar_pago(),
                 default                      => jsonResponse(['success' => false, 'message' => 'Accion AJAX invalida'], 400),
             };
         } catch (\Exception $e) {
@@ -30,7 +30,7 @@ function index(): void
     $employeeModel = new Empleado();
     $employees = $employeeModel->getAll();
 
-    $canPay = \SysInescolara\helpers\Auth::hasPermiso('CUENTAS_COBRAR_PAY');
+    $canPay = \SysInescolara\helpers\Auth::hasPermiso('cuentas_cobrar:editar');
 
     $view = ROOT_PATH . 'app/views/dashboard/cuentas-cobrar.php';
     if (!is_file($view)) {
@@ -46,7 +46,7 @@ function obtener_estadisticas(): void { checkModuleAuth(); cc_obtenerEstadistica
 function obtener_detalle(): void { checkModuleAuth(); cc_obtenerDetalleAjax(); }
 function obtener_pagos(): void { checkModuleAuth(); cc_obtenerPagosAjax(); }
 function obtener_clientes(): void { checkModuleAuth(); cc_obtenerClientesAjax(); }
-function registrar_pago(): void { checkModuleAuth(); checkPermisoOrFail('CUENTAS_COBRAR_PAY'); cc_registrarPagoAjax(); }
+function registrar_pago(): void { checkModuleAuth(); checkPermisoOrFail('cuentas_cobrar:editar'); cc_registrarPagoAjax(); }
 
 function cc_obtenerListaAjax(): void
 {

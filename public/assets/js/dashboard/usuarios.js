@@ -192,9 +192,13 @@ $(document).ready(function () {
     }
 
     const userPermisos = row.permisos || [];
-    $('#permisosChecklist input[type="checkbox"]').each(function () {
-      $(this).prop('checked', userPermisos.indexOf(parseInt($(this).val())) !== -1);
-    });
+    $('#editPermisosChecklist input[name="permisos[]"]').prop('checked', false);
+    if (userPermisos && Array.isArray(userPermisos)) {
+      userPermisos.forEach((p) => {
+        const val = p.id_modulo + ':' + p.id_permiso;
+        $(`#editPermisosChecklist input[name="permisos[]"][value="${val}"]`).prop('checked', true);
+      });
+    }
 
     Validations.clearValidation($('#editUserForm'));
     $('#editUserModal').modal({ focus: false }).modal('show');

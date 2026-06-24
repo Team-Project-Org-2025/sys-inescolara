@@ -11,10 +11,10 @@ function index(): void
     if (isAjaxRequest() && $action !== '') {
         try {
             match ($_SERVER['REQUEST_METHOD'] . '_' . $action) {
-                'GET_get_locations'  => locations_getLocationsAjax(),
-                'POST_add_ajax'      => locations_handleAddEdit('add'),
-                'POST_edit_ajax'     => locations_handleAddEdit('edit'),
-                'POST_delete_ajax'   => locations_handleDelete(),
+                'GET_get_locations'  => get_locations(),
+                'POST_add_ajax'      => add_ajax(),
+                'POST_edit_ajax'     => edit_ajax(),
+                'POST_delete_ajax'   => delete_ajax(),
                 default              => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
             };
         } catch (\Exception $e) {
@@ -33,9 +33,9 @@ function index(): void
 }
 
 function get_locations(): void { checkModuleAuth(); locations_getLocationsAjax(); }
-function add_ajax(): void { checkModuleAuth(); checkPermisoOrFail('UBICACIONES_CREATE'); locations_handleAddEdit('add'); }
-function edit_ajax(): void { checkModuleAuth(); checkPermisoOrFail('UBICACIONES_EDIT'); locations_handleAddEdit('edit'); }
-function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('UBICACIONES_DELETE'); locations_handleDelete(); }
+function add_ajax(): void { checkModuleAuth(); checkPermisoOrFail('ubicaciones:crear'); locations_handleAddEdit('add'); }
+function edit_ajax(): void { checkModuleAuth(); checkPermisoOrFail('ubicaciones:editar'); locations_handleAddEdit('edit'); }
+function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('ubicaciones:eliminar'); locations_handleDelete(); }
 
 function locations_getLocationsAjax(): void
 {

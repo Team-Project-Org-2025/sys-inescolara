@@ -13,10 +13,10 @@ function index(): void
     if (isAjaxRequest() && $action !== '') {
         try {
             match ($_SERVER['REQUEST_METHOD'] . '_' . $action) {
-                'GET_get_users'   => users_getUsersAjax(),
-                'POST_add_ajax'   => users_handleAddEdit('add'),
-                'POST_edit_ajax'  => users_handleAddEdit('edit'),
-                'POST_delete_ajax' => users_handleDelete(),
+                'GET_get_users'   => get_users(),
+                'POST_add_ajax'   => add_ajax(),
+                'POST_edit_ajax'  => edit_ajax(),
+                'POST_delete_ajax' => delete_ajax(),
                 default           => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
             };
         } catch (\Exception $e) {
@@ -41,9 +41,9 @@ function index(): void
 }
 
 function get_users(): void { checkModuleAuth(); users_getUsersAjax(); }
-function add_ajax(): void { checkModuleAuth(); checkPermisoOrFail('USUARIOS_MANAGE'); users_handleAddEdit('add'); }
-function edit_ajax(): void { checkModuleAuth(); checkPermisoOrFail('USUARIOS_MANAGE'); users_handleAddEdit('edit'); }
-function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('USUARIOS_MANAGE'); users_handleDelete(); }
+function add_ajax(): void { checkModuleAuth(); checkPermisoOrFail('usuarios:ver'); users_handleAddEdit('add'); }
+function edit_ajax(): void { checkModuleAuth(); checkPermisoOrFail('usuarios:ver'); users_handleAddEdit('edit'); }
+function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('usuarios:ver'); users_handleDelete(); }
 
 function users_validateUserData(array $data, string $mode): void
 {
@@ -99,7 +99,15 @@ function users_handleAddEdit(string $mode): void
         $avatar = $result['data']['url'];
     }
 
-    $permisoIds = isset($_POST['permisos']) ? array_map('intval', (array)$_POST['permisos']) : [];
+    $permisoIds = [];
+    if (isset($_POST['permisos']) && is_array($_POST['permisos'])) {
+        foreach ($_POST['permisos'] as $val) {
+            $parts = explode(':', $val);
+            if (count($parts) === 2) {
+                $permisoIds[] = ['id_modulo' => (int)$parts[0], 'id_permiso' => (int)$parts[1]];
+            }
+        }
+    }
 
     if ($mode === 'add') {
         if ($model->userExists(null, $nombreUsuario)) {
