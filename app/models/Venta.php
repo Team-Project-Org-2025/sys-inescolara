@@ -7,6 +7,7 @@ use SysInescolara\interfaces\ReadableInterface;
 use SysInescolara\interfaces\DeletableInterface;
 use SysInescolara\traits\ValidationTrait;
 use PDO;
+use SysInescolara\models\AuditLog;
 
 class Venta extends Database implements ReadableInterface, DeletableInterface
 {
@@ -123,6 +124,7 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
 
     public function cancelar(int $id): bool
     {
+        $oldData = $this->getById($id);
         try {
             $this->db()->beginTransaction();
 
@@ -144,6 +146,7 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
             $stmt->execute([':id' => $id]);
 
             $this->db()->commit();
+            AuditLog::record('DEACTIVATE', 'venta', $id, $oldData, null);
             return true;
         } catch (\Throwable $e) {
             $this->db()->rollBack();
@@ -247,6 +250,13 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
             }
 
             $this->db()->commit();
+            AuditLog::record('CREATE', 'venta', $ventaId, null, [
+                'id_cliente'    => $datos['id_cliente'],
+                'id_trabajador' => $datos['id_trabajador'],
+                'tipo_venta'    => $datos['tipo_venta'] ?? 'contado',
+                'productos'     => count($datos['productos'] ?? []),
+                'pagos'         => count($datos['pagos'] ?? []),
+            ]);
             return $ventaId;
         } catch (\Throwable $e) {
             $this->db()->rollBack();

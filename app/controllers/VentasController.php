@@ -5,7 +5,6 @@ require_once __DIR__ . '/controller_helpers.php';
 use SysInescolara\models\Venta;
 use SysInescolara\models\Cliente;
 use SysInescolara\models\Empleado;
-use SysInescolara\models\AuditLog;
 use SysInescolara\helpers\PdfHelper;
 
 function index(): void
@@ -218,7 +217,6 @@ function ventas_manejarGuardar(): void
     if ($nuevoId <= 0) throw new \Exception('Error al guardar la venta.');
 
     $venta = $modelo->getById($nuevoId);
-    AuditLog::record('CREATE', 'venta', $nuevoId, null, $datos);
 
     jsonResponse([
         'success'    => true,
@@ -246,7 +244,6 @@ function ventas_manejarCancelar(): void
     $ok = $modelo->cancelar($id);
     if (!$ok) throw new \Exception('Error al cancelar la venta.');
 
-    AuditLog::record('DEACTIVATE', 'venta', $id, $datosViejos, null);
     jsonResponse(['success' => true, 'message' => 'Venta cancelada correctamente', 'id' => $id]);
 }
 
