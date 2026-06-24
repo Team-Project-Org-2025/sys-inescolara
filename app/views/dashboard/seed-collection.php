@@ -30,7 +30,7 @@ include_once __DIR__ . '/../common/modal.php';
                     <h1>Gestión de Recolección de Semillas</h1>
                     <p style="color: var(--text-secondary);">Asignación y control de tareas de recolección de semillas en campo.</p>
                 </div>
-                <?php if (in_array('RECOLECCION_CREATE', $permisos)): ?>
+                <?php if (\SysInescolara\helpers\Auth::hasModuleAccess('seed_collection', 'crear')): ?>
                 <button class="btn btn-primary" id="btnAddRecoleccion">
                     <i class="fas fa-plus"></i> Registrar Recolección
                 </button>

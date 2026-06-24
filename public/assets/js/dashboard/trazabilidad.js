@@ -61,11 +61,11 @@ $(document).ready(function () {
             const perms = window.userPermisos || [];
             const btns = [];
 
-            if (perms.includes('TRAZABILIDAD_EDIT')) {
+            if (perms.includes('trazabilidad:editar')) {
               btns.push(C.btnEdit('btn-edit'));
             }
 
-            if (perms.includes('TRAZABILIDAD_DELETE')) {
+            if (perms.includes('trazabilidad:eliminar')) {
               btns.push(C.btnDelete('btn-delete'));
             }
 

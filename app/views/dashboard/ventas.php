@@ -86,7 +86,7 @@ include_once __DIR__ . '/../common/modal.php';
                     <h1>Gestión de Ventas</h1>
                     <p style="color: var(--text-secondary);">Registro de ventas y facturación POS.</p>
                 </div>
-                <?php if (function_exists('hasPermiso') && hasPermiso('VENTAS_CREATE')): ?>
+                <?php if (\SysInescolara\helpers\Auth::hasModuleAccess('ventas', 'crear')): ?>
                 <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#ventaModal">
                     <i class="fas fa-plus"></i> Nueva Venta
                 </button>

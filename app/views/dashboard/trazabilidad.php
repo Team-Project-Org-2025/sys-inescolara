@@ -30,7 +30,7 @@ include_once __DIR__ . '/../common/modal.php';
                     <h1>Gestión de Trazabilidad</h1>
                     <p style="color: var(--text-secondary);">Control fitosanitario, cuarentena y monitoreo de ejemplares por lote.</p>
                 </div>
-                <?php if (in_array('TRAZABILIDAD_CREATE', $permisos)): ?>
+                <?php if (\SysInescolara\helpers\Auth::hasModuleAccess('trazabilidad', 'crear')): ?>
                 <button class="btn btn-primary" id="btnAddTrazabilidad">
                     <i class="fas fa-plus"></i> Registrar Cuarentena
                 </button>
