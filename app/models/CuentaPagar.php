@@ -7,6 +7,7 @@ use SysInescolara\interfaces\ReadableInterface;
 use SysInescolara\interfaces\DeletableInterface;
 use SysInescolara\traits\ValidationTrait;
 use PDO;
+use SysInescolara\models\AuditLog;
 
 class CuentaPagar extends Database implements ReadableInterface, DeletableInterface
 {
@@ -282,6 +283,12 @@ class CuentaPagar extends Database implements ReadableInterface, DeletableInterf
             $this->actualizarEstadoCompra($cuenta['id_compra']);
 
             $this->confirmarTransaccion();
+            $nuevoId = (int)$this->db()->lastInsertId();
+            AuditLog::record('CREATE', 'pago_compra', $nuevoId, null, [
+                'id_cuenta_pagar' => $idCuentaPagar,
+                'monto'           => $monto,
+                'tipo_pago'       => $tipoPago,
+            ]);
             return true;
         } catch (\Exception $e) {
             $this->revertirTransaccion();
@@ -291,7 +298,12 @@ class CuentaPagar extends Database implements ReadableInterface, DeletableInterf
 
     public function anularPago(int $idPagoCompra): bool
     {
+        $stmtOld = $this->db()->prepare("SELECT * FROM pago_compra WHERE id_pago_compra = :id");
+        $stmtOld->execute([':id' => $idPagoCompra]);
+        $oldData = $stmtOld->fetch(PDO::FETCH_ASSOC) ?: null;
         $stmt = $this->db()->prepare("UPDATE pago_compra SET estado = 'anulado', activo = 0 WHERE id_pago_compra = :id_pago_compra AND activo = 1");
-        return $stmt->execute([':id_pago_compra' => $idPagoCompra]);
+        $result = $stmt->execute([':id_pago_compra' => $idPagoCompra]);
+        AuditLog::record('DEACTIVATE', 'pago_compra', $idPagoCompra, $oldData, null);
+        return $result;
     }
 }
