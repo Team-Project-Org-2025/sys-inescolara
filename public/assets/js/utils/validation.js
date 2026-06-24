@@ -60,6 +60,45 @@ export const validateNoFutureDate = ($input) => {
   return true;
 };
 
+export const validateFechaPago = ($input) => {
+  const valor = $input.val().trim();
+  const isRequired = $input.prop('required');
+  const fechaVenta = $input.data('fecha-venta');
+
+  $input.siblings('.invalid-feedback').remove();
+
+  if (valor === '') {
+    if (isRequired) {
+      $input.addClass('is-invalid').removeClass('is-valid');
+      $input.after(`<div class="invalid-feedback">Este campo es requerido.</div>`);
+      return false;
+    }
+    $input.removeClass('is-invalid is-valid');
+    return true;
+  }
+
+  if (!REGEX.fechaFormato.test(valor)) {
+    $input.addClass('is-invalid').removeClass('is-valid');
+    $input.after(`<div class="invalid-feedback">${MESSAGES.fecha}</div>`);
+    return false;
+  }
+
+  if (valor > hoy) {
+    $input.addClass('is-invalid').removeClass('is-valid');
+    $input.after(`<div class="invalid-feedback">${MESSAGES.fechaFutura}</div>`);
+    return false;
+  }
+
+  if (fechaVenta && valor < fechaVenta) {
+    $input.addClass('is-invalid').removeClass('is-valid');
+    $input.after(`<div class="invalid-feedback">${MESSAGES.fechaAnteriorVenta}</div>`);
+    return false;
+  }
+
+  $input.removeClass('is-invalid').addClass('is-valid');
+  return true;
+};
+
 // Mensajes de error personalizados
 export const MESSAGES = {
   cedula: 'Cédula inválida (7-10 dígitos)',
@@ -78,6 +117,7 @@ export const MESSAGES = {
   cargo: 'Cargo inválido (2-50 caracteres)',
   referencia: 'Referencia bancaria inválida (6 dígitos)',
   referenciaVenta: 'Referencia inválida (máx 15 caracteres, solo letras, números y guión)',
+  fechaAnteriorVenta: 'La fecha de pago no puede ser anterior a la fecha de venta.',
   banco: 'Nombre del banco inválido (3-30 caracteres)',
   password: 'Contraseña debe tener 8-30 caracteres, mayúsculas, minúsculas, números y símbolos',
   required: 'Este campo es requerido',
@@ -157,6 +197,11 @@ export const setupRealTimeValidation = ($form, rules, isEdit = false) => {
 
     if (tipo === 'fechaFuturaCheck') {
       $input.on('input change blur', () => validateNoFutureDate($input));
+      return;
+    }
+
+    if (tipo === 'fechaPagoCheck') {
+      $input.on('input change blur', () => validateFechaPago($input));
       return;
     }
 
@@ -240,6 +285,11 @@ export const validateForm = ($form, rules, isEdit = false) => {
 
     if (tipo === 'fechaFuturaCheck') {
       if (!validateNoFutureDate($input)) isValid = false;
+      return;
+    }
+
+    if (tipo === 'fechaPagoCheck') {
+      if (!validateFechaPago($input)) isValid = false;
       return;
     }
 
