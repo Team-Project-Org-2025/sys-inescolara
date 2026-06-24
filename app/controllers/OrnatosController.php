@@ -12,12 +12,13 @@ function index(): void
     if (isAjaxRequest() && $accion !== '') {
         try {
             match ($_SERVER['REQUEST_METHOD'] . '_' . $accion) {
-                'GET_listar'      => listar(),
-                'POST_guardar'    => guardar(),
-                'POST_actualizar' => actualizar(),
-                'GET_detalles'    => detalles(),
-                'POST_eliminar'   => eliminar(),
-                default           => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
+                'GET_listar'             => listar(),
+                'POST_guardar'           => guardar(),
+                'POST_actualizar'        => actualizar(),
+                'GET_detalles'           => detalles(),
+                'POST_eliminar'          => eliminar(),
+                'GET_buscar_clientes'    => buscar_clientes(),
+                default                  => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
             };
         } catch (\Exception $e) {
             handleError($e, true);
@@ -33,6 +34,7 @@ function guardar(): void { checkModuleAuth(); checkPermisoOrFail('ornatos:crear'
 function actualizar(): void { checkModuleAuth(); checkPermisoOrFail('ornatos:editar'); ornatos_manejarGuardar('editar'); }
 function eliminar(): void { checkModuleAuth(); checkPermisoOrFail('ornatos:eliminar'); ornatos_manejarEliminar(); }
 function detalles(): void { checkModuleAuth(); ornatos_obtenerDetallesAjax(); }
+function buscar_clientes(): void { checkModuleAuth(); ornatos_buscarClientesAjax(); }
 
 function ornatos_listarAjax(): void
 {
@@ -145,4 +147,17 @@ function ornatos_manejarEliminar(): void
     $modelo->delete($id);
     AuditLog::record('DEACTIVATE', 'ornatos', $id, $datosViejos, null);
     jsonResponse(['success' => true, 'message' => 'Ornato eliminado correctamente', 'id' => $id]);
+}
+
+function ornatos_buscarClientesAjax(): void
+{
+    $query = trim((string)($_GET['q'] ?? ''));
+    if (strlen($query) < 2) {
+        jsonResponse(['success' => true, 'clientes' => []]);
+        return;
+    }
+
+    $modelo = new Ornato();
+    $clientes = $modelo->buscarClientes($query);
+    jsonResponse(['success' => true, 'clientes' => $clientes]);
 }
