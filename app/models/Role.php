@@ -25,8 +25,7 @@ class Role extends Database implements ReadableInterface, DeletableInterface
     public function getAll(): array
     {
         try {
-            $sql = "SELECT r.id_rol AS id, r.nombre_rol, r.descripcion_rol,
-                           (SELECT COUNT(*) FROM rol_permisos rp WHERE rp.id_rol = r.id_rol) AS total_permisos
+            $sql = "SELECT r.id_rol AS id, r.nombre_rol, r.descripcion_rol
                     FROM roles r
                     ORDER BY r.id_rol ASC";
             $stmt = $this->db()->query($sql);
@@ -102,93 +101,36 @@ class Role extends Database implements ReadableInterface, DeletableInterface
         }
     }
 
-    public function add(string $nombreRol, ?string $descripcion = null, array $permisoIds = []): bool
+    public function add(string $nombreRol, ?string $descripcion = null): bool
     {
         $this->validateData([
             'nombre_rol' => $nombreRol,
             'descripcion' => $descripcion,
         ]);
         try {
-            $this->db()->beginTransaction();
-
             $stmt = $this->db()->prepare("INSERT INTO roles (nombre_rol, descripcion_rol) VALUES (:nombre, :descripcion)");
             $stmt->execute([':nombre' => $nombreRol, ':descripcion' => $descripcion]);
-            $newId = (int)$this->db()->lastInsertId();
-
-            if (!empty($permisoIds)) {
-                $this->setRolePermissions($newId, $permisoIds);
-            }
-
-            $this->db()->commit();
             return true;
         } catch (\Throwable $e) {
-            $this->db()->rollBack();
             error_log('Error al crear rol: ' . $e->getMessage());
             return false;
         }
     }
 
-    public function update(int $id, string $nombreRol, ?string $descripcion = null, array $permisoIds = []): bool
+    public function update(int $id, string $nombreRol, ?string $descripcion = null): bool
     {
         $this->validateData([
             'nombre_rol' => $nombreRol,
             'descripcion' => $descripcion,
         ]);
         try {
-            $this->db()->beginTransaction();
-
             $stmt = $this->db()->prepare("UPDATE roles SET nombre_rol = :nombre, descripcion_rol = :descripcion WHERE id_rol = :id");
             $stmt->execute([':nombre' => $nombreRol, ':descripcion' => $descripcion, ':id' => $id]);
-
-            $this->setRolePermissions($id, $permisoIds);
-
-            $this->db()->commit();
             return true;
         } catch (\Throwable $e) {
-            $this->db()->rollBack();
             error_log('Error al actualizar rol: ' . $e->getMessage());
             return false;
         }
     }
 
-    public function getRolePermissions(int $roleId): array
-    {
-        try {
-            $stmt = $this->db()->prepare("SELECT id_permiso FROM rol_permisos WHERE id_rol = :rid");
-            $stmt->execute([':rid' => $roleId]);
-            return array_column($stmt->fetchAll(PDO::FETCH_ASSOC), 'id_permiso');
-        } catch (\Throwable $e) {
-            error_log('Error al obtener permisos del rol: ' . $e->getMessage());
-            return [];
-        }
-    }
-
-    private function setRolePermissions(int $roleId, array $permisoIds): void
-    {
-        try {
-            $stmtDel = $this->db()->prepare("DELETE FROM rol_permisos WHERE id_rol = :rid");
-            $stmtDel->execute([':rid' => $roleId]);
-
-            if (!empty($permisoIds)) {
-                $stmtIns = $this->db()->prepare("INSERT INTO rol_permisos (id_rol, id_permiso) VALUES (:rid, :pid)");
-                foreach ($permisoIds as $pid) {
-                    $stmtIns->execute([':rid' => $roleId, ':pid' => (int)$pid]);
-                }
-            }
-        } catch (\Throwable $e) {
-            error_log('Error al asignar permisos al rol: ' . $e->getMessage());
-            throw $e;
-        }
-    }
-
-    public function getAllPermissions(): array
-    {
-        try {
-            $stmt = $this->db()->query("SELECT id_permiso, codigo_permiso, descripcion_permiso FROM permisos ORDER BY codigo_permiso ASC");
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (\Throwable $e) {
-            error_log('Error al obtener permisos: ' . $e->getMessage());
-            return [];
-        }
-    }
 }

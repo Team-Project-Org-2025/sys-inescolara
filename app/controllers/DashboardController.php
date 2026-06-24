@@ -24,6 +24,9 @@ function dashboardCheckAuth(): void
 function dashboardCheckPermiso(string $codigo): void
 {
     dashboardCheckAuth();
+    if (\SysInescolara\helpers\Auth::isAdmin()) {
+        return;
+    }
     if (!\SysInescolara\helpers\Auth::hasPermiso($codigo)) {
         http_response_code(403);
         echo '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Acceso denegado</title>';
@@ -37,7 +40,7 @@ function dashboardCheckPermiso(string $codigo): void
 
 function index(): void
 {
-    dashboardCheckPermiso('DASHBOARD_VIEW');
+    dashboardCheckAuth();
 
     require_once ROOT_PATH . 'vendor/autoload.php';
 
@@ -65,7 +68,7 @@ function index(): void
 
 function asistente(): void
 {
-    dashboardCheckPermiso('ASISTENTE_ACCESS');
+    dashboardCheckPermiso('asistente:ver');
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'asistente.php';
 
@@ -80,7 +83,7 @@ function asistente(): void
 
 function inventario(): void
 {
-    dashboardCheckPermiso('INVENTARIO_VIEW');
+    dashboardCheckPermiso('inventario:ver');
 
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'inventario.php';
@@ -96,7 +99,7 @@ function inventario(): void
 
 function ventas(): void
 {
-    dashboardCheckPermiso('VENTAS_ACCESS');
+    dashboardCheckPermiso('ventas:ver');
 
     require_once ROOT_PATH . 'vendor/autoload.php';
     $modeloCliente = new \SysInescolara\models\Cliente();
@@ -118,13 +121,13 @@ function ventas(): void
 
 function cuentas_cobrar(): void
 {
-    dashboardCheckPermiso('CUENTAS_COBRAR_VIEW');
+    dashboardCheckPermiso('cuentas_cobrar:ver');
 
     require_once ROOT_PATH . 'vendor/autoload.php';
     $employeeModel = new \SysInescolara\models\Empleado();
     $employees = $employeeModel->getAll();
 
-    $canPay = \SysInescolara\helpers\Auth::hasPermiso('CUENTAS_COBRAR_PAY');
+    $canPay = \SysInescolara\helpers\Auth::hasPermiso('cuentas_cobrar:editar');
 
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'cuentas-cobrar.php';
@@ -140,7 +143,7 @@ function cuentas_cobrar(): void
 
 function usuarios(): void
 {
-    dashboardCheckPermiso('USUARIOS_MANAGE');
+    dashboardCheckPermiso('usuarios:ver');
 
     require_once ROOT_PATH . 'vendor/autoload.php';
     $userModel = new \SysInescolara\models\Usuario();
@@ -163,7 +166,7 @@ function usuarios(): void
 
 function plantas(): void
 {
-    dashboardCheckPermiso('PLANTAS_VIEW');
+    dashboardCheckPermiso('plantas:ver');
 
     require_once ROOT_PATH . 'vendor/autoload.php';
     $speciesModel = new \SysInescolara\models\Especie();
@@ -183,7 +186,7 @@ function plantas(): void
 
 function lotes(): void
 {
-    dashboardCheckPermiso('PLANTAS_VIEW');
+    dashboardCheckPermiso('lotes:ver');
 
     require_once ROOT_PATH . 'vendor/autoload.php';
     $plantModel = new \SysInescolara\models\Planta();
@@ -205,7 +208,7 @@ function lotes(): void
 
 function ubicaciones(): void
 {
-    dashboardCheckPermiso('UBICACIONES_VIEW');
+    dashboardCheckPermiso('ubicaciones:ver');
 
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'ubicaciones.php';
@@ -221,7 +224,7 @@ function ubicaciones(): void
 
 function herramientas(): void
 {
-    dashboardCheckPermiso('HERRAMIENTAS_VIEW');
+    dashboardCheckPermiso('herramientas:ver');
 
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'herramientas.php';
@@ -237,7 +240,7 @@ function herramientas(): void
 
 function proveedores(): void
 {
-    dashboardCheckPermiso('PROVEEDORES_VIEW');
+    dashboardCheckPermiso('proveedores:ver');
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'proveedores.php';
 
@@ -252,7 +255,7 @@ function proveedores(): void
 
 function insumos(): void
 {
-    dashboardCheckPermiso('INSUMOS_VIEW');
+    dashboardCheckPermiso('insumos:ver');
 
     require_once ROOT_PATH . 'vendor/autoload.php';
     $unidadMedidaModel = new \SysInescolara\models\UnidadMedida();
@@ -272,7 +275,7 @@ function insumos(): void
 
 function compras(): void
 {
-    dashboardCheckPermiso('COMPRAS_VIEW');
+    dashboardCheckPermiso('compras:ver');
 
     require_once ROOT_PATH . 'vendor/autoload.php';
     $supplierModel = new \SysInescolara\models\Proveedor();
@@ -298,7 +301,7 @@ function compras(): void
 
 function tasks(): void
 {
-    dashboardCheckPermiso('TAREAS_VIEW');
+    dashboardCheckPermiso('tareas:ver');
     $employeeModel = new \SysInescolara\models\Empleado();
     $trabajadores = $employeeModel->getAll();
     $batchModel = new \SysInescolara\models\Lote();
@@ -318,7 +321,7 @@ function tasks(): void
 
 function empleados(): void
 {
-    dashboardCheckPermiso('TRABAJADORES_VIEW');
+    dashboardCheckPermiso('empleados:ver');
 
     require_once ROOT_PATH . 'vendor/autoload.php';
     try {
@@ -344,7 +347,7 @@ function empleados(): void
 
 function tareas(): void
 {
-    dashboardCheckPermiso('TAREAS_VIEW');
+    dashboardCheckPermiso('tareas:ver');
 
     require_once ROOT_PATH . 'vendor/autoload.php';
     $employeeModel = new \SysInescolara\models\Empleado();
@@ -370,7 +373,7 @@ function tareas(): void
 
 function clientes(): void
 {
-    dashboardCheckPermiso('CLIENTES_VIEW');
+    dashboardCheckPermiso('clientes:ver');
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'clientes.php';
 
@@ -384,7 +387,7 @@ function clientes(): void
 }
 function especies(): void
 {
-    dashboardCheckPermiso('PLANTAS_VIEW');
+    dashboardCheckPermiso('especies:ver');
 
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'especies.php';
@@ -400,7 +403,7 @@ function especies(): void
 
 function auditlog(): void
 {
-    dashboardCheckPermiso('USUARIOS_MANAGE');
+    dashboardCheckPermiso('usuarios:ver');
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'auditlog.php';
 
@@ -415,7 +418,7 @@ function auditlog(): void
 
 function reports(): void
 {
-    dashboardCheckPermiso('DASHBOARD_VIEW');
+    dashboardCheckPermiso('reports:ver');
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'reports.php';
 
@@ -508,7 +511,7 @@ function perfil(): void
 
 function backups(): void
 {
-    dashboardCheckPermiso('USUARIOS_MANAGE');
+    dashboardCheckPermiso('usuarios:ver');
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'backups.php';
 
@@ -522,7 +525,7 @@ function backups(): void
 }
 function ornatos(): void
 {
-    dashboardCheckPermiso('ORNATOS_VIEW');
+    dashboardCheckPermiso('ornatos:ver');
 
     require_once ROOT_PATH . 'vendor/autoload.php';
     $modeloCliente = new \SysInescolara\models\Cliente();
@@ -541,11 +544,7 @@ function ornatos(): void
 
 function roles(): void
 {
-    dashboardCheckPermiso('USUARIOS_MANAGE');
-
-    require_once ROOT_PATH . 'vendor/autoload.php';
-    $roleModel = new \SysInescolara\models\Role();
-    $allPermisos = $roleModel->getAllPermissions();
+    dashboardCheckPermiso('roles:ver');
 
     $view = ROOT_PATH . 'app/views/dashboard/roles.php';
 
@@ -560,7 +559,7 @@ function roles(): void
 
 function locations(): void
 {
-    dashboardCheckPermiso('UBICACIONES_VIEW');
+    dashboardCheckPermiso('ubicaciones:ver');
 
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'locations.php';
@@ -576,7 +575,7 @@ function locations(): void
 
 function tools(): void
 {
-    dashboardCheckPermiso('HERRAMIENTAS_VIEW');
+    dashboardCheckPermiso('herramientas:ver');
 
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'tools.php';
@@ -592,7 +591,7 @@ function tools(): void
 
 function precios(): void
 {
-    dashboardCheckPermiso('PRECIOS_VIEW');
+    dashboardCheckPermiso('precios:ver');
 
     require_once ROOT_PATH . 'vendor/autoload.php';
 
@@ -613,7 +612,7 @@ function precios(): void
 
 function unidadesMedida(): void
 {
-    dashboardCheckPermiso('UNIDADES_MEDIDA_VIEW');
+    dashboardCheckPermiso('unidades_medida:ver');
 
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'unidades-medida.php';
@@ -629,7 +628,7 @@ function unidadesMedida(): void
 
 function seedcollection(): void
 {
-    dashboardCheckPermiso('RECOLECCION_VIEW');
+    dashboardCheckPermiso('seed_collection:ver');
 
     require_once ROOT_PATH . 'vendor/autoload.php';
     $locationModel = new \SysInescolara\models\Ubicacion();
@@ -654,7 +653,7 @@ function seedcollection(): void
 
 function ampliacion(): void
 {
-    dashboardCheckPermiso('AMPLIACION_VIEW');
+    dashboardCheckPermiso('ampliacion:ver');
 
     require_once ROOT_PATH . 'vendor/autoload.php';
     $clientModel = new \SysInescolara\models\Cliente();
@@ -675,7 +674,7 @@ function ampliacion(): void
 
 function trazabilidad(): void
 {
-    dashboardCheckPermiso('TRAZABILIDAD_VIEW');
+    dashboardCheckPermiso('trazabilidad:ver');
 
     require_once ROOT_PATH . 'vendor/autoload.php';
 
@@ -692,7 +691,7 @@ function trazabilidad(): void
 
 function mermas(): void
 {
-    dashboardCheckPermiso('MERMAS_VIEW');
+    dashboardCheckPermiso('mermas:ver');
 
     require_once ROOT_PATH . 'vendor/autoload.php';
 
@@ -714,7 +713,7 @@ function cuentaspagar(): void
 
 function cuentas_pagar(): void
 {
-    dashboardCheckPermiso('CUENTAS_VIEW');
+    dashboardCheckPermiso('cuentas_pagar:ver');
 
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'cuentas-pagar.php';

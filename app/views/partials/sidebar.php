@@ -1,9 +1,6 @@
 <?php
 
-function hasPermiso(string $codigo): bool
-{
-    return \SysInescolara\helpers\Auth::hasPermiso($codigo);
-}
+use SysInescolara\helpers\Auth;
 
 $current = $currentPage ?? '';
 
@@ -14,23 +11,39 @@ $isServicios = in_array($current, ['ornatos', 'ampliacion', 'proveedores']);
 $isTarea = in_array($current, ['tareas', 'empleados', 'seed-collection']);
 $isConfiguracion = in_array($current, ['usuarios', 'roles', 'auditlog', 'backups']);
 
-$showInventario = hasPermiso('PLANTAS_VIEW') || hasPermiso('UBICACIONES_VIEW')
-    || hasPermiso('INVENTARIO_VIEW') || hasPermiso('TRAZABILIDAD_VIEW')
-    || hasPermiso('INSUMOS_VIEW') || hasPermiso('HERRAMIENTAS_VIEW')
-    || hasPermiso('UNIDADES_MEDIDA_VIEW') || hasPermiso('MERMAS_VIEW');
+$showInventario = Auth::hasModuleAccess('plantas', 'ver')
+    || Auth::hasModuleAccess('ubicaciones', 'ver')
+    || Auth::hasModuleAccess('especies', 'ver')
+    || Auth::hasModuleAccess('inventario', 'ver')
+    || Auth::hasModuleAccess('trazabilidad', 'ver')
+    || Auth::hasModuleAccess('insumos', 'ver')
+    || Auth::hasModuleAccess('herramientas', 'ver')
+    || Auth::hasModuleAccess('unidades_medida', 'ver')
+    || Auth::hasModuleAccess('mermas', 'ver');
+    
 
-$showComercial = hasPermiso('VENTAS_ACCESS') || hasPermiso('PRECIOS_VIEW')
-    || hasPermiso('CLIENTES_VIEW') || hasPermiso('CUENTAS_COBRAR_VIEW')
-    || hasPermiso('CUENTAS_VIEW') || hasPermiso('COMPRAS_VIEW')
-    || hasPermiso('ORNATOS_VIEW') || hasPermiso('AMPLIACION_VIEW')
-    || hasPermiso('PROVEEDORES_VIEW');
+$showComercial = Auth::hasModuleAccess('ventas', 'ver')
+    || Auth::hasModuleAccess('precios', 'ver')
+    || Auth::hasModuleAccess('clientes', 'ver')
+    || Auth::hasModuleAccess('cuentas_cobrar', 'ver')
+    || Auth::hasModuleAccess('cuentas_pagar', 'ver')
+    || Auth::hasModuleAccess('compras', 'ver')
+    || Auth::hasModuleAccess('ornatos', 'ver')
+    || Auth::hasModuleAccess('ampliacion', 'ver')
+    || Auth::hasModuleAccess('lotes', 'ver')
+    || Auth::hasModuleAccess('proveedores', 'ver');
 
-$showOperaciones = hasPermiso('TRABAJADORES_VIEW') || hasPermiso('TAREAS_VIEW')
-    || hasPermiso('RECOLECCION_VIEW');
+$showOperaciones = Auth::hasModuleAccess('empleados', 'ver')
+    || Auth::hasModuleAccess('tareas', 'ver')
+    || Auth::hasModuleAccess('seed_collection', 'ver');
 
-$showHerramientas = hasPermiso('ASISTENTE_ACCESS') || hasPermiso('DASHBOARD_VIEW');
+$showHerramientas = Auth::hasModuleAccess('asistente', 'ver')
+    || Auth::hasModuleAccess('reports', 'ver');
 
-$showSistema = hasPermiso('USUARIOS_MANAGE');
+$showSistema = Auth::hasModuleAccess('usuarios', 'ver')
+    || Auth::hasModuleAccess('roles', 'ver')
+    || Auth::hasModuleAccess('auditlog', 'ver')
+    || Auth::hasModuleAccess('backups', 'ver');
 
 ?>
 <aside class="sidebar" id="sidebar">
@@ -64,7 +77,7 @@ $showSistema = hasPermiso('USUARIOS_MANAGE');
         <?php if ($showInventario): ?>
         <div class="sidebar-section-label">INVENTARIO</div>
 
-        <?php if (hasPermiso('PLANTAS_VIEW') || hasPermiso('UBICACIONES_VIEW')): ?>
+        <?php if (Auth::hasModuleAccess('plantas', 'ver') || Auth::hasModuleAccess('especies', 'ver') || Auth::hasModuleAccess('ubicaciones', 'ver')): ?>
         <div class="nav-group">
             <button class="nav-group-btn <?= $isPlanta ? 'open-bg' : '' ?>">
                 <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-9"></path><path d="M12 13c2.5-2.5 6-3 7.5-1.5s1 5-1.5 7.5"></path><path d="M12 10c-2.5-2.5-6-3-7.5-1.5s-1 5 1.5 7.5"></path></svg>
@@ -73,7 +86,7 @@ $showSistema = hasPermiso('USUARIOS_MANAGE');
             </button>
             <div class="submenu-wrapper <?= $isPlanta ? 'show' : '' ?>">
                 <ul class="submenu-inner">
-                    <?php if (hasPermiso('PLANTAS_VIEW')): ?>
+                    <?php if (Auth::hasModuleAccess('plantas', 'ver')): ?>
                     <li>
                         <a href="<?= BASE_URL ?>dashboard/plantas" class="nav-link <?= $current === 'plantas' ? 'active' : '' ?>">
                             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-9"></path><path d="M12 13c2.5-2.5 6-3 7.5-1.5s1 5-1.5 7.5"></path><path d="M12 10c-2.5-2.5-6-3-7.5-1.5s-1 5 1.5 7.5"></path></svg>
@@ -81,7 +94,7 @@ $showSistema = hasPermiso('USUARIOS_MANAGE');
                         </a>
                     </li>
                     <?php endif; ?>
-                    <?php if (hasPermiso('PLANTAS_VIEW')): ?>
+                    <?php if (Auth::hasModuleAccess('especies', 'ver')): ?>
                     <li>
                         <a href="<?= BASE_URL ?>dashboard/especies" class="nav-link <?= $current === 'especies' ? 'active' : '' ?>">
                             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="3" x2="6" y2="15"></line><circle cx="18" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><path d="M18 9a9 9 0 0 1-9 9"></path></svg>
@@ -89,7 +102,7 @@ $showSistema = hasPermiso('USUARIOS_MANAGE');
                         </a>
                     </li>
                     <?php endif; ?>
-                    <?php if (hasPermiso('UBICACIONES_VIEW')): ?>
+                    <?php if (Auth::hasModuleAccess('ubicaciones', 'ver')): ?>
                     <li>
                         <a href="<?= BASE_URL ?>dashboard/ubicaciones" class="nav-link <?= $current === 'ubicaciones' ? 'active' : '' ?>">
                             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
@@ -102,7 +115,7 @@ $showSistema = hasPermiso('USUARIOS_MANAGE');
         </div>
         <?php endif; ?>
 
-        <?php if (hasPermiso('INVENTARIO_VIEW') || hasPermiso('PLANTAS_VIEW') || hasPermiso('TRAZABILIDAD_VIEW') || hasPermiso('INSUMOS_VIEW') || hasPermiso('HERRAMIENTAS_VIEW') || hasPermiso('UNIDADES_MEDIDA_VIEW') || hasPermiso('MERMAS_VIEW')): ?>
+        <?php if (Auth::hasModuleAccess('inventario', 'ver') || Auth::hasModuleAccess('lotes', 'ver') || Auth::hasModuleAccess('trazabilidad', 'ver') || Auth::hasModuleAccess('insumos', 'ver') || Auth::hasModuleAccess('herramientas', 'ver') || Auth::hasModuleAccess('unidades_medida', 'ver') || Auth::hasModuleAccess('mermas', 'ver')): ?>
         <div class="nav-group">
             <button class="nav-group-btn <?= $isActivos ? 'open-bg' : '' ?>">
                 <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
@@ -111,7 +124,7 @@ $showSistema = hasPermiso('USUARIOS_MANAGE');
             </button>
             <div class="submenu-wrapper <?= $isActivos ? 'show' : '' ?>">
                 <ul class="submenu-inner">
-                    <?php if (hasPermiso('INVENTARIO_VIEW')): ?>
+                    <?php if (Auth::hasModuleAccess('inventario', 'ver')): ?>
                     <li>
                         <a href="<?= BASE_URL ?>dashboard/inventario" class="nav-link <?= $current === 'inventario' ? 'active' : '' ?>">
                             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
@@ -119,7 +132,7 @@ $showSistema = hasPermiso('USUARIOS_MANAGE');
                         </a>
                     </li>
                     <?php endif; ?>
-                    <?php if (hasPermiso('PLANTAS_VIEW')): ?>
+                    <?php if (Auth::hasModuleAccess('lotes', 'ver')): ?>
                     <li>
                         <a href="<?= BASE_URL ?>dashboard/lotes" class="nav-link <?= $current === 'lotes' ? 'active' : '' ?>">
                             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5"></polygon><line x1="12" y1="22" x2="12" y2="15.5"></line><polyline points="2 8.5 12 15.5 22 8.5"></polyline></svg>
@@ -127,7 +140,7 @@ $showSistema = hasPermiso('USUARIOS_MANAGE');
                         </a>
                     </li>
                     <?php endif; ?>
-                    <?php if (hasPermiso('TRAZABILIDAD_VIEW')): ?>
+                    <?php if (Auth::hasModuleAccess('trazabilidad', 'ver')): ?>
                     <li>
                         <a href="<?= BASE_URL ?>dashboard/trazabilidad" class="nav-link <?= $current === 'trazabilidad' ? 'active' : '' ?>">
                             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
@@ -135,7 +148,7 @@ $showSistema = hasPermiso('USUARIOS_MANAGE');
                         </a>
                     </li>
                     <?php endif; ?>
-                    <?php if (hasPermiso('INSUMOS_VIEW')): ?>
+                    <?php if (Auth::hasModuleAccess('insumos', 'ver')): ?>
                     <li>
                         <a href="<?= BASE_URL ?>dashboard/insumos" class="nav-link <?= $current === 'insumos' ? 'active' : '' ?>">
                             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>
@@ -143,7 +156,7 @@ $showSistema = hasPermiso('USUARIOS_MANAGE');
                         </a>
                     </li>
                     <?php endif; ?>
-                    <?php if (hasPermiso('HERRAMIENTAS_VIEW')): ?>
+                    <?php if (Auth::hasModuleAccess('herramientas', 'ver')): ?>
                     <li>
                         <a href="<?= BASE_URL ?>dashboard/herramientas" class="nav-link <?= $current === 'herramientas' ? 'active' : '' ?>">
                             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
@@ -151,7 +164,7 @@ $showSistema = hasPermiso('USUARIOS_MANAGE');
                         </a>
                     </li>
                     <?php endif; ?>
-                    <?php if (hasPermiso('UNIDADES_MEDIDA_VIEW')): ?>
+                    <?php if (Auth::hasModuleAccess('unidades_medida', 'ver')): ?>
                     <li>
                         <a href="<?= BASE_URL ?>dashboard/unidades-medida" class="nav-link <?= $current === 'unidades-medida' ? 'active' : '' ?>">
                             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
@@ -159,7 +172,7 @@ $showSistema = hasPermiso('USUARIOS_MANAGE');
                         </a>
                     </li>
                     <?php endif; ?>
-                    <?php if (hasPermiso('MERMAS_VIEW')): ?>
+                    <?php if (Auth::hasModuleAccess('mermas', 'ver')): ?>
                     <li>
                         <a href="<?= BASE_URL ?>dashboard/mermas" class="nav-link <?= $current === 'mermas' ? 'active' : '' ?>">
                             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
@@ -176,7 +189,7 @@ $showSistema = hasPermiso('USUARIOS_MANAGE');
         <?php if ($showComercial): ?>
         <div class="sidebar-section-label">COMERCIAL</div>
 
-        <?php if (hasPermiso('VENTAS_ACCESS') || hasPermiso('PRECIOS_VIEW') || hasPermiso('CLIENTES_VIEW') || hasPermiso('CUENTAS_COBRAR_VIEW') || hasPermiso('CUENTAS_VIEW') || hasPermiso('COMPRAS_VIEW')): ?>
+        <?php if (Auth::hasModuleAccess('ventas', 'ver') || Auth::hasModuleAccess('precios', 'ver') || Auth::hasModuleAccess('clientes', 'ver') || Auth::hasModuleAccess('cuentas_cobrar', 'ver') || Auth::hasModuleAccess('cuentas_pagar', 'ver') || Auth::hasModuleAccess('compras', 'ver')): ?>
         <div class="nav-group">
             <button class="nav-group-btn <?= $isVenta ? 'open-bg' : '' ?>">
                 <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
@@ -185,7 +198,7 @@ $showSistema = hasPermiso('USUARIOS_MANAGE');
             </button>
             <div class="submenu-wrapper <?= $isVenta ? 'show' : '' ?>">
                 <ul class="submenu-inner">
-                    <?php if (hasPermiso('VENTAS_ACCESS')): ?>
+                    <?php if (Auth::hasModuleAccess('ventas', 'ver')): ?>
                     <li>
                         <a href="<?= BASE_URL ?>dashboard/ventas" class="nav-link <?= $current === 'ventas' ? 'active' : '' ?>">
                             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
@@ -193,7 +206,7 @@ $showSistema = hasPermiso('USUARIOS_MANAGE');
                         </a>
                     </li>
                     <?php endif; ?>
-                    <?php if (hasPermiso('PRECIOS_VIEW')): ?>
+                    <?php if (Auth::hasModuleAccess('precios', 'ver')): ?>
                     <li>
                         <a href="<?= BASE_URL ?>dashboard/precios" class="nav-link <?= $current === 'precios' ? 'active' : '' ?>">
                             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
@@ -201,7 +214,7 @@ $showSistema = hasPermiso('USUARIOS_MANAGE');
                         </a>
                     </li>
                     <?php endif; ?>
-                    <?php if (hasPermiso('CLIENTES_VIEW')): ?>
+                    <?php if (Auth::hasModuleAccess('clientes', 'ver')): ?>
                     <li>
                         <a href="<?= BASE_URL ?>dashboard/clientes" class="nav-link <?= $current === 'clientes' ? 'active' : '' ?>">
                             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
@@ -209,7 +222,7 @@ $showSistema = hasPermiso('USUARIOS_MANAGE');
                         </a>
                     </li>
                     <?php endif; ?>
-                    <?php if (hasPermiso('CUENTAS_COBRAR_VIEW')): ?>
+                    <?php if (Auth::hasModuleAccess('cuentas_cobrar', 'ver')): ?>
                     <li>
                         <a href="<?= BASE_URL ?>dashboard/cuentas_cobrar" class="nav-link <?= $current === 'cuentas-cobrar' ? 'active' : '' ?>">
                             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
@@ -217,7 +230,7 @@ $showSistema = hasPermiso('USUARIOS_MANAGE');
                         </a>
                     </li>
                     <?php endif; ?>
-                    <?php if (hasPermiso('CUENTAS_VIEW')): ?>
+                    <?php if (Auth::hasModuleAccess('cuentas_pagar', 'ver')): ?>
                     <li>
                         <a href="<?= BASE_URL ?>dashboard/cuentas-pagar" class="nav-link <?= $current === 'cuentas-pagar' ? 'active' : '' ?>">
                             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
@@ -225,7 +238,7 @@ $showSistema = hasPermiso('USUARIOS_MANAGE');
                         </a>
                     </li>
                     <?php endif; ?>
-                    <?php if (hasPermiso('COMPRAS_VIEW')): ?>
+                    <?php if (Auth::hasModuleAccess('compras', 'ver')): ?>
                     <li>
                         <a href="<?= BASE_URL ?>dashboard/compras" class="nav-link <?= $current === 'compras' ? 'active' : '' ?>">
                             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
@@ -238,7 +251,7 @@ $showSistema = hasPermiso('USUARIOS_MANAGE');
         </div>
         <?php endif; ?>
 
-        <?php if (hasPermiso('ORNATOS_VIEW') || hasPermiso('AMPLIACION_VIEW') || hasPermiso('PROVEEDORES_VIEW')): ?>
+        <?php if (Auth::hasModuleAccess('ornatos', 'ver') || Auth::hasModuleAccess('ampliacion', 'ver') || Auth::hasModuleAccess('proveedores', 'ver')): ?>
         <div class="nav-group">
             <button class="nav-group-btn <?= $isServicios ? 'open-bg' : '' ?>">
                 <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L9.5 9.5L2 12l7.5 2.5L12 22l2.5-7.5L22 12l-7.5-2.5L12 2z"></path></svg>
@@ -247,7 +260,7 @@ $showSistema = hasPermiso('USUARIOS_MANAGE');
             </button>
             <div class="submenu-wrapper <?= $isServicios ? 'show' : '' ?>">
                 <ul class="submenu-inner">
-                    <?php if (hasPermiso('ORNATOS_VIEW')): ?>
+                    <?php if (Auth::hasModuleAccess('ornatos', 'ver')): ?>
                     <li>
                         <a href="<?= BASE_URL ?>dashboard/ornatos" class="nav-link <?= $current === 'ornatos' ? 'active' : '' ?>">
                             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L9.5 9.5L2 12l7.5 2.5L12 22l2.5-7.5L22 12l-7.5-2.5L12 2z"></path></svg>
@@ -255,7 +268,7 @@ $showSistema = hasPermiso('USUARIOS_MANAGE');
                         </a>
                     </li>
                     <?php endif; ?>
-                    <?php if (hasPermiso('AMPLIACION_VIEW')): ?>
+                    <?php if (Auth::hasModuleAccess('ampliacion', 'ver')): ?>
                     <li>
                         <a href="<?= BASE_URL ?>dashboard/ampliacion" class="nav-link <?= $current === 'ampliacion' ? 'active' : '' ?>">
                             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
@@ -263,7 +276,7 @@ $showSistema = hasPermiso('USUARIOS_MANAGE');
                         </a>
                     </li>
                     <?php endif; ?>
-                    <?php if (hasPermiso('PROVEEDORES_VIEW')): ?>
+                    <?php if (Auth::hasModuleAccess('proveedores', 'ver')): ?>
                     <li>
                         <a href="<?= BASE_URL ?>dashboard/proveedores" class="nav-link <?= $current === 'proveedores' ? 'active' : '' ?>">
                             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
@@ -280,7 +293,7 @@ $showSistema = hasPermiso('USUARIOS_MANAGE');
         <?php if ($showOperaciones): ?>
         <div class="sidebar-section-label">OPERACIONES</div>
 
-        <?php if (hasPermiso('TRABAJADORES_VIEW') || hasPermiso('TAREAS_VIEW') || hasPermiso('RECOLECCION_VIEW')): ?>
+        <?php if (Auth::hasModuleAccess('empleados', 'ver') || Auth::hasModuleAccess('tareas', 'ver') || Auth::hasModuleAccess('seed_collection', 'ver')): ?>
         <div class="nav-group">
             <button class="nav-group-btn <?= $isTarea ? 'open-bg' : '' ?>">
                 <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
@@ -289,7 +302,7 @@ $showSistema = hasPermiso('USUARIOS_MANAGE');
             </button>
             <div class="submenu-wrapper <?= $isTarea ? 'show' : '' ?>">
                 <ul class="submenu-inner">
-                    <?php if (hasPermiso('TAREAS_VIEW')): ?>
+                    <?php if (Auth::hasModuleAccess('tareas', 'ver')): ?>
                     <li>
                         <a href="<?= BASE_URL ?>dashboard/tareas" class="nav-link <?= $current === 'tareas' ? 'active' : '' ?>">
                             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
@@ -297,7 +310,7 @@ $showSistema = hasPermiso('USUARIOS_MANAGE');
                         </a>
                     </li>
                     <?php endif; ?>
-                    <?php if (hasPermiso('TRABAJADORES_VIEW')): ?>
+                    <?php if (Auth::hasModuleAccess('empleados', 'ver')): ?>
                     <li>
                         <a href="<?= BASE_URL ?>dashboard/empleados" class="nav-link <?= $current === 'empleados' ? 'active' : '' ?>">
                             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
@@ -305,7 +318,7 @@ $showSistema = hasPermiso('USUARIOS_MANAGE');
                         </a>
                     </li>
                     <?php endif; ?>
-                    <?php if (hasPermiso('RECOLECCION_VIEW')): ?>
+                    <?php if (Auth::hasModuleAccess('seed_collection', 'ver')): ?>
                     <li>
                         <a href="<?= BASE_URL ?>dashboard/seed-collection" class="nav-link <?= $current === 'seed-collection' ? 'active' : '' ?>">
                             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 18a5 5 0 0 0-10 0"></path><line x1="12" y1="9" x2="12" y2="2"></line><line x1="4.22" y1="10.22" x2="5.64" y2="11.64"></line><line x1="1" y1="18" x2="3" y2="18"></line><line x1="21" y1="18" x2="23" y2="18"></line><line x1="18.36" y1="11.64" x2="19.78" y2="10.22"></line><polyline points="8 21 12 17 16 21"></polyline></svg>
@@ -322,14 +335,14 @@ $showSistema = hasPermiso('USUARIOS_MANAGE');
         <?php if ($showHerramientas): ?>
         <div class="sidebar-section-label">HERRAMIENTAS</div>
 
-        <?php if (hasPermiso('ASISTENTE_ACCESS')): ?>
+        <?php if (Auth::hasModuleAccess('asistente', 'ver')): ?>
         <a href="<?= BASE_URL ?>dashboard/asistente" class="nav-link <?= $current === 'asistente' ? 'active' : '' ?>">
             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
             <span>Asistente IA</span>
         </a>
         <?php endif; ?>
 
-        <?php if (hasPermiso('DASHBOARD_VIEW')): ?>
+        <?php if (Auth::hasModuleAccess('reports', 'ver')): ?>
         <a href="<?= BASE_URL ?>dashboard/reports" class="nav-link <?= $current === 'reports' ? 'active' : '' ?>">
             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
             <span>Reportes</span>

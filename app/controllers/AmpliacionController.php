@@ -12,14 +12,14 @@ function index(): void
     if (isAjaxRequest() && $action !== '') {
         try {
             match ($_SERVER['REQUEST_METHOD'] . '_' . $action) {
-                'GET_get_exchanges'      => ampliacion_getExchangesAjax(),
-                'GET_get_detail'         => ampliacion_getDetailAjax(),
-                'GET_get_lotes'          => ampliacion_getLotesAjax(),
-                'GET_get_plantas'        => ampliacion_getPlantasAjax(),
-                'GET_get_ubicaciones'    => ampliacion_getUbicacionesAjax(),
-                'GET_get_especies'       => ampliacion_getEspeciesAjax(),
-                'POST_add_ajax'          => ampliacion_handleAdd(),
-                'POST_delete_ajax'       => ampliacion_handleDelete(),
+                'GET_get_exchanges'      => get_exchanges(),
+                'GET_get_detail'         => get_detail(),
+                'GET_get_lotes'          => get_lotes(),
+                'GET_get_plantas'        => get_plantas(),
+                'GET_get_ubicaciones'    => get_ubicaciones(),
+                'GET_get_especies'       => get_especies(),
+                'POST_add_ajax'          => add_ajax(),
+                'POST_delete_ajax'       => delete_ajax(),
                 default                  => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
             };
         } catch (\Exception $e) {
@@ -38,8 +38,8 @@ function get_lotes(): void { checkModuleAuth(); ampliacion_getLotesAjax(); }
 function get_plantas(): void { checkModuleAuth(); ampliacion_getPlantasAjax(); }
 function get_ubicaciones(): void { checkModuleAuth(); ampliacion_getUbicacionesAjax(); }
 function get_especies(): void { checkModuleAuth(); ampliacion_getEspeciesAjax(); }
-function add_ajax(): void { checkModuleAuth(); checkPermisoOrFail('AMPLIACION_CREATE'); ampliacion_handleAdd(); }
-function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('AMPLIACION_DELETE'); ampliacion_handleDelete(); }
+function add_ajax(): void { checkModuleAuth(); checkPermisoOrFail('ampliacion:crear'); ampliacion_handleAdd(); }
+function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('ampliacion:eliminar'); ampliacion_handleDelete(); }
 
 function ampliacion_handleAdd(): void
 {

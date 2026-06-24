@@ -12,10 +12,10 @@ function index(): void
     if (isAjaxRequest() && $action !== '') {
         try {
             match ($_SERVER['REQUEST_METHOD'] . '_' . $action) {
-                'GET_get_roles'   => roles_getRolesAjax(),
-                'POST_add_ajax'   => roles_handleAddEdit('add'),
-                'POST_edit_ajax'  => roles_handleAddEdit('edit'),
-                'POST_delete_ajax' => roles_handleDelete(),
+                'GET_get_roles'   => get_roles(),
+                'POST_add_ajax'   => add_ajax(),
+                'POST_edit_ajax'  => edit_ajax(),
+                'POST_delete_ajax' => delete_ajax(),
                 default           => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
             };
         } catch (\Exception $e) {
@@ -23,9 +23,6 @@ function index(): void
         }
         return;
     }
-
-    $model = new Role();
-    $allPermisos = $model->getAllPermissions();
 
     $view = ROOT_PATH . 'app/views/dashboard/roles.php';
     if (!is_file($view)) {
@@ -37,9 +34,9 @@ function index(): void
 }
 
 function get_roles(): void { checkModuleAuth(); roles_getRolesAjax(); }
-function add_ajax(): void { checkModuleAuth(); checkPermisoOrFail('USUARIOS_MANAGE'); roles_handleAddEdit('add'); }
-function edit_ajax(): void { checkModuleAuth(); checkPermisoOrFail('USUARIOS_MANAGE'); roles_handleAddEdit('edit'); }
-function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('USUARIOS_MANAGE'); roles_handleDelete(); }
+function add_ajax(): void { checkModuleAuth(); checkPermisoOrFail('roles:crear'); roles_handleAddEdit('add'); }
+function edit_ajax(): void { checkModuleAuth(); checkPermisoOrFail('roles:editar'); roles_handleAddEdit('edit'); }
+function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('roles:eliminar'); roles_handleDelete(); }
 
 function roles_handleAddEdit(string $mode): void
 {
@@ -50,15 +47,13 @@ function roles_handleAddEdit(string $mode): void
     $descripcion = trim((string)($_POST['descripcion_rol'] ?? ''));
     if ($descripcion === '') $descripcion = null;
 
-    $permisoIds = isset($_POST['permisos']) ? array_map('intval', (array)$_POST['permisos']) : [];
-
     if ($mode === 'add') {
         if ($model->existsByName($nombreRol)) {
             throw new \Exception('Ya existe un rol con ese nombre.');
         }
-        $model->add($nombreRol, $descripcion, $permisoIds);
+        $model->add($nombreRol, $descripcion);
         $newId = $model->getLastInsertId() ?? 0;
-        AuditLog::record('CREATE', 'roles', $newId, null, compact('nombreRol', 'descripcion', 'permisoIds'));
+        AuditLog::record('CREATE', 'roles', $newId, null, compact('nombreRol', 'descripcion'));
         jsonResponse(['success' => true, 'message' => 'Rol creado correctamente', 'role' => ['id' => $newId, 'nombre_rol' => $nombreRol]]);
     }
 
@@ -72,8 +67,8 @@ function roles_handleAddEdit(string $mode): void
     }
 
     $oldData = $model->getById($id);
-    $model->update($id, $nombreRol, $descripcion, $permisoIds);
-    AuditLog::record('UPDATE', 'roles', $id, $oldData, compact('nombreRol', 'descripcion', 'permisoIds'));
+    $model->update($id, $nombreRol, $descripcion);
+    AuditLog::record('UPDATE', 'roles', $id, $oldData, compact('nombreRol', 'descripcion'));
     jsonResponse(['success' => true, 'message' => 'Rol actualizado correctamente', 'role' => ['id' => $id]]);
 }
 
@@ -95,9 +90,5 @@ function roles_getRolesAjax(): void
 {
     $model = new Role();
     $roles = $model->getAll();
-    foreach ($roles as &$r) {
-        $r['permisos'] = $model->getRolePermissions((int)$r['id']);
-    }
-    unset($r);
     jsonResponse(['success' => true, 'roles' => $roles, 'count' => count($roles)]);
 }

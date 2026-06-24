@@ -11,10 +11,10 @@ function index(): void
     if (isAjaxRequest() && $action !== '') {
         try {
             match ($_SERVER['REQUEST_METHOD'] . '_' . $action) {
-                'GET_get_clients'  => clients_getClientsAjax(),
-                'POST_add_ajax'    => clients_handleAddEdit('add'),
-                'POST_edit_ajax'   => clients_handleAddEdit('edit'),
-                'POST_delete_ajax' => clients_handleDelete(),
+                'GET_get_clients'  => get_clients(),
+                'POST_add_ajax'    => add_ajax(),
+                'POST_edit_ajax'   => edit_ajax(),
+                'POST_delete_ajax' => delete_ajax(),
                 default            => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
             };
         } catch (\Exception $e) {
@@ -33,9 +33,9 @@ function index(): void
 }
 
 function get_clients(): void { checkModuleAuth(); clients_getClientsAjax(); }
-function add_ajax(): void { checkModuleAuth(); checkPermisoOrFail('CLIENTES_CREATE'); clients_handleAddEdit('add'); }
-function edit_ajax(): void { checkModuleAuth(); checkPermisoOrFail('CLIENTES_EDIT'); clients_handleAddEdit('edit'); }
-function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('CLIENTES_DELETE'); clients_handleDelete(); }
+function add_ajax(): void { checkModuleAuth(); checkPermisoOrFail('clientes:crear'); clients_handleAddEdit('add'); }
+function edit_ajax(): void { checkModuleAuth(); checkPermisoOrFail('clientes:editar'); clients_handleAddEdit('edit'); }
+function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('clientes:eliminar'); clients_handleDelete(); }
 
 function clients_handleAddEdit(string $mode): void
 {
