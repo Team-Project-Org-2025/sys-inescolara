@@ -154,6 +154,7 @@ CREATE TABLE IF NOT EXISTS `insumo` (
 CREATE TABLE IF NOT EXISTS `herramienta` (
   `id_herramienta`             INT(11)     NOT NULL AUTO_INCREMENT,
   `nombre_herramienta`         VARCHAR(150) NOT NULL,
+  `cantidad`                   INT(11)      NOT NULL DEFAULT 1,
   `tipo`                       VARCHAR(50)  DEFAULT NULL,
   `estado`                     VARCHAR(30)  NOT NULL DEFAULT 'disponible',
   `fecha_adquisicion`          DATE         DEFAULT NULL,
