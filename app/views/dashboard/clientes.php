@@ -40,7 +40,9 @@ include_once __DIR__ . '/../common/modal.php';
                         <table id="clientesTable" class="table table-striped table-hover w-100">
                             <thead>
                                 <tr>
+                                    <th>C.I.</th>
                                     <th>Nombre</th>
+                                    <th>Apellido</th>
                                     <th>Contacto</th>
                                     <th>Acciones</th>
                                 </tr>
@@ -55,9 +57,32 @@ include_once __DIR__ . '/../common/modal.php';
 
     <!-- Add Client Modal -->
     <?php modal_form(['id' => 'addClientModal', 'title' => 'Agregar Cliente', 'formId' => 'addClientForm']); ?>
-        <div class="mb-3">
-            <label class="form-label">Nombre del Cliente</label>
-            <input type="text" class="form-control" name="nombre_cliente" required placeholder="Ej: Juan Pérez" maxlength="50">
+        <div class="row g-2 mb-3">
+            <div class="col-3">
+                <label class="form-label">Tipo C.I.</label>
+                <select class="form-select" name="tipo_cedula_cliente">
+                    <option value="">—</option>
+                    <option value="V">V</option>
+                    <option value="E">E</option>
+                    <option value="J">J</option>
+                    <option value="G">G</option>
+                    <option value="P">P</option>
+                </select>
+            </div>
+            <div class="col-9">
+                <label class="form-label">Cédula</label>
+                <input type="text" class="form-control" name="cedula_cliente" placeholder="Ej: 12345678" maxlength="10">
+            </div>
+        </div>
+        <div class="row g-3 mb-3">
+            <div class="col-md-6">
+                <label class="form-label">Nombre</label>
+                <input type="text" class="form-control" name="nombre_cliente" required placeholder="Ej: Juan" maxlength="50">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Apellido</label>
+                <input type="text" class="form-control" name="apellido_cliente" placeholder="Ej: Pérez" maxlength="50">
+            </div>
         </div>
         <div class="mb-3">
             <label class="form-label">Contacto</label>
@@ -68,9 +93,32 @@ include_once __DIR__ . '/../common/modal.php';
 
     <!-- Edit Client Modal -->
     <?php modal_form(['id' => 'editClientModal', 'title' => 'Editar Cliente', 'formId' => 'editClientForm', 'hasHiddenId' => true, 'hiddenId' => 'editClientId', 'saveText' => 'Actualizar']); ?>
-        <div class="mb-3">
-            <label class="form-label">Nombre del Cliente</label>
-            <input type="text" class="form-control" name="nombre_cliente" id="editClientName" required maxlength="50">
+        <div class="row g-2 mb-3">
+            <div class="col-3">
+                <label class="form-label">Tipo C.I.</label>
+                <select class="form-select" name="tipo_cedula_cliente" id="editClientTipoCedula">
+                    <option value="">—</option>
+                    <option value="V">V</option>
+                    <option value="E">E</option>
+                    <option value="J">J</option>
+                    <option value="G">G</option>
+                    <option value="P">P</option>
+                </select>
+            </div>
+            <div class="col-9">
+                <label class="form-label">Cédula</label>
+                <input type="text" class="form-control" name="cedula_cliente" id="editClientCedula" placeholder="Ej: 12345678" maxlength="10">
+            </div>
+        </div>
+        <div class="row g-3 mb-3">
+            <div class="col-md-6">
+                <label class="form-label">Nombre</label>
+                <input type="text" class="form-control" name="nombre_cliente" id="editClientName" required maxlength="50">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Apellido</label>
+                <input type="text" class="form-control" name="apellido_cliente" id="editClientApellido" maxlength="50">
+            </div>
         </div>
         <div class="mb-3">
             <label class="form-label">Contacto</label>
