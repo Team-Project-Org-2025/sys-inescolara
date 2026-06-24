@@ -1,6 +1,8 @@
 // Expresiones regulares reutilizables
 export const REGEX = {
   cedula: /^\d{7,10}$/,
+  tipo_cedula: /^[VEJGPejgp]$/,
+  cedula_numero: /^\d{7,10}$/,
   codigo: /^\d{9}$/,
   factura: /^\d{8}$/,
   nombre: /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]{2,50}$/,
@@ -61,6 +63,8 @@ export const validateNoFutureDate = ($input) => {
 // Mensajes de error personalizados
 export const MESSAGES = {
   cedula: 'Cédula inválida (7-10 dígitos)',
+  tipo_cedula: 'Tipo de C.I. inválido (V, E, J, G, P)',
+  cedula_numero: 'Número de C.I. inválido (7-10 dígitos)',
   codigo: 'Código inválido (9 dígitos)',
   factura: 'Factura inválida (8 dígitos)',
   nombre: 'Nombre inválido (2-50 caracteres, solo letras)',
@@ -159,7 +163,7 @@ export const setupRealTimeValidation = ($form, rules, isEdit = false) => {
     // ========================================================================
     // BLOQUEO 1: BLOQUEAR LETRAS (Para Teléfonos, Cédulas, Códigos)
     // ========================================================================
-    if (['telefono', 'cedula', 'codigo', 'factura', 'referencia', 'cantidad'].includes(tipo)) {
+    if (['telefono', 'cedula', 'cedula_numero', 'codigo', 'factura', 'referencia', 'cantidad'].includes(tipo)) {
       
       // 1. Evitar que se escriban letras (Evento de pulsación de tecla)
       $input.on('keypress', function (e) {
@@ -181,7 +185,7 @@ export const setupRealTimeValidation = ($form, rules, isEdit = false) => {
     // ========================================================================
     // BLOQUEO 2: BLOQUEAR NÚMEROS (Para Nombres de personas, Cargos)
     // ========================================================================
-    if (['nombre', 'cargo', 'nombrePlanta', 'nombreProducto'].includes(tipo)) {
+    if (['nombre', 'cargo', 'nombrePlanta', 'nombreProducto', 'tipo_cedula'].includes(tipo)) {
       
       // 1. Evitar que se escriban números del 0 al 9 (ASCII 48 al 57)
       $input.on('keypress', function (e) {
