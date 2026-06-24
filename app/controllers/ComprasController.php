@@ -5,8 +5,10 @@ require_once __DIR__ . '/controller_helpers.php';
 use SysInescolara\models\Purchase;
 use SysInescolara\models\Proveedor;
 use SysInescolara\models\Insumo;
+use SysInescolara\models\Herramienta;
 use SysInescolara\models\Ubicacion;
 use SysInescolara\models\Planta;
+use SysInescolara\models\UnidadMedida;
 use SysInescolara\models\AuditLog;
 
 function index(): void
@@ -23,8 +25,10 @@ function index(): void
                 'POST_eliminar_ajax'         => compras_manejarEliminar(),
                 'POST_recibir_ajax'           => compras_manejarRecibir(),
                 'POST_cancelar_ajax'         => compras_manejarCancelar(),
-                'POST_agregar_planta_rapido' => compras_agregarPlantaRapido(),
-                default                      => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
+                'POST_agregar_planta_rapido'      => compras_agregarPlantaRapido(),
+                'POST_agregar_insumo_rapido'       => compras_agregarInsumoRapido(),
+                'POST_agregar_herramienta_rapido'  => compras_agregarHerramientaRapido(),
+                default                            => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
             };
         } catch (\Exception $e) {
             handleError($e, true);
@@ -38,6 +42,8 @@ function index(): void
     $insumos = $modeloInsumo->getAll();
     $modeloUbicacion = new Ubicacion();
     $ubicaciones = $modeloUbicacion->getAll();
+    $modeloUnidad = new UnidadMedida();
+    $unidadesMedida = $modeloUnidad->getAll();
 
     $vista = ROOT_PATH . 'app/views/dashboard/compras.php';
     if (!is_file($vista)) {
@@ -56,6 +62,8 @@ function eliminar_ajax(): void { checkModuleAuth(); checkPermisoOrFail('COMPRAS_
 function recibir_ajax(): void { checkModuleAuth(); checkPermisoOrFail('COMPRAS_COMPLETE'); compras_manejarRecibir(); }
 function cancelar_ajax(): void { checkModuleAuth(); checkPermisoOrFail('COMPRAS_COMPLETE'); compras_manejarCancelar(); }
 function agregar_planta_rapido(): void { checkModuleAuth(); compras_agregarPlantaRapido(); }
+function agregar_insumo_rapido(): void { checkModuleAuth(); compras_agregarInsumoRapido(); }
+function agregar_herramienta_rapido(): void { checkModuleAuth(); compras_agregarHerramientaRapido(); }
 
 function compras_manejarAgregarEditar(string $modo): void
 {
@@ -270,5 +278,64 @@ function compras_agregarPlantaRapido(): void
         'success' => true,
         'message' => 'Planta creada correctamente.',
         'planta' => ['id' => $planta['id_planta'] ?? $nuevoId, 'nombre_comun' => $planta['nombre_comun'] ?? $nombre],
+    ]);
+}
+
+function compras_agregarInsumoRapido(): void
+{
+    $nombre = trim((string)($_POST['nombre_insumo'] ?? ''));
+    if ($nombre === '') {
+        jsonResponse(['success' => false, 'message' => 'El nombre del insumo es requerido.'], 400);
+        return;
+    }
+    $idUnidad = (int)($_POST['id_unidad_medida'] ?? 0);
+    if ($idUnidad <= 0) {
+        jsonResponse(['success' => false, 'message' => 'La unidad de medida es requerida.'], 400);
+        return;
+    }
+
+    $modelo = new Insumo();
+    $modelo->add($nombre, $idUnidad, null, 0, 0);
+    $nuevoId = $modelo->getLastInsertId() ?? 0;
+
+    if ($nuevoId <= 0) {
+        jsonResponse(['success' => false, 'message' => 'Error al crear el insumo.'], 500);
+        return;
+    }
+
+    $insumo = $modelo->getById($nuevoId);
+    AuditLog::record('CREATE', 'insumo', $nuevoId, null, ['nombre_insumo' => $nombre, 'origen' => 'compra_rapida']);
+
+    jsonResponse([
+        'success' => true,
+        'message' => 'Insumo creado correctamente.',
+        'insumo' => ['id' => $insumo['id_insumo'] ?? $nuevoId, 'nombre_insumo' => $insumo['nombre_insumo'] ?? $nombre],
+    ]);
+}
+
+function compras_agregarHerramientaRapido(): void
+{
+    $nombre = trim((string)($_POST['nombre_herramienta'] ?? ''));
+    if ($nombre === '') {
+        jsonResponse(['success' => false, 'message' => 'El nombre de la herramienta es requerido.'], 400);
+        return;
+    }
+
+    $modelo = new Herramienta();
+    $modelo->add($nombre);
+    $nuevoId = $modelo->getLastInsertId() ?? 0;
+
+    if ($nuevoId <= 0) {
+        jsonResponse(['success' => false, 'message' => 'Error al crear la herramienta.'], 500);
+        return;
+    }
+
+    $herramienta = $modelo->getById($nuevoId);
+    AuditLog::record('CREATE', 'herramienta', $nuevoId, null, ['nombre_herramienta' => $nombre, 'origen' => 'compra_rapida']);
+
+    jsonResponse([
+        'success' => true,
+        'message' => 'Herramienta creada correctamente.',
+        'herramienta' => ['id' => $herramienta['id_herramienta'] ?? $nuevoId, 'nombre_herramienta' => $herramienta['nombre_herramienta'] ?? $nombre],
     ]);
 }
