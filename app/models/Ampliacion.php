@@ -22,7 +22,9 @@ class Ampliacion extends Database implements ReadableInterface
                         mp.fecha_movimiento,
                         mp.observacion,
                         CONCAT(t.nombre_trabajador, ' ', t.apellido_trabajador) AS gestor_nombre,
-                        COALESCE(c.nombre_cliente, '—') AS cliente_nombre,
+                        COALESCE(CONCAT(c.nombre_cliente, ' ', c.apellido_cliente), '—') AS cliente_nombre,
+                        c.tipo_cedula_cliente,
+                        c.cedula_cliente,
                         (SELECT COUNT(*) FROM movimiento_planta_detalle d WHERE d.id_movimiento_planta = mp.id_movimiento_planta AND d.tipo = 'salida' AND d.activo = 1) AS total_salida,
                         (SELECT COUNT(*) FROM movimiento_planta_detalle d WHERE d.id_movimiento_planta = mp.id_movimiento_planta AND d.tipo = 'entrada' AND d.activo = 1) AS total_entrada
                     FROM movimiento_planta mp
@@ -44,7 +46,9 @@ class Ampliacion extends Database implements ReadableInterface
             $stmt = $this->db()->prepare("
                 SELECT mp.*,
                        CONCAT(t.nombre_trabajador, ' ', t.apellido_trabajador) AS gestor_nombre,
-                       COALESCE(c.nombre_cliente, '—') AS cliente_nombre
+                       COALESCE(CONCAT(c.nombre_cliente, ' ', c.apellido_cliente), '—') AS cliente_nombre,
+                       c.tipo_cedula_cliente,
+                       c.cedula_cliente
                 FROM movimiento_planta mp
                 LEFT JOIN cliente c ON mp.id_cliente = c.id_cliente
                 LEFT JOIN trabajadores t ON mp.id_trabajador_gestor = t.id_trabajador
@@ -323,6 +327,30 @@ class Ampliacion extends Database implements ReadableInterface
             if ($this->db()->inTransaction()) $this->db()->rollBack();
             error_log('Error en Ampliacion::registerExchange: ' . $e->getMessage());
             throw $e;
+        }
+    }
+
+    public function buscarClientes(string $query): array
+    {
+        try {
+            $stmt = $this->db()->prepare("SELECT
+                                            id_cliente,
+                                            CONCAT(nombre_cliente, ' ', apellido_cliente) AS nombre_cliente,
+                                            tipo_cedula_cliente,
+                                            cedula_cliente,
+                                            apellido_cliente,
+                                            contacto_cliente
+                                        FROM cliente
+                                        WHERE activo = 1
+                                        AND (nombre_cliente LIKE ? OR apellido_cliente LIKE ? OR contacto_cliente LIKE ? OR cedula_cliente LIKE ?)
+                                        ORDER BY nombre_cliente ASC, apellido_cliente ASC
+                                        LIMIT 10");
+            $searchTerm = "%{$query}%";
+            $stmt->execute([$searchTerm, $searchTerm, $searchTerm, $searchTerm]);
+            return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+        } catch (\Throwable $e) {
+            error_log('Error al buscar clientes en Ampliacion: ' . $e->getMessage());
+            return [];
         }
     }
 }
