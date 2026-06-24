@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/controller_helpers.php';
 
+use SysInescolara\models\AuditLog;
 use SysInescolara\models\Herramienta;
 
 function index(): void
