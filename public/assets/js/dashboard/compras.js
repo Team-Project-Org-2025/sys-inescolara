@@ -289,13 +289,13 @@ $(document).ready(function () {
           orderable: false,
           render: (data) => {
             const esPendiente = data.estado === 'pendiente';
+            const sinPagos = parseInt(data.pagos_count) === 0;
             return C.btnGroup(
               C.btnView('btn-detail'),
               ...(esPendiente ? [
                 C.btnEdit('btn-edit'),
                 C.btnReceive('btn-recibir'),
-                C.btnCancel('btn-cancelar'),
-                C.btnDelete('btn-delete'),
+                ...(sinPagos ? [C.btnDelete('btn-delete')] : []),
               ] : []),
             );
           },
@@ -530,32 +530,6 @@ $(document).ready(function () {
           }).catch((err) => Helpers.toast('error', err));
       },
       'Sí, recibir'
-    );
-  });
-
-  // ============================================================
-  //  Cancelar
-  // ============================================================
-
-  $(document).on('click', '.btn-cancelar', function () {
-    const row = tablaCompras.row($(this).closest('tr')).data();
-    const id = row.id_compra;
-    const info = `#${row.id_compra} - ${row.proveedor_nombre || ''}`;
-    Helpers.confirmDialog(
-      '¿Cancelar compra?',
-      `¿Deseas cancelar la compra <strong>${Helpers.escapeHtml(info)}</strong>?`,
-      () => {
-        Ajax.post(`${urlBase}?action=cancelar_ajax`, { id })
-          .then((response) => {
-            if (response.success) {
-              Helpers.toast('success', response.message);
-              tablaCompras.ajax.reload(null, false);
-            } else {
-              Helpers.toast('error', response.message);
-            }
-          }).catch((err) => Helpers.toast('error', err));
-      },
-      'Sí, cancelar'
     );
   });
 
