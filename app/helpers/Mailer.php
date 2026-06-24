@@ -31,6 +31,11 @@ class Mailer
 
     public static function send(string $to, string $toName, string $subject, string $htmlBody): bool
     {
+        $smtpUser = getenv('SMTP_USER');
+        if (empty($smtpUser) || $smtpUser === 'tu-correo@gmail.com') {
+            return MailLogger::send($to, $toName, $subject, $htmlBody);
+        }
+
         try {
             $mail = self::getInstance();
             $mail->clearAddresses();

@@ -1504,7 +1504,32 @@ div.dataTables_wrapper .dt-buttons .btn {
     font-size: 1.5rem;
   }
 
-  .auth-form .form-row {
+.password-strength-bar {
+  height: 4px;
+  background: #e0e0e0;
+  border-radius: 2px;
+  margin-top: 6px;
+  transition: width 0.3s ease, background-color 0.3s ease;
+  width: 0%;
+}
+
+.password-strength-bar.weak { background-color: #dc3545; }
+.password-strength-bar.medium { background-color: #e5a835; }
+.password-strength-bar.strong { background-color: #28a745; }
+
+.password-strength-text {
+  font-size: 0.75rem;
+  margin-top: 4px;
+  min-height: 1rem;
+}
+
+.password-match-text {
+  font-size: 0.75rem;
+  margin-top: 4px;
+  min-height: 1rem;
+}
+
+.auth-form .form-row {
     flex-direction: column;
     align-items: flex-start;
   }

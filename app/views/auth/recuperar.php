@@ -44,11 +44,16 @@
             <?php endif; ?>
 
             <form action="<?= BASE_URL ?>recuperar-password/enviar" method="POST" class="auth-form" id="recuperarForm">
+                <?= \SysInescolara\helpers\Csrf::render() ?>
                 <div class="form-group">
                     <label for="correo">Correo Electrónico</label>
                     <input type="email" id="correo" name="correo" placeholder="tu-correo@ejemplo.com"
                            value="<?= htmlspecialchars($old['correo'] ?? '') ?>"
                            required autocomplete="email" maxlength="254">
+                </div>
+
+                <div class="form-group recaptcha-wrapper">
+                    <div class="g-recaptcha" data-sitekey="<?= htmlspecialchars(getenv('RECAPTCHA_SITE_KEY') ?: '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI') ?>"></div>
                 </div>
 
                 <button type="submit" class="btn btn-primary btn-block btn-lg">
@@ -59,6 +64,7 @@
                     <a href="<?= BASE_URL ?>login" class="form-link">Volver al inicio de sesión</a>
                 </div>
             </form>
+            <script src="<?= BASE_URL ?>public/assets/js/auth.js"></script>
         </div>
     </div>
 </div>
