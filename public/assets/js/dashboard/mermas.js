@@ -17,7 +17,7 @@ $(document).ready(function () {
 
   const initDataTable = () => {
     if (typeof SkeletonHelper !== 'undefined') {
-      SkeletonHelper.showTableSkeleton('mermasTable', 5, 8);
+      SkeletonHelper.showTableSkeleton('mermasTable', 5, 4);
     }
     mermasTable = $('#mermasTable').DataTable({
       ajax: {
@@ -42,42 +42,10 @@ $(document).ready(function () {
           render: (data) => `<strong>${parseInt(data)}</strong>`,
         },
         {
-          data: 'motivo',
-          render: (data) => {
-            const badges = {
-              plaga: 'badge bg-danger',
-              enfermedad: 'badge bg-warning',
-              daño_mecanico: 'badge bg-secondary',
-              factor_climatico: 'badge bg-info',
-              otro: 'badge bg-dark',
-            };
-            const cls = badges[data] || 'badge bg-secondary';
-            const labels = {
-              plaga: 'Plaga',
-              enfermedad: 'Enfermedad',
-              daño_mecanico: 'Daño Mecánico',
-              factor_climatico: 'Factor Climático',
-              otro: 'Otro',
-            };
-            return `<span class="${cls}">${labels[data] || data}</span>`;
-          },
-        },
-        {
-          data: 'fecha_merma',
-          render: (data) => data ? Helpers.formatDate(data) : '—',
-        },
-        {
-          data: 'impacto_economico',
-          render: (data) => `<span class="text-danger fw-semibold">${Helpers.formatCurrency(data)}</span>`,
-        },
-        {
-          data: 'usuario_registra',
-          render: (data) => data || '<span class="text-muted">—</span>',
-        },
-        {
           data: null,
           orderable: false,
-          render: () => C.btnGroup(
+          render: (data) => C.btnGroup(
+              C.btnView('btn-view'),
               C.btnDelete('btn-delete'),
             ),
         },
@@ -95,7 +63,7 @@ $(document).ready(function () {
           className: 'btn btn-outline-secondary btn-sm',
           action: () => {
             if (typeof SkeletonHelper !== 'undefined') {
-              SkeletonHelper.showTableSkeleton('mermasTable', 5, 8);
+              SkeletonHelper.showTableSkeleton('mermasTable', 5, 4);
             }
             mermasTable.ajax.reload(null, false);
           },
@@ -217,6 +185,37 @@ $(document).ready(function () {
       .always(() => {
         $btn.prop('disabled', false).text('Registrar Merma');
       });
+  });
+
+  // Ver Merma
+  $(document).on('click', '.btn-view', function () {
+    const row = mermasTable.row($(this).closest('tr')).data();
+    const d = row;
+    const motivoLabels = {
+      plaga: 'Plaga', enfermedad: 'Enfermedad',
+      daño_mecanico: 'Daño Mecánico', factor_climatico: 'Factor Climático', otro: 'Otro',
+    };
+    const motivoBadge = {
+      plaga: 'danger', enfermedad: 'warning',
+      daño_mecanico: 'secondary', factor_climatico: 'info', otro: 'dark',
+    };
+    $('#viewMermaContent').html(`
+      <div class="table-responsive">
+        <table class="table table-bordered">
+          <tr><th class="w-25">Cuarentena</th><td>#${Helpers.escapeHtml(d.id_trazabilidad)}</td></tr>
+          <tr><th>Planta</th><td>${Helpers.escapeHtml(d.planta_nombre || '—')}</td></tr>
+          <tr><th>Cantidad</th><td><strong>${parseInt(d.cantidad)}</strong></td></tr>
+          <tr><th>Motivo</th><td><span class="badge bg-${motivoBadge[d.motivo] || 'secondary'}">${motivoLabels[d.motivo] || d.motivo}</span></td></tr>
+          <tr><th>Fecha Merma</th><td>${Helpers.formatDate(d.fecha_merma)}</td></tr>
+          <tr><th>Impacto Económico</th><td class="text-danger fw-semibold">${Helpers.formatCurrency(d.impacto_economico)}</td></tr>
+          <tr><th>Descripción</th><td>${Helpers.escapeHtml(d.descripcion) || '<span class="text-muted">—</span>'}</td></tr>
+          <tr><th>Estado Salud</th><td>${Helpers.escapeHtml(d.estado_salud) || '<span class="text-muted">—</span>'}</td></tr>
+          <tr><th>Fecha Cuarentena</th><td>${d.fecha_cuarentena ? Helpers.formatDate(d.fecha_cuarentena) : '—'}</td></tr>
+          <tr><th>Registrado por</th><td>${Helpers.escapeHtml(d.usuario_registra) || '<span class="text-muted">—</span>'}</td></tr>
+        </table>
+      </div>
+    `);
+    $('#viewMermaModal').modal({ focus: false }).modal('show');
   });
 
   // Eliminar Merma
