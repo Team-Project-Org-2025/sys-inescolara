@@ -224,11 +224,14 @@ p {
 
 .btn-primary {
   background-color: var(--color-primary);
+  border-color: var(--color-primary);
   color: var(--text-light);
 }
 
 .btn-primary:hover {
   background-color: var(--color-primary-dark);
+  border-color: var(--color-primary-dark);
+  color: var(--text-light);
 }
 
 .btn-secondary {
@@ -468,7 +471,7 @@ table.dataTable.table > thead > tr > th {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--text-light);
-  background-color: var(--bg-dark);
+  background-color: var(--color-secondary);
   border-bottom: none;
   text-align: left;
 }
@@ -484,16 +487,18 @@ table.dataTable.table > thead > tr > th:last-child {
 table.dataTable.table > thead > tr > th.sorting:hover,
 table.dataTable.table > thead > tr > th.sorting_asc,
 table.dataTable.table > thead > tr > th.sorting_desc {
-  background-color: var(--color-gray-800);
+  background-color: var(--color-secondary-dark);
 }
 
 table.dataTable thead .sorting:before,
-table.dataTable thead .sorting:after,
+table.dataTable thead .sorting:after {
+  opacity: 0.3;
+  color: var(--text-light);
+}
+
 table.dataTable thead .sorting_asc:before,
-table.dataTable thead .sorting_asc:after,
-table.dataTable thead .sorting_desc:before,
 table.dataTable thead .sorting_desc:after {
-  opacity: 0.6;
+  opacity: 0.9;
   color: var(--text-light);
 }
 
@@ -507,12 +512,12 @@ table.dataTable tbody tr {
   transition: background-color var(--transition-fast);
 }
 
-table.dataTable tbody tr:hover {
-  background-color: var(--color-gray-100);
-}
-
 table.dataTable tbody tr:nth-child(even) {
   background-color: var(--color-gray-50);
+}
+
+table.dataTable tbody tr:hover {
+  background-color: var(--color-gray-100);
 }
 
 table.dataTable tbody tr:nth-child(even):hover {
@@ -527,6 +532,20 @@ table.dataTable.display tbody tr.odd {
 table.dataTable.stripe tbody tr.odd:hover,
 table.dataTable.display tbody tr.odd:hover {
   background-color: var(--color-gray-100);
+}
+
+/* Override DataTables Bootstrap 5 box-shadow hover & stripe mechanism */
+table.dataTable.table-striped > tbody > tr:nth-of-type(2n+1) > * {
+  box-shadow: none !important;
+}
+
+table.dataTable.table-hover > tbody > tr:hover > * {
+  box-shadow: none !important;
+  background-color: transparent;
+}
+
+table.dataTable.table-hover > tbody > tr.selected:hover > * {
+  box-shadow: none !important;
 }
 
 table.dataTable tbody tr.selected {
@@ -2808,6 +2827,11 @@ div.dataTables_wrapper .dt-buttons .btn {
   padding: var(--space-6);
 }
 
+.dashboard-content h1 {
+  font-size: 2rem;
+  margin-bottom: var(--space-1);
+}
+
 .dashboard-page-header {
   margin-bottom: var(--space-6);
 }
@@ -3772,7 +3796,6 @@ div.dataTables_wrapper .dt-buttons .btn {
   }
 
   .dashboard-content h1 {
-    font-size: 1.25rem;
     margin-bottom: var(--space-1);
   }
 
