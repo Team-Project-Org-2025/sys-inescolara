@@ -74,7 +74,7 @@ function cuentas_obtenerPagosAjax(): void
 
 function cuentas_registrarPago(): void
 {
-    $idCuentaPagar = (int)($_POST['id_cuenta_pagar'] ?? 0);
+    $idCuentaPagar = (int)($_POST['id'] ?? 0);
     if ($idCuentaPagar <= 0) throw new \Exception('ID de cuenta inválido.');
 
     $monto = isset($_POST['monto']) ? floatval($_POST['monto']) : 0;

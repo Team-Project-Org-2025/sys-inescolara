@@ -150,6 +150,9 @@ include_once __DIR__ . '/../common/modal.php';
     window.UBICACIONES = <?= json_encode(array_map(function($u) {
         return ['id' => $u['id'], 'nombre' => $u['nombre_ubicacion']];
     }, $ubicaciones)) ?>;
+    window.UNIDADES_MEDIDA = <?= json_encode(array_map(function($um) {
+        return ['id' => $um['id'], 'nombre' => $um['nombre_unidad_medida']];
+    }, $unidadesMedida)) ?>;
     </script>
     <script type="module" src="<?= BASE_URL ?>public/assets/js/dashboard/compras.js"></script>
 </body>
