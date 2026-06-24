@@ -67,7 +67,7 @@ include_once __DIR__ . '/../common/modal.php';
             <select class="form-select" name="id_unidad_medida" required>
                 <option value="">Seleccione...</option>
                 <?php if (isset($unidades)): foreach ($unidades as $u): ?>
-                <option value="<?= $u['id'] ?>"><?= htmlspecialchars($u['nombre_unidad_medida']) ?> (<?= htmlspecialchars($u['simbolo']) ?>)</option>
+                <option value="<?= $u['id'] ?>"><?= htmlspecialchars($u['nombre_unidad_medida']) ?></option>
                 <?php endforeach; endif; ?>
             </select>
         </div>
@@ -98,7 +98,7 @@ include_once __DIR__ . '/../common/modal.php';
             <select class="form-select" name="id_unidad_medida" id="editSupplyUnit" required>
                 <option value="">Seleccione...</option>
                 <?php if (isset($unidades)): foreach ($unidades as $u): ?>
-                <option value="<?= $u['id'] ?>"><?= htmlspecialchars($u['nombre_unidad_medida']) ?> (<?= htmlspecialchars($u['simbolo']) ?>)</option>
+                <option value="<?= $u['id'] ?>"><?= htmlspecialchars($u['nombre_unidad_medida']) ?></option>
                 <?php endforeach; endif; ?>
             </select>
         </div>

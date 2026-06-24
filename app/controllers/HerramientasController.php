@@ -86,19 +86,24 @@ function tools_handleAddEdit(string $mode): void
     $observacion = trim((string)($_POST['observacion'] ?? ''));
     if ($observacion === '') $observacion = null;
 
+    $cantidad = max(1, (int)($_POST['cantidad'] ?? 1));
+
     if ($mode === 'add') {
-        $model->add($nombre, $tipo, $estado, $fechaAdquisicion, $fechaUltimoMantenimiento, $observacion);
+        $model->add($nombre, $cantidad, $tipo, $estado, $fechaAdquisicion, $fechaUltimoMantenimiento, $observacion);
         $newId = $model->getLastInsertId() ?? 0;
+        AuditLog::record('CREATE', 'herramienta', $newId, null, compact('nombre', 'cantidad', 'tipo', 'estado', 'fechaAdquisicion', 'fechaUltimoMantenimiento', 'observacion'));
         jsonResponse([
             'success' => true, 'message' => 'Herramienta agregada correctamente',
-            'herramienta' => ['id' => $newId, 'nombre_herramienta' => $nombre, 'tipo' => $tipo, 'estado' => $estado],
+            'herramienta' => ['id' => $newId, 'nombre_herramienta' => $nombre, 'cantidad' => $cantidad, 'tipo' => $tipo, 'estado' => $estado],
         ]);
     }
 
     $id = (int)($_POST['id'] ?? 0);
     if ($id <= 0) throw new \Exception('ID inválido');
 
-    $model->update($id, $nombre, $tipo, $estado, $fechaAdquisicion, $fechaUltimoMantenimiento, $observacion);
+    $oldData = $model->getById($id);
+    $model->update($id, $nombre, $cantidad, $tipo, $estado, $fechaAdquisicion, $fechaUltimoMantenimiento, $observacion);
+    AuditLog::record('UPDATE', 'herramienta', $id, $oldData, compact('nombre', 'cantidad', 'tipo', 'estado', 'fechaAdquisicion', 'fechaUltimoMantenimiento', 'observacion'));
     jsonResponse([
         'success' => true, 'message' => 'Herramienta actualizada correctamente',
         'herramienta' => ['id' => $id],

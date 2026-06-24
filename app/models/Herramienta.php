@@ -20,6 +20,7 @@ class Herramienta extends Database implements ReadableInterface, DeletableInterf
         'fecha_adquisicion'         => ['type' => null,            'required' => false],
         'fecha_ultimo_mantenimiento'=> ['type' => null,            'required' => false],
         'observacion'               => ['type' => null,            'required' => false],
+        'cantidad'                  => ['type' => 'cantidad',      'required' => true],
     ];
 
     public function __construct()
@@ -31,13 +32,17 @@ class Herramienta extends Database implements ReadableInterface, DeletableInterf
     {
         try {
             $stmt = $this->db()->query("
-                SELECT id_herramienta AS id, nombre_herramienta, tipo, estado,
+                SELECT id_herramienta AS id, nombre_herramienta, cantidad, tipo, estado,
                        fecha_adquisicion, fecha_ultimo_mantenimiento, observacion, activo
                 FROM herramienta
                 WHERE activo = 1
                 ORDER BY nombre_herramienta ASC
             ");
-            return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+            $rows = $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+            foreach ($rows as &$row) {
+                $row['cantidad'] = (int)$row['cantidad'];
+            }
+            return $rows;
         } catch (\Throwable $e) {
             error_log('Error en Herramienta::getAll: ' . $e->getMessage());
             return [];
@@ -48,13 +53,17 @@ class Herramienta extends Database implements ReadableInterface, DeletableInterf
     {
         try {
             $stmt = $this->db()->prepare("
-                SELECT id_herramienta AS id, nombre_herramienta, tipo, estado,
+                SELECT id_herramienta AS id, nombre_herramienta, cantidad, tipo, estado,
                        fecha_adquisicion, fecha_ultimo_mantenimiento, observacion
                 FROM herramienta
                 WHERE id_herramienta = :id
             ");
             $stmt->execute([':id' => $id]);
-            return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($row) {
+                $row['cantidad'] = (int)$row['cantidad'];
+            }
+            return $row ?: null;
         } catch (\Throwable $e) {
             error_log('Error en Herramienta::getById: ' . $e->getMessage());
             return null;
@@ -68,7 +77,7 @@ class Herramienta extends Database implements ReadableInterface, DeletableInterf
         return $stmt->fetchColumn() > 0;
     }
 
-    public function add(string $nombre, ?string $tipo = null, string $estado = 'disponible', ?string $fechaAdquisicion = null, ?string $fechaUltimoMantenimiento = null, ?string $observacion = null): bool
+    public function add(string $nombre, int $cantidad = 1, ?string $tipo = null, string $estado = 'disponible', ?string $fechaAdquisicion = null, ?string $fechaUltimoMantenimiento = null, ?string $observacion = null): bool
     {
         $this->validateData([
             'nombre' => $nombre,
@@ -77,12 +86,21 @@ class Herramienta extends Database implements ReadableInterface, DeletableInterf
             'fecha_adquisicion' => $fechaAdquisicion,
             'fecha_ultimo_mantenimiento' => $fechaUltimoMantenimiento,
             'observacion' => $observacion,
+            'cantidad' => $cantidad,
         ]);
         $stmt = $this->db()->prepare("
-            INSERT INTO herramienta (nombre_herramienta, tipo, estado, fecha_adquisicion, fecha_ultimo_mantenimiento, observacion)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO herramienta (nombre_herramienta, cantidad, tipo, estado, fecha_adquisicion, fecha_ultimo_mantenimiento, observacion)
+            VALUES (:nombre, :cantidad, :tipo, :estado, :fecha_adquisicion, :fecha_ultimo_mantenimiento, :observacion)
         ");
-        $stmt->execute([$nombre, $tipo, $estado, $fechaAdquisicion, $fechaUltimoMantenimiento, $observacion]);
+        $stmt->execute([
+            ':nombre' => $nombre,
+            ':cantidad' => $cantidad,
+            ':tipo' => $tipo,
+            ':estado' => $estado,
+            ':fecha_adquisicion' => $fechaAdquisicion,
+            ':fecha_ultimo_mantenimiento' => $fechaUltimoMantenimiento,
+            ':observacion' => $observacion,
+        ]);
 
         $newId = (int) $this->db()->lastInsertId();
 
@@ -93,12 +111,13 @@ class Herramienta extends Database implements ReadableInterface, DeletableInterf
             'fecha_adquisicion' => $fechaAdquisicion,
             'fecha_ultimo_mantenimiento' => $fechaUltimoMantenimiento,
             'observacion' => $observacion,
+            'cantidad' => $cantidad,
         ]);
 
         return true;
     }
 
-    public function update(int $id, string $nombre, ?string $tipo = null, string $estado = 'disponible', ?string $fechaAdquisicion = null, ?string $fechaUltimoMantenimiento = null, ?string $observacion = null): bool
+    public function update(int $id, string $nombre, int $cantidad = 1, ?string $tipo = null, string $estado = 'disponible', ?string $fechaAdquisicion = null, ?string $fechaUltimoMantenimiento = null, ?string $observacion = null): bool
     {
         $this->validateData([
             'nombre' => $nombre,
@@ -107,6 +126,7 @@ class Herramienta extends Database implements ReadableInterface, DeletableInterf
             'fecha_adquisicion' => $fechaAdquisicion,
             'fecha_ultimo_mantenimiento' => $fechaUltimoMantenimiento,
             'observacion' => $observacion,
+            'cantidad' => $cantidad,
         ]);
         if (!$this->exists($id)) {
             throw new \Exception('No existe la herramienta solicitada para modificar.');
@@ -116,15 +136,25 @@ class Herramienta extends Database implements ReadableInterface, DeletableInterf
 
         $stmt = $this->db()->prepare("
             UPDATE herramienta
-            SET nombre_herramienta = ?,
-                tipo = ?,
-                estado = ?,
-                fecha_adquisicion = ?,
-                fecha_ultimo_mantenimiento = ?,
-                observacion = ?
-            WHERE id_herramienta = ?
+            SET nombre_herramienta = :nombre,
+                cantidad = :cantidad,
+                tipo = :tipo,
+                estado = :estado,
+                fecha_adquisicion = :fecha_adquisicion,
+                fecha_ultimo_mantenimiento = :fecha_ultimo_mantenimiento,
+                observacion = :observacion
+            WHERE id_herramienta = :id
         ");
-        $stmt->execute([$nombre, $tipo, $estado, $fechaAdquisicion, $fechaUltimoMantenimiento, $observacion, $id]);
+        $stmt->execute([
+            ':id' => $id,
+            ':nombre' => $nombre,
+            ':cantidad' => $cantidad,
+            ':tipo' => $tipo,
+            ':estado' => $estado,
+            ':fecha_adquisicion' => $fechaAdquisicion,
+            ':fecha_ultimo_mantenimiento' => $fechaUltimoMantenimiento,
+            ':observacion' => $observacion,
+        ]);
 
         AuditLog::record('UPDATE', 'herramienta', $id, $oldData, [
             'nombre' => $nombre,
@@ -133,6 +163,7 @@ class Herramienta extends Database implements ReadableInterface, DeletableInterf
             'fecha_adquisicion' => $fechaAdquisicion,
             'fecha_ultimo_mantenimiento' => $fechaUltimoMantenimiento,
             'observacion' => $observacion,
+            'cantidad' => $cantidad,
         ]);
 
         return true;
