@@ -3,7 +3,6 @@
 require_once __DIR__ . '/controller_helpers.php';
 
 use SysInescolara\models\Role;
-use SysInescolara\models\AuditLog;
 
 function index(): void
 {
@@ -53,7 +52,6 @@ function roles_handleAddEdit(string $mode): void
         }
         $model->add($nombreRol, $descripcion);
         $newId = $model->getLastInsertId() ?? 0;
-        AuditLog::record('CREATE', 'roles', $newId, null, compact('nombreRol', 'descripcion'));
         jsonResponse(['success' => true, 'message' => 'Rol creado correctamente', 'role' => ['id' => $newId, 'nombre_rol' => $nombreRol]]);
     }
 
@@ -66,9 +64,7 @@ function roles_handleAddEdit(string $mode): void
         throw new \Exception('Ya existe otro rol con ese nombre.');
     }
 
-    $oldData = $model->getById($id);
     $model->update($id, $nombreRol, $descripcion);
-    AuditLog::record('UPDATE', 'roles', $id, $oldData, compact('nombreRol', 'descripcion'));
     jsonResponse(['success' => true, 'message' => 'Rol actualizado correctamente', 'role' => ['id' => $id]]);
 }
 
@@ -80,9 +76,7 @@ function roles_handleDelete(): void
     if ($id <= 2) throw new \Exception('No se pueden eliminar los roles por defecto.');
     if (!$model->exists($id)) throw new \Exception('No existe el rol.');
 
-    $oldData = $model->getById($id);
     $model->delete($id);
-    AuditLog::record('DELETE', 'roles', $id, $oldData, null);
     jsonResponse(['success' => true, 'message' => 'Rol desactivado correctamente', 'roleId' => $id]);
 }
 

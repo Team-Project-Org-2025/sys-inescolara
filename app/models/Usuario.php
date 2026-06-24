@@ -6,6 +6,7 @@ use SysInescolara\core\Database;
 use SysInescolara\traits\ValidationTrait;
 use PDO;
 use Exception;
+use SysInescolara\models\AuditLog;
 
 class Usuario extends Database
 {
@@ -381,7 +382,7 @@ class Usuario extends Database
             VALUES (:nombre_usuario, :password_hash, :id_rol, :correo_electronico, :avatar, :id_trabajador_ref)
         ");
 
-        return $stmt->execute([
+        $result = $stmt->execute([
             ':nombre_usuario' => $nombreUsuario,
             ':password_hash' => $passwordHash,
             ':id_rol' => $rolId,
@@ -389,6 +390,13 @@ class Usuario extends Database
             ':avatar' => $avatar,
             ':id_trabajador_ref' => $idTrabajadorRef,
         ]);
+        if ($result) {
+            AuditLog::record('CREATE', 'usuarios', $this->db()->lastInsertId(), null, [
+                'nombre_usuario' => $nombreUsuario, 'rol_id' => $rolId,
+                'correo_electronico' => $correoElectronico,
+            ]);
+        }
+        return $result;
     }
 
 
@@ -429,16 +437,25 @@ class Usuario extends Database
 
         $sql .= " WHERE id_usuario = :id";
 
+        $oldData = $this->getById($id);
         $stmt = $this->db()->prepare($sql);
-        return $stmt->execute($params);
+        $result = $stmt->execute($params);
+        AuditLog::record('UPDATE', 'usuarios', $id, $oldData, [
+            'nombre_usuario' => $nombreUsuario, 'rol_id' => $rolId,
+            'correo_electronico' => $correoElectronico,
+        ]);
+        return $result;
     }
 
 
     public function delete(int $id)
     {
         try {
+            $oldData = $this->getById($id);
             $stmt = $this->db()->prepare("DELETE FROM usuarios WHERE id_usuario = :id");
-            return $stmt->execute([':id' => $id]);
+            $result = $stmt->execute([':id' => $id]);
+            AuditLog::record('DELETE', 'usuarios', $id, $oldData, null);
+            return $result;
         } catch (\Throwable $e) {
             error_log("Error en delete: " . $e->getMessage());
             return false;
