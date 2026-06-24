@@ -9,6 +9,7 @@ $(document).ready(function () {
 
   const toolValidationRules = {
     nombre_herramienta: 'nombrePlanta',
+    cantidad: 'cantidad',
     tipo: 'text',
     estado: 'select',
     fecha_adquisicion: 'fechaFuturaCheck',
@@ -17,7 +18,7 @@ $(document).ready(function () {
 
   const initDataTable = () => {
     if (typeof SkeletonHelper !== 'undefined') {
-      SkeletonHelper.showTableSkeleton('herramientasTable', 5, 7);
+      SkeletonHelper.showTableSkeleton('herramientasTable', 5, 8);
     }
     herramientasTable = $('#herramientasTable').DataTable({
       ajax: {
@@ -29,6 +30,7 @@ $(document).ready(function () {
       },
       columns: [
         { data: 'nombre_herramienta' },
+        { data: 'cantidad', className: 'text-center' },
         {
           data: 'tipo',
           render: (data) => data || '<span class="text-muted">&mdash;</span>',
@@ -140,6 +142,7 @@ $(document).ready(function () {
 
     $('#editToolId').val(row.id);
     $('#editToolName').val(row.nombre_herramienta);
+    $('#editToolCantidad').val(row.cantidad);
     $('#editToolType').val(row.tipo);
     $('#editToolStatus').val(row.estado);
     $('#editToolAcqDate').val(row.fecha_adquisicion);
@@ -189,7 +192,7 @@ $(document).ready(function () {
 
     Helpers.confirmDialog(
       '¿Eliminar herramienta?',
-      `¿Deseas eliminar <strong>${Helpers.escapeHtml(nombre)}</strong>?`,
+      `¿Deseas eliminar <strong>${Helpers.escapeHtml(nombre)}</strong> (cantidad: ${row.cantidad})?`,
       () => {
         Ajax.post(`${baseUrl}?action=delete_ajax`, { id })
           .then((response) => {
