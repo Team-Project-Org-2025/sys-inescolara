@@ -41,6 +41,7 @@ include_once __DIR__ . '/../common/modal.php';
                             <thead>
                                 <tr>
                                     <th>Nombre</th>
+                                    <th>Cantidad</th>
                                     <th>Tipo</th>
                                     <th>Estado</th>
                                     <th>Fecha Adquisición</th>
@@ -62,6 +63,10 @@ include_once __DIR__ . '/../common/modal.php';
         <div class="mb-3">
             <label class="form-label">Nombre de la Herramienta</label>
             <input type="text" class="form-control" name="nombre_herramienta" required placeholder="Ej: Pala, Rastrillo, Tijeras de podar" maxlength="50">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Cantidad</label>
+            <input type="number" class="form-control" name="cantidad" value="1" min="1" step="1" required oninput="this.value = this.value.replace(/[^0-9]/g,'')">
         </div>
         <div class="mb-3">
             <label class="form-label">Tipo</label>
@@ -98,6 +103,10 @@ include_once __DIR__ . '/../common/modal.php';
         <div class="mb-3">
             <label class="form-label">Nombre de la Herramienta</label>
             <input type="text" class="form-control" name="nombre_herramienta" id="editToolName" required maxlength="50">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Cantidad</label>
+            <input type="number" class="form-control" name="cantidad" id="editToolCantidad" min="1" step="1" required oninput="this.value = this.value.replace(/[^0-9]/g,'')">
         </div>
         <div class="mb-3">
             <label class="form-label">Tipo</label>
