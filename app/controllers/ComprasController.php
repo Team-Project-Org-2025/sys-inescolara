@@ -9,8 +9,6 @@ use SysInescolara\models\Herramienta;
 use SysInescolara\models\Ubicacion;
 use SysInescolara\models\Planta;
 use SysInescolara\models\UnidadMedida;
-use SysInescolara\models\AuditLog;
-
 function index(): void
 {
     checkModuleAuth();
@@ -123,10 +121,6 @@ function compras_manejarAgregarEditar(string $modo): void
 
             $modelo->confirmarTransaccion();
 
-            AuditLog::record('CREATE', 'compra', $nuevoId, null, [
-                'id_proveedor' => $idProveedor, 'total' => $total, 'items' => count($items),
-            ]);
-
             jsonResponse(['success' => true, 'message' => 'Compra registrada correctamente.', 'id' => $nuevoId]);
             return;
         }
@@ -135,7 +129,6 @@ function compras_manejarAgregarEditar(string $modo): void
         $id = (int)($_POST['id'] ?? 0);
         if ($id <= 0) throw new \Exception('ID inválido');
 
-        $datosViejos = $modelo->obtenerPorId($id);
         $modelo->actualizar($id, $idProveedor, $fechaCompra, $tipoComprobante, $numeroComprobante, $subtotal, $iva, $total, $observacion);
 
         $modelo->eliminarDetalles($id);
@@ -159,10 +152,6 @@ function compras_manejarAgregarEditar(string $modo): void
 
         $modelo->confirmarTransaccion();
 
-        AuditLog::record('UPDATE', 'compra', $id, $datosViejos, [
-            'id_proveedor' => $idProveedor, 'total' => $total, 'items' => count($items),
-        ]);
-
         jsonResponse(['success' => true, 'message' => 'Compra actualizada correctamente.']);
     } catch (\Exception $e) {
         $modelo->revertirTransaccion();
@@ -176,8 +165,7 @@ function compras_manejarEliminar(): void
     $id = (int)($_POST['id'] ?? 0);
     if ($id <= 0) throw new \Exception('ID inválido');
 
-    $datosViejos = $modelo->obtenerPorId($id);
-    if (!$datosViejos) throw new \Exception('No existe la compra');
+    if (!$modelo->obtenerPorId($id)) throw new \Exception('No existe la compra');
 
     if ($modelo->tienePagosCuentaPagar($id)) {
         throw new \Exception('No se puede eliminar una compra que ya tiene pagos registrados.');
@@ -193,7 +181,6 @@ function compras_manejarEliminar(): void
         throw $e;
     }
 
-    AuditLog::record('DEACTIVATE', 'compra', $id, $datosViejos, null);
     jsonResponse(['success' => true, 'message' => 'Compra eliminada correctamente.']);
 }
 
@@ -206,7 +193,6 @@ function compras_manejarRecibir(): void
     $modelo->aplicarStock($id);
     $modelo->marcarRecibida($id);
 
-    AuditLog::record('UPDATE', 'compra', $id, ['estado' => 'pendiente', 'fecha_recepcion' => null], ['estado' => 'recibida', 'stock_aplicado' => true]);
     jsonResponse(['success' => true, 'message' => 'Compra recibida y stock actualizado.']);
 }
 
@@ -230,7 +216,6 @@ function compras_manejarCancelar(): void
         throw $e;
     }
 
-    AuditLog::record('UPDATE', 'compra', $id, ['estado' => 'pendiente'], ['estado' => 'cancelada']);
     jsonResponse(['success' => true, 'message' => 'Compra cancelada.']);
 }
 
@@ -272,7 +257,6 @@ function compras_agregarPlantaRapido(): void
     }
 
     $planta = $modelo->getById($nuevoId);
-    AuditLog::record('CREATE', 'plantas', $nuevoId, null, ['nombre_comun' => $nombre, 'origen' => 'compra_rapida']);
 
     jsonResponse([
         'success' => true,
@@ -304,7 +288,6 @@ function compras_agregarInsumoRapido(): void
     }
 
     $insumo = $modelo->getById($nuevoId);
-    AuditLog::record('CREATE', 'insumo', $nuevoId, null, ['nombre_insumo' => $nombre, 'origen' => 'compra_rapida']);
 
     jsonResponse([
         'success' => true,
@@ -331,7 +314,6 @@ function compras_agregarHerramientaRapido(): void
     }
 
     $herramienta = $modelo->getById($nuevoId);
-    AuditLog::record('CREATE', 'herramienta', $nuevoId, null, ['nombre_herramienta' => $nombre, 'origen' => 'compra_rapida']);
 
     jsonResponse([
         'success' => true,

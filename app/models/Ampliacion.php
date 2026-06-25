@@ -5,6 +5,7 @@ namespace SysInescolara\models;
 use SysInescolara\core\Database;
 use SysInescolara\interfaces\ReadableInterface;
 use PDO;
+use SysInescolara\models\AuditLog;
 
 class Ampliacion extends Database implements ReadableInterface
 {
@@ -71,6 +72,7 @@ class Ampliacion extends Database implements ReadableInterface
 
     public function delete(int $id): bool
     {
+        $oldData = $this->getById($id);
         try {
             $this->db()->beginTransaction();
             $stmt1 = $this->db()->prepare("UPDATE movimiento_planta SET activo = 0 WHERE id_movimiento_planta = :id");
@@ -78,6 +80,7 @@ class Ampliacion extends Database implements ReadableInterface
             $stmt2 = $this->db()->prepare("UPDATE movimiento_planta_detalle SET activo = 0 WHERE id_movimiento_planta = :id");
             $stmt2->execute([':id' => $id]);
             $this->db()->commit();
+            AuditLog::record('DEACTIVATE', 'movimiento_planta', $id, $oldData, null);
             return true;
         } catch (\Throwable $e) {
             if ($this->db()->inTransaction()) $this->db()->rollBack();
@@ -318,6 +321,15 @@ class Ampliacion extends Database implements ReadableInterface
             }
 
             $this->db()->commit();
+
+            AuditLog::record('CREATE', 'movimiento_planta', $movimientoId, null, [
+                'tipo' => 'intercambio',
+                'id_cliente' => $idCliente,
+                'id_trabajador' => $idTrabajador,
+                'salida_count' => count($salidaItems),
+                'entrada_count' => count($entradaItems),
+            ]);
+
             return $movimientoId;
         } catch (\Throwable $e) {
             if ($this->db()->inTransaction()) $this->db()->rollBack();

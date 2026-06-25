@@ -5,7 +5,6 @@ require_once __DIR__ . '/controller_helpers.php';
 use SysInescolara\models\CalculoPrecio;
 use SysInescolara\models\Lote;
 use SysInescolara\models\Planta;
-use SysInescolara\models\AuditLog;
 
 function index(): void
 {
@@ -66,10 +65,8 @@ function prices_handleEdit(): void
     $fechaCalculo = trim((string)($_POST['fecha_calculo'] ?? ''));
     if ($fechaCalculo === '') $fechaCalculo = date('Y-m-d');
 
-    $oldData = $model->getById($id);
     $model->update($id, $idLote, 0, $costoTotalInsumo, $porcentajeGanancia, $precioFinalSugerido, $fechaCalculo);
 
-    AuditLog::record('UPDATE', 'calculo_precio', $id, $oldData, compact('idLote', 'costoTotalInsumo', 'porcentajeGanancia', 'precioFinalSugerido'));
     jsonResponse(['success' => true, 'message' => 'Cálculo de precio actualizado correctamente', 'price' => ['id' => $id]]);
 }
 
@@ -80,9 +77,7 @@ function prices_handleDelete(): void
     if ($id <= 0) throw new \Exception('ID inválido');
     if (!$model->exists($id)) throw new \Exception('No existe el cálculo de precio');
 
-    $oldData = $model->getById($id);
     $model->delete($id);
-    AuditLog::record('DELETE', 'calculo_precio', $id, $oldData, null);
     jsonResponse(['success' => true, 'message' => 'Cálculo de precio eliminado correctamente', 'priceId' => $id]);
 }
 

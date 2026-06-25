@@ -7,6 +7,7 @@ use SysInescolara\interfaces\ReadableInterface;
 use SysInescolara\interfaces\DeletableInterface;
 use SysInescolara\traits\ValidationTrait;
 use PDO;
+use SysInescolara\models\AuditLog;
 
 class Purchase extends Database implements ReadableInterface, DeletableInterface
 {
@@ -189,7 +190,7 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
                 (:id_proveedor, :fecha_compra, :tipo_comprobante, :numero_comprobante,
                  :subtotal, :iva, :total, :observacion)
         ");
-        return $stmt->execute([
+        $result = $stmt->execute([
             ':id_proveedor' => $idProveedor,
             ':fecha_compra' => $fechaCompra,
             ':tipo_comprobante' => $tipoComprobante,
@@ -199,6 +200,13 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
             ':total' => $total,
             ':observacion' => $observacion,
         ]);
+        $nuevoId = $this->db()->lastInsertId();
+        AuditLog::record('CREATE', 'compra', $nuevoId, null, [
+            'id_proveedor' => $idProveedor,
+            'fecha_compra' => $fechaCompra,
+            'total' => $total,
+        ]);
+        return $result;
     }
 
     public function actualizar(
@@ -237,7 +245,8 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
                 observacion = :observacion
             WHERE id_compra = :id AND activo = 1
         ");
-        return $stmt->execute([
+        $oldData = $this->obtenerPorId($id);
+        $result = $stmt->execute([
             ':id' => $id,
             ':id_proveedor' => $idProveedor,
             ':fecha_compra' => $fechaCompra,
@@ -248,12 +257,21 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
             ':total' => $total,
             ':observacion' => $observacion,
         ]);
+        AuditLog::record('UPDATE', 'compra', $id, $oldData, [
+            'id_proveedor' => $idProveedor,
+            'fecha_compra' => $fechaCompra,
+            'total' => $total,
+        ]);
+        return $result;
     }
 
     public function eliminar(int $id): bool
     {
+        $oldData = $this->obtenerPorId($id);
         $stmt = $this->db()->prepare("UPDATE compra SET activo = 0 WHERE id_compra = :id");
-        return $stmt->execute([':id' => $id]);
+        $result = $stmt->execute([':id' => $id]);
+        AuditLog::record('DEACTIVATE', 'compra', $id, $oldData, null);
+        return $result;
     }
 
     public function restaurar(int $id): bool
@@ -352,8 +370,11 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
         if (!$compra) {
             throw new \Exception('No existe la compra.');
         }
+        $oldEstado = $compra['estado'];
         $stmt = $this->db()->prepare("UPDATE compra SET estado = :estado WHERE id_compra = :id AND activo = 1");
-        return $stmt->execute([':estado' => $estado, ':id' => $id]);
+        $result = $stmt->execute([':estado' => $estado, ':id' => $id]);
+        AuditLog::record('UPDATE', 'compra', $id, ['estado' => $oldEstado], ['estado' => $estado]);
+        return $result;
     }
 
     public function marcarRecibida(int $id): bool
@@ -366,7 +387,9 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
             throw new \Exception('Solo se pueden recibir compras pendientes.');
         }
         $stmt = $this->db()->prepare("UPDATE compra SET estado = 'recibida' WHERE id_compra = :id AND activo = 1");
-        return $stmt->execute([':id' => $id]);
+        $result = $stmt->execute([':id' => $id]);
+        AuditLog::record('UPDATE', 'compra', $id, ['estado' => 'pendiente', 'fecha_recepcion' => null], ['estado' => 'recibida', 'stock_aplicado' => true]);
+        return $result;
     }
 
     // ============================================================
