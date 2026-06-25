@@ -41,6 +41,7 @@ include_once __DIR__ . '/../common/modal.php';
                                 <tr>
                                     <th>ID</th>
                                     <th>Cliente</th>
+                                    <th>C.I.</th>
                                     <th>Tipo</th>
                                     <th>Fecha</th>
                                     <th>Ubicación</th>
@@ -62,12 +63,15 @@ include_once __DIR__ . '/../common/modal.php';
         <div class="row">
             <div class="col-md-6 mb-3">
                 <label class="form-label">Cliente *</label>
-                <select class="form-select" name="id_cliente" id="inputCliente" required>
-                    <option value="">Seleccione un cliente...</option>
-                    <?php if (isset($clientes)): foreach ($clientes as $c): ?>
-                    <option value="<?= $c['id'] ?>"><?= htmlspecialchars($c['nombre_cliente']) ?></option>
-                    <?php endforeach; endif; ?>
-                </select>
+                <div class="position-relative">
+                    <input type="text" class="form-control" id="buscarClienteOrnato" placeholder="Buscar por C.I., nombre o apellido..." autocomplete="off">
+                    <input type="hidden" name="id_cliente" id="idClienteOrnato">
+                    <div class="list-group position-absolute" id="clienteResultadosOrnato" style="z-index:1000;display:none;max-height:200px;overflow-y:auto;width:100%;"></div>
+                    <div id="clienteSeleccionadoOrnato" class="d-none mt-1">
+                        <span id="clienteSeleccionadoTextoOrnato" class="badge bg-info text-dark"></span>
+                        <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-1" id="limpiarClienteOrnato">&times;</button>
+                    </div>
+                </div>
             </div>
             <div class="col-md-3 mb-3">
                 <label class="form-label">Tipo de ornato *</label>

@@ -1,6 +1,8 @@
 // Expresiones regulares reutilizables
 export const REGEX = {
   cedula: /^\d{7,10}$/,
+  tipo_cedula: /^[VEJGPejgp]$/,
+  cedula_numero: /^\d{7,10}$/,
   codigo: /^\d{9}$/,
   factura: /^\d{8}$/,
   nombre: /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]{2,50}$/,
@@ -58,9 +60,50 @@ export const validateNoFutureDate = ($input) => {
   return true;
 };
 
+export const validateFechaPago = ($input) => {
+  const valor = $input.val().trim();
+  const isRequired = $input.prop('required');
+  const fechaVenta = $input.data('fecha-venta');
+
+  $input.siblings('.invalid-feedback').remove();
+
+  if (valor === '') {
+    if (isRequired) {
+      $input.addClass('is-invalid').removeClass('is-valid');
+      $input.after(`<div class="invalid-feedback">Este campo es requerido.</div>`);
+      return false;
+    }
+    $input.removeClass('is-invalid is-valid');
+    return true;
+  }
+
+  if (!REGEX.fechaFormato.test(valor)) {
+    $input.addClass('is-invalid').removeClass('is-valid');
+    $input.after(`<div class="invalid-feedback">${MESSAGES.fecha}</div>`);
+    return false;
+  }
+
+  if (valor > hoy) {
+    $input.addClass('is-invalid').removeClass('is-valid');
+    $input.after(`<div class="invalid-feedback">${MESSAGES.fechaFutura}</div>`);
+    return false;
+  }
+
+  if (fechaVenta && valor < fechaVenta) {
+    $input.addClass('is-invalid').removeClass('is-valid');
+    $input.after(`<div class="invalid-feedback">${MESSAGES.fechaAnteriorVenta}</div>`);
+    return false;
+  }
+
+  $input.removeClass('is-invalid').addClass('is-valid');
+  return true;
+};
+
 // Mensajes de error personalizados
 export const MESSAGES = {
   cedula: 'Cédula inválida (7-10 dígitos)',
+  tipo_cedula: 'Tipo de C.I. inválido (V, E, J, G, P)',
+  cedula_numero: 'Número de C.I. inválido (7-10 dígitos)',
   codigo: 'Código inválido (9 dígitos)',
   factura: 'Factura inválida (8 dígitos)',
   nombre: 'Nombre inválido (2-50 caracteres, solo letras)',
@@ -74,6 +117,7 @@ export const MESSAGES = {
   cargo: 'Cargo inválido (2-50 caracteres)',
   referencia: 'Referencia bancaria inválida (6 dígitos)',
   referenciaVenta: 'Referencia inválida (máx 15 caracteres, solo letras, números y guión)',
+  fechaAnteriorVenta: 'La fecha de pago no puede ser anterior a la fecha de venta.',
   banco: 'Nombre del banco inválido (3-30 caracteres)',
   password: 'Contraseña debe tener 8-30 caracteres, mayúsculas, minúsculas, números y símbolos',
   required: 'Este campo es requerido',
@@ -156,10 +200,15 @@ export const setupRealTimeValidation = ($form, rules, isEdit = false) => {
       return;
     }
 
+    if (tipo === 'fechaPagoCheck') {
+      $input.on('input change blur', () => validateFechaPago($input));
+      return;
+    }
+
     // ========================================================================
     // BLOQUEO 1: BLOQUEAR LETRAS (Para Teléfonos, Cédulas, Códigos)
     // ========================================================================
-    if (['telefono', 'cedula', 'codigo', 'factura', 'referencia', 'cantidad'].includes(tipo)) {
+    if (['telefono', 'cedula', 'cedula_numero', 'codigo', 'factura', 'referencia', 'cantidad'].includes(tipo)) {
       
       // 1. Evitar que se escriban letras (Evento de pulsación de tecla)
       $input.on('keypress', function (e) {
@@ -181,7 +230,7 @@ export const setupRealTimeValidation = ($form, rules, isEdit = false) => {
     // ========================================================================
     // BLOQUEO 2: BLOQUEAR NÚMEROS (Para Nombres de personas, Cargos)
     // ========================================================================
-    if (['nombre', 'cargo', 'nombrePlanta', 'nombreProducto'].includes(tipo)) {
+    if (['nombre', 'cargo', 'nombrePlanta', 'nombreProducto', 'tipo_cedula'].includes(tipo)) {
       
       // 1. Evitar que se escriban números del 0 al 9 (ASCII 48 al 57)
       $input.on('keypress', function (e) {
@@ -236,6 +285,11 @@ export const validateForm = ($form, rules, isEdit = false) => {
 
     if (tipo === 'fechaFuturaCheck') {
       if (!validateNoFutureDate($input)) isValid = false;
+      return;
+    }
+
+    if (tipo === 'fechaPagoCheck') {
+      if (!validateFechaPago($input)) isValid = false;
       return;
     }
 

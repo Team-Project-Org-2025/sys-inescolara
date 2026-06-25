@@ -105,6 +105,7 @@ include_once __DIR__ . '/../common/modal.php';
                                 <tr>
                                     <th>Referencia</th>
                                     <th>Cliente</th>
+                                    <th>C.I.</th>
                                     <th>Contacto</th>
                                     <th>Fecha Venta</th>
                                     <th>Vencimiento</th>

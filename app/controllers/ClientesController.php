@@ -43,20 +43,29 @@ function clients_handleAddEdit(string $mode): void
     $nombreCliente = trim((string)($_POST['nombre_cliente'] ?? ''));
     if ($nombreCliente === '') throw new \Exception('El nombre del cliente es requerido.');
 
+    $apellidoCliente = trim((string)($_POST['apellido_cliente'] ?? ''));
+    if ($apellidoCliente === '') $apellidoCliente = null;
+
+    $tipoCedulaCliente = trim((string)($_POST['tipo_cedula_cliente'] ?? ''));
+    if ($tipoCedulaCliente === '') $tipoCedulaCliente = null;
+
+    $cedulaCliente = trim((string)($_POST['cedula_cliente'] ?? ''));
+    if ($cedulaCliente === '') $cedulaCliente = null;
+
     $contactoCliente = trim((string)($_POST['contacto_cliente'] ?? ''));
     if ($contactoCliente === '') $contactoCliente = null;
 
     if ($mode === 'add') {
-        $model->add($nombreCliente, $contactoCliente);
+        $model->add($nombreCliente, $apellidoCliente, $tipoCedulaCliente, $cedulaCliente, $contactoCliente);
         $newId = $model->getLastInsertId() ?? 0;
-        jsonResponse(['success' => true, 'message' => 'Cliente agregado correctamente', 'client' => ['id' => $newId, 'nombre_cliente' => $nombreCliente, 'contacto_cliente' => $contactoCliente]]);
+        jsonResponse(['success' => true, 'message' => 'Cliente agregado correctamente', 'client' => ['id' => $newId, 'nombre_cliente' => $nombreCliente, 'apellido_cliente' => $apellidoCliente, 'nombre_completo' => trim("$nombreCliente $apellidoCliente"), 'tipo_cedula_cliente' => $tipoCedulaCliente, 'cedula_cliente' => $cedulaCliente, 'cedula_completa' => $tipoCedulaCliente ? "$tipoCedulaCliente-$cedulaCliente" : null, 'contacto_cliente' => $contactoCliente]]);
     }
 
     $id = (int)($_POST['id'] ?? 0);
     if ($id <= 0) throw new \Exception('ID inválido');
 
-    $model->update($id, $nombreCliente, $contactoCliente);
-    jsonResponse(['success' => true, 'message' => 'Cliente actualizado correctamente', 'client' => ['id' => $id, 'nombre_cliente' => $nombreCliente, 'contacto_cliente' => $contactoCliente]]);
+    $model->update($id, $nombreCliente, $apellidoCliente, $tipoCedulaCliente, $cedulaCliente, $contactoCliente);
+    jsonResponse(['success' => true, 'message' => 'Cliente actualizado correctamente', 'client' => ['id' => $id, 'nombre_cliente' => $nombreCliente, 'apellido_cliente' => $apellidoCliente, 'nombre_completo' => trim("$nombreCliente $apellidoCliente"), 'tipo_cedula_cliente' => $tipoCedulaCliente, 'cedula_cliente' => $cedulaCliente, 'cedula_completa' => $tipoCedulaCliente ? "$tipoCedulaCliente-$cedulaCliente" : null, 'contacto_cliente' => $contactoCliente]]);
 }
 
 function clients_handleDelete(): void

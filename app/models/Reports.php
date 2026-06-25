@@ -563,12 +563,12 @@ class Reports extends Database
         $where = $this->buildWhere($conds, $params);
 
         try {
-            $stmt = $this->db()->prepare("SELECT id_cliente, nombre_cliente, contacto_cliente FROM cliente $where ORDER BY nombre_cliente ASC");
+            $stmt = $this->db()->prepare("SELECT id_cliente, CONCAT(nombre_cliente, ' ', apellido_cliente) AS nombre_cliente, tipo_cedula_cliente, cedula_cliente, contacto_cliente FROM cliente $where ORDER BY nombre_cliente ASC, apellido_cliente ASC");
             $stmt->execute($params);
             $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             return [
-                'columns' => ['ID', 'Nombre', 'Contacto'],
+                'columns' => ['ID', 'Nombre', 'C.I.', 'Contacto'],
                 'rows' => $rows,
                 'chart' => null,
             ];
@@ -671,7 +671,7 @@ class Reports extends Database
         $where = $this->buildWhere($conds, $params);
 
         try {
-            $sql = "SELECT v.id_venta, v.referencia, c.nombre_cliente AS cliente,
+            $sql = "SELECT v.id_venta, v.referencia, CONCAT(c.nombre_cliente, ' ', c.apellido_cliente) AS cliente,
                            CONCAT(t.nombre_trabajador, ' ', t.apellido_trabajador) AS vendedor,
                            v.tipo_venta, v.estado,
                            COALESCE((SELECT SUM(dv.cantidad * dv.precio_unitario) FROM detalle_venta dv WHERE dv.id_venta = v.id_venta), 0) AS total,
@@ -1056,7 +1056,7 @@ class Reports extends Database
 
         try {
             $sql = "SELECT
-                        v.id_venta, v.referencia, c.nombre_cliente, v.fecha_venta, v.fecha_vencimiento,
+                        v.id_venta, v.referencia, CONCAT(c.nombre_cliente, ' ', c.apellido_cliente) AS nombre_cliente, v.fecha_venta, v.fecha_vencimiento,
                         COALESCE(det.monto_total, 0) AS monto_total,
                         COALESCE(pag.total_pagado, 0) AS total_pagado,
                         ROUND(COALESCE(det.monto_total, 0) - COALESCE(pag.total_pagado, 0), 2) AS saldo_pendiente,

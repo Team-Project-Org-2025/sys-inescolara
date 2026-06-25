@@ -21,7 +21,7 @@ class CuentaCobrar extends Database
             $params = [];
 
             if ($search !== '') {
-                $where .= " AND (v.referencia LIKE :search OR c.nombre_cliente LIKE :search2)";
+                $where .= " AND (v.referencia LIKE :search OR c.nombre_cliente LIKE :search2 OR c.apellido_cliente LIKE :search2 OR c.cedula_cliente LIKE :search2)";
                 $params[':search'] = "%{$search}%";
                 $params[':search2'] = "%{$search}%";
             }
@@ -40,7 +40,9 @@ class CuentaCobrar extends Database
                     v.fecha_vencimiento,
                     v.observaciones,
                     c.id_cliente,
-                    c.nombre_cliente,
+                    CONCAT(c.nombre_cliente, ' ', c.apellido_cliente) AS nombre_cliente,
+                    c.tipo_cedula_cliente,
+                    c.cedula_cliente,
                     c.contacto_cliente AS contacto,
                     COALESCE(det.monto_total, 0) AS monto_total,
                     COALESCE(pag.total_pagado, 0) AS total_pagado,
@@ -111,7 +113,9 @@ class CuentaCobrar extends Database
             $stmt = $this->db()->prepare("
                 SELECT
                     v.*,
-                    c.nombre_cliente,
+                    CONCAT(c.nombre_cliente, ' ', c.apellido_cliente) AS nombre_cliente,
+                    c.tipo_cedula_cliente,
+                    c.cedula_cliente,
                     c.contacto_cliente AS contacto,
                     CONCAT(t.nombre_trabajador, ' ', t.apellido_trabajador) AS trabajador,
                     COALESCE(det.monto_total, 0) AS monto_total,
@@ -320,7 +324,7 @@ class CuentaCobrar extends Database
     public function obtenerClientes(): array
     {
         try {
-            $stmt = $this->db()->query("SELECT id_cliente, nombre_cliente, contacto_cliente AS contacto FROM cliente WHERE activo = 1 ORDER BY nombre_cliente ASC");
+            $stmt = $this->db()->query("SELECT id_cliente, CONCAT(nombre_cliente, ' ', apellido_cliente) AS nombre_cliente, contacto_cliente AS contacto FROM cliente WHERE activo = 1 ORDER BY nombre_cliente ASC");
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (\Throwable $e) {
             error_log('Error en CuentaCobrar::obtenerClientes: ' . $e->getMessage());
