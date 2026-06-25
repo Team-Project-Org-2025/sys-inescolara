@@ -15,6 +15,8 @@ composer.phar
  /cache/
 /logs/
 
+_backups/
+
 # OS and editor files
 .DS_Store
 Thumbs.db
