@@ -130,21 +130,18 @@ function plants_handleDelete(): void
     if (!$planta->loadById($id)) {
         throw new \Exception('No existe la planta');
     }
+
+    $loteModel = new \SysInescolara\models\Lote();
+    if ($loteModel->hasActiveStockByPlanta($id)) {
+        jsonResponse([
+            'success' => false,
+            'message' => 'No se puede eliminar esta planta porque tiene lotes con disponibilidad activa.',
+        ]);
+        return;
+    }
     
-    try {
-        if (!$planta->delete($id)) {
-            throw new \Exception('Error al desactivar la planta.');
-        }
-    } catch (\PDOException $e) {
-        if ((int)$e->getCode() === 23000 && str_contains($e->getMessage(), '1451')) {
-            jsonResponse([
-                'success' => false, 
-                'message' => 'No se puede eliminar esta planta porque tiene lotes asociados.', 
-                'type' => 'foreign_key'
-            ]);
-            return;
-        }
-        throw $e;
+    if (!$planta->delete($id)) {
+        throw new \Exception('Error al desactivar la planta.');
     }
     
     if (!empty($planta->getImagen())) {
