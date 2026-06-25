@@ -42,11 +42,7 @@ include_once __DIR__ . '/../common/modal.php';
                                 <tr>
                                     <th>Nombre</th>
                                     <th>Cantidad</th>
-                                    <th>Tipo</th>
                                     <th>Estado</th>
-                                    <th>Fecha Adquisición</th>
-                                    <th>Último Mantenimiento</th>
-                                    <th>Observación</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
@@ -137,6 +133,40 @@ include_once __DIR__ . '/../common/modal.php';
             <textarea class="form-control" name="observacion" id="editToolObs" rows="2" placeholder="Notas adicionales..." maxlength="500"></textarea>
         </div>
     <?php modal_form_end('editToolForm'); ?>
+
+    <!-- View Tool Detail Modal -->
+    <?php modal_detail_start(['id' => 'viewToolModal', 'title' => 'Detalle de Herramienta', 'size' => 'modal-lg']); ?>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label fw-semibold text-muted small text-uppercase">Nombre</label>
+                <p class="fs-5 fw-medium" id="viewToolNombre">—</p>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-semibold text-muted small text-uppercase">Cantidad</label>
+                <p class="fs-5 fw-medium" id="viewToolCantidad">—</p>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-semibold text-muted small text-uppercase">Tipo</label>
+                <p class="fs-5 fw-medium" id="viewToolTipo">—</p>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-semibold text-muted small text-uppercase">Estado</label>
+                <p class="fs-5 fw-medium" id="viewToolEstado">—</p>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-semibold text-muted small text-uppercase">Fecha de Adquisición</label>
+                <p class="fs-5 fw-medium" id="viewToolFechaAdq">—</p>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-semibold text-muted small text-uppercase">Último Mantenimiento</label>
+                <p class="fs-5 fw-medium" id="viewToolFechaMant">—</p>
+            </div>
+            <div class="col-12">
+                <label class="form-label fw-semibold text-muted small text-uppercase">Observación</label>
+                <p class="fs-5 fw-medium" id="viewToolObs">—</p>
+            </div>
+        </div>
+    <?php modal_detail_end(); ?>
 
     <script src="<?= BASE_URL ?>public/assets/js/dashboard/notifications.js"></script>
     <?= $scripts_links ?>

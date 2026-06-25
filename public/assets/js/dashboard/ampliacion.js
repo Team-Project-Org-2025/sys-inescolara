@@ -47,6 +47,10 @@ $(document).ready(function () {
         { data: 'fecha_movimiento' },
         { data: 'cliente_nombre' },
         {
+            data: null,
+            render: (r) => r.tipo_cedula_cliente ? `${r.tipo_cedula_cliente}-${r.cedula_cliente}` : '—'
+        },
+        {
           data: 'total_salida',
           render: (data) => {
             const n = parseInt(data);
@@ -173,6 +177,11 @@ $(document).ready(function () {
   $('#btnAddAmpliacion').on('click', function () {
     $('#ampliacionForm')[0].reset();
     clearValidation($('#ampliacionForm'));
+    limpiarClienteAmp(
+      document.getElementById('buscarClienteAmp'),
+      document.getElementById('idClienteAmp'),
+      document.getElementById('clienteSeleccionadoAmp')
+    );
     $('#fecha_movimiento').val(new Date().toISOString().split('T')[0]);
     $('#salidaTableBody').empty();
     $('#entradaTableBody').empty();
@@ -234,6 +243,11 @@ $(document).ready(function () {
     }
 
     const formData = new FormData(this);
+
+    const idClienteVal = document.getElementById('idClienteAmp')?.value;
+    if (!idClienteVal) {
+      formData.delete('id_cliente');
+    }
     formData.append('salida_items', JSON.stringify(salidaItems));
     formData.append('entrada_items', JSON.stringify(entradaItems));
 
@@ -313,7 +327,7 @@ $(document).ready(function () {
 
     let html = `
       <div class="mb-3">
-        <p><strong>Cliente:</strong> ${Helpers.escapeHtml(item.cliente_nombre)}</p>
+        <p><strong>Cliente:</strong> ${Helpers.escapeHtml(item.cliente_nombre)}${item.tipo_cedula_cliente ? ` — ${item.tipo_cedula_cliente}-${item.cedula_cliente}` : ''}</p>
         <p><strong>Fecha:</strong> ${Helpers.escapeHtml(item.fecha_movimiento)}</p>
         <p><strong>Gestor:</strong> ${Helpers.escapeHtml(item.gestor_nombre)}</p>
         <p><strong>Observación:</strong> ${Helpers.escapeHtml(item.observacion || '—')}</p>
@@ -352,15 +366,102 @@ $(document).ready(function () {
     $('#detalleModalBody').html(html);
   }
 
+  $(document).on('hide.bs.modal', '#ampliacionModal, #detalleModal', function () {
+    if (document.activeElement && document.activeElement !== document.body) {
+      document.activeElement.blur();
+    }
+  });
+
   $('#ampliacionModal, #detalleModal').on('hidden.bs.modal', function () {
     const $form = $(this).find('form');
     if ($form.length) {
       Helpers.resetForm($form);
       clearValidation($form);
     }
+    if ($(this).is('#ampliacionModal')) {
+      limpiarClienteAmp(
+        document.getElementById('buscarClienteAmp'),
+        document.getElementById('idClienteAmp'),
+        document.getElementById('clienteSeleccionadoAmp')
+      );
+    }
+    if (document.activeElement && document.activeElement !== document.body) {
+      document.activeElement.blur();
+    }
   });
+
+  // ==================== CLIENTE ====================
+
+  function initBuscarClienteAmp() {
+    const input = document.getElementById('buscarClienteAmp');
+    const resultados = document.getElementById('clienteResultadosAmp');
+    const hidden = document.getElementById('idClienteAmp');
+    const seleccionado = document.getElementById('clienteSeleccionadoAmp');
+    const texto = document.getElementById('clienteSeleccionadoTextoAmp');
+    const limpiar = document.getElementById('limpiarClienteAmp');
+    if (!input) return;
+    let timeout;
+
+    input.addEventListener('input', () => {
+      clearTimeout(timeout);
+      const q = input.value.trim();
+      if (q.length < 2) { resultados.style.display = 'none'; return; }
+      timeout = setTimeout(() => buscarClientesAmp(q, input, resultados, hidden, seleccionado, texto), 300);
+    });
+    input.addEventListener('blur', () => setTimeout(() => resultados.style.display = 'none', 300));
+    input.addEventListener('focus', () => { if (resultados.children.length > 0) resultados.style.display = 'block'; });
+    if (limpiar) {
+      limpiar.addEventListener('click', () => limpiarClienteAmp(input, hidden, seleccionado));
+    }
+  }
+
+  async function buscarClientesAmp(q, input, resultados, hidden, seleccionado, texto) {
+    try {
+      const res = await fetch(`${baseUrl}?action=buscar_clientes&q=${encodeURIComponent(q)}`, {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+      });
+      const data = await res.json();
+      resultados.innerHTML = '';
+      resultados.style.display = 'none';
+      if (!data.success || !data.clientes?.length) return;
+
+      data.clientes.forEach(cl => {
+        const item = document.createElement('button');
+        item.type = 'button';
+        item.className = 'list-group-item list-group-item-action py-1 d-flex justify-content-between align-items-center';
+        const cedula = cl.tipo_cedula_cliente ? `${cl.tipo_cedula_cliente}-${cl.cedula_cliente}` : '';
+        item.innerHTML = `<div><strong>${cl.nombre_cliente}</strong> <small class="text-muted">${cedula}</small></div>`;
+        item.addEventListener('click', () => {
+          seleccionarClienteAmp(cl.id_cliente, cl.nombre_cliente, cedula, input, hidden, seleccionado, texto);
+          resultados.style.display = 'none';
+        });
+        resultados.appendChild(item);
+      });
+      resultados.style.display = 'block';
+    } catch (e) {
+      console.error('Error buscando clientes:', e);
+    }
+  }
+
+  function seleccionarClienteAmp(id, nombre, cedula, input, hidden, seleccionado, texto) {
+    hidden.value = id;
+    input.value = '';
+    input.placeholder = nombre;
+    input.classList.add('is-valid');
+    texto.textContent = cedula ? `${nombre} — ${cedula}` : nombre;
+    seleccionado.classList.remove('d-none');
+  }
+
+  function limpiarClienteAmp(input, hidden, seleccionado) {
+    hidden.value = '';
+    input.value = '';
+    input.placeholder = 'Buscar por C.I., nombre o apellido...';
+    input.classList.remove('is-valid');
+    seleccionado.classList.add('d-none');
+  }
 
   setupRealTimeValidation($('#ampliacionForm'), ampliacionRules);
   loadSelectData();
+  initBuscarClienteAmp();
   initDataTable();
 });

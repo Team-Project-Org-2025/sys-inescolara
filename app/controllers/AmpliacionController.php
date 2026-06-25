@@ -3,7 +3,6 @@
 require_once __DIR__ . '/controller_helpers.php';
 
 use SysInescolara\models\Ampliacion;
-use SysInescolara\models\AuditLog;
 
 function index(): void
 {
@@ -18,6 +17,7 @@ function index(): void
                 'GET_get_plantas'        => get_plantas(),
                 'GET_get_ubicaciones'    => get_ubicaciones(),
                 'GET_get_especies'       => get_especies(),
+                'GET_buscar_clientes'    => buscar_clientes(),
                 'POST_add_ajax'          => add_ajax(),
                 'POST_delete_ajax'       => delete_ajax(),
                 default                  => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
@@ -38,6 +38,7 @@ function get_lotes(): void { checkModuleAuth(); ampliacion_getLotesAjax(); }
 function get_plantas(): void { checkModuleAuth(); ampliacion_getPlantasAjax(); }
 function get_ubicaciones(): void { checkModuleAuth(); ampliacion_getUbicacionesAjax(); }
 function get_especies(): void { checkModuleAuth(); ampliacion_getEspeciesAjax(); }
+function buscar_clientes(): void { checkModuleAuth(); ampliacion_buscarClientesAjax(); }
 function add_ajax(): void { checkModuleAuth(); checkPermisoOrFail('ampliacion:crear'); ampliacion_handleAdd(); }
 function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('ampliacion:eliminar'); ampliacion_handleDelete(); }
 
@@ -90,14 +91,6 @@ function ampliacion_handleAdd(): void
 
     $newId = $model->registerExchange($payload);
 
-    AuditLog::record('CREATE', 'movimiento_planta', $newId, null, [
-        'tipo' => 'intercambio',
-        'id_cliente' => $idCliente,
-        'id_trabajador' => $idTrabajador,
-        'salida_items' => $salidaItems,
-        'entrada_items' => $entradaItems,
-    ]);
-
     jsonResponse(['success' => true, 'message' => 'Ampliación de especies registrada correctamente', 'id' => $newId]);
 }
 
@@ -109,9 +102,7 @@ function ampliacion_handleDelete(): void
     if ($id <= 0) throw new \Exception('ID inválido');
     if (!$model->exists($id)) throw new \Exception('No existe la ampliación');
 
-    $oldData = $model->getById($id);
     $model->delete($id);
-    AuditLog::record('DEACTIVATE', 'movimiento_planta', $id, $oldData, null);
     jsonResponse(['success' => true, 'message' => 'Ampliación desactivada correctamente']);
 }
 
@@ -164,4 +155,17 @@ function ampliacion_getEspeciesAjax(): void
     $model = new Ampliacion();
     $especies = $model->getSpecies();
     jsonResponse(['success' => true, 'especies' => $especies]);
+}
+
+function ampliacion_buscarClientesAjax(): void
+{
+    $query = trim((string)($_GET['q'] ?? ''));
+    if (strlen($query) < 2) {
+        jsonResponse(['success' => true, 'clientes' => []]);
+        return;
+    }
+
+    $model = new Ampliacion();
+    $clientes = $model->buscarClientes($query);
+    jsonResponse(['success' => true, 'clientes' => $clientes]);
 }

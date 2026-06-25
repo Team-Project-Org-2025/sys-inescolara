@@ -8,13 +8,16 @@ const baseUrl = `${window.BASE_URL || '/'}clientes`;
 let clientesTable = null;
 
   const clientRules = {
+    tipo_cedula_cliente: 'select',
+    cedula_cliente: 'cedula_numero',
     nombre_cliente: 'nombre',
+    apellido_cliente: 'nombre',
     contacto_cliente: 'telefono'
   };
 
   const initDataTable = () => {
     if (typeof SkeletonHelper !== 'undefined') {
-SkeletonHelper.showTableSkeleton('clientesTable', 5, 3);
+SkeletonHelper.showTableSkeleton('clientesTable', 5, 5);
     }
     clientesTable = $('#clientesTable').DataTable({
         ajax: {
@@ -25,7 +28,15 @@ SkeletonHelper.showTableSkeleton('clientesTable', 5, 3);
             dataSrc: 'clientes',
       },
       columns: [
+        {
+          data: null,
+          render: (row) => row.cedula_completa || '<span class="text-muted">—</span>',
+        },
         { data: 'nombre_cliente' },
+        {
+          data: 'apellido_cliente',
+          render: (data) => data || '<span class="text-muted">—</span>',
+        },
         {
           data: 'contacto_cliente',
           render: (data) => data || '<span class="text-muted">—</span>',
@@ -52,7 +63,7 @@ SkeletonHelper.showTableSkeleton('clientesTable', 5, 3);
           className: 'btn btn-outline-secondary btn-sm',
           action: () => {
             if (typeof SkeletonHelper !== 'undefined') {
-              SkeletonHelper.showTableSkeleton('clientesTable', 5, 3);
+              SkeletonHelper.showTableSkeleton('clientesTable', 5, 5);
             }
             clientesTable.ajax.reload(null, false);
           },
@@ -114,7 +125,10 @@ SkeletonHelper.showTableSkeleton('clientesTable', 5, 3);
     }
 
     $('#editClientId').val(row.id);
+    $('#editClientTipoCedula').val(row.tipo_cedula_cliente || '');
+    $('#editClientCedula').val(row.cedula_cliente || '');
     $('#editClientName').val(row.nombre_cliente);
+    $('#editClientApellido').val(row.apellido_cliente || '');
     $('#editClientContacto').val(row.contacto_cliente);
 
     $('#editClientModal').modal({ focus: false }).modal('show');
@@ -157,7 +171,7 @@ SkeletonHelper.showTableSkeleton('clientesTable', 5, 3);
   $(document).on('click', '.btn-delete', function () {
     const row = clientesTable.row($(this).closest('tr')).data();
     const id = row.id;
-    const nombre = row.nombre_cliente;
+    const nombre = row.nombre_completo;
 
     Helpers.confirmDialog(
       '¿Eliminar cliente?',

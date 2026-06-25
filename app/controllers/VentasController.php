@@ -5,7 +5,6 @@ require_once __DIR__ . '/controller_helpers.php';
 use SysInescolara\models\Venta;
 use SysInescolara\models\Cliente;
 use SysInescolara\models\Empleado;
-use SysInescolara\models\AuditLog;
 use SysInescolara\helpers\PdfHelper;
 
 function index(): void
@@ -172,9 +171,24 @@ function ventas_manejarGuardar(): void
         throw new \Exception('Debe agregar al menos un producto.');
     }
 
-    foreach ($productos as $item) {
-        if (empty($item['id_lote']) || (int)$item['id_lote'] <= 0) {
-            throw new \Exception('Cada producto debe tener un lote seleccionado.');
+    foreach ($productos as &$item) {
+        $tipoItem = $item['tipo_item'] ?? 'planta';
+        if (!in_array($tipoItem, ['planta', 'insumo'], true)) {
+            throw new \Exception('Tipo de producto inválido.');
+        }
+        $item['tipo_item'] = $tipoItem;
+        if ($tipoItem === 'insumo') {
+            $item['id_insumo'] = (int)($item['id_insumo'] ?? 0);
+            if ($item['id_insumo'] <= 0) {
+                throw new \Exception('Cada insumo debe tener un ID seleccionado.');
+            }
+            $item['id_lote'] = 0;
+        } else {
+            $item['id_lote'] = (int)($item['id_lote'] ?? 0);
+            if ($item['id_lote'] <= 0) {
+                throw new \Exception('Cada planta debe tener un lote seleccionado.');
+            }
+            $item['id_insumo'] = 0;
         }
         if (empty($item['cantidad']) || (int)$item['cantidad'] <= 0) {
             throw new \Exception('La cantidad debe ser mayor a cero en todos los productos.');
@@ -183,6 +197,7 @@ function ventas_manejarGuardar(): void
             throw new \Exception('El precio unitario es requerido en todos los productos.');
         }
     }
+    unset($item);
 
     $pagosRaw = $_POST['pagos'] ?? '[]';
     $pagos = is_array($pagosRaw) ? $pagosRaw : json_decode($pagosRaw, true);
@@ -195,8 +210,12 @@ function ventas_manejarGuardar(): void
         if (!isset($pago['monto']) || (float)$pago['monto'] <= 0) {
             throw new \Exception('El monto de pago debe ser mayor a cero.');
         }
-        if (!in_array($pago['metodo'], ['efectivo', 'punto'], true) && !empty($pago['referencia'])) {
-            $pago['referencia'] = preg_replace('/\D/', '', $pago['referencia']);
+        if (!in_array($pago['metodo'], ['efectivo', 'punto'], true)) {
+            $ref = trim((string)($pago['referencia'] ?? ''));
+            if ($ref === '') {
+                throw new \Exception('La referencia es obligatoria para ' . $pago['metodo'] . '.');
+            }
+            $pago['referencia'] = preg_replace('/\D/', '', $ref);
             if (strlen($pago['referencia']) > 6) {
                 throw new \Exception('La referencia debe tener máximo 6 dígitos.');
             }
@@ -220,7 +239,6 @@ function ventas_manejarGuardar(): void
     if ($nuevoId <= 0) throw new \Exception('Error al guardar la venta.');
 
     $venta = $modelo->getById($nuevoId);
-    AuditLog::record('CREATE', 'venta', $nuevoId, null, $datos);
 
     jsonResponse([
         'success'    => true,
@@ -248,7 +266,6 @@ function ventas_manejarCancelar(): void
     $ok = $modelo->cancelar($id);
     if (!$ok) throw new \Exception('Error al cancelar la venta.');
 
-    AuditLog::record('DEACTIVATE', 'venta', $id, $datosViejos, null);
     jsonResponse(['success' => true, 'message' => 'Venta cancelada correctamente', 'id' => $id]);
 }
 

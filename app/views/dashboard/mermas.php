@@ -70,10 +70,6 @@ include_once __DIR__ . '/../common/modal.php';
                                     <th>Cuarentena</th>
                                     <th>Planta</th>
                                     <th>Cantidad</th>
-                                    <th>Motivo</th>
-                                    <th>Fecha Merma</th>
-                                    <th>Impacto Económico</th>
-                                    <th>Registrado por</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
@@ -82,6 +78,11 @@ include_once __DIR__ . '/../common/modal.php';
                     </div>
                 </div>
             </div>
+
+            <!-- View Merma Modal -->
+            <?php modal_detail_start(['id' => 'viewMermaModal', 'title' => 'Detalles de la Merma']); ?>
+                <div id="viewMermaContent"></div>
+            <?php modal_detail_end(); ?>
         </div>
     </main>
 

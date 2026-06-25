@@ -154,6 +154,7 @@ CREATE TABLE IF NOT EXISTS `insumo` (
 CREATE TABLE IF NOT EXISTS `herramienta` (
   `id_herramienta`             INT(11)     NOT NULL AUTO_INCREMENT,
   `nombre_herramienta`         VARCHAR(150) NOT NULL,
+  `cantidad`                   INT(11)      NOT NULL DEFAULT 1,
   `tipo`                       VARCHAR(50)  DEFAULT NULL,
   `estado`                     VARCHAR(30)  NOT NULL DEFAULT 'disponible',
   `fecha_adquisicion`          DATE         DEFAULT NULL,
@@ -182,10 +183,13 @@ CREATE TABLE IF NOT EXISTS `trabajadores` (
   COMMENT='Personal del vivero.';
 
 CREATE TABLE IF NOT EXISTS `cliente` (
-  `id_cliente`       INT(11)      NOT NULL AUTO_INCREMENT,
-  `nombre_cliente`   VARCHAR(100) NOT NULL,
-  `contacto_cliente` VARCHAR(250) DEFAULT NULL,
-  `activo`           TINYINT(1)   NOT NULL DEFAULT 1,
+  `id_cliente`          INT(11)      NOT NULL AUTO_INCREMENT,
+  `tipo_cedula_cliente` VARCHAR(1)   DEFAULT NULL COMMENT 'V, E, J, G, P',
+  `cedula_cliente`      VARCHAR(10)  DEFAULT NULL COMMENT 'Solo dígitos',
+  `nombre_cliente`      VARCHAR(100) NOT NULL COMMENT 'Nombres',
+  `apellido_cliente`    VARCHAR(100) NOT NULL DEFAULT '' COMMENT 'Apellidos',
+  `contacto_cliente`    VARCHAR(250) DEFAULT NULL,
+  `activo`              TINYINT(1)   NOT NULL DEFAULT 1,
   PRIMARY KEY (`id_cliente`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
   COMMENT='Catálogo de clientes.';

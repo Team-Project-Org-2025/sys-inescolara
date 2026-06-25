@@ -26,6 +26,19 @@ class Herramienta extends Database implements ReadableInterface, DeletableInterf
     public function __construct()
     {
         parent::__construct();
+        $this->bootstrapDefaults();
+    }
+
+    private function bootstrapDefaults(): void
+    {
+        try {
+            $columns = $this->db()->query("SHOW COLUMNS FROM herramienta")->fetchAll(PDO::FETCH_COLUMN);
+            if (!in_array('cantidad', $columns)) {
+                $this->db()->exec("ALTER TABLE herramienta ADD COLUMN cantidad INT(11) NOT NULL DEFAULT 1 AFTER nombre_herramienta");
+            }
+        } catch (\Throwable $e) {
+            error_log('Error en Herramienta::bootstrapDefaults: ' . $e->getMessage());
+        }
     }
 
     public function getAll(): array
@@ -77,7 +90,7 @@ class Herramienta extends Database implements ReadableInterface, DeletableInterf
         return $stmt->fetchColumn() > 0;
     }
 
-    public function add(string $nombre, int $cantidad = 1, ?string $tipo = null, string $estado = 'disponible', ?string $fechaAdquisicion = null, ?string $fechaUltimoMantenimiento = null, ?string $observacion = null): bool
+    public function add(string $nombre, int $cantidad = 1, ?string $tipo = null, string $estado = 'disponible', ?string $fechaAdquisicion = null, ?string $fechaUltimoMantenimiento = null, ?string $observacion = null): int
     {
         $this->validateData([
             'nombre' => $nombre,
@@ -102,19 +115,7 @@ class Herramienta extends Database implements ReadableInterface, DeletableInterf
             ':observacion' => $observacion,
         ]);
 
-        $newId = (int) $this->db()->lastInsertId();
-
-        AuditLog::record('CREATE', 'herramienta', $newId, null, [
-            'nombre' => $nombre,
-            'tipo' => $tipo,
-            'estado' => $estado,
-            'fecha_adquisicion' => $fechaAdquisicion,
-            'fecha_ultimo_mantenimiento' => $fechaUltimoMantenimiento,
-            'observacion' => $observacion,
-            'cantidad' => $cantidad,
-        ]);
-
-        return true;
+        return (int) $this->db()->lastInsertId();
     }
 
     public function update(int $id, string $nombre, int $cantidad = 1, ?string $tipo = null, string $estado = 'disponible', ?string $fechaAdquisicion = null, ?string $fechaUltimoMantenimiento = null, ?string $observacion = null): bool

@@ -3,7 +3,6 @@
 require_once __DIR__ . '/controller_helpers.php';
 
 use SysInescolara\models\CuentaPagar;
-use SysInescolara\models\AuditLog;
 
 function index(): void
 {
@@ -100,12 +99,6 @@ function cuentas_registrarPago(): void
 
     $modelo->registrarPago($idCuentaPagar, $monto, $fechaPago, $tipoPago, $referencia, $observacion);
 
-    $nuevoId = $modelo->obtenerUltimoId();
-
-    AuditLog::record('CREATE', 'pago_compra', $nuevoId, null, [
-        'id_cuenta_pagar' => $idCuentaPagar, 'monto' => $monto, 'tipo_pago' => $tipoPago,
-    ]);
-
     jsonResponse(['success' => true, 'message' => 'Pago registrado correctamente.']);
 }
 
@@ -117,6 +110,5 @@ function cuentas_anularPago(): void
     $modelo = new CuentaPagar();
     $modelo->anularPago($idPago);
 
-    AuditLog::record('DEACTIVATE', 'pago_compra', $idPago, null, null);
     jsonResponse(['success' => true, 'message' => 'Pago anulado correctamente.']);
 }

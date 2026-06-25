@@ -18,7 +18,7 @@ $(document).ready(function () {
 
   const initDataTable = () => {
     if (typeof SkeletonHelper !== 'undefined') {
-      SkeletonHelper.showTableSkeleton('herramientasTable', 5, 8);
+      SkeletonHelper.showTableSkeleton('herramientasTable', 5, 4);
     }
     herramientasTable = $('#herramientasTable').DataTable({
       ajax: {
@@ -31,10 +31,6 @@ $(document).ready(function () {
       columns: [
         { data: 'nombre_herramienta' },
         { data: 'cantidad', className: 'text-center' },
-        {
-          data: 'tipo',
-          render: (data) => data || '<span class="text-muted">&mdash;</span>',
-        },
         {
           data: 'estado',
           render: (data) => {
@@ -49,21 +45,10 @@ $(document).ready(function () {
           },
         },
         {
-          data: 'fecha_adquisicion',
-          render: (data) => data || '<span class="text-muted">&mdash;</span>',
-        },
-        {
-          data: 'fecha_ultimo_mantenimiento',
-          render: (data) => data || '<span class="text-muted">&mdash;</span>',
-        },
-        {
-          data: 'observacion',
-          render: (data) => data ? Helpers.truncateText(data, 50) : '<span class="text-muted">&mdash;</span>',
-        },
-        {
           data: null,
           orderable: false,
           render: () => C.btnGroup(
+              C.btnView('btn-view'),
               C.btnEdit('btn-edit'),
               C.btnDelete('btn-delete'),
             ),
@@ -82,7 +67,7 @@ $(document).ready(function () {
           className: 'btn btn-outline-secondary btn-sm',
           action: () => {
             if (typeof SkeletonHelper !== 'undefined') {
-              SkeletonHelper.showTableSkeleton('herramientasTable', 5, 7);
+              SkeletonHelper.showTableSkeleton('herramientasTable', 5, 4);
             }
             herramientasTable.ajax.reload(null, false);
           },
@@ -90,6 +75,28 @@ $(document).ready(function () {
       ],
     });
   };
+
+  $(document).on('click', '.btn-view', function () {
+    const row = herramientasTable.row($(this).closest('tr')).data();
+
+    $('#viewToolNombre').text(row.nombre_herramienta || '—');
+    $('#viewToolCantidad').text(row.cantidad ?? '0');
+    $('#viewToolTipo').text(row.tipo || '—');
+
+    const badges = {
+      disponible: 'Disponible',
+      en_uso: 'En Uso',
+      mantenimiento: 'Mantenimiento',
+      danada: 'Dañada',
+      baja: 'De Baja',
+    };
+    $('#viewToolEstado').text(badges[row.estado] || row.estado || '—');
+    $('#viewToolFechaAdq').text(row.fecha_adquisicion || '—');
+    $('#viewToolFechaMant').text(row.fecha_ultimo_mantenimiento || '—');
+    $('#viewToolObs').text(row.observacion || '—');
+
+    $('#viewToolModal').modal({ focus: false }).modal('show');
+  });
 
   $('#btnAddTool').on('click', function () {
     const $editModal = $('#editToolModal');

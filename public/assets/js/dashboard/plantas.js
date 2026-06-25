@@ -34,7 +34,7 @@ $(document).ready(function () {
 
   const initDataTable = () => {
     if (typeof SkeletonHelper !== 'undefined') {
-      SkeletonHelper.showTableSkeleton('plantasTable', 5, 7);
+      SkeletonHelper.showTableSkeleton('plantasTable', 5, 4);
     }
     plantasTable = $('#plantasTable').DataTable({
       ajax: {
@@ -61,19 +61,10 @@ $(document).ready(function () {
           render: (data) => data || '<span class="text-muted">—</span>',
         },
         {
-          data: 'especie_nombre',
-          render: (data) => data || '<span class="text-muted">Sin especie</span>',
-        },
-        { data: 'stock_lotes', render: (data) => data ?? '0', className: 'text-end' },
-        {
-          data: 'precio_vigente',
-          render: (data) => data ? Helpers.formatCurrencyBs(data) : '<span class="text-muted">—</span>',
-          className: 'text-end',
-        },
-        {
           data: null,
           orderable: false,
           render: () => C.btnGroup(
+              C.btnView('btn-view'),
               C.btnEdit('btn-edit'),
               C.btnDelete('btn-delete'),
             ),
@@ -92,7 +83,7 @@ $(document).ready(function () {
           className: 'btn btn-outline-secondary btn-sm',
           action: () => {
             if (typeof SkeletonHelper !== 'undefined') {
-              SkeletonHelper.showTableSkeleton('plantasTable', 5, 7);
+              SkeletonHelper.showTableSkeleton('plantasTable', 5, 4);
             }
             plantasTable.ajax.reload(null, false);
           },
@@ -111,6 +102,26 @@ $(document).ready(function () {
 
   $('#imageLightbox').on('hidden.bs.modal', function () {
     $('#lightboxImg').attr('src', '');
+  });
+
+  $(document).on('click', '.btn-view', function () {
+    const row = plantasTable.row($(this).closest('tr')).data();
+
+    const imgUrl = row.imagen ? `${window.BASE_URL || '/'}${row.imagen}` : '';
+    if (imgUrl) {
+      $('#viewPlantImage').attr('src', imgUrl).show();
+    } else {
+      $('#viewPlantImage').hide();
+    }
+
+    $('#viewPlantNombre').text(row.nombre_comun || '—');
+    $('#viewPlantTecnico').text(row.nombre_tecnico || '—');
+    $('#viewPlantEspecie').text(row.especie_nombre || 'Sin especie');
+    $('#viewPlantStock').text(row.stock_lotes ?? '0');
+    $('#viewPlantCantidad').text(row.cantidad_total ?? '0');
+    $('#viewPlantPrecio').text(row.precio_vigente ? Helpers.formatCurrencyBs(row.precio_vigente) : '—');
+
+    $('#viewPlantModal').modal({ focus: false }).modal('show');
   });
 
   $('#btnAddPlant').on('click', function () {

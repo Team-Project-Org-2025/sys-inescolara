@@ -7,6 +7,7 @@ use SysInescolara\interfaces\ReadableInterface;
 use SysInescolara\interfaces\DeletableInterface;
 use SysInescolara\traits\ValidationTrait;
 use PDO;
+use SysInescolara\models\AuditLog;
 
 class Venta extends Database implements ReadableInterface, DeletableInterface
 {
@@ -43,7 +44,10 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
                         v.fecha_venta,
                         v.observaciones,
                         v.activo,
-                        c.nombre_cliente,
+                        CONCAT(c.nombre_cliente, ' ', c.apellido_cliente) AS nombre_cliente,
+                        c.tipo_cedula_cliente,
+                        c.cedula_cliente,
+                        c.apellido_cliente,
                         t.nombre_trabajador,
                         t.apellido_trabajador,
                         COALESCE((SELECT SUM(dv.cantidad * dv.precio_unitario) FROM detalle_venta dv WHERE dv.id_venta = v.id_venta), 0) AS monto_subtotal,
@@ -68,7 +72,9 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
         try {
             $sql = "SELECT
                         v.*,
-                        c.nombre_cliente,
+                        CONCAT(c.nombre_cliente, ' ', c.apellido_cliente) AS nombre_cliente,
+                        c.tipo_cedula_cliente,
+                        c.cedula_cliente,
                         t.nombre_trabajador,
                         t.apellido_trabajador,
                         COALESCE((SELECT SUM(dv.cantidad * dv.precio_unitario) FROM detalle_venta dv WHERE dv.id_venta = v.id_venta), 0) AS monto_subtotal,
@@ -123,6 +129,7 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
 
     public function cancelar(int $id): bool
     {
+        $oldData = $this->getById($id);
         try {
             $this->db()->beginTransaction();
 
@@ -131,19 +138,28 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
                 throw new \Exception('No se encontraron detalles para esta venta.');
             }
 
-            $stmtStock = $this->db()->prepare("UPDATE lote SET cantidad_actual = cantidad_actual + :cantidad, estado = IF(cantidad_actual + :cantidad2 > 0, 'Activo', estado) WHERE id_lote = :id_lote");
+            $stmtStockLote = $this->db()->prepare("UPDATE lote SET cantidad_actual = cantidad_actual + :cantidad, estado = IF(cantidad_actual + :cantidad2 > 0, 'Activo', estado) WHERE id_lote = :id_lote");
+            $stmtStockInsumo = $this->db()->prepare("UPDATE insumo SET stock_actual = stock_actual + :cantidad WHERE id_insumo = :id_insumo");
             foreach ($detalles as $det) {
-                $stmtStock->execute([
-                    ':cantidad' => (int)$det['cantidad'],
-                    ':cantidad2' => (int)$det['cantidad'],
-                    ':id_lote' => (int)$det['id_lote'],
-                ]);
+                if (($det['tipo_item'] ?? 'planta') === 'insumo') {
+                    $stmtStockInsumo->execute([
+                        ':cantidad' => (int)$det['cantidad'],
+                        ':id_insumo' => (int)($det['id_insumo'] ?? 0),
+                    ]);
+                } else {
+                    $stmtStockLote->execute([
+                        ':cantidad' => (int)$det['cantidad'],
+                        ':cantidad2' => (int)$det['cantidad'],
+                        ':id_lote' => (int)$det['id_lote'],
+                    ]);
+                }
             }
 
             $stmt = $this->db()->prepare("UPDATE venta SET activo = 0, estado = 'cancelada', updated_at = NOW() WHERE id_venta = :id");
             $stmt->execute([':id' => $id]);
 
             $this->db()->commit();
+            AuditLog::record('DEACTIVATE', 'venta', $id, $oldData, null);
             return true;
         } catch (\Throwable $e) {
             $this->db()->rollBack();
@@ -247,6 +263,13 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
             }
 
             $this->db()->commit();
+            AuditLog::record('CREATE', 'venta', $ventaId, null, [
+                'id_cliente'    => $datos['id_cliente'],
+                'id_trabajador' => $datos['id_trabajador'],
+                'tipo_venta'    => $datos['tipo_venta'] ?? 'contado',
+                'productos'     => count($datos['productos'] ?? []),
+                'pagos'         => count($datos['pagos'] ?? []),
+            ]);
             return $ventaId;
         } catch (\Throwable $e) {
             $this->db()->rollBack();
@@ -258,42 +281,83 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
     private function agregarDetalles(int $idVenta, array $productos): void
     {
         $stmtDet = $this->db()->prepare("INSERT INTO detalle_venta
-            (id_venta, id_lote, cantidad, precio_unitario)
-            VALUES (:id_venta, :id_lote, :cantidad, :precio_unitario)");
+            (id_venta, tipo_item, id_lote, id_insumo, cantidad, precio_unitario)
+            VALUES (:id_venta, :tipo_item, :id_lote, :id_insumo, :cantidad, :precio_unitario)");
 
-        $stmtStock = $this->db()->prepare("UPDATE lote SET
+        $stmtStockLote = $this->db()->prepare("UPDATE lote SET
             cantidad_actual = cantidad_actual - :cantidad,
             estado = IF(cantidad_actual - :cantidad2 <= 0, 'Agotado', estado)
             WHERE id_lote = :id_lote");
 
+        $stmtStockInsumo = $this->db()->prepare("UPDATE insumo SET
+            stock_actual = stock_actual - :cantidad
+            WHERE id_insumo = :id_insumo AND stock_actual >= :cantidad2");
+
         foreach ($productos as $item) {
+            $tipoItem = $item['tipo_item'] ?? 'planta';
             $idLote = (int)($item['id_lote'] ?? 0);
+            $idInsumo = (int)($item['id_insumo'] ?? 0);
             $cantidad = (int)($item['cantidad'] ?? 0);
 
-            $stmtCheck = $this->db()->prepare("SELECT cantidad_actual FROM lote WHERE id_lote = :id_lote AND activo = 1");
-            $stmtCheck->execute([':id_lote' => $idLote]);
-            $lote = $stmtCheck->fetch(PDO::FETCH_ASSOC);
+            if ($tipoItem === 'insumo') {
+                if ($idInsumo <= 0) {
+                    throw new \Exception("Insumo inválido.");
+                }
+                $stmtCheck = $this->db()->prepare("SELECT stock_actual FROM insumo WHERE id_insumo = :id AND activo = 1");
+                $stmtCheck->execute([':id' => $idInsumo]);
+                $insumo = $stmtCheck->fetch(PDO::FETCH_ASSOC);
 
-            if (!$lote) {
-                throw new \Exception("El lote ID {$idLote} no existe.");
+                if (!$insumo) {
+                    throw new \Exception("El insumo ID {$idInsumo} no existe.");
+                }
+                if ((float)$insumo['stock_actual'] < $cantidad) {
+                    throw new \Exception("Stock insuficiente de insumo. Disponible: {$insumo['stock_actual']}, solicitado: {$cantidad}.");
+                }
+
+                $stmtDet->execute([
+                    ':id_venta'       => $idVenta,
+                    ':tipo_item'      => 'insumo',
+                    ':id_lote'        => null,
+                    ':id_insumo'      => $idInsumo,
+                    ':cantidad'       => $cantidad,
+                    ':precio_unitario'=> $item['precio_unitario'] ?? 0,
+                ]);
+
+                $stmtStockInsumo->execute([
+                    ':cantidad'  => $cantidad,
+                    ':id_insumo' => $idInsumo,
+                    ':cantidad2' => $cantidad,
+                ]);
+            } else {
+                if ($idLote <= 0) {
+                    throw new \Exception("El lote es requerido.");
+                }
+                $stmtCheck = $this->db()->prepare("SELECT cantidad_actual FROM lote WHERE id_lote = :id_lote AND activo = 1");
+                $stmtCheck->execute([':id_lote' => $idLote]);
+                $lote = $stmtCheck->fetch(PDO::FETCH_ASSOC);
+
+                if (!$lote) {
+                    throw new \Exception("El lote ID {$idLote} no existe.");
+                }
+                if ((int)$lote['cantidad_actual'] < $cantidad) {
+                    throw new \Exception("Stock insuficiente en el lote ID {$idLote}. Disponible: {$lote['cantidad_actual']}, solicitado: {$cantidad}.");
+                }
+
+                $stmtDet->execute([
+                    ':id_venta'       => $idVenta,
+                    ':tipo_item'      => 'planta',
+                    ':id_lote'        => $idLote,
+                    ':id_insumo'      => null,
+                    ':cantidad'       => $cantidad,
+                    ':precio_unitario'=> $item['precio_unitario'] ?? 0,
+                ]);
+
+                $stmtStockLote->execute([
+                    ':cantidad'  => $cantidad,
+                    ':cantidad2' => $cantidad,
+                    ':id_lote'   => $idLote,
+                ]);
             }
-
-            if ((int)$lote['cantidad_actual'] < $cantidad) {
-                throw new \Exception("Stock insuficiente en el lote ID {$idLote}. Disponible: {$lote['cantidad_actual']}, solicitado: {$cantidad}.");
-            }
-
-            $stmtDet->execute([
-                ':id_venta'       => $idVenta,
-                ':id_lote'        => $idLote,
-                ':cantidad'       => $cantidad,
-                ':precio_unitario'=> $item['precio_unitario'] ?? 0,
-            ]);
-
-            $stmtStock->execute([
-                ':cantidad'  => $cantidad,
-                ':cantidad2' => $cantidad,
-                ':id_lote'   => $idLote,
-            ]);
         }
     }
 
@@ -333,17 +397,38 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
             $stmt = $this->db()->prepare("SELECT
                                             dv.id_detalle_venta,
                                             dv.id_venta,
+                                            dv.tipo_item,
                                             dv.id_lote,
+                                            dv.id_insumo,
                                             dv.cantidad,
                                             dv.precio_unitario,
                                             (dv.cantidad * dv.precio_unitario) AS sub_total,
-                                            l.cantidad_actual,
-                                            p.nombre_comun AS planta_nombre,
-                                            e.nombre_especie AS especie_nombre
+                                            CASE dv.tipo_item
+                                                WHEN 'insumo' THEN i.stock_actual
+                                                ELSE l.cantidad_actual
+                                            END AS cantidad_actual,
+                                            CASE dv.tipo_item
+                                                WHEN 'insumo' THEN i.nombre_insumo
+                                                ELSE p.nombre_comun
+                                            END AS planta_nombre,
+                                            CASE dv.tipo_item
+                                                WHEN 'insumo' THEN u.simbolo
+                                                ELSE e.nombre_especie
+                                            END AS especie_nombre,
+                                            CASE dv.tipo_item
+                                                WHEN 'insumo' THEN i.nombre_insumo
+                                                ELSE p.nombre_tecnico
+                                            END AS nombre_tecnico,
+                                            CASE dv.tipo_item
+                                                WHEN 'insumo' THEN u.simbolo
+                                                ELSE NULL
+                                            END AS unidad_simbolo
                                         FROM detalle_venta dv
-                                        JOIN lote l ON dv.id_lote = l.id_lote
+                                        LEFT JOIN lote l ON dv.id_lote = l.id_lote
                                         LEFT JOIN plantas p ON l.id_planta = p.id_planta
                                         LEFT JOIN especie e ON p.id_especie = e.id_especie
+                                        LEFT JOIN insumo i ON dv.id_insumo = i.id_insumo
+                                        LEFT JOIN unidad_medida u ON i.id_unidad_medida = u.id_unidad_medida
                                         WHERE dv.id_venta = :id_venta
                                         ORDER BY dv.id_detalle_venta ASC");
             $stmt->execute([':id_venta' => $idVenta]);
@@ -369,13 +454,19 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
     public function obtenerLotesDisponibles(string $query): array
     {
         try {
+            $searchTerm = "%{$query}%";
+
             $stmt = $this->db()->prepare("SELECT
                                             l.id_lote,
+                                            'planta' AS tipo_item,
                                             l.cantidad_actual,
                                             l.estado,
                                             p.nombre_comun AS planta_nombre,
+                                            p.nombre_comun AS nombre,
                                             e.nombre_especie AS especie_nombre,
-                                            c.precio_final_sugerido AS precio_unitario
+                                            e.nombre_especie AS detalle,
+                                            c.precio_final_sugerido AS precio_unitario,
+                                            NULL AS unidad_simbolo
                                         FROM lote l
                                         JOIN plantas p ON l.id_planta = p.id_planta AND p.activo = 1
                                         LEFT JOIN especie e ON p.id_especie = e.id_especie
@@ -385,11 +476,39 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
                                         AND (p.nombre_comun LIKE ? OR e.nombre_especie LIKE ? OR p.nombre_tecnico LIKE ?)
                                         ORDER BY p.nombre_comun ASC
                                         LIMIT 20");
-            $searchTerm = "%{$query}%";
             $stmt->execute([$searchTerm, $searchTerm, $searchTerm]);
-            return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+            $plantas = $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+
+            foreach ($plantas as &$p) {
+                $p['id_insumo'] = null;
+            }
+            unset($p);
+
+            $stmt2 = $this->db()->prepare("SELECT
+                                            i.id_insumo AS id_lote,
+                                            'insumo' AS tipo_item,
+                                            i.stock_actual AS cantidad_actual,
+                                            i.categoria AS estado,
+                                            i.nombre_insumo AS planta_nombre,
+                                            i.nombre_insumo AS nombre,
+                                            u.simbolo AS especie_nombre,
+                                            u.simbolo AS detalle,
+                                            i.costo_unitario_actual AS precio_unitario,
+                                            u.simbolo AS unidad_simbolo,
+                                            i.id_insumo
+                                        FROM insumo i
+                                        LEFT JOIN unidad_medida u ON i.id_unidad_medida = u.id_unidad_medida AND u.activo = 1
+                                        WHERE i.activo = 1
+                                        AND i.stock_actual > 0
+                                        AND (i.nombre_insumo LIKE ? OR i.categoria LIKE ?)
+                                        ORDER BY i.nombre_insumo ASC
+                                        LIMIT 10");
+            $stmt2->execute([$searchTerm, $searchTerm]);
+            $insumos = $stmt2 ? $stmt2->fetchAll(PDO::FETCH_ASSOC) : [];
+
+            return array_merge($plantas, $insumos);
         } catch (\Throwable $e) {
-            error_log('Error al buscar lotes: ' . $e->getMessage());
+            error_log('Error al buscar productos: ' . $e->getMessage());
             return [];
         }
     }
@@ -399,15 +518,18 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
         try {
             $stmt = $this->db()->prepare("SELECT
                                             id_cliente,
-                                            nombre_cliente,
+                                            CONCAT(nombre_cliente, ' ', apellido_cliente) AS nombre_cliente,
+                                            tipo_cedula_cliente,
+                                            cedula_cliente,
+                                            apellido_cliente,
                                             contacto_cliente
                                         FROM cliente
                                         WHERE activo = 1
-                                        AND (nombre_cliente LIKE ? OR contacto_cliente LIKE ?)
-                                        ORDER BY nombre_cliente ASC
+                                        AND (nombre_cliente LIKE ? OR apellido_cliente LIKE ? OR contacto_cliente LIKE ? OR cedula_cliente LIKE ?)
+                                        ORDER BY nombre_cliente ASC, apellido_cliente ASC
                                         LIMIT 10");
             $searchTerm = "%{$query}%";
-            $stmt->execute([$searchTerm, $searchTerm]);
+            $stmt->execute([$searchTerm, $searchTerm, $searchTerm, $searchTerm]);
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
         } catch (\Throwable $e) {
             error_log('Error al buscar clientes: ' . $e->getMessage());

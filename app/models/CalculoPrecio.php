@@ -6,6 +6,7 @@ use SysInescolara\core\Database;
 use SysInescolara\interfaces\ReadableInterface;
 use SysInescolara\interfaces\DeletableInterface;
 use SysInescolara\traits\ValidationTrait;
+use SysInescolara\models\AuditLog;
 use PDO;
 
 class CalculoPrecio extends Database implements ReadableInterface, DeletableInterface
@@ -84,10 +85,13 @@ class CalculoPrecio extends Database implements ReadableInterface, DeletableInte
     public function delete(int $id): bool
     {
         try {
+            $oldData = $this->getById($id);
             $this->db()->beginTransaction();
             $stmt = $this->db()->prepare("DELETE FROM calculo_precio WHERE id_calculo = :id");
             $stmt->execute([':id' => $id]);
-            return $this->db()->commit();
+            $this->db()->commit();
+            AuditLog::record('DELETE', 'calculo_precio', $id, $oldData, null);
+            return true;
         } catch (\Throwable $e) {
             $this->db()->rollBack();
             error_log('Error en CalculoPrecio::delete: ' . $e->getMessage());
@@ -158,6 +162,14 @@ class CalculoPrecio extends Database implements ReadableInterface, DeletableInte
 
             $this->_lastInsertId = (int)$this->db()->lastInsertId();
             $this->db()->commit();
+            AuditLog::record('CREATE', 'calculo_precio', $this->_lastInsertId, null, [
+                'id_lote' => $idLote,
+                'costo_mano_obra' => $costoManoObra,
+                'costo_total_insumo' => $costoTotalInsumo,
+                'porcentaje_ganancia' => $porcentajeGanancia,
+                'precio_final_sugerido' => $precioFinalSugerido,
+                'fecha_calculo' => $fechaCalculo,
+            ]);
             return true;
         } catch (\Throwable $e) {
             if ($this->db()->inTransaction()) $this->db()->rollBack();
@@ -186,25 +198,31 @@ class CalculoPrecio extends Database implements ReadableInterface, DeletableInte
         if (!$this->exists($id)) {
             throw new \Exception('No existe el cálculo de precio solicitado para modificar.');
         }
+
+        $oldData = $this->getById($id);
+
         $stmt = $this->db()->prepare("
             UPDATE calculo_precio
-            SET id_lote = :id_lote,
-                costo_mano_obra = :costo_mano_obra,
-                costo_total_insumo = :costo_total_insumo,
-                porcentaje_ganancia = :porcentaje_ganancia,
-                precio_final_sugerido = :precio_final_sugerido,
-                fecha_calculo = :fecha_calculo
-            WHERE id_calculo = :id
+            SET id_lote = ?,
+                costo_mano_obra = ?,
+                costo_total_insumo = ?,
+                porcentaje_ganancia = ?,
+                precio_final_sugerido = ?,
+                fecha_calculo = ?
+            WHERE id_calculo = ?
         ");
-        return $stmt->execute([
-            ':id' => $id,
-            ':id_lote' => $idLote,
-            ':costo_mano_obra' => $costoManoObra,
-            ':costo_total_insumo' => $costoTotalInsumo,
-            ':porcentaje_ganancia' => $porcentajeGanancia,
-            ':precio_final_sugerido' => $precioFinalSugerido,
-            ':fecha_calculo' => $fechaCalculo,
+        $stmt->execute([$idLote, $costoManoObra, $costoTotalInsumo, $porcentajeGanancia, $precioFinalSugerido, $fechaCalculo, $id]);
+
+        AuditLog::record('UPDATE', 'calculo_precio', $id, $oldData, [
+            'id_lote' => $idLote,
+            'costo_mano_obra' => $costoManoObra,
+            'costo_total_insumo' => $costoTotalInsumo,
+            'porcentaje_ganancia' => $porcentajeGanancia,
+            'precio_final_sugerido' => $precioFinalSugerido,
+            'fecha_calculo' => $fechaCalculo,
         ]);
+
+        return true;
     }
 
     public function getLotesByPlanta(int $idPlanta, ?string $categoria = null): array

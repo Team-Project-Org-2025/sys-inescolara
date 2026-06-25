@@ -3,7 +3,6 @@
 require_once __DIR__ . '/controller_helpers.php';
 
 use SysInescolara\models\Usuario;
-use SysInescolara\models\AuditLog;
 use SysInescolara\models\Empleado;
 
 function index(): void
@@ -116,7 +115,6 @@ function users_handleAddEdit(string $mode): void
         $model->add($nombreUsuario, $password, $rolId, $correoElectronico, $avatar, $idTrabajadorRef);
         $newId = $model->getLastInsertId() ?? 0;
         if ($rolId !== 1) $model->setUserPermissions($newId, $permisoIds);
-        AuditLog::record('CREATE', 'usuarios', $newId, null, compact('nombreUsuario', 'correoElectronico', 'rolId'));
         jsonResponse([
             'success' => true, 'message' => 'Usuario agregado',
             'user' => ['id' => $newId, 'nombre_usuario' => $nombreUsuario, 'correo_electronico' => $correoElectronico, 'rol_id' => $rolId, 'id_trabajador_ref' => $idTrabajadorRef, 'avatar' => $avatar, 'permisos' => $rolId !== 1 ? $model->getUserPermissions($newId) : []],
@@ -138,8 +136,6 @@ function users_handleAddEdit(string $mode): void
     } else {
         $model->setUserPermissions($id, []);
     }
-
-    AuditLog::record('UPDATE', 'usuarios', $id, $oldData, compact('nombreUsuario', 'correoElectronico', 'rolId'));
 
     if (\SysInescolara\helpers\Auth::check() && \SysInescolara\helpers\Auth::id() === $id) {
         \SysInescolara\helpers\Auth::setField('user_nombre', $nombreUsuario);
@@ -174,12 +170,10 @@ function users_handleDelete(): void
         return;
     }
 
-    $oldData = $model->getById($id);
     if (!$model->delete($id)) {
         jsonResponse(['success' => false, 'message' => 'No se pudo eliminar el usuario. Puede tener registros asociados (ej. sesiones activas, auditoría).'], 500);
         return;
     }
-    AuditLog::record('DELETE', 'usuarios', $id, $oldData, null);
     jsonResponse(['success' => true, 'message' => 'Usuario desactivado', 'userId' => $id]);
 }
 

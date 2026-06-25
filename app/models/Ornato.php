@@ -7,6 +7,7 @@ use SysInescolara\interfaces\ReadableInterface;
 use SysInescolara\interfaces\DeletableInterface;
 use SysInescolara\traits\ValidationTrait;
 use PDO;
+use SysInescolara\models\AuditLog;
 
 class Ornato extends Database implements ReadableInterface, DeletableInterface
 {
@@ -39,7 +40,9 @@ class Ornato extends Database implements ReadableInterface, DeletableInterface
                         o.monto_total,
                         o.fecha,
                         o.activo,
-                        c.nombre_cliente
+                        CONCAT(c.nombre_cliente, ' ', c.apellido_cliente) AS nombre_cliente,
+                        c.tipo_cedula_cliente,
+                        c.cedula_cliente
                     FROM ornatos o
                     LEFT JOIN cliente c ON o.id_cliente = c.id_cliente AND c.activo = 1
                     WHERE o.activo = 1
@@ -57,7 +60,9 @@ class Ornato extends Database implements ReadableInterface, DeletableInterface
         try {
             $stmt = $this->db()->prepare("SELECT
                                             o.*,
-                                            c.nombre_cliente
+                                            CONCAT(c.nombre_cliente, ' ', c.apellido_cliente) AS nombre_cliente,
+                                            c.tipo_cedula_cliente,
+                                            c.cedula_cliente
                                         FROM ornatos o
                                         LEFT JOIN cliente c ON o.id_cliente = c.id_cliente
                                         WHERE o.id_ornato = :id");
@@ -84,8 +89,11 @@ class Ornato extends Database implements ReadableInterface, DeletableInterface
     public function delete(int $id): bool
     {
         try {
+            $oldData = $this->getById($id);
             $stmt = $this->db()->prepare("UPDATE ornatos SET activo = 0 WHERE id_ornato = :id");
-            return $stmt->execute([':id' => $id]);
+            $result = $stmt->execute([':id' => $id]);
+            AuditLog::record('DEACTIVATE', 'ornatos', $id, $oldData, null);
+            return $result;
         } catch (\Throwable $e) {
             error_log('Error al eliminar ornato: ' . $e->getMessage());
             return false;
@@ -126,7 +134,7 @@ class Ornato extends Database implements ReadableInterface, DeletableInterface
             $stmt = $this->db()->prepare("INSERT INTO ornatos
                 (id_cliente, tipo_ornato, descripcion, ubicacion, monto_total, fecha)
                 VALUES (:id_cliente, :tipo_ornato, :descripcion, :ubicacion, :monto_total, :fecha)");
-            return $stmt->execute([
+            $result = $stmt->execute([
                 ':id_cliente'  => $datos['id_cliente'],
                 ':tipo_ornato' => $datos['tipo_ornato'] ?? 'Venta',
                 ':descripcion' => $datos['descripcion'] ?? null,
@@ -134,6 +142,10 @@ class Ornato extends Database implements ReadableInterface, DeletableInterface
                 ':monto_total' => $datos['monto_total'] ?? 0.00,
                 ':fecha'       => $datos['fecha'],
             ]);
+            if ($result) {
+                AuditLog::record('CREATE', 'ornatos', $this->db()->lastInsertId(), null, $datos);
+            }
+            return $result;
         } catch (\Throwable $e) {
             error_log('Error al agregar ornato: ' . $e->getMessage());
             return false;
@@ -189,7 +201,8 @@ class Ornato extends Database implements ReadableInterface, DeletableInterface
                 monto_total = :monto_total,
                 fecha       = :fecha
                 WHERE id_ornato = :id");
-            return $stmt->execute([
+            $oldData = $this->getById($id);
+            $result = $stmt->execute([
                 ':id'          => $id,
                 ':id_cliente'  => $datos['id_cliente'],
                 ':tipo_ornato' => $datos['tipo_ornato'] ?? 'Venta',
@@ -198,6 +211,8 @@ class Ornato extends Database implements ReadableInterface, DeletableInterface
                 ':monto_total' => $datos['monto_total'] ?? 0.00,
                 ':fecha'       => $datos['fecha'],
             ]);
+            AuditLog::record('UPDATE', 'ornatos', $id, $oldData, $datos);
+            return $result;
         } catch (\Throwable $e) {
             error_log('Error al actualizar ornato: ' . $e->getMessage());
             return false;
@@ -258,6 +273,30 @@ class Ornato extends Database implements ReadableInterface, DeletableInterface
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
         } catch (\Throwable $e) {
             error_log('Error al obtener detalles de ornato: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    public function buscarClientes(string $query): array
+    {
+        try {
+            $stmt = $this->db()->prepare("SELECT
+                                            id_cliente,
+                                            CONCAT(nombre_cliente, ' ', apellido_cliente) AS nombre_cliente,
+                                            tipo_cedula_cliente,
+                                            cedula_cliente,
+                                            apellido_cliente,
+                                            contacto_cliente
+                                        FROM cliente
+                                        WHERE activo = 1
+                                        AND (nombre_cliente LIKE ? OR apellido_cliente LIKE ? OR contacto_cliente LIKE ? OR cedula_cliente LIKE ?)
+                                        ORDER BY nombre_cliente ASC, apellido_cliente ASC
+                                        LIMIT 10");
+            $searchTerm = "%{$query}%";
+            $stmt->execute([$searchTerm, $searchTerm, $searchTerm, $searchTerm]);
+            return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+        } catch (\Throwable $e) {
+            error_log('Error al buscar clientes en Ornato: ' . $e->getMessage());
             return [];
         }
     }

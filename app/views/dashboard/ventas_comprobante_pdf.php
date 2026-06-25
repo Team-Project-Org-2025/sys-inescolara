@@ -50,7 +50,7 @@
             </tr>
             <tr>
                 <td class="label">Cliente:</td>
-                <td><?= htmlspecialchars($venta['nombre_cliente'] ?? '') ?></td>
+                <td><?= htmlspecialchars($venta['nombre_cliente'] ?? '') ?> — <?= htmlspecialchars(($venta['tipo_cedula_cliente'] ?? '') . '-' . ($venta['cedula_cliente'] ?? '')) ?></td>
                 <td class="label">Vendedor:</td>
                 <td><?= htmlspecialchars(($venta['nombre_trabajador'] ?? '') . ' ' . ($venta['apellido_trabajador'] ?? '')) ?></td>
             </tr>
@@ -73,8 +73,8 @@
         <thead>
             <tr>
                 <th style="width:40px;text-align:center;">#</th>
-                <th>Planta</th>
-                <th style="width:80px;text-align:center;">Especie</th>
+                <th>Tipo</th>
+                <th>Producto</th>
                 <th style="width:60px;text-align:center;">Cant.</th>
                 <th style="width:90px;text-align:right;">Precio Unit.</th>
                 <th style="width:90px;text-align:right;">Subtotal</th>
@@ -84,11 +84,12 @@
             <?php $cont = 1; ?>
             <?php foreach ($venta['detalles'] as $det): ?>
             <?php $subtotal = (float)$det['cantidad'] * (float)$det['precio_unitario']; ?>
+            <?php $esInsumo = ($det['tipo_item'] ?? 'planta') === 'insumo'; ?>
             <tr>
                 <td class="text-center"><?= $cont++ ?></td>
-                <td><?= htmlspecialchars($det['planta_nombre'] ?? '') ?></td>
-                <td class="text-center"><?= htmlspecialchars($det['especie_nombre'] ?? '') ?></td>
-                <td class="text-center"><?= (int)$det['cantidad'] ?></td>
+                <td class="text-center"><?= $esInsumo ? 'Insumo' : 'Planta' ?></td>
+                <td><?= htmlspecialchars($det['planta_nombre'] ?? '') ?> <?= !$esInsumo && !empty($det['especie_nombre']) ? '(' . htmlspecialchars($det['especie_nombre']) . ')' : '' ?></td>
+                <td class="text-center"><?= $esInsumo ? number_format((float)$det['cantidad'], 2, ',', '.') : (int)$det['cantidad'] ?></td>
                 <td class="text-right">Bs. <?= number_format((float)$det['precio_unitario'], 2, ',', '.') ?></td>
                 <td class="text-right">Bs. <?= number_format($subtotal, 2, ',', '.') ?></td>
             </tr>

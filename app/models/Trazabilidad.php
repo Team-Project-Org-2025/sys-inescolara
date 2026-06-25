@@ -7,6 +7,7 @@ use SysInescolara\interfaces\ReadableInterface;
 use SysInescolara\interfaces\DeletableInterface;
 use SysInescolara\traits\ValidationTrait;
 use PDO;
+use SysInescolara\models\AuditLog;
 
 class Trazabilidad extends Database implements ReadableInterface, DeletableInterface
 {
@@ -80,8 +81,11 @@ class Trazabilidad extends Database implements ReadableInterface, DeletableInter
 
     public function delete(int $id): bool
     {
+        $oldData = $this->getById($id);
         $stmt = $this->db()->prepare("UPDATE trazabilidad SET activo = 0 WHERE id_trazabilidad = :id");
-        return $stmt->execute([':id' => $id]);
+        $result = $stmt->execute([':id' => $id]);
+        AuditLog::record('DEACTIVATE', 'trazabilidad', $id, $oldData, null);
+        return $result;
     }
 
     public function restore(int $id): bool
@@ -112,13 +116,21 @@ class Trazabilidad extends Database implements ReadableInterface, DeletableInter
             INSERT INTO trazabilidad (id_lote, cantidad, estado_salud, fecha_registro, observacion)
             VALUES (:id_lote, :cantidad, :estado_salud, :fecha_registro, :observacion)
         ");
-        return $stmt->execute([
+        $result = $stmt->execute([
             ':id_lote'       => $idLote,
             ':cantidad'      => $cantidad,
             ':estado_salud'  => $estadoSalud,
             ':fecha_registro' => $fechaRegistro,
             ':observacion'   => $observacion,
         ]);
+        if ($result) {
+            AuditLog::record('CREATE', 'trazabilidad', $this->db()->lastInsertId(), null, [
+                'id_lote' => $idLote, 'cantidad' => $cantidad,
+                'estado_salud' => $estadoSalud, 'fecha_registro' => $fechaRegistro,
+                'observacion' => $observacion,
+            ]);
+        }
+        return $result;
     }
 
     public function update(int $id, int $idLote, int $cantidad, string $estadoSalud, string $fechaRegistro, ?string $observacion = null): bool
@@ -142,7 +154,8 @@ class Trazabilidad extends Database implements ReadableInterface, DeletableInter
                 observacion = :observacion
             WHERE id_trazabilidad = :id
         ");
-        return $stmt->execute([
+        $oldData = $this->getById($id);
+        $result = $stmt->execute([
             ':id'            => $id,
             ':id_lote'       => $idLote,
             ':cantidad'      => $cantidad,
@@ -150,6 +163,12 @@ class Trazabilidad extends Database implements ReadableInterface, DeletableInter
             ':fecha_registro' => $fechaRegistro,
             ':observacion'   => $observacion,
         ]);
+        AuditLog::record('UPDATE', 'trazabilidad', $id, $oldData, [
+            'id_lote' => $idLote, 'cantidad' => $cantidad,
+            'estado_salud' => $estadoSalud, 'fecha_registro' => $fechaRegistro,
+            'observacion' => $observacion,
+        ]);
+        return $result;
     }
 
     public function getAvailableBatches(?int $includeId = null): array
