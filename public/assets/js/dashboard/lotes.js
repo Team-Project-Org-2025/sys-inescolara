@@ -38,7 +38,7 @@ $(document).ready(function () {
 
   const initDataTable = () => {
     if (typeof SkeletonHelper !== 'undefined') {
-      SkeletonHelper.showTableSkeleton('lotesTable', 5, 12);
+      SkeletonHelper.showTableSkeleton('lotesTable', 5, 13);
     }
     lotesTable = $('#lotesTable').DataTable({
       ajax: {
@@ -49,6 +49,7 @@ $(document).ready(function () {
         dataSrc: 'lotes',
       },
       columns: [
+        { data: 'id' },
         {
           data: 'imagen',
           render: (data) => {

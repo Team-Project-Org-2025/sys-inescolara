@@ -11,8 +11,8 @@ include_once __DIR__ . '/../common/modal.php';
     <?= $css_links ?>
     <style>
         .lote-thumb {
-            width: 60px;
-            height: 60px;
+            width: 80px;
+            height: 80px;
             object-fit: cover;
             border-radius: 8px;
             cursor: pointer;
@@ -21,8 +21,8 @@ include_once __DIR__ . '/../common/modal.php';
         }
 .lote-thumb:hover { transform: scale(1.1); }
 .lote-thumb-placeholder {
-            width: 60px;
-            height: 60px;
+            width: 80px;
+            height: 80px;
             border-radius: 8px;
             background: #f3f4f6;
             display: flex;
@@ -72,18 +72,13 @@ include_once __DIR__ . '/../common/modal.php';
                         <table id="lotesTable" class="table table-striped table-hover w-100">
                             <thead>
                                 <tr>
+                                    <th># Lote</th>
                                     <th>Imagen</th>
                                     <th>Planta</th>
                                     <th>Especie</th>
                                     <th>Ubicación</th>
-                                    <th>Fecha Siembra</th>
-                                    <th>Cant. Inicial</th>
                                     <th>Cant. Actual</th>
-                                    <th>Precio Unitario</th>
                                     <th>Estado</th>
-                                    <th>Categoría</th>
-                                    <th>Origen</th>
-                                    <th>Observación</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
@@ -269,6 +264,59 @@ include_once __DIR__ . '/../common/modal.php';
             </div>
         </div>
     </div>
+
+    <!-- View Batch Detail Modal -->
+    <?php modal_detail_start(['id' => 'viewBatchModal', 'title' => 'Detalle de Lote', 'size' => 'modal-lg']); ?>
+        <div class="text-center mb-4">
+            <img id="viewBatchImage" src="" alt="Imagen de lote" style="width:120px;height:120px;object-fit:cover;border-radius:8px;border:2px solid #e5e7eb;">
+        </div>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label fw-semibold text-muted small text-uppercase">Planta</label>
+                <p class="fs-5 fw-medium" id="viewBatchPlanta">—</p>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-semibold text-muted small text-uppercase">Especie</label>
+                <p class="fs-5 fw-medium" id="viewBatchEspecie">—</p>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-semibold text-muted small text-uppercase">Ubicación</label>
+                <p class="fs-5 fw-medium" id="viewBatchUbicacion">—</p>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-semibold text-muted small text-uppercase">Fecha de Siembra</label>
+                <p class="fs-5 fw-medium" id="viewBatchFecha">—</p>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-semibold text-muted small text-uppercase">Cantidad Inicial</label>
+                <p class="fs-5 fw-medium" id="viewBatchCantInicial">—</p>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-semibold text-muted small text-uppercase">Cantidad Actual</label>
+                <p class="fs-5 fw-medium" id="viewBatchCantActual">—</p>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-semibold text-muted small text-uppercase">Precio Unitario</label>
+                <p class="fs-5 fw-medium" id="viewBatchPrecio">—</p>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-semibold text-muted small text-uppercase">Estado</label>
+                <p class="fs-5 fw-medium" id="viewBatchEstado">—</p>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-semibold text-muted small text-uppercase">Categoría</label>
+                <p class="fs-5 fw-medium" id="viewBatchCategoria">—</p>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-semibold text-muted small text-uppercase">Origen</label>
+                <p class="fs-5 fw-medium" id="viewBatchOrigen">—</p>
+            </div>
+            <div class="col-12">
+                <label class="form-label fw-semibold text-muted small text-uppercase">Observación</label>
+                <p class="fs-5 fw-medium" id="viewBatchObs">—</p>
+            </div>
+        </div>
+    <?php modal_detail_end(); ?>
 
     <script src="<?= BASE_URL ?>public/assets/js/dashboard/notifications.js"></script>
     <?= $scripts_links ?>

@@ -10,10 +10,52 @@ include_once __DIR__ . '/../common/modal.php';
     <title>Ventas - INECOLARA</title>
     <?= $css_links ?>
     <style>
-        #resultadosLotes {
-            max-height: 160px;
-            overflow-y: auto;
-        }
+            .producto-search-wrapper {
+                position: relative;
+            }
+            #resultadosLotes {
+                max-height: 240px;
+                overflow-y: auto;
+                position: absolute;
+                z-index: 1050;
+                top: 100%;
+                left: 0;
+                right: 0;
+                border: 1px solid #dee2e6;
+                border-radius: 0 0 0.375rem 0.375rem;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                background: #fff;
+                margin-top: 0;
+            }
+            #resultadosLotes .list-group-item {
+                border-left: none;
+                border-right: none;
+                cursor: pointer;
+                transition: background-color 0.15s;
+            }
+            #resultadosLotes .list-group-item:first-child {
+                border-top: none;
+            }
+            #resultadosLotes .list-group-item:hover {
+                background-color: #f0f4ff;
+            }
+            .search-spinner {
+                position: absolute;
+                right: 40px;
+                top: 50%;
+                transform: translateY(-50%);
+                z-index: 5;
+            }
+            .badge-tipo-planta {
+                background-color: #d1e7dd;
+                color: #0f5132;
+                font-size: 0.6rem;
+            }
+            .badge-tipo-insumo {
+                background-color: #cff4fc;
+                color: #055160;
+                font-size: 0.6rem;
+            }
         #ventaModal .modal-dialog {
             margin-left: 300px;
             margin-right: auto;
@@ -159,16 +201,23 @@ include_once __DIR__ . '/../common/modal.php';
                 </div>
             </div>
 
-            <label class="form-label small fw-semibold mb-1">Buscar Planta</label>
-            <div class="input-group mb-2">
-                <span class="input-group-text"><i class="fas fa-search"></i></span>
-                <input type="text" class="form-control" id="buscarLote" placeholder="Escriba nombre de la planta..." minlength="2" maxlength="100">
+            <label class="form-label small fw-semibold mb-1">Buscar Producto</label>
+            <div class="producto-search-wrapper mb-2">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" class="form-control" id="buscarLote" placeholder="Buscar planta o insumo (tierra, abono, maceta...)" minlength="2" maxlength="100" autocomplete="off">
+                    <div class="search-spinner d-none" id="searchSpinner">
+                        <div class="spinner-border spinner-border-sm text-primary" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                    </div>
+                </div>
+                <div id="resultadosLotes" class="list-group" style="display:none;"></div>
             </div>
-            <div id="resultadosLotes" class="list-group mb-2" style="display:none;"></div>
 
             <div id="productosContainer"></div>
             <div id="sinProductos" class="alert alert-info text-center py-2 mb-3">
-                <i class="fas fa-info-circle me-1"></i>Busque y seleccione plantas para agregar a la venta
+                <i class="fas fa-info-circle me-1"></i>Busque y seleccione productos para agregar a la venta
             </div>
 
             <div class="mb-2">
@@ -215,7 +264,7 @@ include_once __DIR__ . '/../common/modal.php';
                                         <div class="col-4">
                                             <input type="text" class="form-control form-control-sm monto-pago" placeholder="Monto" inputmode="decimal">
                                         </div>
-                                        <div class="col-2">
+                                        <div class="col-2 ref-col">
                                             <input type="text" class="form-control form-control-sm ref-pago" placeholder="Ref." maxlength="100">
                                         </div>
                                         <div class="col-1 text-end">

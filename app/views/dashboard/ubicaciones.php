@@ -40,7 +40,6 @@ include_once __DIR__ . '/../common/modal.php';
                         <table id="ubicacionesTable" class="table table-striped table-hover w-100">
                             <thead>
                                 <tr>
-                                    <th>ID</th>
                                     <th>Nombre</th>
                                     <th>Descripción</th>
                                     <th>Zona</th>
