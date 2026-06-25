@@ -3,7 +3,6 @@
 require_once __DIR__ . '/controller_helpers.php';
 
 use SysInescolara\models\Merma;
-use SysInescolara\models\AuditLog;
 
 function index(): void
 {
@@ -65,7 +64,6 @@ function mermas_handleAdd(): void
 
     $newId = $model->registerLoss($idTrazabilidad, $cantidad, $motivo, $descripcion, $fechaMerma, $idUsuario);
 
-    AuditLog::record('CREATE', 'mermas_historico', $newId, null, compact('idTrazabilidad', 'cantidad', 'motivo', 'descripcion', 'fechaMerma'));
     jsonResponse(['success' => true, 'message' => 'Merma registrada correctamente. Stock de cuarentena actualizado.', 'id' => $newId]);
 }
 
@@ -81,7 +79,6 @@ function mermas_handleDelete(): void
 
     $model->delete($id);
 
-    AuditLog::record('DEACTIVATE', 'mermas_historico', $id, $data, null);
     jsonResponse(['success' => true, 'message' => 'Registro de merma desactivado correctamente.']);
 }
 

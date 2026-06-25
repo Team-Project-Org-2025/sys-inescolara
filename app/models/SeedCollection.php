@@ -7,6 +7,7 @@ use SysInescolara\interfaces\ReadableInterface;
 use SysInescolara\interfaces\DeletableInterface;
 use SysInescolara\traits\ValidationTrait;
 use PDO;
+use SysInescolara\models\AuditLog;
 
 class SeedCollection extends Database implements ReadableInterface, DeletableInterface
 {
@@ -80,8 +81,11 @@ class SeedCollection extends Database implements ReadableInterface, DeletableInt
 
     public function delete(int $id): bool
     {
+        $oldData = $this->getById($id);
         $stmt = $this->db()->prepare("UPDATE recoleccion_semillas SET activo = 0 WHERE id_recoleccion = :id");
-        return $stmt->execute([':id' => $id]);
+        $result = $stmt->execute([':id' => $id]);
+        AuditLog::record('DEACTIVATE', 'recoleccion_semillas', $id, $oldData, null);
+        return $result;
     }
 
     public function restore(int $id): bool
@@ -112,12 +116,19 @@ class SeedCollection extends Database implements ReadableInterface, DeletableInt
             INSERT INTO recoleccion_semillas (id_trabajador, id_ubicacion, fecha_asignacion, estatus, observacion)
             VALUES (:id_trabajador, :id_ubicacion, :fecha_asignacion, 'Pendiente', :observacion)
         ");
-        return $stmt->execute([
+        $result = $stmt->execute([
             ':id_trabajador'   => $idTrabajador,
             ':id_ubicacion'    => $idUbicacion,
             ':fecha_asignacion' => $fechaAsignacion,
             ':observacion'     => $observacion,
         ]);
+        if ($result) {
+            AuditLog::record('CREATE', 'recoleccion_semillas', $this->db()->lastInsertId(), null, [
+                'id_trabajador' => $idTrabajador, 'id_ubicacion' => $idUbicacion,
+                'fecha_asignacion' => $fechaAsignacion, 'observacion' => $observacion,
+            ]);
+        }
+        return $result;
     }
 
     public function update(int $id, int $idTrabajador, int $idUbicacion, string $fechaAsignacion, ?string $observacion = null): bool
@@ -139,13 +150,19 @@ class SeedCollection extends Database implements ReadableInterface, DeletableInt
                 observacion = :observacion
             WHERE id_recoleccion = :id
         ");
-        return $stmt->execute([
+        $oldData = $this->getById($id);
+        $result = $stmt->execute([
             ':id' => $id,
             ':id_trabajador' => $idTrabajador,
             ':id_ubicacion' => $idUbicacion,
             ':fecha_asignacion' => $fechaAsignacion,
             ':observacion' => $observacion,
         ]);
+        AuditLog::record('UPDATE', 'recoleccion_semillas', $id, $oldData, [
+            'id_trabajador' => $idTrabajador, 'id_ubicacion' => $idUbicacion,
+            'fecha_asignacion' => $fechaAsignacion, 'observacion' => $observacion,
+        ]);
+        return $result;
     }
 
     public function complete(int $id, string $fechaRecoleccion): bool
@@ -159,10 +176,15 @@ class SeedCollection extends Database implements ReadableInterface, DeletableInt
                 fecha_recoleccion = :fecha_recoleccion
             WHERE id_recoleccion = :id AND estatus = 'Pendiente'
         ");
-        return $stmt->execute([
+        $oldData = $this->getById($id);
+        $result = $stmt->execute([
             ':id' => $id,
             ':fecha_recoleccion' => $fechaRecoleccion,
         ]);
+        AuditLog::record('UPDATE', 'recoleccion_semillas', $id, $oldData, [
+            'estatus' => 'Realizada', 'fecha_recoleccion' => $fechaRecoleccion,
+        ]);
+        return $result;
     }
 
     public function addDetail(int $idRecoleccion, ?string $plantaOrigen, string $nombreSemilla, int $idUnidadMedida, float $cantidad, ?int $idInsumo = null): bool
@@ -258,6 +280,10 @@ class SeedCollection extends Database implements ReadableInterface, DeletableInt
             }
 
             $this->db()->commit();
+            $oldData = $this->getById($idRecoleccion);
+            AuditLog::record('UPDATE', 'recoleccion_semillas', $idRecoleccion, $oldData, [
+                'insumos_registrados' => $createdCount,
+            ]);
             return $createdCount;
         } catch (\Throwable $e) {
             if ($this->db()->inTransaction()) {

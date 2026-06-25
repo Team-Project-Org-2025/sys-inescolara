@@ -7,6 +7,7 @@ use SysInescolara\interfaces\ReadableInterface;
 use SysInescolara\interfaces\DeletableInterface;
 use SysInescolara\traits\ValidationTrait;
 use PDO;
+use SysInescolara\models\AuditLog;
 
 class Role extends Database implements ReadableInterface, DeletableInterface
 {
@@ -84,8 +85,11 @@ class Role extends Database implements ReadableInterface, DeletableInterface
             if ($stmtCheck->fetchColumn() > 0) {
                 throw new \Exception('No se puede eliminar el rol: hay usuarios asignados a él.');
             }
+            $oldData = $this->getById($id);
             $stmt = $this->db()->prepare("DELETE FROM roles WHERE id_rol = :id");
-            return $stmt->execute([':id' => $id]);
+            $stmt->execute([':id' => $id]);
+            AuditLog::record('DELETE', 'roles', $id, $oldData, null);
+            return true;
         } catch (\Throwable $e) {
             error_log('Error al eliminar rol: ' . $e->getMessage());
             throw $e;
@@ -110,6 +114,9 @@ class Role extends Database implements ReadableInterface, DeletableInterface
         try {
             $stmt = $this->db()->prepare("INSERT INTO roles (nombre_rol, descripcion_rol) VALUES (:nombre, :descripcion)");
             $stmt->execute([':nombre' => $nombreRol, ':descripcion' => $descripcion]);
+            AuditLog::record('CREATE', 'roles', $this->db()->lastInsertId(), null, [
+                'nombre_rol' => $nombreRol, 'descripcion' => $descripcion,
+            ]);
             return true;
         } catch (\Throwable $e) {
             error_log('Error al crear rol: ' . $e->getMessage());
@@ -124,8 +131,12 @@ class Role extends Database implements ReadableInterface, DeletableInterface
             'descripcion' => $descripcion,
         ]);
         try {
+            $oldData = $this->getById($id);
             $stmt = $this->db()->prepare("UPDATE roles SET nombre_rol = :nombre, descripcion_rol = :descripcion WHERE id_rol = :id");
             $stmt->execute([':nombre' => $nombreRol, ':descripcion' => $descripcion, ':id' => $id]);
+            AuditLog::record('UPDATE', 'roles', $id, $oldData, [
+                'nombre_rol' => $nombreRol, 'descripcion' => $descripcion,
+            ]);
             return true;
         } catch (\Throwable $e) {
             error_log('Error al actualizar rol: ' . $e->getMessage());

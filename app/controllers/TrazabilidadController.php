@@ -4,7 +4,6 @@ require_once __DIR__ . '/controller_helpers.php';
 
 use SysInescolara\models\Trazabilidad;
 use SysInescolara\models\Lote;
-use SysInescolara\models\AuditLog;
 
 function index(): void
 {
@@ -92,7 +91,6 @@ function trazabilidad_handleAddEdit(string $mode): void
 
             $model->commit();
 
-            AuditLog::record('CREATE', 'trazabilidad', $newId, null, compact('idLote', 'cantidad', 'estadoSalud', 'fechaRegistro', 'observacion'));
             jsonResponse(['success' => true, 'message' => 'Cuarentena registrada correctamente. Stock del lote actualizado.', 'id' => $newId]);
         } catch (\Exception $e) {
             $model->rollback();
@@ -151,7 +149,6 @@ function trazabilidad_handleAddEdit(string $mode): void
         $model->update($id, $idLote, $cantidad, $estadoSalud, $fechaRegistro, $observacion);
     }
 
-    AuditLog::record('UPDATE', 'trazabilidad', $id, $oldData, compact('idLote', 'cantidad', 'estadoSalud', 'fechaRegistro', 'observacion'));
     jsonResponse(['success' => true, 'message' => 'Monitoreo actualizado correctamente.']);
 }
 
@@ -187,7 +184,6 @@ function trazabilidad_handleDelete(): void
         throw $e;
     }
 
-    AuditLog::record('DEACTIVATE', 'trazabilidad', $id, $data, null);
     jsonResponse(['success' => true, 'message' => 'Registro de cuarentena desactivado correctamente. Stock del lote restaurado.']);
 }
 

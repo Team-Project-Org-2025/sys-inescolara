@@ -8,7 +8,6 @@ use SysInescolara\models\Empleado;//no lo borre
 use SysInescolara\models\Planta;
 use SysInescolara\models\Insumo;
 use SysInescolara\models\UnidadMedida;
-use SysInescolara\models\AuditLog;
 
 function index(): void
 {
@@ -62,15 +61,12 @@ function recoleccion_handleAddEdit(string $mode): void
     if ($mode === 'add') {
         $model->add($idTrabajador, $idUbicacion, $fechaAsignacion, $observacion);
         $newId = $model->getLastInsertId() ?? 0;
-        AuditLog::record('CREATE', 'recoleccion_semillas', $newId, null, compact('idTrabajador', 'idUbicacion', 'fechaAsignacion', 'observacion'));
         jsonResponse(['success' => true, 'message' => 'Recolección registrada correctamente', 'id' => $newId]);
     }
 
     $id = (int)($data['id'] ?? 0);
     if ($id <= 0) throw new \Exception('ID inválido');
-    $oldData = $model->getById($id);
     $model->update($id, $idTrabajador, $idUbicacion, $fechaAsignacion, $observacion);
-    AuditLog::record('UPDATE', 'recoleccion_semillas', $id, $oldData, compact('idTrabajador', 'idUbicacion', 'fechaAsignacion', 'observacion'));
     jsonResponse(['success' => true, 'message' => 'Recolección actualizada correctamente']);
 }
 
@@ -82,7 +78,6 @@ function recoleccion_handleDelete(): void
     if ($id <= 0) throw new \Exception('ID inválido');
     if (!$model->exists($id)) throw new \Exception('No existe la recolección');
 
-    $oldData = $model->getById($id);
     try {
         $model->delete($id);
     } catch (\PDOException $e) {
@@ -92,7 +87,6 @@ function recoleccion_handleDelete(): void
         }
         throw $e;
     }
-    AuditLog::record('DEACTIVATE', 'recoleccion_semillas', $id, $oldData, null);
     jsonResponse(['success' => true, 'message' => 'Recolección desactivada correctamente']);
 }
 
@@ -113,7 +107,6 @@ function recoleccion_handleCompletar(): void
     }
 
     $model->complete($id, $fechaRecoleccion);
-    AuditLog::record('UPDATE', 'recoleccion_semillas', $id, $recoleccion, ['estatus' => 'Realizada', 'fecha_recoleccion' => $fechaRecoleccion]);
     jsonResponse(['success' => true, 'message' => 'Recolección completada correctamente']);
 }
 
@@ -138,7 +131,6 @@ function recoleccion_handleRegistrarInsumo(): void
 
     if ($createdCount === 0) throw new \Exception('No se pudo registrar ningún insumo. Verifique los datos.');
 
-    AuditLog::record('UPDATE', 'recoleccion_semillas', $id, $recoleccion, ['insumos_registrados' => $createdCount]);
     jsonResponse(['success' => true, 'message' => "$createdCount tipo(s) de semilla registrado(s) correctamente"]);
 }
 

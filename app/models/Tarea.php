@@ -6,6 +6,7 @@ use SysInescolara\core\Database;
 use SysInescolara\interfaces\ReadableInterface;
 use SysInescolara\interfaces\DeletableInterface;
 use SysInescolara\traits\ValidationTrait;
+use SysInescolara\models\AuditLog;
 use PDO;
 
 class Tarea extends Database implements ReadableInterface, DeletableInterface
@@ -156,6 +157,10 @@ class Tarea extends Database implements ReadableInterface, DeletableInterface
             }
 
             $this->db()->commit();
+            AuditLog::record('CREATE', 'asignar_tarea', $asignacionId, null, $assignmentData);
+            if (!empty($consumptions)) {
+                AuditLog::record('CREATE', 'consumo_insumos', $asignacionId, null, ['count' => count($consumptions)]);
+            }
             return $asignacionId;
         } catch (\Exception $e) {
             $this->db()->rollBack();
@@ -251,6 +256,13 @@ class Tarea extends Database implements ReadableInterface, DeletableInterface
             }
 
             $this->db()->commit();
+            AuditLog::record('UPDATE', 'asignar_tarea', $asignacionId, null, $assignmentData);
+            if (!empty($consumptions)) {
+                AuditLog::record('UPDATE', 'consumo_insumos', $asignacionId, null, ['count' => count($consumptions)]);
+            }
+            if (!empty($tools)) {
+                AuditLog::record('UPDATE', 'uso_herramienta', $asignacionId, null, ['count' => count($tools)]);
+            }
         } catch (\Exception $e) {
             $this->db()->rollBack();
             throw $e;
@@ -271,6 +283,10 @@ class Tarea extends Database implements ReadableInterface, DeletableInterface
                 ':fecha' => $fechaCumplimiento,
             ]);
             $this->db()->commit();
+            AuditLog::record('UPDATE', 'asignar_tarea', $id, null, [
+                'estatus_tarea' => 'completada',
+                'fecha_cumplimiento' => $fechaCumplimiento,
+            ]);
         } catch (\Exception $e) {
             $this->db()->rollBack();
             throw $e;
@@ -279,8 +295,9 @@ class Tarea extends Database implements ReadableInterface, DeletableInterface
 
     public function cancelAssignment(int $id): void
     {
-        $stmt = $this->db()->prepare("UPDATE asignar_tarea SET estatus_tarea = 'cancelada' WHERE id_asignacion = :id");
-        $stmt->execute([':id' => $id]);
+        $stmt = $this->db()->prepare("UPDATE asignar_tarea SET estatus_tarea = 'cancelada' WHERE id_asignacion = ?");
+        $stmt->execute([$id]);
+        AuditLog::record('UPDATE', 'asignar_tarea', $id, null, ['estatus_tarea' => 'cancelada']);
     }
 
     public function getAssignments(): array
