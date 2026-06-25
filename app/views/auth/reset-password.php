@@ -33,19 +33,29 @@
             </div>
 
             <?php if (!empty($error)): ?>
-            <div class="alert alert-error">
+            <div class="alert alert-error animate-slide-up">
+                <svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
                 <span><?= htmlspecialchars($error) ?></span>
             </div>
             <?php endif; ?>
 
-            <form action="<?= BASE_URL ?>recuperar-password/restablecer" method="POST" class="auth-form" id="resetForm">
+            <form action="<?= BASE_URL ?>recuperar-password/restablecer" method="POST" class="auth-form" id="resetForm" novalidate>
                 <?= \SysInescolara\helpers\Csrf::render() ?>
                 <input type="hidden" name="token" value="<?= htmlspecialchars($token ?? '') ?>">
 
                 <div class="form-group">
-                    <label for="password">Nueva Contraseña</label>
+                    <label for="password" class="form-label">Nueva Contraseña</label>
                     <div class="input-wrapper">
-                        <input type="password" id="password" name="password" placeholder="Mínimo 8 caracteres"
+                        <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                        <input type="password" id="password" name="password" class="form-input"
+                               placeholder="Mínimo 8 caracteres"
                                required minlength="8" autocomplete="new-password" maxlength="30">
                         <button type="button" class="password-toggle" id="passwordToggle1" aria-label="Mostrar contraseña">
                             <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -58,14 +68,21 @@
                             </svg>
                         </button>
                     </div>
-                    <div class="password-strength-bar" id="strengthBar"></div>
+                    <div class="password-strength-track">
+                        <div class="password-strength-bar" id="strengthBar"></div>
+                    </div>
                     <div class="password-strength-text" id="strengthText"></div>
                 </div>
 
                 <div class="form-group">
-                    <label for="password2">Confirmar Contraseña</label>
+                    <label for="password2" class="form-label">Confirmar Contraseña</label>
                     <div class="input-wrapper">
-                        <input type="password" id="password2" name="password2" placeholder="Repite la contraseña"
+                        <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                        <input type="password" id="password2" name="password2" class="form-input"
+                               placeholder="Repite la contraseña"
                                required minlength="8" autocomplete="new-password" maxlength="30">
                         <button type="button" class="password-toggle" id="passwordToggle2" aria-label="Mostrar contraseña">
                             <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -81,11 +98,20 @@
                     <div class="password-match-text" id="matchText"></div>
                 </div>
 
-                <button type="submit" class="btn btn-primary btn-block btn-lg">
-                    Cambiar Contraseña
+                <button type="submit" class="btn btn-primary btn-block btn-lg" id="resetBtn">
+                    <span class="btn-text">Cambiar Contraseña</span>
+                    <span class="btn-loader hidden">
+                        <svg class="spinner" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round">
+                                <animate attributeName="stroke-dasharray" values="0 150;42 150;42 150" dur="1.5s" repeatCount="indefinite"/>
+                                <animate attributeName="stroke-dashoffset" values="0;-16;-59" dur="1.5s" repeatCount="indefinite"/>
+                            </circle>
+                        </svg>
+                        Procesando...
+                    </span>
                 </button>
 
-                <div class="form-row" style="justify-content:center;margin-top:var(--space-4);">
+                <div class="form-row" style="justify-content:center;margin-top:var(--space-5);">
                     <a href="<?= BASE_URL ?>login" class="form-link">Volver al inicio de sesión</a>
                 </div>
             </form>

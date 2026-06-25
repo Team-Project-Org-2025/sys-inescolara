@@ -33,6 +33,13 @@ function getBaseUrl(): string
     return defined('BASE_URL') ? BASE_URL : '/';
 }
 
+function getAbsoluteUrl(string $path = ''): string
+{
+    $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    return $scheme . '://' . $host . getBaseUrl() . ltrim($path, '/');
+}
+
 function index(): void
 {
     renderPasswordView('recuperar', [
@@ -81,20 +88,38 @@ function enviar(): void
     }
 
     $recaptchaSecret = getenv('RECAPTCHA_SECRET_KEY') ?: '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe';
-    $verifyResponse = @file_get_contents('https://www.google.com/recaptcha/api/siteverify', false, stream_context_create([
-        'http' => [
-            'method' => 'POST',
-            'header' => 'Content-type: application/x-www-form-urlencoded',
-            'content' => http_build_query([
-                'secret' => $recaptchaSecret,
-                'response' => $recaptchaToken,
-                'remoteip' => $_SERVER['REMOTE_ADDR'] ?? '',
-            ]),
-        ],
-    ]));
-    $verifyData = $verifyResponse ? json_decode($verifyResponse, true) : [];
+
+    $ch = curl_init('https://www.google.com/recaptcha/api/siteverify');
+    curl_setopt_array($ch, [
+        CURLOPT_POST => true,
+        CURLOPT_POSTFIELDS => http_build_query([
+            'secret' => $recaptchaSecret,
+            'response' => $recaptchaToken,
+            'remoteip' => $_SERVER['REMOTE_ADDR'] ?? '',
+        ]),
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT => 10,
+        CURLOPT_SSL_VERIFYPEER => true,
+    ]);
+    $verifyResponse = curl_exec($ch);
+    $curlError = curl_error($ch);
+    curl_close($ch);
+
+    if ($verifyResponse === false || $verifyResponse === '') {
+        error_log("reCAPTATCHA cURL error: " . ($curlError ?: 'Respuesta vacía'));
+        renderPasswordView('recuperar', [
+            'title' => 'Recuperar Contraseña',
+            'error' => 'Error de conexión al verificar la seguridad. Intenta de nuevo.',
+            'old' => ['correo' => $correo],
+        ]);
+        return;
+    }
+
+    $verifyData = json_decode($verifyResponse, true);
 
     if (!($verifyData['success'] ?? false)) {
+        $errorCodes = isset($verifyData['error-codes']) ? implode(', ', $verifyData['error-codes']) : 'unknown';
+        error_log("reCAPTCHA verification failed: $errorCodes");
         renderPasswordView('recuperar', [
             'title' => 'Recuperar Contraseña',
             'error' => 'Verificación de seguridad fallida. Intenta de nuevo.',
@@ -135,7 +160,7 @@ function enviar(): void
         'token_preview' => substr($token, 0, 8) . '...',
     ]);
 
-    $resetLink = getBaseUrl() . 'recuperar-password/cambiar?token=' . urlencode($token);
+    $resetLink = getAbsoluteUrl('recuperar-password/cambiar?token=' . urlencode($token));
     $userName = htmlspecialchars($user['nombre_usuario'] ?? 'Usuario');
 
     $htmlBody = <<<HTML
@@ -300,7 +325,7 @@ function restablecer(): void
         'via' => 'password_reset',
     ]);
 
-    $resetLinkNotify = getBaseUrl() . 'login';
+    $resetLinkNotify = getAbsoluteUrl('login');
 
     $notifyHtml = <<<HTML
 <!DOCTYPE html>
