@@ -203,18 +203,6 @@ class Lote extends Database implements ReadableInterface, DeletableInterface
         }
     }
 
-    public function hasActiveStockByEspecie(int $idEspecie): bool
-    {
-        try {
-            $stmt = $this->db()->prepare("SELECT COUNT(*) FROM lote l JOIN plantas p ON l.id_planta = p.id_planta WHERE p.id_especie = :id_especie AND l.activo = 1 AND l.cantidad_actual > 0");
-            $stmt->execute([':id_especie' => $idEspecie]);
-            return (int)$stmt->fetchColumn() > 0;
-        } catch (\Throwable $e) {
-            error_log('Error en hasActiveStockByEspecie: ' . $e->getMessage());
-            return false;
-        }
-    }
-
     protected function deductStock(int $id, int $cantidad): bool
     {
         $stmt = $this->db()->prepare("UPDATE lote SET cantidad_actual = GREATEST(0, cantidad_actual - :cantidad) WHERE id_lote = :id AND cantidad_actual >= :cantidad2");
