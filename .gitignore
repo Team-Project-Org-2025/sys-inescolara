@@ -13,6 +13,7 @@ composer.phar
 *.cache
 /tmp/
  /cache/
+/logs/
 
 # OS and editor files
 .DS_Store

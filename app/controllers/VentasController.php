@@ -57,6 +57,8 @@ function cancelar(): void { checkModuleAuth(); checkPermisoOrFail('ventas:elimin
 function detalles(): void { checkModuleAuth(); ventas_obtenerDetallesAjax(); }
 function buscar_lotes(): void { checkModuleAuth(); ventas_buscarLotesAjax(); }
 function buscar_clientes(): void { checkModuleAuth(); ventas_buscarClientesAjax(); }
+function precio_lote(): void { checkModuleAuth(); ventas_precioLoteAjax(); }
+function trabajadores(): void { checkModuleAuth(); ventas_trabajadoresAjax(); }
 function comprobante(): void { checkModuleAuth(); checkPermisoOrFail('ventas:ver'); ventas_comprobanteAjax(); }
 
 function ventas_listarAjax(): void

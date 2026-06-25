@@ -1431,22 +1431,86 @@ div.dataTables_wrapper .dt-buttons .btn {
   width: 100%;
 }
 
-.alert-error {
+.btn-loader {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-loader .spinner {
+  width: 18px;
+  height: 18px;
+  animation: spin 1s linear infinite;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.alert {
   display: flex;
   align-items: center;
   gap: 0.75rem;
   padding: 0.9rem 1rem;
   margin-bottom: 1rem;
   border-radius: 0.9rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.alert-icon {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+  flex-shrink: 0;
+}
+
+.alert-error {
   background: rgba(220, 38, 38, 0.08);
   border: 1px solid rgba(220, 38, 38, 0.18);
   color: #991b1b;
 }
 
-.alert-icon {
-  width: 18px;
-  height: 18px;
-  flex: 0 0 auto;
+.alert-success {
+  background: rgba(46, 125, 50, 0.08);
+  border: 1px solid rgba(46, 125, 50, 0.18);
+  color: #14532d;
+}
+
+/* Password Strength & Match */
+.password-strength-track {
+  height: 5px;
+  background: #e5e7eb;
+  border-radius: 999px;
+  margin-top: 8px;
+  overflow: hidden;
+}
+
+.password-strength-bar {
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  transition: width 0.35s ease, background-color 0.35s ease;
+}
+
+.password-strength-bar.weak { background-color: #dc2626; }
+.password-strength-bar.medium { background-color: #e5a835; }
+.password-strength-bar.strong { background-color: #16a34a; }
+
+.password-strength-text {
+  font-size: 0.75rem;
+  margin-top: 5px;
+  min-height: 1.2rem;
+  font-weight: 500;
+  transition: color 0.25s ease;
+}
+
+.password-match-text {
+  font-size: 0.78rem;
+  margin-top: 5px;
+  min-height: 1.2rem;
+  font-weight: 500;
+  transition: color 0.25s ease;
 }
 
 @media (max-width: 960px) {
