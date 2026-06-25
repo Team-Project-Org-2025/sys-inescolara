@@ -14,7 +14,7 @@ $(document).ready(function () {
   
   const initDataTable = () => {
     if (typeof SkeletonHelper !== 'undefined') {
-      SkeletonHelper.showTableSkeleton('ubicacionesTable', 5, 5);
+      SkeletonHelper.showTableSkeleton('ubicacionesTable', 5, 4);
     }
     ubicacionesTable = $('#ubicacionesTable').DataTable({
       ajax: {
@@ -25,10 +25,6 @@ $(document).ready(function () {
         dataSrc: 'ubicaciones',
       },
       columns: [
-        { 
-          data: 'id',
-          width: '10%'
-        },
         { 
           data: 'nombre_ubicacion' 
         },
@@ -70,7 +66,7 @@ $(document).ready(function () {
           className: 'btn btn-outline-secondary btn-sm',
           action: () => {
             if (typeof SkeletonHelper !== 'undefined') {
-              SkeletonHelper.showTableSkeleton('ubicacionesTable', 5, 3);
+              SkeletonHelper.showTableSkeleton('ubicacionesTable', 5, 4);
             }
             ubicacionesTable.ajax.reload(null, false);
           },
