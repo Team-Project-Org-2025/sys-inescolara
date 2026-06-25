@@ -95,6 +95,9 @@ function cuentas_registrarPago(): void
 
     $cuenta = $modelo->obtenerPorId($idCuentaPagar);
     if (!$cuenta) throw new \Exception('No existe la cuenta por pagar.');
+    if ($fechaPago < $cuenta['fecha_compra']) {
+        throw new \Exception('La fecha de pago no puede ser anterior a la fecha de la compra (' . $cuenta['fecha_compra'] . ').');
+    }
     if ($monto > $cuenta['saldo_pendiente']) throw new \Exception('El monto supera el saldo pendiente.');
 
     $modelo->registrarPago($idCuentaPagar, $monto, $fechaPago, $tipoPago, $referencia, $observacion);
