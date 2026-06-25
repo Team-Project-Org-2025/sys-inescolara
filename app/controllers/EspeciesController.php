@@ -65,6 +65,15 @@ function species_handleDelete(): void
     if ($id <= 0) throw new \Exception('ID inválido');
     if (!$model->exists($id)) throw new \Exception('No existe la especie');
 
+    $loteModel = new \SysInescolara\models\Lote();
+    if ($loteModel->hasActiveStockByEspecie($id)) {
+        jsonResponse([
+            'success' => false,
+            'message' => 'No se puede eliminar esta especie porque tiene plantas con lotes de disponibilidad activa.',
+        ]);
+        return;
+    }
+
     $model->delete($id);
     jsonResponse(['success' => true, 'message' => 'Especie desactivada correctamente', 'especieId' => $id]);
 }
