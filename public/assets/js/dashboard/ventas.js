@@ -119,6 +119,7 @@ const Ventas = {
     initBuscarLote() {
         this.buscarInput = document.getElementById('buscarLote');
         this.buscarResultados = document.getElementById('resultadosLotes');
+        this.searchSpinner = document.getElementById('searchSpinner');
         let timeout;
 
         this.buscarInput.addEventListener('input', () => {
@@ -126,9 +127,11 @@ const Ventas = {
             const q = this.buscarInput.value.trim();
             if (q.length < 2) {
                 this.buscarResultados.style.display = 'none';
+                this.searchSpinner.classList.add('d-none');
                 return;
             }
-            timeout = setTimeout(() => this.buscarLotes(q), 300);
+            this.searchSpinner.classList.remove('d-none');
+            timeout = setTimeout(() => this.buscarLotes(q), 250);
         });
 
         this.buscarInput.addEventListener('blur', () => setTimeout(() => this.buscarResultados.style.display = 'none', 300));
@@ -145,17 +148,32 @@ const Ventas = {
             const data = await res.json();
             const cont = this.buscarResultados;
             cont.innerHTML = '';
-            cont.style.display = 'none';
+            this.searchSpinner.classList.add('d-none');
 
-            if (!data.success || !data.lotes?.length) return;
+            if (!data.success || !data.lotes?.length) {
+                cont.innerHTML = `<div class="list-group-item text-muted text-center small py-2">Sin resultados para "<strong>${this.escapeHtml(q)}</strong>"</div>`;
+                cont.style.display = 'block';
+                return;
+            }
 
             data.lotes.forEach(l => {
+                const esInsumo = l.tipo_item === 'insumo';
+                const badgeHtml = esInsumo
+                    ? '<span class="badge badge-tipo-insumo">Insumo</span>'
+                    : '<span class="badge badge-tipo-planta">Planta</span>';
+                const detalle = l.especie_nombre
+                    ? `<small class="text-muted">${esInsumo ? '' : '('}${l.especie_nombre}${esInsumo ? '' : ')'}</small>`
+                    : '';
                 const item = document.createElement('button');
                 item.type = 'button';
                 item.className = 'list-group-item list-group-item-action py-2 d-flex justify-content-between align-items-center';
                 item.innerHTML = `
-                    <div><strong>${l.planta_nombre || ''}</strong> ${l.especie_nombre ? `<small class="text-muted">(${l.especie_nombre})</small>` : ''}</div>
-                    <div class="text-end small">Stock: <strong>${l.cantidad_actual}</strong> | Bs. ${parseFloat(l.precio_unitario || 0).toLocaleString('es-ES', { minimumFractionDigits: 2 })}</div>
+                    <div>
+                        <strong>${l.planta_nombre || l.nombre || ''}</strong>
+                        ${detalle}
+                        ${badgeHtml}
+                    </div>
+                    <div class="text-end small">Stock: <strong>${l.cantidad_actual}</strong> ${l.unidad_simbolo || ''} | Bs. ${parseFloat(l.precio_unitario || 0).toLocaleString('es-ES', { minimumFractionDigits: 2 })}</div>
                 `;
                 item.addEventListener('click', () => {
                     this.agregarProducto(l);
@@ -166,8 +184,15 @@ const Ventas = {
             });
             cont.style.display = 'block';
         } catch (e) {
-            console.error('Error buscando lotes:', e);
+            this.searchSpinner.classList.add('d-none');
+            console.error('Error buscando productos:', e);
         }
+    },
+
+    escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
     },
 
     // ==================== CLIENTE ====================
@@ -249,20 +274,32 @@ const Ventas = {
         this.clienteSeleccionado.classList.add('d-none');
     },
 
-    agregarProducto(lote) {
+    agregarProducto(item) {
         const cont = document.getElementById('productosContainer');
         document.getElementById('sinProductos').style.display = 'none';
 
+        const esInsumo = item.tipo_item === 'insumo';
+        const idLote = esInsumo ? 0 : (item.id_lote || 0);
+        const idInsumo = esInsumo ? (item.id_insumo || item.id_lote || 0) : 0;
+        const tipoBadge = esInsumo
+            ? '<span class="badge badge-tipo-insumo ms-1" style="font-size:.65rem;">Insumo</span>'
+            : '<span class="badge badge-tipo-planta ms-1" style="font-size:.65rem;">Planta</span>';
+        const stockLabel = `${item.cantidad_actual}${item.unidad_simbolo || ''}`;
+        const nombre = item.planta_nombre || item.nombre || '';
+
         const div = document.createElement('div');
         div.className = 'card border-0 bg-light mb-2';
-        div.dataset.idLote = lote.id_lote;
+        div.dataset.idLote = idLote;
+        div.dataset.idInsumo = idInsumo;
+        div.dataset.tipoItem = esInsumo ? 'insumo' : 'planta';
         div.innerHTML = `
             <div class="card-body py-2 px-3">
                 <div class="d-flex justify-content-between align-items-start mb-2">
                     <div>
-                        <strong>${lote.planta_nombre || ''}</strong>
-                        ${lote.especie_nombre ? `<span class="text-muted">(${lote.especie_nombre})</span>` : ''}
-                        <span class="badge bg-info ms-1" style="font-size:.65rem;">Stock ${lote.cantidad_actual}</span>
+                        <strong>${nombre}</strong>
+                        ${item.especie_nombre ? `<span class="text-muted">${esInsumo ? '' : '('}${item.especie_nombre}${esInsumo ? '' : ')'}</span>` : ''}
+                        ${tipoBadge}
+                        <span class="badge bg-info ms-1" style="font-size:.65rem;">Stock ${stockLabel}</span>
                     </div>
                     <button type="button" class="btn btn-sm btn-outline-danger quitar-producto py-0 px-1" title="Quitar">
                         <i class="fas fa-times"></i>
@@ -272,17 +309,17 @@ const Ventas = {
                     <div class="col-4">
                         <small class="text-muted d-block" style="font-size:.7rem;line-height:1;letter-spacing:.5px;">CANTIDAD</small>
                         <div class="input-group input-group-sm mt-1">
-                            <input type="number" class="form-control cantidad-producto text-center" value="1" min="1" max="${lote.cantidad_actual}">
-                            <span class="input-group-text px-1" style="font-size:.7rem;">/ ${lote.cantidad_actual}</span>
+                            <input type="number" class="form-control cantidad-producto text-center" value="1" min="1" max="${item.cantidad_actual}" step="${esInsumo ? '0.01' : '1'}">
+                            <span class="input-group-text px-1" style="font-size:.7rem;">/ ${stockLabel}</span>
                         </div>
                     </div>
                     <div class="col-4">
                         <small class="text-muted d-block" style="font-size:.7rem;line-height:1;letter-spacing:.5px;">PRECIO UNIT.</small>
-                            <input type="text" class="form-control form-control-sm precio-producto text-end mt-1" value="${parseFloat(lote.precio_unitario || 0).toFixed(2)}" inputmode="decimal">
+                            <input type="text" class="form-control form-control-sm precio-producto text-end mt-1" value="${parseFloat(item.precio_unitario || 0).toFixed(2)}" inputmode="decimal" readonly>
                     </div>
                     <div class="col-4 text-end">
                         <small class="text-muted d-block" style="font-size:.7rem;line-height:1;letter-spacing:.5px;">SUBTOTAL</small>
-                        <div class="subtotal-producto fw-bold mt-1" style="font-size:1rem;">Bs. ${parseFloat(lote.precio_unitario || 0).toLocaleString('es-ES', { minimumFractionDigits: 2 })}</div>
+                        <div class="subtotal-producto fw-bold mt-1" style="font-size:1rem;">Bs. ${parseFloat(item.precio_unitario || 0).toLocaleString('es-ES', { minimumFractionDigits: 2 })}</div>
                     </div>
                 </div>
             </div>
@@ -293,7 +330,7 @@ const Ventas = {
         const sub = div.querySelector('.subtotal-producto');
 
         const recalcular = () => {
-            const c = parseInt(cant.value) || 0;
+            const c = parseFloat(cant.value) || 0;
             const p = parseFloat(precio.value) || 0;
             sub.textContent = `Bs. ${(c * p).toLocaleString('es-ES', { minimumFractionDigits: 2 })}`;
             this.calcularTotales();
@@ -319,7 +356,7 @@ const Ventas = {
     calcularTotales() {
         let total = 0;
         document.querySelectorAll('#productosContainer .card').forEach(f => {
-            const c = parseInt(f.querySelector('.cantidad-producto')?.value) || 0;
+            const c = parseFloat(f.querySelector('.cantidad-producto')?.value) || 0;
             const p = parseFloat(f.querySelector('.precio-producto')?.value) || 0;
             total += c * p;
         });
@@ -382,13 +419,16 @@ const Ventas = {
 
     toggleRef(select) {
         const row = select.closest('.pago-row');
-        const refCol = row?.querySelector('.ref-pago')?.closest('.col-2');
-        if (!refCol) return;
+        const refCol = row?.querySelector('.ref-pago')?.closest('.ref-col, .col-2');
+        const refInput = row?.querySelector('.ref-pago');
+        if (!refCol || !refInput) return;
         if (select.value === 'efectivo' || select.value === 'punto') {
             refCol.classList.add('d-none');
-            row.querySelector('.ref-pago').value = '';
+            refInput.value = '';
+            refInput.removeAttribute('required');
         } else {
             refCol.classList.remove('d-none');
+            refInput.setAttribute('required', 'required');
         }
     },
 
@@ -431,14 +471,23 @@ const Ventas = {
     async guardarVenta() {
         const productos = [];
         document.querySelectorAll('#productosContainer .card').forEach(row => {
-            const cant = parseInt(row.querySelector('.cantidad-producto')?.value) || 0;
+            const cant = parseFloat(row.querySelector('.cantidad-producto')?.value) || 0;
             const precio = parseFloat(row.querySelector('.precio-producto')?.value) || 0;
+            const tipoItem = row.dataset.tipoItem || 'planta';
             if (cant > 0 && precio > 0) {
-                productos.push({
-                    id_lote: parseInt(row.dataset.idLote),
+                const prod = {
+                    tipo_item: tipoItem,
                     cantidad: cant,
                     precio_unitario: precio,
-                });
+                };
+                if (tipoItem === 'insumo') {
+                    prod.id_insumo = parseInt(row.dataset.idInsumo) || 0;
+                    prod.id_lote = 0;
+                } else {
+                    prod.id_lote = parseInt(row.dataset.idLote) || 0;
+                    prod.id_insumo = 0;
+                }
+                productos.push(prod);
             }
         });
 
@@ -454,16 +503,25 @@ const Ventas = {
         }
 
         const pagos = [];
+        let pagosValidos = true;
         document.querySelectorAll('.pago-row').forEach(row => {
             const monto = parseFloat(row.querySelector('.monto-pago').value) || 0;
             if (monto > 0) {
+                const metodo = row.querySelector('.metodo-pago').value;
+                const ref = row.querySelector('.ref-pago').value || '';
+                if (!['efectivo', 'punto'].includes(metodo) && ref.trim() === '') {
+                    Swal.fire('Error', `La referencia es obligatoria para ${metodo}.`, 'warning');
+                    pagosValidos = false;
+                    return;
+                }
                 pagos.push({
-                    metodo: row.querySelector('.metodo-pago').value,
+                    metodo: metodo,
                     monto: monto,
-                    referencia: row.querySelector('.ref-pago').value || null,
+                    referencia: ref || null,
                 });
             }
         });
+        if (!pagosValidos) return;
 
         const tipoVenta = document.getElementById('tipoVenta')?.value;
         if (pagos.length === 0 && tipoVenta !== 'credito') {
@@ -542,7 +600,7 @@ const Ventas = {
                     <div class="col-4">
                         <input type="text" class="form-control form-control-sm monto-pago" placeholder="Monto" inputmode="decimal">
                     </div>
-                    <div class="col-2">
+                    <div class="col-2 ref-col">
                         <input type="text" class="form-control form-control-sm ref-pago" placeholder="Ref.">
                     </div>
                     <div class="col-1 text-end">
@@ -551,6 +609,8 @@ const Ventas = {
                 </div>
             </div>
         `;
+        const primerMetodo = document.querySelector('.metodo-pago');
+        if (primerMetodo) this.toggleRef(primerMetodo);
     },
 
     // ==================== ACCIONES ====================
@@ -616,15 +676,20 @@ const Ventas = {
                 <h6 class="fw-bold">Productos</h6>
                 <table class="table table-sm table-bordered">
                     <thead class="table-light">
-                        <tr><th>#</th><th>Planta</th><th class="text-center">Cant.</th><th class="text-end">Precio Unit.</th><th class="text-end">Subtotal</th></tr>
+                        <tr><th>#</th><th>Tipo</th><th>Producto</th><th class="text-center">Cant.</th><th class="text-end">Precio Unit.</th><th class="text-end">Subtotal</th></tr>
                     </thead>
                     <tbody>`;
 
             detalles.forEach((d, i) => {
                 const sub = parseFloat(d.cantidad) * parseFloat(d.precio_unitario);
+                const esInsumo = (d.tipo_item || 'planta') === 'insumo';
+                const tipoLabel = esInsumo ? '<span class="badge badge-tipo-insumo">Insumo</span>' : '<span class="badge badge-tipo-planta">Planta</span>';
+                const nombre = d.planta_nombre || '';
+                const detalle = d.especie_nombre && !esInsumo ? ` <small class="text-muted">(${d.especie_nombre})</small>` : '';
                 html += `<tr>
                     <td>${i + 1}</td>
-                    <td>${d.planta_nombre || ''} ${d.especie_nombre ? `<small class="text-muted">(${d.especie_nombre})</small>` : ''}</td>
+                    <td>${tipoLabel}</td>
+                    <td>${nombre}${detalle}</td>
                     <td class="text-center">${d.cantidad}</td>
                     <td class="text-end">Bs. ${parseFloat(d.precio_unitario).toLocaleString('es-ES', { minimumFractionDigits: 2 })}</td>
                     <td class="text-end">Bs. ${sub.toLocaleString('es-ES', { minimumFractionDigits: 2 })}</td>
