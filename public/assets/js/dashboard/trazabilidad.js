@@ -34,11 +34,9 @@ $(document).ready(function () {
           data: 'estado_salud',
           render: (data) => {
             const badges = {
-              Sano: 'badge bg-success',
               Sospechoso: 'badge bg-warning text-dark',
               Enfermo: 'badge bg-danger',
               Plaga: 'badge bg-danger',
-              Cuarentena: 'badge bg-info text-dark',
               'Bajo observación': 'badge bg-secondary',
             };
             const cls = badges[data] || 'badge bg-secondary';
@@ -63,11 +61,11 @@ $(document).ready(function () {
             const perms = window.userPermisos || [];
             const btns = [];
 
-            if (perms.includes('TRAZABILIDAD_EDIT')) {
+            if (perms.includes('trazabilidad:editar')) {
               btns.push(C.btnEdit('btn-edit'));
             }
 
-            if (perms.includes('TRAZABILIDAD_DELETE')) {
+            if (perms.includes('trazabilidad:eliminar')) {
               btns.push(C.btnDelete('btn-delete'));
             }
 
@@ -98,8 +96,14 @@ $(document).ready(function () {
   };
 
   const loadBatches = (selectedId = null) => {
-    return $.getJSON(`${baseUrl}?action=get_batches`, {
-      'X-Requested-With': 'XMLHttpRequest',
+    const data = { action: 'get_batches' };
+    if (selectedId) data.include_id = selectedId;
+    return $.ajax({
+      url: baseUrl,
+      method: 'GET',
+      data,
+      dataType: 'json',
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
     }).done((res) => {
       const $select = $('#id_lote');
       $select.find('option:not(:first)').remove();
@@ -118,14 +122,27 @@ $(document).ready(function () {
     const $option = $select.find('option:selected');
     const stock = $option.data('stock');
     const $info = $('#loteInfo');
+    const $cantidad = $('#cantidad');
     if (stock !== undefined) {
       $info.text(`Ejemplares disponibles en este lote: ${stock}`).css('color', stock > 0 ? 'var(--text-secondary)' : '#dc3545');
+      $cantidad.attr('max', stock);
     } else {
       $info.text('');
+      $cantidad.removeAttr('max');
     }
   };
 
   $(document).on('change', '#id_lote', updateLoteInfo);
+
+  $(document).on('input change', '#cantidad', function () {
+    const $input = $(this);
+    const max = parseInt($input.attr('max'), 10);
+    const val = parseInt($input.val(), 10);
+    if (max && val > max) {
+      Helpers.toast('warning', `La cantidad no puede ser mayor a ${max} ejemplares disponibles en el lote.`);
+      $input.val(max);
+    }
+  });
 
   $('#btnAddTrazabilidad').on('click', function () {
     $('#trazabilidadModalTitle').text('Registrar Cuarentena');
@@ -142,6 +159,12 @@ $(document).ready(function () {
   $('#trazabilidadForm').on('submit', function (e) {
     e.preventDefault();
     if (!validateForm($(this), trazabilidadRules)) return;
+    const max = parseInt($('#cantidad').attr('max'), 10);
+    const val = parseInt($('#cantidad').val(), 10);
+    if (max && val > max) {
+      Helpers.toast('warning', `La cantidad no puede ser mayor a ${max} ejemplares disponibles.`);
+      return;
+    }
     const id = $('#trazabilidadId').val();
     const action = id && id !== '0' ? 'edit_ajax' : 'add_ajax';
     const formData = new FormData(this);
@@ -174,7 +197,11 @@ $(document).ready(function () {
     $('#trazabilidadModalTitle').text('Editar Cuarentena');
     $('#trazabilidadId').val(row.id);
     $('#cantidad').val(row.cantidad);
-    $('#estado_salud').val(row.estado_salud);
+    const $estado = $('#estado_salud');
+    $estado.val(row.estado_salud);
+    if ($estado.val() !== row.estado_salud) {
+      $estado.append(`<option value="${Helpers.escapeHtml(row.estado_salud)}" selected>${Helpers.escapeHtml(row.estado_salud)}</option>`);
+    }
     $('#fecha_registro').val(row.fecha_registro);
     $('#observacion').val(row.observacion);
     $('#trazabilidadSubmitBtn').text('Actualizar');

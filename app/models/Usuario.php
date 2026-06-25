@@ -28,7 +28,7 @@ class Usuario extends Database
     private function bootstrapDefaults(): void
     {
         try {
-            // Migración: agregar columna avatar si no existe
+            // Migración: columna avatar si no existe
             try {
                 $stmt = $this->db()->query("SHOW COLUMNS FROM usuarios LIKE 'avatar'");
                 if (!$stmt->fetch()) {
@@ -38,129 +38,130 @@ class Usuario extends Database
                 error_log('Error al migrar columna avatar: ' . $e->getMessage());
             }
 
-            // Migración: tabla usuario_permisos para permisos individuales por usuario
-            try {
-                $this->db()->exec("CREATE TABLE IF NOT EXISTS usuario_permisos (
-                    id_usuario INT NOT NULL,
-                    id_permiso INT NOT NULL,
-                    PRIMARY KEY (id_usuario, id_permiso),
-                    FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario) ON DELETE CASCADE,
-                    FOREIGN KEY (id_permiso) REFERENCES permisos(id_permiso) ON DELETE CASCADE
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
-            } catch (\Throwable $e) {
-                error_log('Error al migrar tabla usuario_permisos: ' . $e->getMessage());
-            }
+            // Nuevo sistema de permisos basado en módulos + acciones
+            // Tabla: modulos
+            $this->db()->exec("CREATE TABLE IF NOT EXISTS modulos (
+                id_modulo INT(11) NOT NULL AUTO_INCREMENT,
+                nombre_modulo VARCHAR(100) NOT NULL,
+                descripcion_modulo VARCHAR(255) DEFAULT NULL,
+                PRIMARY KEY (id_modulo),
+                UNIQUE KEY uq_nombre_modulo (nombre_modulo)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
+            // Tabla: permisos (básicos: ver, crear, editar, eliminar)
+            $this->db()->exec("CREATE TABLE IF NOT EXISTS permisos (
+                id_permiso INT(11) NOT NULL AUTO_INCREMENT,
+                nombre_permiso VARCHAR(20) NOT NULL,
+                PRIMARY KEY (id_permiso),
+                UNIQUE KEY uq_nombre_permiso (nombre_permiso)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
+            // Tabla: rol_modulo_permiso
+            $this->db()->exec("CREATE TABLE IF NOT EXISTS rol_modulo_permiso (
+                id_rol_modulo_permiso INT(11) NOT NULL AUTO_INCREMENT,
+                id_rol INT(11) NOT NULL,
+                id_modulo INT(11) NOT NULL,
+                id_permiso INT(11) NOT NULL,
+                PRIMARY KEY (id_rol_modulo_permiso),
+                UNIQUE KEY uk_rol_modulo_permiso (id_rol, id_modulo, id_permiso),
+                CONSTRAINT fk_rmp_rol FOREIGN KEY (id_rol) REFERENCES roles (id_rol) ON DELETE CASCADE,
+                CONSTRAINT fk_rmp_modulo FOREIGN KEY (id_modulo) REFERENCES modulos (id_modulo) ON DELETE CASCADE,
+                CONSTRAINT fk_rmp_permiso FOREIGN KEY (id_permiso) REFERENCES permisos (id_permiso) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
+            // Tabla: usuario_modulo_permiso
+            $this->db()->exec("CREATE TABLE IF NOT EXISTS usuario_modulo_permiso (
+                id_usuario_modulo_permiso INT(11) NOT NULL AUTO_INCREMENT,
+                id_usuario INT(11) NOT NULL,
+                id_modulo INT(11) NOT NULL,
+                id_permiso INT(11) NOT NULL,
+                PRIMARY KEY (id_usuario_modulo_permiso),
+                UNIQUE KEY uk_usuario_modulo_permiso (id_usuario, id_modulo, id_permiso),
+                CONSTRAINT fk_ump_usuario FOREIGN KEY (id_usuario) REFERENCES usuarios (id_usuario) ON DELETE CASCADE,
+                CONSTRAINT fk_ump_modulo FOREIGN KEY (id_modulo) REFERENCES modulos (id_modulo) ON DELETE CASCADE,
+                CONSTRAINT fk_ump_permiso FOREIGN KEY (id_permiso) REFERENCES permisos (id_permiso) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 
             // Asegurar roles
             $adminExists = (int)$this->db()->query("SELECT COUNT(*) FROM roles WHERE id_rol = 1")->fetchColumn();
             if (!$adminExists) {
                 $this->db()->exec("INSERT INTO roles (id_rol, nombre_rol, descripcion_rol) VALUES (1, 'Administrador', 'Acceso total al sistema')");
             }
-
             $trabajadorExists = (int)$this->db()->query("SELECT COUNT(*) FROM roles WHERE id_rol = 2")->fetchColumn();
             if (!$trabajadorExists) {
                 $this->db()->exec("INSERT IGNORE INTO roles (id_rol, nombre_rol, descripcion_rol) VALUES (2, 'Trabajador', 'Acceso a inventario, plantas, clientes y ventas')");
             }
 
-            // Asegurar permisos
-            $permisos = [
-                ['codigo' => 'DASHBOARD_VIEW', 'desc' => 'Ver panel principal'],
-                ['codigo' => 'INVENTARIO_VIEW', 'desc' => 'Ver inventario'],
-                ['codigo' => 'VENTAS_ACCESS', 'desc' => 'Acceder a ventas/POS'],
-                ['codigo' => 'VENTAS_CREATE', 'desc' => 'Crear ventas'],
-                ['codigo' => 'VENTAS_EDIT', 'desc' => 'Editar ventas'],
-                ['codigo' => 'VENTAS_DELETE', 'desc' => 'Anular ventas'],
-                ['codigo' => 'VENTAS_PDF', 'desc' => 'Exportar comprobante PDF'],
-                ['codigo' => 'USUARIOS_MANAGE', 'desc' => 'Gestionar usuarios'],
-                ['codigo' => 'PLANTAS_VIEW', 'desc' => 'Ver plantas'],
-                ['codigo' => 'PLANTAS_CREATE', 'desc' => 'Crear plantas'],
-                ['codigo' => 'PLANTAS_EDIT', 'desc' => 'Editar plantas'],
-                ['codigo' => 'PLANTAS_DELETE', 'desc' => 'Eliminar plantas'],
-                ['codigo' => 'PROVEEDORES_VIEW', 'desc' => 'Ver proveedores'],
-                ['codigo' => 'PROVEEDORES_CREATE', 'desc' => 'Crear proveedores'],
-                ['codigo' => 'PROVEEDORES_EDIT', 'desc' => 'Editar proveedores'],
-                ['codigo' => 'PROVEEDORES_DELETE', 'desc' => 'Eliminar proveedores'],
-                ['codigo' => 'INSUMOS_VIEW', 'desc' => 'Ver insumos'],
-                ['codigo' => 'INSUMOS_CREATE', 'desc' => 'Crear insumos'],
-                ['codigo' => 'INSUMOS_EDIT', 'desc' => 'Editar insumos'],
-                ['codigo' => 'INSUMOS_DELETE', 'desc' => 'Eliminar insumos'],
-                ['codigo' => 'TRABAJADORES_VIEW', 'desc' => 'Ver trabajadores'],
-                ['codigo' => 'TRABAJADORES_CREATE', 'desc' => 'Crear trabajadores'],
-                ['codigo' => 'TRABAJADORES_EDIT', 'desc' => 'Editar trabajadores'],
-                ['codigo' => 'TRABAJADORES_DELETE', 'desc' => 'Eliminar trabajadores'],
-                ['codigo' => 'CLIENTES_VIEW', 'desc' => 'Ver clientes'],
-                ['codigo' => 'CLIENTES_CREATE', 'desc' => 'Crear clientes'],
-                ['codigo' => 'CLIENTES_EDIT', 'desc' => 'Editar clientes'],
-                ['codigo' => 'CLIENTES_DELETE', 'desc' => 'Eliminar clientes'],
-                ['codigo' => 'TAREAS_VIEW', 'desc' => 'Ver tareas'],
-                ['codigo' => 'TAREAS_CREATE', 'desc' => 'Crear tareas'],
-                ['codigo' => 'TAREAS_EDIT', 'desc' => 'Editar tareas'],
-                ['codigo' => 'TAREAS_DELETE', 'desc' => 'Eliminar tareas'],
-                ['codigo' => 'UBICACIONES_VIEW', 'desc' => 'Ver ubicaciones'],
-                ['codigo' => 'UBICACIONES_CREATE', 'desc' => 'Crear ubicaciones'],
-                ['codigo' => 'UBICACIONES_EDIT', 'desc' => 'Editar ubicaciones'],
-                ['codigo' => 'UBICACIONES_DELETE', 'desc' => 'Eliminar ubicaciones'],
-                ['codigo' => 'ASISTENTE_ACCESS', 'desc' => 'Acceder al asistente IA'],
-                ['codigo' => 'HERRAMIENTAS_VIEW', 'desc' => 'Ver herramientas'],
-                ['codigo' => 'HERRAMIENTAS_CREATE', 'desc' => 'Crear herramientas'],
-                ['codigo' => 'HERRAMIENTAS_EDIT', 'desc' => 'Editar herramientas'],
-                ['codigo' => 'HERRAMIENTAS_DELETE', 'desc' => 'Eliminar herramientas'],
-                ['codigo' => 'PRECIOS_VIEW', 'desc' => 'Ver precios'],
-                ['codigo' => 'PRECIOS_CREATE', 'desc' => 'Crear precios'],
-                ['codigo' => 'PRECIOS_EDIT', 'desc' => 'Editar precios'],
-                ['codigo' => 'PRECIOS_DELETE', 'desc' => 'Eliminar precios'],
-                ['codigo' => 'UNIDADES_MEDIDA_VIEW', 'desc' => 'Ver unidades de medida'],
-                ['codigo' => 'UNIDADES_MEDIDA_CREATE', 'desc' => 'Crear unidades de medida'],
-                ['codigo' => 'UNIDADES_MEDIDA_EDIT', 'desc' => 'Editar unidades de medida'],
-                ['codigo' => 'UNIDADES_MEDIDA_DELETE', 'desc' => 'Eliminar unidades de medida'],
-                ['codigo' => 'INVENTARIO_ADJUST', 'desc' => 'Ajustar inventario'],
-                ['codigo' => 'TAREAS_ASSIGN', 'desc' => 'Asignar tareas a trabajadores'],
-                ['codigo' => 'USO_HERRAMIENTA_CREATE', 'desc' => 'Registrar uso de herramientas'],
-                ['codigo' => 'BACKUPS_CREATE', 'desc' => 'Crear respaldos'],
-                ['codigo' => 'BACKUPS_DELETE', 'desc' => 'Eliminar y restaurar respaldos'],
-                ['codigo' => 'AUDIT_VIEW', 'desc' => 'Ver bitácora de auditoría'],
-                ['codigo' => 'RECOLECCION_VIEW', 'desc' => 'Ver recolecciones'],
-                ['codigo' => 'RECOLECCION_CREATE', 'desc' => 'Crear recolecciones'],
-                ['codigo' => 'RECOLECCION_EDIT', 'desc' => 'Editar recolecciones'],
-                ['codigo' => 'RECOLECCION_DELETE', 'desc' => 'Eliminar recolecciones'],
-                ['codigo' => 'RECOLECCION_COMPLETE', 'desc' => 'Completar recolecciones y registrar insumos'],
-                ['codigo' => 'CUENTAS_COBRAR_VIEW', 'desc' => 'Ver cuentas por cobrar'],
-                ['codigo' => 'CUENTAS_COBRAR_PAY', 'desc' => 'Registrar pagos de cuentas por cobrar'],
+            // Asegurar 4 permisos básicos
+            $permisosBasicos = ['ver', 'crear', 'editar', 'eliminar'];
+            foreach ($permisosBasicos as $np) {
+                $this->db()->exec("INSERT IGNORE INTO permisos (nombre_permiso) VALUES ('$np')");
+            }
+
+            // Asegurar módulos
+            $modulos = [
+                ['plantas', 'Administrar plantas'],
+                ['especies', 'Administrar especies'],
+                ['ubicaciones', 'Administrar ubicaciones'],
+                ['inventario', 'Gestión de inventario'],
+                ['lotes', 'Gestión de lotes'],
+                ['trazabilidad', 'Monitoreo y seguimiento de ejemplares'],
+                ['insumos', 'Gestión de insumos'],
+                ['herramientas', 'Gestión de herramientas'],
+                ['unidades_medida', 'Gestión de unidades de medida'],
+                ['mermas', 'Registro de mermas y bajas'],
+                ['ventas', 'Procesar ventas'],
+                ['precios', 'Gestión de precios'],
+                ['clientes', 'Gestión de clientes'],
+                ['cuentas_cobrar', 'Cuentas por cobrar'],
+                ['cuentas_pagar', 'Cuentas por pagar'],
+                ['compras', 'Gestión de compras'],
+                ['ornatos', 'Gestión de ornatos'],
+                ['ampliacion', 'Ampliación de especies'],
+                ['proveedores', 'Gestión de proveedores'],
+                ['tareas', 'Asignación y seguimiento de tareas'],
+                ['empleados', 'Gestión de empleados'],
+                ['seed_collection', 'Gestión de recolección de semillas'],
+                ['asistente', 'Asistente IA'],
+                ['reports', 'Reportes y estadísticas'],
+                ['usuarios', 'Administración de usuarios'],
+                ['roles', 'Administración de roles'],
+                ['auditlog', 'Bitácora de auditoría'],
+                ['backups', 'Respaldo y restauración'],
             ];
-
-            $stmtCheckPermiso = $this->db()->prepare("SELECT COUNT(*) FROM permisos WHERE codigo_permiso = :codigo");
-            $stmtInsertPermiso = $this->db()->prepare("INSERT IGNORE INTO permisos (codigo_permiso, descripcion_permiso) VALUES (:codigo, :descripcion)");
-            foreach ($permisos as $p) {
-                $stmtCheckPermiso->execute([':codigo' => $p['codigo']]);
-                if ((int)$stmtCheckPermiso->fetchColumn() === 0) {
-                    $stmtInsertPermiso->execute([':codigo' => $p['codigo'], ':descripcion' => $p['desc']]);
+            foreach ($modulos as $m) {
+                $stmt = $this->db()->prepare("SELECT COUNT(*) FROM modulos WHERE nombre_modulo = :nom");
+                $stmt->execute([':nom' => $m[0]]);
+                if ((int)$stmt->fetchColumn() === 0) {
+                    $ins = $this->db()->prepare("INSERT INTO modulos (nombre_modulo, descripcion_modulo) VALUES (:nom, :desc)");
+                    $ins->execute([':nom' => $m[0], ':desc' => $m[1]]);
                 }
             }
 
-            // Mapa permisos -> id
-            $allPermisos = $this->db()->query("SELECT id_permiso, codigo_permiso FROM permisos")->fetchAll(PDO::FETCH_ASSOC);
-            $permMap = [];
-            foreach ($allPermisos as $p) {
-                $permMap[$p['codigo_permiso']] = $p['id_permiso'];
-            }
-
-            // Asegurar rol_permisos para Administrador (rol 1) — todos
-            $stmtCheckRP = $this->db()->prepare("SELECT COUNT(*) FROM rol_permisos WHERE id_rol = :rol AND id_permiso = :perm");
-            $stmtInsertRP = $this->db()->prepare("INSERT IGNORE INTO rol_permisos (id_rol, id_permiso) VALUES (:rol, :perm)");
-            foreach ($permMap as $pid) {
-                $stmtCheckRP->execute([':rol' => 1, ':perm' => $pid]);
-                if ((int)$stmtCheckRP->fetchColumn() === 0) {
-                    $stmtInsertRP->execute([':rol' => 1, ':perm' => $pid]);
+            // Asignar todos los permisos al rol Administrador (1)
+            $modulosAll = $this->db()->query("SELECT id_modulo FROM modulos")->fetchAll(PDO::FETCH_COLUMN);
+            $permisosAll = $this->db()->query("SELECT id_permiso FROM permisos")->fetchAll(PDO::FETCH_COLUMN);
+            foreach ($modulosAll as $idMod) {
+                foreach ($permisosAll as $idPerm) {
+                    $this->db()->exec("INSERT IGNORE INTO rol_modulo_permiso (id_rol, id_modulo, id_permiso) VALUES (1, $idMod, $idPerm)");
                 }
             }
 
-            // Asegurar rol_permisos para Trabajador (rol 2) — limitados
-            $trabajadorPermisos = ['DASHBOARD_VIEW', 'INVENTARIO_VIEW', 'VENTAS_ACCESS', 'VENTAS_CREATE', 'VENTAS_PDF', 'PLANTAS_VIEW', 'PLANTAS_CREATE', 'PLANTAS_EDIT', 'CLIENTES_VIEW', 'CLIENTES_CREATE', 'CLIENTES_EDIT', 'TAREAS_VIEW', 'ASISTENTE_ACCESS'];
-            foreach ($trabajadorPermisos as $cod) {
-                if (isset($permMap[$cod])) {
-                    $stmtCheckRP->execute([':rol' => 2, ':perm' => $permMap[$cod]]);
-                    if ((int)$stmtCheckRP->fetchColumn() === 0) {
-                        $stmtInsertRP->execute([':rol' => 2, ':perm' => $permMap[$cod]]);
+            // Asignar permisos limitados al rol Trabajador (2)
+            $trabajadorModulos = ['dashboard', 'inventario', 'plantas', 'especies', 'clientes', 'tareas', 'ventas', 'asistente'];
+            $trabajadorAcciones = ['ver', 'crear', 'editar'];
+            foreach ($trabajadorModulos as $nomMod) {
+                $stmt = $this->db()->prepare("SELECT id_modulo FROM modulos WHERE nombre_modulo = :nom");
+                $stmt->execute([':nom' => $nomMod]);
+                $idMod = $stmt->fetchColumn();
+                if ($idMod) {
+                    foreach ($trabajadorAcciones as $acc) {
+                        $stmtP = $this->db()->prepare("SELECT id_permiso FROM permisos WHERE nombre_permiso = :acc");
+                        $stmtP->execute([':acc' => $acc]);
+                        $idPerm = $stmtP->fetchColumn();
+                        if ($idPerm) {
+                            $this->db()->exec("INSERT IGNORE INTO rol_modulo_permiso (id_rol, id_modulo, id_permiso) VALUES (2, $idMod, $idPerm)");
+                        }
                     }
                 }
             }
@@ -493,36 +494,43 @@ class Usuario extends Database
     public function getAllPermissions(): array
     {
         try {
-            $stmt = $this->db()->query("SELECT id_permiso, codigo_permiso, descripcion_permiso FROM permisos ORDER BY codigo_permiso ASC");
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $modulos = $this->db()->query("SELECT id_modulo, nombre_modulo, descripcion_modulo FROM modulos ORDER BY nombre_modulo ASC")->fetchAll(PDO::FETCH_ASSOC);
+            $acciones = $this->db()->query("SELECT id_permiso, nombre_permiso FROM permisos ORDER BY id_permiso ASC")->fetchAll(PDO::FETCH_ASSOC);
+            return ['modulos' => $modulos, 'acciones' => $acciones];
         } catch (\Throwable $e) {
             error_log("Error al obtener todos los permisos: " . $e->getMessage());
-            return [];
+            return ['modulos' => [], 'acciones' => []];
         }
     }
 
     public function getUserPermissions(int $userId): array
     {
         try {
-            $stmt = $this->db()->prepare("SELECT id_permiso FROM usuario_permisos WHERE id_usuario = :uid");
+            $stmt = $this->db()->prepare("
+                SELECT ump.id_modulo, ump.id_permiso, m.nombre_modulo, p.nombre_permiso
+                FROM usuario_modulo_permiso ump
+                JOIN modulos m ON ump.id_modulo = m.id_modulo
+                JOIN permisos p ON ump.id_permiso = p.id_permiso
+                WHERE ump.id_usuario = :uid
+            ");
             $stmt->execute([':uid' => $userId]);
-            return array_column($stmt->fetchAll(PDO::FETCH_ASSOC), 'id_permiso');
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (\Throwable $e) {
             error_log("Error al obtener permisos de usuario: " . $e->getMessage());
             return [];
         }
     }
 
-    public function setUserPermissions(int $userId, array $permisoIds): void
+    public function setUserPermissions(int $userId, array $permisos): void
     {
         try {
             $this->db()->beginTransaction();
-            $stmtDel = $this->db()->prepare("DELETE FROM usuario_permisos WHERE id_usuario = :uid");
+            $stmtDel = $this->db()->prepare("DELETE FROM usuario_modulo_permiso WHERE id_usuario = :uid");
             $stmtDel->execute([':uid' => $userId]);
-            if (!empty($permisoIds)) {
-                $stmtIns = $this->db()->prepare("INSERT INTO usuario_permisos (id_usuario, id_permiso) VALUES (:uid, :pid)");
-                foreach ($permisoIds as $pid) {
-                    $stmtIns->execute([':uid' => $userId, ':pid' => (int)$pid]);
+            if (!empty($permisos)) {
+                $stmtIns = $this->db()->prepare("INSERT INTO usuario_modulo_permiso (id_usuario, id_modulo, id_permiso) VALUES (:uid, :mid, :pid)");
+                foreach ($permisos as $p) {
+                    $stmtIns->execute([':uid' => $userId, ':mid' => (int)$p['id_modulo'], ':pid' => (int)$p['id_permiso']]);
                 }
             }
             $this->db()->commit();
@@ -535,28 +543,25 @@ class Usuario extends Database
     public function getRolePermissions(int $rolId, ?int $userId = null): array
     {
         try {
-            $stmt = $this->db()->prepare("
-                SELECT p.codigo_permiso
-                FROM rol_permisos rp
-                JOIN permisos p ON p.id_permiso = rp.id_permiso
-                WHERE rp.id_rol = :rol_id
-            ");
-            $stmt->execute([':rol_id' => $rolId]);
-            $permisos = array_column($stmt->fetchAll(PDO::FETCH_ASSOC), 'codigo_permiso');
-
-            // Para no-administradores, fusionar con permisos individuales del usuario
-            if ($rolId !== 1 && $userId !== null) {
-                $userPermIds = $this->getUserPermissions($userId);
-                if (!empty($userPermIds)) {
-                    $placeholders = implode(',', array_fill(0, count($userPermIds), '?'));
-                    $stmt2 = $this->db()->prepare("SELECT codigo_permiso FROM permisos WHERE id_permiso IN ($placeholders)");
-                    $stmt2->execute(array_map('intval', $userPermIds));
-                    $userPermisos = array_column($stmt2->fetchAll(PDO::FETCH_ASSOC), 'codigo_permiso');
-                    $permisos = array_unique(array_merge($permisos, $userPermisos));
-                }
+            // Admin tiene bypass, devolver array vacío (Auth::isAdmin() maneja el acceso)
+            if ($rolId === 1) {
+                return [];
             }
 
-            return $permisos;
+            // Solo usar permisos individuales del usuario (el rol es solo una etiqueta)
+            if ($userId !== null) {
+                $stmt = $this->db()->prepare("
+                    SELECT CONCAT(m.nombre_modulo, ':', p.nombre_permiso) AS permiso
+                    FROM usuario_modulo_permiso ump
+                    JOIN modulos m ON ump.id_modulo = m.id_modulo
+                    JOIN permisos p ON ump.id_permiso = p.id_permiso
+                    WHERE ump.id_usuario = :uid
+                ");
+                $stmt->execute([':uid' => $userId]);
+                return array_column($stmt->fetchAll(PDO::FETCH_ASSOC), 'permiso');
+            }
+
+            return [];
         } catch (\Throwable $e) {
             error_log("Error al obtener permisos: " . $e->getMessage());
             return [];

@@ -12,11 +12,11 @@ function index(): void
     if (isAjaxRequest() && $accion !== '') {
         try {
             match ($_SERVER['REQUEST_METHOD'] . '_' . $accion) {
-                'GET_listar'      => ornatos_listarAjax(),
-                'POST_guardar'    => ornatos_manejarGuardar('crear'),
-                'POST_actualizar' => ornatos_manejarGuardar('editar'),
-                'GET_detalles'    => ornatos_obtenerDetallesAjax(),
-                'POST_eliminar'   => ornatos_manejarEliminar(),
+                'GET_listar'      => listar(),
+                'POST_guardar'    => guardar(),
+                'POST_actualizar' => actualizar(),
+                'GET_detalles'    => detalles(),
+                'POST_eliminar'   => eliminar(),
                 default           => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
             };
         } catch (\Exception $e) {
@@ -29,9 +29,9 @@ function index(): void
 }
 
 function listar(): void { checkModuleAuth(); ornatos_listarAjax(); }
-function guardar(): void { checkModuleAuth(); checkPermisoOrFail('ORNATOS_CREATE'); ornatos_manejarGuardar('crear'); }
-function actualizar(): void { checkModuleAuth(); checkPermisoOrFail('ORNATOS_EDIT'); ornatos_manejarGuardar('editar'); }
-function eliminar(): void { checkModuleAuth(); checkPermisoOrFail('ORNATOS_DELETE'); ornatos_manejarEliminar(); }
+function guardar(): void { checkModuleAuth(); checkPermisoOrFail('ornatos:crear'); ornatos_manejarGuardar('crear'); }
+function actualizar(): void { checkModuleAuth(); checkPermisoOrFail('ornatos:editar'); ornatos_manejarGuardar('editar'); }
+function eliminar(): void { checkModuleAuth(); checkPermisoOrFail('ornatos:eliminar'); ornatos_manejarEliminar(); }
 function detalles(): void { checkModuleAuth(); ornatos_obtenerDetallesAjax(); }
 
 function ornatos_listarAjax(): void

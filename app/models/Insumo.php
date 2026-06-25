@@ -8,6 +8,7 @@ use SysInescolara\interfaces\DeletableInterface;
 use SysInescolara\traits\ValidationTrait;
 use PDO;
 use Exception;
+use SysInescolara\models\AuditLog;
 
 class Insumo extends Database implements ReadableInterface, DeletableInterface
 {
@@ -17,7 +18,7 @@ class Insumo extends Database implements ReadableInterface, DeletableInterface
         'nombre'            => ['type' => 'nombreProducto', 'required' => true],
         'id_unidad_medida'  => ['type' => null,            'required' => true],
         'categoria'         => ['type' => null,            'required' => false],
-        'stock'             => ['type' => 'cantidad',      'required' => false],
+        'stock'             => ['type' => 'precio',        'required' => false],
         'costo'             => ['type' => 'precio',        'required' => false],
     ];
 
@@ -66,15 +67,21 @@ class Insumo extends Database implements ReadableInterface, DeletableInterface
         ]);
         $stmt = $this->db()->prepare("
             INSERT INTO insumo (nombre_insumo, id_unidad_medida, categoria, stock_actual, costo_unitario_actual)
-            VALUES (:nombre, :id_unidad_medida, :categoria, :stock, :costo)
+            VALUES (?, ?, ?, ?, ?)
         ");
-        return $stmt->execute([
-            ':nombre' => $nombre,
-            ':id_unidad_medida' => $id_unidad_medida,
-            ':categoria' => $categoria,
-            ':stock'  => $stock,
-            ':costo'  => $costo
+        $stmt->execute([$nombre, $id_unidad_medida, $categoria, $stock, $costo]);
+
+        $newId = (int) $this->db()->lastInsertId();
+
+        AuditLog::record('CREATE', 'insumo', $newId, null, [
+            'nombre_insumo'        => $nombre,
+            'id_unidad_medida'     => $id_unidad_medida,
+            'categoria'            => $categoria,
+            'stock_actual'         => $stock,
+            'costo_unitario_actual'=> $costo,
         ]);
+
+        return true;
     }
 
     public function update($id, $nombre, $id_unidad_medida, $categoria = null, $stock = 0, $costo = 0) {
@@ -89,28 +96,36 @@ class Insumo extends Database implements ReadableInterface, DeletableInterface
             throw new Exception("No existe el insumo solicitado para modificar.");
         }
 
+        $oldData = $this->getById($id);
+
         $stmt = $this->db()->prepare("
             UPDATE insumo
-            SET nombre_insumo = :nombre,
-                id_unidad_medida = :id_unidad_medida,
-                categoria = :categoria,
-                stock_actual = :stock,
-                costo_unitario_actual = :costo
-            WHERE id_insumo = :id
+            SET nombre_insumo = ?,
+                id_unidad_medida = ?,
+                categoria = ?,
+                stock_actual = ?,
+                costo_unitario_actual = ?
+            WHERE id_insumo = ?
         ");
-        return $stmt->execute([
-            ':id'     => $id,
-            ':nombre' => $nombre,
-            ':id_unidad_medida' => $id_unidad_medida,
-            ':categoria' => $categoria,
-            ':stock'  => $stock,
-            ':costo'  => $costo
+        $stmt->execute([$nombre, $id_unidad_medida, $categoria, $stock, $costo, $id]);
+
+        AuditLog::record('UPDATE', 'insumo', $id, $oldData, [
+            'nombre_insumo'        => $nombre,
+            'id_unidad_medida'     => $id_unidad_medida,
+            'categoria'            => $categoria,
+            'stock_actual'         => $stock,
+            'costo_unitario_actual'=> $costo,
         ]);
+
+        return true;
     }
 
     public function delete(int $id): bool {
-        $stmt = $this->db()->prepare("UPDATE insumo SET activo = 0 WHERE id_insumo = :id");
-        return $stmt->execute([':id' => $id]);
+        $oldData = $this->getById($id);
+        $stmt = $this->db()->prepare("UPDATE insumo SET activo = 0 WHERE id_insumo = ?");
+        $stmt->execute([$id]);
+        AuditLog::record('DEACTIVATE', 'insumo', $id, $oldData, null);
+        return true;
     }
 
     public function restore(int $id): bool {

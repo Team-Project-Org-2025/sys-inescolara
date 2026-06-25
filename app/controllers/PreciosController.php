@@ -14,11 +14,11 @@ function index(): void
     if (isAjaxRequest() && $action !== '') {
         try {
             match ($_SERVER['REQUEST_METHOD'] . '_' . $action) {
-                'GET_get_prices'         => prices_getPricesAjax(),
-                'POST_edit_ajax'         => prices_handleEdit(),
-                'POST_delete_ajax'       => prices_handleDelete(),
-                'GET_calcular_por_planta' => prices_calcularPorPlantaAjax(),
-                'POST_guardar_por_planta' => prices_guardarPorPlantaAjax(),
+                'GET_get_prices'         => get_prices(),
+                'POST_edit_ajax'         => edit_ajax(),
+                'POST_delete_ajax'       => delete_ajax(),
+                'GET_calcular_por_planta' => calcular_por_planta(),
+                'POST_guardar_por_planta' => guardar_por_planta(),
                 default                  => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
             };
         } catch (\Exception $e) {
@@ -41,9 +41,9 @@ function index(): void
 
 function get_prices(): void { checkModuleAuth(); prices_getPricesAjax(); }
 function calcular_por_planta(): void { checkModuleAuth(); prices_calcularPorPlantaAjax(); }
-function guardar_por_planta(): void { checkModuleAuth(); checkPermisoOrFail('PRECIOS_CREATE'); prices_guardarPorPlantaAjax(); }
-function edit_ajax(): void { checkModuleAuth(); checkPermisoOrFail('PRECIOS_EDIT'); prices_handleEdit(); }
-function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('PRECIOS_DELETE'); prices_handleDelete(); }
+function guardar_por_planta(): void { checkModuleAuth(); checkPermisoOrFail('precios:crear'); prices_guardarPorPlantaAjax(); }
+function edit_ajax(): void { checkModuleAuth(); checkPermisoOrFail('precios:editar'); prices_handleEdit(); }
+function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('precios:eliminar'); prices_handleDelete(); }
 
 function prices_handleEdit(): void
 {

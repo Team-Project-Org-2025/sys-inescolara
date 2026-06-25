@@ -152,9 +152,15 @@ class Trazabilidad extends Database implements ReadableInterface, DeletableInter
         ]);
     }
 
-    public function getAvailableBatches(): array
+    public function getAvailableBatches(?int $includeId = null): array
     {
         try {
+            $params = [];
+            $extra = '';
+            if ($includeId !== null) {
+                $extra = ' OR l.id_lote = :include_id';
+                $params[':include_id'] = $includeId;
+            }
             $sql = "SELECT
                         l.id_lote AS id,
                         l.cantidad_actual,
@@ -164,10 +170,11 @@ class Trazabilidad extends Database implements ReadableInterface, DeletableInter
                     FROM lote l
                     LEFT JOIN plantas p ON l.id_planta = p.id_planta AND p.activo = 1
                     LEFT JOIN ubicacion u ON l.id_ubicacion = u.id_ubicacion AND u.activo = 1
-                    WHERE l.activo = 1 AND l.cantidad_actual > 0
+                    WHERE l.activo = 1 AND (l.cantidad_actual > 0$extra)
                     ORDER BY p.nombre_comun ASC, l.id_lote DESC";
-            $stmt = $this->db()->query($sql);
-            return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+            $stmt = $this->db()->prepare($sql);
+            $stmt->execute($params);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (\Throwable $e) {
             error_log('Error en Trazabilidad::getAvailableBatches: ' . $e->getMessage());
             return [];

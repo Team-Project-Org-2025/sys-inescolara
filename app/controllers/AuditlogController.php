@@ -11,7 +11,7 @@ function index(): void
     if (isAjaxRequest() && $action !== '') {
         try {
             match ($_SERVER['REQUEST_METHOD'] . '_' . $action) {
-                'GET_get_auditlogs' => auditlog_getAuditLogsAjax(),
+                'GET_get_auditlogs' => get_auditlogs(),
                 default             => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
             };
         } catch (\Exception $e) {
@@ -29,7 +29,7 @@ function index(): void
     require $view;
 }
 
-function get_auditlogs(): void { checkModuleAuth(); checkPermisoOrFail('AUDIT_VIEW'); auditlog_getAuditLogsAjax(); }
+function get_auditlogs(): void { checkModuleAuth(); checkPermisoOrFail('auditlog:ver'); auditlog_getAuditLogsAjax(); }
 
 function auditlog_getAuditLogsAjax(): void
 {

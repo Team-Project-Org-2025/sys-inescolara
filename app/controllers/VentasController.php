@@ -21,14 +21,14 @@ function index(): void
     if (isAjaxRequest() && $accion !== '') {
         try {
             match ($_SERVER['REQUEST_METHOD'] . '_' . $accion) {
-                'GET_listar'           => ventas_listarAjax(),
-                'POST_guardar'         => ventas_manejarGuardar(),
-                'GET_detalles'         => ventas_obtenerDetallesAjax(),
-                'POST_cancelar'        => ventas_manejarCancelar(),
-                'GET_buscar_lotes'     => ventas_buscarLotesAjax(),
-                'GET_precio_lote'      => ventas_precioLoteAjax(),
-                'GET_buscar_clientes'  => ventas_buscarClientesAjax(),
-                'GET_trabajadores'     => ventas_trabajadoresAjax(),
+                'GET_listar'           => listar(),
+                'POST_guardar'         => guardar(),
+                'GET_detalles'         => detalles(),
+                'POST_cancelar'        => cancelar(),
+                'GET_buscar_lotes'     => buscar_lotes(),
+                'GET_precio_lote'      => precio_lote(),
+                'GET_buscar_clientes'  => buscar_clientes(),
+                'GET_trabajadores'     => trabajadores(),
                 default                => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
             };
         } catch (\Exception $e) {
@@ -52,12 +52,14 @@ function index(): void
 }
 
 function listar(): void { checkModuleAuth(); ventas_listarAjax(); }
-function guardar(): void { checkModuleAuth(); checkPermisoOrFail('VENTAS_CREATE'); ventas_manejarGuardar(); }
-function cancelar(): void { checkModuleAuth(); checkPermisoOrFail('VENTAS_DELETE'); ventas_manejarCancelar(); }
+function guardar(): void { checkModuleAuth(); checkPermisoOrFail('ventas:crear'); ventas_manejarGuardar(); }
+function cancelar(): void { checkModuleAuth(); checkPermisoOrFail('ventas:eliminar'); ventas_manejarCancelar(); }
 function detalles(): void { checkModuleAuth(); ventas_obtenerDetallesAjax(); }
 function buscar_lotes(): void { checkModuleAuth(); ventas_buscarLotesAjax(); }
 function buscar_clientes(): void { checkModuleAuth(); ventas_buscarClientesAjax(); }
-function comprobante(): void { checkModuleAuth(); checkPermisoOrFail('VENTAS_PDF'); ventas_comprobanteAjax(); }
+function precio_lote(): void { checkModuleAuth(); ventas_precioLoteAjax(); }
+function trabajadores(): void { checkModuleAuth(); ventas_trabajadoresAjax(); }
+function comprobante(): void { checkModuleAuth(); checkPermisoOrFail('ventas:ver'); ventas_comprobanteAjax(); }
 
 function ventas_listarAjax(): void
 {

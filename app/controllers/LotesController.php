@@ -5,7 +5,6 @@ require_once __DIR__ . '/controller_helpers.php';
 use SysInescolara\models\Lote;
 use SysInescolara\models\Planta;
 use SysInescolara\models\Ubicacion;
-use SysInescolara\models\AuditLog;
 
 function index(): void
 {
@@ -14,10 +13,10 @@ function index(): void
     if (isAjaxRequest() && $action !== '') {
         try {
             match ($_SERVER['REQUEST_METHOD'] . '_' . $action) {
-                'GET_get_batches'  => batches_getBatchesAjax(),
-                'POST_add_ajax'    => batches_handleAddEdit('add'),
-                'POST_edit_ajax'   => batches_handleAddEdit('edit'),
-                'POST_delete_ajax' => batches_handleDelete(),
+                'GET_get_batches'  => get_batches(),
+                'POST_add_ajax'    => add_ajax(),
+                'POST_edit_ajax'   => edit_ajax(),
+                'POST_delete_ajax' => delete_ajax(),
                 default            => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
             };
         } catch (\Exception $e) {
@@ -46,9 +45,9 @@ function index(): void
 }
 
 function get_batches(): void { checkModuleAuth(); batches_getBatchesAjax(); }
-function add_ajax(): void { checkModuleAuth(); checkPermisoOrFail('PLANTAS_CREATE'); batches_handleAddEdit('add'); }
-function edit_ajax(): void { checkModuleAuth(); checkPermisoOrFail('PLANTAS_EDIT'); batches_handleAddEdit('edit'); }
-function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('PLANTAS_DELETE'); batches_handleDelete(); }
+function add_ajax(): void { checkModuleAuth(); checkPermisoOrFail('lotes:crear'); batches_handleAddEdit('add'); }
+function edit_ajax(): void { checkModuleAuth(); checkPermisoOrFail('lotes:editar'); batches_handleAddEdit('edit'); }
+function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('lotes:eliminar'); batches_handleDelete(); }
 
 function batches_handleAddEdit(string $mode): void
 {
@@ -85,11 +84,6 @@ function batches_handleAddEdit(string $mode): void
     if ($mode === 'add') {
         $model->add($id_planta, $id_ubicacion, $fecha_siembra, $cantidad_inicial, $cantidad_actual, $estado, $categoria, $origen, $observacion, $imagen);
         $newId = $model->getLastInsertId() ?? 0;
-        AuditLog::record('CREATE', 'lote', $newId, null, [
-            'id_planta' => $id_planta, 'id_ubicacion' => $id_ubicacion, 'fecha_siembra' => $fecha_siembra,
-            'cantidad_inicial' => $cantidad_inicial, 'cantidad_actual' => $cantidad_actual,
-            'estado' => $estado, 'origen' => $origen, 'observacion' => $observacion, 'imagen' => $imagen,
-        ]);
         jsonResponse([
             'success' => true, 'message' => 'Lote agregado correctamente',
             'lote' => ['id' => $newId, 'id_planta' => $id_planta, 'imagen' => $imagen],
@@ -100,22 +94,16 @@ function batches_handleAddEdit(string $mode): void
     if ($id <= 0) throw new \Exception('ID inválido');
 
     if ($imagen === null) {
-        $oldData = $model->getById($id);
-        $imagen = $oldData['imagen'] ?? null;
+        $data = $model->getById($id);
+        $imagen = $data['imagen'] ?? null;
     } else {
-        $oldData = $model->getById($id);
-        if (!empty($oldData['imagen'])) {
-            $uploader = new \SysInescolara\helpers\ImageUploader();
-            $uploader->delete($oldData['imagen']);
+        $data = $model->getById($id);
+        if (!empty($data['imagen'])) {
+            (new \SysInescolara\helpers\ImageUploader())->delete($data['imagen']);
         }
     }
 
     $model->update($id, $id_planta, $id_ubicacion, $fecha_siembra, $cantidad_inicial, $cantidad_actual, $estado, $categoria, $origen, $observacion, $imagen);
-    AuditLog::record('UPDATE', 'lote', $id, $oldData, [
-        'id_planta' => $id_planta, 'id_ubicacion' => $id_ubicacion, 'fecha_siembra' => $fecha_siembra,
-        'cantidad_inicial' => $cantidad_inicial, 'cantidad_actual' => $cantidad_actual,
-        'estado' => $estado, 'origen' => $origen, 'observacion' => $observacion, 'imagen' => $imagen,
-    ]);
     jsonResponse([
         'success' => true, 'message' => 'Lote actualizado correctamente',
         'lote' => ['id' => $id, 'imagen' => $imagen],
@@ -136,7 +124,6 @@ function batches_handleDelete(): void
     }
 
     $model->delete($id);
-    AuditLog::record('DEACTIVATE', 'lote', $id, $oldData, null);
     jsonResponse(['success' => true, 'message' => 'Lote desactivado correctamente', 'loteId' => $id]);
 }
 

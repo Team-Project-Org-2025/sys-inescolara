@@ -6,6 +6,7 @@ use SysInescolara\core\Database;
 use SysInescolara\interfaces\ReadableInterface;
 use SysInescolara\interfaces\DeletableInterface;
 use SysInescolara\traits\ValidationTrait;
+use SysInescolara\models\AuditLog;
 use PDO;
 
 class Empleado extends Database implements ReadableInterface, DeletableInterface
@@ -53,8 +54,11 @@ class Empleado extends Database implements ReadableInterface, DeletableInterface
 
     public function delete(int $id): bool
     {
-        $stmt = $this->db()->prepare("UPDATE trabajadores SET activo = 0 WHERE id_trabajador = :id");
-        return $stmt->execute([':id' => $id]);
+        $oldData = $this->getById($id);
+        $stmt = $this->db()->prepare("UPDATE trabajadores SET activo = 0 WHERE id_trabajador = ?");
+        $stmt->execute([$id]);
+        AuditLog::record('DEACTIVATE', 'trabajadores', $id, $oldData, null);
+        return true;
     }
 
     public function restore(int $id): bool
@@ -92,15 +96,20 @@ class Empleado extends Database implements ReadableInterface, DeletableInterface
             'telefono_trabajador' => $telefonoTrabajador,
             'cargo' => $cargo,
         ]);
-        $stmt = $this->db()->prepare("INSERT INTO trabajadores (nombre_trabajador, apellido_trabajador, cedula_trabajador, telefono_trabajador, cargo, activo) VALUES (:nombre_trabajador, :apellido_trabajador, :cedula_trabajador, :telefono_trabajador, :cargo, :activo)");
-        return $stmt->execute([
-            ':nombre_trabajador' => $nombreTrabajador,
-            ':apellido_trabajador' => $apellidoTrabajador,
-            ':cedula_trabajador' => $cedulaTrabajador,
-            ':telefono_trabajador' => $telefonoTrabajador,
-            ':cargo' => $cargo,
-            ':activo' => $activo ? 1 : 0,
+        $stmt = $this->db()->prepare("INSERT INTO trabajadores (nombre_trabajador, apellido_trabajador, cedula_trabajador, telefono_trabajador, cargo, activo) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$nombreTrabajador, $apellidoTrabajador, $cedulaTrabajador, $telefonoTrabajador, $cargo, $activo ? 1 : 0]);
+
+        $newId = (int) $this->db()->lastInsertId();
+
+        AuditLog::record('CREATE', 'trabajadores', $newId, null, [
+            'nombre_trabajador'   => $nombreTrabajador,
+            'apellido_trabajador' => $apellidoTrabajador,
+            'cedula_trabajador'   => $cedulaTrabajador,
+            'telefono_trabajador' => $telefonoTrabajador,
+            'cargo'               => $cargo,
         ]);
+
+        return true;
     }
 
     public function update(int $id, string $nombreTrabajador, ?string $apellidoTrabajador = null, ?string $cedulaTrabajador = null, ?string $telefonoTrabajador = null, ?string $cargo = null, bool $activo = true)
@@ -115,15 +124,20 @@ class Empleado extends Database implements ReadableInterface, DeletableInterface
         if (!$this->exists($id)) {
             throw new \Exception("No existe el trabajador con ID: $id");
         }
-        $stmt = $this->db()->prepare("UPDATE trabajadores SET nombre_trabajador = :nombre_trabajador, apellido_trabajador = :apellido_trabajador, cedula_trabajador = :cedula_trabajador, telefono_trabajador = :telefono_trabajador, cargo = :cargo, activo = :activo WHERE id_trabajador = :id");
-        return $stmt->execute([
-            ':id' => $id,
-            ':nombre_trabajador' => $nombreTrabajador,
-            ':apellido_trabajador' => $apellidoTrabajador,
-            ':cedula_trabajador' => $cedulaTrabajador,
-            ':telefono_trabajador' => $telefonoTrabajador,
-            ':cargo' => $cargo,
-            ':activo' => $activo ? 1 : 0,
+
+        $oldData = $this->getById($id);
+
+        $stmt = $this->db()->prepare("UPDATE trabajadores SET nombre_trabajador = ?, apellido_trabajador = ?, cedula_trabajador = ?, telefono_trabajador = ?, cargo = ?, activo = ? WHERE id_trabajador = ?");
+        $stmt->execute([$nombreTrabajador, $apellidoTrabajador, $cedulaTrabajador, $telefonoTrabajador, $cargo, $activo ? 1 : 0, $id]);
+
+        AuditLog::record('UPDATE', 'trabajadores', $id, $oldData, [
+            'nombre_trabajador'   => $nombreTrabajador,
+            'apellido_trabajador' => $apellidoTrabajador,
+            'cedula_trabajador'   => $cedulaTrabajador,
+            'telefono_trabajador' => $telefonoTrabajador,
+            'cargo'               => $cargo,
         ]);
+
+        return true;
     }
 }

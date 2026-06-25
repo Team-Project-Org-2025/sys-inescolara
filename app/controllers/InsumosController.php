@@ -4,7 +4,6 @@ require_once __DIR__ . '/controller_helpers.php';
 
 use SysInescolara\models\Insumo;
 use SysInescolara\models\UnidadMedida;
-use SysInescolara\models\AuditLog;
 
 function index(): void
 {
@@ -13,10 +12,10 @@ function index(): void
     if (isAjaxRequest() && $action !== '') {
         try {
             match ($_SERVER['REQUEST_METHOD'] . '_' . $action) {
-                'GET_get_supplies'  => supplies_getSuppliesAjax(),
-                'POST_add_ajax'     => supplies_handleAddEdit('add'),
-                'POST_edit_ajax'    => supplies_handleAddEdit('edit'),
-                'POST_delete_ajax'  => supplies_handleDelete(),
+                'GET_get_supplies'  => get_supplies(),
+                'POST_add_ajax'     => add_ajax(),
+                'POST_edit_ajax'    => edit_ajax(),
+                'POST_delete_ajax'  => delete_ajax(),
                 default             => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
             };
         } catch (\Exception $e) {
@@ -38,9 +37,9 @@ function index(): void
 }
 
 function get_supplies(): void { checkModuleAuth(); supplies_getSuppliesAjax(); }
-function add_ajax(): void { checkModuleAuth(); checkPermisoOrFail('INSUMOS_CREATE'); supplies_handleAddEdit('add'); }
-function edit_ajax(): void { checkModuleAuth(); checkPermisoOrFail('INSUMOS_EDIT'); supplies_handleAddEdit('edit'); }
-function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('INSUMOS_DELETE'); supplies_handleDelete(); }
+function add_ajax(): void { checkModuleAuth(); checkPermisoOrFail('insumos:crear'); supplies_handleAddEdit('add'); }
+function edit_ajax(): void { checkModuleAuth(); checkPermisoOrFail('insumos:editar'); supplies_handleAddEdit('edit'); }
+function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('insumos:eliminar'); supplies_handleDelete(); }
 
 function supplies_handleAddEdit(string $mode): void
 {
@@ -67,10 +66,6 @@ function supplies_handleAddEdit(string $mode): void
     if ($mode === 'add') {
         $model->add($nombre, $id_unidad_medida, $categoria, $stock, $costo);
         $newId = $model->getLastInsertId() ?? 0;
-        AuditLog::record('CREATE', 'insumo', $newId, null, [
-            'nombre_insumo' => $nombre, 'id_unidad_medida' => $id_unidad_medida,
-            'categoria' => $categoria, 'stock_actual' => $stock, 'costo_unitario_actual' => $costo,
-        ]);
         jsonResponse([
             'success' => true, 'message' => 'Insumo agregado correctamente',
             'supply' => ['id' => $newId, 'nombre_insumo' => $nombre, 'id_unidad_medida' => $id_unidad_medida, 'stock_actual' => $stock, 'costo_unitario_actual' => $costo],
@@ -80,12 +75,7 @@ function supplies_handleAddEdit(string $mode): void
     $id = (int)($_POST['id'] ?? 0);
     if ($id <= 0) throw new \Exception('ID inválido');
 
-    $oldData = $model->getById($id);
     $model->update($id, $nombre, $id_unidad_medida, $categoria, $stock, $costo);
-    AuditLog::record('UPDATE', 'insumo', $id, $oldData, [
-        'nombre_insumo' => $nombre, 'id_unidad_medida' => $id_unidad_medida,
-        'categoria' => $categoria, 'stock_actual' => $stock, 'costo_unitario_actual' => $costo,
-    ]);
     jsonResponse([
         'success' => true, 'message' => 'Insumo actualizado correctamente',
         'supply' => ['id' => $id, 'nombre_insumo' => $nombre, 'id_unidad_medida' => $id_unidad_medida, 'stock_actual' => $stock, 'costo_unitario_actual' => $costo],
@@ -99,9 +89,7 @@ function supplies_handleDelete(): void
     if ($id <= 0) throw new \Exception('ID inválido');
     if (!$model->exists($id)) throw new \Exception('No existe el insumo');
 
-    $oldData = $model->getById($id);
     $model->delete($id);
-    AuditLog::record('DEACTIVATE', 'insumo', $id, $oldData, null);
     jsonResponse(['success' => true, 'message' => 'Insumo desactivado correctamente', 'supplyId' => $id]);
 }
 

@@ -13,11 +13,11 @@ function index(): void
     if (isAjaxRequest() && $action !== '') {
         try {
             match ($_SERVER['REQUEST_METHOD'] . '_' . $action) {
-                'GET_get_trazabilidad'     => trazabilidad_getTrazabilidadAjax(),
-                'GET_get_batches'          => trazabilidad_getBatchesAjax(),
-                'POST_add_ajax'            => trazabilidad_handleAddEdit('add'),
-                'POST_edit_ajax'           => trazabilidad_handleAddEdit('edit'),
-                'POST_delete_ajax'         => trazabilidad_handleDelete(),
+                'GET_get_trazabilidad'     => get_trazabilidad(),
+                'GET_get_batches'          => get_batches(),
+                'POST_add_ajax'            => add_ajax(),
+                'POST_edit_ajax'           => edit_ajax(),
+                'POST_delete_ajax'         => delete_ajax(),
                 default                    => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
             };
         } catch (\Exception $e) {
@@ -37,9 +37,9 @@ function index(): void
 
 function get_trazabilidad(): void { checkModuleAuth(); trazabilidad_getTrazabilidadAjax(); }
 function get_batches(): void { checkModuleAuth(); trazabilidad_getBatchesAjax(); }
-function add_ajax(): void { checkModuleAuth(); checkPermisoOrFail('TRAZABILIDAD_CREATE'); trazabilidad_handleAddEdit('add'); }
-function edit_ajax(): void { checkModuleAuth(); checkPermisoOrFail('TRAZABILIDAD_EDIT'); trazabilidad_handleAddEdit('edit'); }
-function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('TRAZABILIDAD_DELETE'); trazabilidad_handleDelete(); }
+function add_ajax(): void { checkModuleAuth(); checkPermisoOrFail('trazabilidad:crear'); trazabilidad_handleAddEdit('add'); }
+function edit_ajax(): void { checkModuleAuth(); checkPermisoOrFail('trazabilidad:editar'); trazabilidad_handleAddEdit('edit'); }
+function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('trazabilidad:eliminar'); trazabilidad_handleDelete(); }
 
 function trazabilidad_handleAddEdit(string $mode): void
 {
@@ -49,8 +49,11 @@ function trazabilidad_handleAddEdit(string $mode): void
     $idLote = (int)($_POST['id_lote'] ?? 0);
     if ($idLote <= 0) throw new \Exception('Debe seleccionar un lote.');
 
-    $cantidad = (int)($_POST['cantidad'] ?? 0);
-    if ($cantidad <= 0) throw new \Exception('La cantidad debe ser mayor a cero.');
+    $rawCantidad = $_POST['cantidad'] ?? '';
+    if (!preg_match('/^[1-9]\d*$/', $rawCantidad)) {
+        throw new \Exception('La cantidad debe ser un número entero positivo, sin decimales ni signos.');
+    }
+    $cantidad = (int)$rawCantidad;
 
     $lote = $batchModel->getById($idLote);
     if (!$lote) throw new \Exception('El lote seleccionado no existe.');
@@ -124,6 +127,13 @@ function trazabilidad_handleAddEdit(string $mode): void
     } elseif ($oldCantidad !== $cantidad) {
         $diff = $cantidad - $oldCantidad;
 
+        if ($diff > 0) {
+            $currentLote = $batchModel->getById($idLote);
+            if ($diff > (int)$currentLote['cantidad_actual']) {
+                throw new \Exception("El lote solo tiene {$currentLote['cantidad_actual']} ejemplares disponibles adicionales.");
+            }
+        }
+
         $model->beginTransaction();
         try {
             if ($diff > 0) {
@@ -190,5 +200,6 @@ function trazabilidad_getTrazabilidadAjax(): void
 function trazabilidad_getBatchesAjax(): void
 {
     $model = new Trazabilidad();
-    jsonResponse(['success' => true, 'batches' => $model->getAvailableBatches()]);
+    $includeId = isset($_GET['include_id']) && $_GET['include_id'] !== '' ? (int)$_GET['include_id'] : null;
+    jsonResponse(['success' => true, 'batches' => $model->getAvailableBatches($includeId)]);
 }

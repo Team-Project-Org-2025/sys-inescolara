@@ -3,7 +3,6 @@
 require_once __DIR__ . '/controller_helpers.php';
 
 use SysInescolara\models\Proveedor;
-use SysInescolara\models\AuditLog;
 
 function index(): void
 {
@@ -12,10 +11,10 @@ function index(): void
     if (isAjaxRequest() && $action !== '') {
         try {
             match ($_SERVER['REQUEST_METHOD'] . '_' . $action) {
-                'GET_get_suppliers' => suppliers_getSuppliersAjax(),
-                'POST_add_ajax'    => suppliers_handleAddEdit('add'),
-                'POST_edit_ajax'   => suppliers_handleAddEdit('edit'),
-                'POST_delete_ajax' => suppliers_handleDelete(),
+                'GET_get_suppliers' => get_suppliers(),
+                'POST_add_ajax'    => add_ajax(),
+                'POST_edit_ajax'   => edit_ajax(),
+                'POST_delete_ajax' => delete_ajax(),
                 default            => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
             };
         } catch (\Exception $e) {
@@ -34,9 +33,9 @@ function index(): void
 }
 
 function get_suppliers(): void { checkModuleAuth(); suppliers_getSuppliersAjax(); }
-function add_ajax(): void { checkModuleAuth(); checkPermisoOrFail('PROVEEDORES_CREATE'); suppliers_handleAddEdit('add'); }
-function edit_ajax(): void { checkModuleAuth(); checkPermisoOrFail('PROVEEDORES_EDIT'); suppliers_handleAddEdit('edit'); }
-function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('PROVEEDORES_DELETE'); suppliers_handleDelete(); }
+function add_ajax(): void { checkModuleAuth(); checkPermisoOrFail('proveedores:crear'); suppliers_handleAddEdit('add'); }
+function edit_ajax(): void { checkModuleAuth(); checkPermisoOrFail('proveedores:editar'); suppliers_handleAddEdit('edit'); }
+function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('proveedores:eliminar'); suppliers_handleDelete(); }
 
 function suppliers_handleAddEdit(string $mode): void
 {
@@ -61,16 +60,13 @@ function suppliers_handleAddEdit(string $mode): void
     if ($mode === 'add') {
         $model->add($nombre, $rif, $contacto, $telefono);
         $newId = $model->getLastInsertId() ?? 0;
-        AuditLog::record('CREATE', 'proveedores', $newId, null, compact('nombre', 'rif', 'contacto', 'telefono'));
         jsonResponse(['success' => true, 'message' => 'Proveedor agregado correctamente', 'proveedor' => ['id' => $newId, 'nombre_proveedor' => $nombre, 'rif_proveedor' => $rif, 'contacto_vendedor' => $contacto, 'telefono_proveedor' => $telefono]]);
     }
 
     $id = (int)($_POST['id'] ?? 0);
     if ($id <= 0) throw new \Exception('ID inválido');
 
-    $oldData = $model->getById($id);
     $model->update($id, $nombre, $rif, $contacto, $telefono);
-    AuditLog::record('UPDATE', 'proveedores', $id, $oldData, compact('nombre', 'rif', 'contacto', 'telefono'));
     jsonResponse(['success' => true, 'message' => 'Proveedor actualizado correctamente', 'proveedor' => ['id' => $id, 'nombre_proveedor' => $nombre, 'rif_proveedor' => $rif, 'contacto_vendedor' => $contacto, 'telefono_proveedor' => $telefono]]);
 }
 
@@ -81,9 +77,7 @@ function suppliers_handleDelete(): void
     if ($id <= 0) throw new \Exception('ID inválido');
     if (!$model->exists($id)) throw new \Exception('No existe el proveedor');
 
-    $oldData = $model->getById($id);
     $model->delete($id);
-    AuditLog::record('DEACTIVATE', 'proveedores', $id, $oldData, null);
     jsonResponse(['success' => true, 'message' => 'Proveedor desactivado correctamente', 'supplierId' => $id]);
 }
 

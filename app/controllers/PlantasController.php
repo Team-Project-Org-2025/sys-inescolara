@@ -3,7 +3,6 @@ require_once __DIR__ . '/controller_helpers.php';
 
 use SysInescolara\models\Planta;
 use SysInescolara\models\Especie;
-use SysInescolara\models\AuditLog;
 
 function index(): void
 {
@@ -13,10 +12,10 @@ function index(): void
     if (isAjaxRequest() && $action !== '') {
         try {
             match ($_SERVER['REQUEST_METHOD'] . '_' . $action) {
-                'GET_get_plants'   => plants_getPlantsAjax(),
-                'POST_add_ajax'    => plants_handleAddEdit('add'),
-                'POST_edit_ajax'   => plants_handleAddEdit('edit'),
-                'POST_delete_ajax' => plants_handleDelete(),
+                'GET_get_plants'   => get_plants(),
+                'POST_add_ajax'    => add_ajax(),
+                'POST_edit_ajax'   => edit_ajax(),
+                'POST_delete_ajax' => delete_ajax(),
                 default            => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
             };
         } catch (\Exception $e) {
@@ -39,9 +38,9 @@ function index(): void
 }
 
 function get_plants(): void { checkModuleAuth(); plants_getPlantsAjax(); }
-function add_ajax(): void { checkModuleAuth(); checkPermisoOrFail('PLANTAS_CREATE'); plants_handleAddEdit('add'); }
-function edit_ajax(): void { checkModuleAuth(); checkPermisoOrFail('PLANTAS_EDIT'); plants_handleAddEdit('edit'); }
-function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('PLANTAS_DELETE'); plants_handleDelete(); }
+function add_ajax(): void { checkModuleAuth(); checkPermisoOrFail('plantas:crear'); plants_handleAddEdit('add'); }
+function edit_ajax(): void { checkModuleAuth(); checkPermisoOrFail('plantas:editar'); plants_handleAddEdit('edit'); }
+function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('plantas:eliminar'); plants_handleDelete(); }
 
 function plants_handleAddEdit(string $mode): void
 {
@@ -79,8 +78,6 @@ function plants_handleAddEdit(string $mode): void
         
         $newId = $planta->getId(); 
         
-        AuditLog::record('CREATE', 'plantas', $newId, null, compact('nombreComun', 'nombreTecnico', 'especieId', 'imagen'));
-        
         jsonResponse([
             'success' => true, 
             'message' => 'Planta agregada correctamente', 
@@ -97,19 +94,11 @@ function plants_handleAddEdit(string $mode): void
         throw new \Exception('No existe la planta con ID: ' . $id);
     }
     
-    $oldData = [
-        'nombre_comun'   => $planta->getNombreComun(),
-        'nombre_tecnico' => $planta->getNombreTecnico(),
-        'id_especie'     => $planta->getIdEspecie(),
-        'imagen'         => $planta->getImagen(),
-        'cantidad_total' => $planta->getCantidadTotal()
-    ];
-    
     if ($imagen === null) {
-        $imagen = $oldData['imagen'];
+        $imagen = $planta->getImagen();
     } else {
-        if (!empty($oldData['imagen'])) {
-            (new \SysInescolara\helpers\ImageUploader())->delete($oldData['imagen']);
+        if (!empty($planta->getImagen())) {
+            (new \SysInescolara\helpers\ImageUploader())->delete($planta->getImagen());
         }
     }
     
@@ -121,8 +110,6 @@ function plants_handleAddEdit(string $mode): void
     if (!$planta->save()) {
         throw new \Exception('Error al actualizar la planta.');
     }
-    
-    AuditLog::record('UPDATE', 'plantas', $id, $oldData, compact('nombreComun', 'nombreTecnico', 'especieId', 'imagen'));
     
     jsonResponse([
         'success' => true, 
@@ -144,14 +131,6 @@ function plants_handleDelete(): void
         throw new \Exception('No existe la planta');
     }
     
-    $oldData = [
-        'nombre_comun'   => $planta->getNombreComun(),
-        'nombre_tecnico' => $planta->getNombreTecnico(),
-        'id_especie'     => $planta->getIdEspecie(),
-        'imagen'         => $planta->getImagen(),
-        'cantidad_total' => $planta->getCantidadTotal()
-    ];
-    
     try {
         if (!$planta->delete($id)) {
             throw new \Exception('Error al desactivar la planta.');
@@ -168,11 +147,9 @@ function plants_handleDelete(): void
         throw $e;
     }
     
-    if (!empty($oldData['imagen'])) {
-        (new \SysInescolara\helpers\ImageUploader())->delete($oldData['imagen']);
+    if (!empty($planta->getImagen())) {
+        (new \SysInescolara\helpers\ImageUploader())->delete($planta->getImagen());
     }
-    
-    AuditLog::record('DEACTIVATE', 'plantas', $id, $oldData, null);
     
     jsonResponse([
         'success' => true, 

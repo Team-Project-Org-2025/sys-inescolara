@@ -17,12 +17,12 @@ function index(): void
     if (isAjaxRequest() && $action !== '') {
         try {
             match ($_SERVER['REQUEST_METHOD'] . '_' . $action) {
-                'GET_get_recolecciones'   => recoleccion_getRecoleccionesAjax(),
-                'POST_add_ajax'           => recoleccion_handleAddEdit('add'),
-                'POST_edit_ajax'          => recoleccion_handleAddEdit('edit'),
-                'POST_delete_ajax'        => recoleccion_handleDelete(),
-                'POST_completar_ajax'     => recoleccion_handleCompletar(),
-                'POST_registrar_insumo_ajax' => recoleccion_handleRegistrarInsumo(),
+                'GET_get_recolecciones'   => get_recolecciones(),
+                'POST_add_ajax'           => add_ajax(),
+                'POST_edit_ajax'          => edit_ajax(),
+                'POST_delete_ajax'        => delete_ajax(),
+                'POST_completar_ajax'     => completar_ajax(),
+                'POST_registrar_insumo_ajax' => registrar_insumo_ajax(),
                 default                   => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
             };
         } catch (\Exception $e) {
@@ -36,11 +36,11 @@ function index(): void
 }
 
 function get_recolecciones(): void { checkModuleAuth(); recoleccion_getRecoleccionesAjax(); }
-function add_ajax(): void { checkModuleAuth(); checkPermisoOrFail('RECOLECCION_CREATE'); recoleccion_handleAddEdit('add'); }
-function edit_ajax(): void { checkModuleAuth(); checkPermisoOrFail('RECOLECCION_EDIT'); recoleccion_handleAddEdit('edit'); }
-function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('RECOLECCION_DELETE'); recoleccion_handleDelete(); }
-function completar_ajax(): void { checkModuleAuth(); checkPermisoOrFail('RECOLECCION_COMPLETE'); recoleccion_handleCompletar(); }
-function registrar_insumo_ajax(): void { checkModuleAuth(); checkPermisoOrFail('RECOLECCION_COMPLETE'); recoleccion_handleRegistrarInsumo(); }
+function add_ajax(): void { checkModuleAuth(); checkPermisoOrFail('seed_collection:crear'); recoleccion_handleAddEdit('add'); }
+function edit_ajax(): void { checkModuleAuth(); checkPermisoOrFail('seed_collection:editar'); recoleccion_handleAddEdit('edit'); }
+function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('seed_collection:eliminar'); recoleccion_handleDelete(); }
+function completar_ajax(): void { checkModuleAuth(); checkPermisoOrFail('seed_collection:editar'); recoleccion_handleCompletar(); }
+function registrar_insumo_ajax(): void { checkModuleAuth(); checkPermisoOrFail('seed_collection:editar'); recoleccion_handleRegistrarInsumo(); }
 
 function recoleccion_handleAddEdit(string $mode): void
 {

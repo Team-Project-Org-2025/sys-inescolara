@@ -56,45 +56,24 @@ include_once __DIR__ . '/../common/modal.php';
     </main>
 
 <?php
-$modulos = [
-    'Dashboard' => ['DASHBOARD_VIEW' => 'Ver'],
-    'Inventario' => ['INVENTARIO_VIEW' => 'Ver'],
-    'Ventas' => ['VENTAS_ACCESS' => 'Acceder', 'VENTAS_CREATE' => 'Crear', 'VENTAS_EDIT' => 'Editar', 'VENTAS_DELETE' => 'Anular', 'VENTAS_PDF' => 'PDF'],
-    'Plantas' => ['PLANTAS_VIEW' => 'Ver', 'PLANTAS_CREATE' => 'Crear', 'PLANTAS_EDIT' => 'Editar', 'PLANTAS_DELETE' => 'Eliminar'],
-    'Proveedores' => ['PROVEEDORES_VIEW' => 'Ver', 'PROVEEDORES_CREATE' => 'Crear', 'PROVEEDORES_EDIT' => 'Editar', 'PROVEEDORES_DELETE' => 'Eliminar'],
-    'Insumos' => ['INSUMOS_VIEW' => 'Ver', 'INSUMOS_CREATE' => 'Crear', 'INSUMOS_EDIT' => 'Editar', 'INSUMOS_DELETE' => 'Eliminar'],
-    'Trabajadores' => ['TRABAJADORES_VIEW' => 'Ver', 'TRABAJADORES_CREATE' => 'Crear', 'TRABAJADORES_EDIT' => 'Editar', 'TRABAJADORES_DELETE' => 'Eliminar'],
-    'Clientes' => ['CLIENTES_VIEW' => 'Ver', 'CLIENTES_CREATE' => 'Crear', 'CLIENTES_EDIT' => 'Editar', 'CLIENTES_DELETE' => 'Eliminar'],
-    'Tareas' => ['TAREAS_VIEW' => 'Ver', 'TAREAS_CREATE' => 'Crear', 'TAREAS_EDIT' => 'Editar', 'TAREAS_DELETE' => 'Eliminar'],
-    'Ubicaciones' => ['UBICACIONES_VIEW' => 'Ver', 'UBICACIONES_CREATE' => 'Crear', 'UBICACIONES_EDIT' => 'Editar', 'UBICACIONES_DELETE' => 'Eliminar'],
-    'Ornatos' => ['ORNATOS_VIEW' => 'Ver', 'ORNATOS_CREATE' => 'Crear', 'ORNATOS_EDIT' => 'Editar', 'ORNATOS_DELETE' => 'Eliminar'],
-    'Asistente IA' => ['ASISTENTE_ACCESS' => 'Acceder'],
-    'Sistema' => ['USUARIOS_MANAGE' => 'Gestionar (usuarios, bitácora, respaldos)'],
-];
-
-$codigoToId = [];
-foreach ($allPermisos as $p) {
-    $codigoToId[$p['codigo_permiso']] = $p['id_permiso'];
-}
-
-function renderPermisosChecklist(array $modulos, array $codigoToId): void
+function renderPermisosChecklist(array $allPermisos): void
 {
-    foreach ($modulos as $nombreModulo => $acciones):
-        $showActions = [];
-        foreach ($acciones as $codigo => $etiqueta) {
-            if (isset($codigoToId[$codigo])) {
-                $showActions[] = ['codigo' => $codigo, 'etiqueta' => $etiqueta, 'id' => $codigoToId[$codigo]];
-            }
-        }
-        if (empty($showActions)) continue;
+    $modulos = $allPermisos['modulos'] ?? [];
+    $acciones = $allPermisos['acciones'] ?? [];
+    foreach ($modulos as $modulo):
+        $idModulo = $modulo['id_modulo'];
+        $nombreModulo = $modulo['nombre_modulo'];
     ?>
     <div style="margin-bottom:10px;">
         <div style="font-size:0.8rem;font-weight:600;color:var(--text-primary);margin-bottom:4px;"><?= htmlspecialchars($nombreModulo) ?></div>
         <div style="display:flex;flex-wrap:wrap;gap:4px 12px;">
-            <?php foreach ($showActions as $a): ?>
+            <?php foreach ($acciones as $accion):
+                $value = $idModulo . ':' . $accion['id_permiso'];
+                $label = ucfirst($accion['nombre_permiso']);
+            ?>
             <label style="display:flex;align-items:center;gap:4px;font-size:0.8rem;cursor:pointer;">
-                <input type="checkbox" name="permisos[]" value="<?= $a['id'] ?>">
-                <?= htmlspecialchars($a['etiqueta']) ?>
+                <input type="checkbox" name="permisos[]" value="<?= $value ?>">
+                <?= htmlspecialchars($label) ?>
             </label>
             <?php endforeach; ?>
         </div>
@@ -142,7 +121,7 @@ function renderPermisosChecklist(array $modulos, array $codigoToId): void
         <div class="mb-3 permisos-checklist" id="addPermisosChecklist" style="display:none;">
             <label class="form-label">Módulos y acciones permitidas</label>
             <div style="padding:8px 12px;border:1px solid var(--color-gray-200);border-radius:var(--radius-md);background:var(--bg-secondary);max-height:300px;overflow-y:auto;">
-                <?php renderPermisosChecklist($modulos, $codigoToId); ?>
+                <?php renderPermisosChecklist($allPermisos); ?>
             </div>
             <small class="text-muted">Selecciona los módulos y acciones a los que este usuario tendrá acceso.</small>
         </div>
@@ -195,7 +174,7 @@ function renderPermisosChecklist(array $modulos, array $codigoToId): void
         <div class="mb-3 permisos-checklist" id="editPermisosChecklist" style="display:none;">
             <label class="form-label">Módulos y acciones permitidas</label>
             <div style="padding:8px 12px;border:1px solid var(--color-gray-200);border-radius:var(--radius-md);background:var(--bg-secondary);max-height:300px;overflow-y:auto;">
-                <?php renderPermisosChecklist($modulos, $codigoToId); ?>
+                <?php renderPermisosChecklist($allPermisos); ?>
             </div>
             <small class="text-muted">Selecciona los módulos y acciones a los que este usuario tendrá acceso.</small>
         </div>

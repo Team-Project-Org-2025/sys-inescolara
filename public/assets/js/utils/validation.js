@@ -19,6 +19,7 @@ export const REGEX = {
   passwordEdit: /^(?:.{0}|(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&._-])[A-Za-z\d@$!%*?&._-]{8,30})$/,
   fechaFormato: /^\d{4}-\d{2}-\d{2}$/, 
   cantidad: /^[1-9]\d*$/,
+  decimal: /^(0|[1-9]\d*)(\.\d{1,2})?$/,
   text: /^.+/,
 };
 
@@ -80,6 +81,7 @@ export const MESSAGES = {
   fecha: 'Fecha inválida',
   fechaFutura: 'La fecha no puede ser posterior al día de hoy',
   cantidad: 'Cantidad inválida (solo números, sin ceros a la izquierda)',
+  decimal: 'Valor inválido (solo números positivos, hasta 2 decimales)',
 
   default: 'Campo inválido',
 };
@@ -157,7 +159,7 @@ export const setupRealTimeValidation = ($form, rules, isEdit = false) => {
     // ========================================================================
     // BLOQUEO 1: BLOQUEAR LETRAS (Para Teléfonos, Cédulas, Códigos)
     // ========================================================================
-    if (['telefono', 'cedula', 'codigo', 'factura', 'referencia'].includes(tipo)) {
+    if (['telefono', 'cedula', 'codigo', 'factura', 'referencia', 'cantidad'].includes(tipo)) {
       
       // 1. Evitar que se escriban letras (Evento de pulsación de tecla)
       $input.on('keypress', function (e) {

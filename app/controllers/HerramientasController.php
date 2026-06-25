@@ -3,7 +3,6 @@
 require_once __DIR__ . '/controller_helpers.php';
 
 use SysInescolara\models\Herramienta;
-use SysInescolara\models\AuditLog;
 
 function index(): void
 {
@@ -12,12 +11,12 @@ function index(): void
     if (isAjaxRequest() && $action !== '') {
         try {
             match ($_SERVER['REQUEST_METHOD'] . '_' . $action) {
-                'GET_get_tools'          => tools_getToolsAjax(),
-                'POST_add_ajax'          => tools_handleAddEdit('add'),
-                'POST_edit_ajax'         => tools_handleAddEdit('edit'),
-                'POST_delete_ajax'       => tools_handleDelete(),
-                'POST_record_usage_ajax' => tools_recordUsageAjax(),
-                'GET_get_usages'         => tools_getUsagesAjax(),
+                'GET_get_tools'          => get_tools(),
+                'POST_add_ajax'          => add_ajax(),
+                'POST_edit_ajax'         => edit_ajax(),
+                'POST_delete_ajax'       => delete_ajax(),
+                'POST_record_usage_ajax' => record_usage_ajax(),
+                'GET_get_usages'         => get_usages(),
                 default                  => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
             };
         } catch (\Exception $e) {
@@ -36,10 +35,10 @@ function index(): void
 }
 
 function get_tools(): void { checkModuleAuth(); tools_getToolsAjax(); }
-function add_ajax(): void { checkModuleAuth(); checkPermisoOrFail('HERRAMIENTAS_CREATE'); tools_handleAddEdit('add'); }
-function edit_ajax(): void { checkModuleAuth(); checkPermisoOrFail('HERRAMIENTAS_EDIT'); tools_handleAddEdit('edit'); }
-function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('HERRAMIENTAS_DELETE'); tools_handleDelete(); }
-function record_usage_ajax(): void { checkModuleAuth(); checkPermisoOrFail('USO_HERRAMIENTA_CREATE'); tools_recordUsageAjax(); }
+function add_ajax(): void { checkModuleAuth(); checkPermisoOrFail('herramientas:crear'); tools_handleAddEdit('add'); }
+function edit_ajax(): void { checkModuleAuth(); checkPermisoOrFail('herramientas:editar'); tools_handleAddEdit('edit'); }
+function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('herramientas:eliminar'); tools_handleDelete(); }
+function record_usage_ajax(): void { checkModuleAuth(); checkPermisoOrFail('herramientas:crear'); tools_recordUsageAjax(); }
 function get_usages(): void { checkModuleAuth(); tools_getUsagesAjax(); }
 
 function tools_handleAddEdit(string $mode): void
@@ -87,13 +86,15 @@ function tools_handleAddEdit(string $mode): void
     $observacion = trim((string)($_POST['observacion'] ?? ''));
     if ($observacion === '') $observacion = null;
 
+    $cantidad = max(1, (int)($_POST['cantidad'] ?? 1));
+
     if ($mode === 'add') {
-        $model->add($nombre, $tipo, $estado, $fechaAdquisicion, $fechaUltimoMantenimiento, $observacion);
+        $model->add($nombre, $cantidad, $tipo, $estado, $fechaAdquisicion, $fechaUltimoMantenimiento, $observacion);
         $newId = $model->getLastInsertId() ?? 0;
-        AuditLog::record('CREATE', 'herramienta', $newId, null, compact('nombre', 'tipo', 'estado', 'fechaAdquisicion', 'fechaUltimoMantenimiento', 'observacion'));
+        AuditLog::record('CREATE', 'herramienta', $newId, null, compact('nombre', 'cantidad', 'tipo', 'estado', 'fechaAdquisicion', 'fechaUltimoMantenimiento', 'observacion'));
         jsonResponse([
             'success' => true, 'message' => 'Herramienta agregada correctamente',
-            'herramienta' => ['id' => $newId, 'nombre_herramienta' => $nombre, 'tipo' => $tipo, 'estado' => $estado],
+            'herramienta' => ['id' => $newId, 'nombre_herramienta' => $nombre, 'cantidad' => $cantidad, 'tipo' => $tipo, 'estado' => $estado],
         ]);
     }
 
@@ -101,8 +102,8 @@ function tools_handleAddEdit(string $mode): void
     if ($id <= 0) throw new \Exception('ID inválido');
 
     $oldData = $model->getById($id);
-    $model->update($id, $nombre, $tipo, $estado, $fechaAdquisicion, $fechaUltimoMantenimiento, $observacion);
-    AuditLog::record('UPDATE', 'herramienta', $id, $oldData, compact('nombre', 'tipo', 'estado', 'fechaAdquisicion', 'fechaUltimoMantenimiento', 'observacion'));
+    $model->update($id, $nombre, $cantidad, $tipo, $estado, $fechaAdquisicion, $fechaUltimoMantenimiento, $observacion);
+    AuditLog::record('UPDATE', 'herramienta', $id, $oldData, compact('nombre', 'cantidad', 'tipo', 'estado', 'fechaAdquisicion', 'fechaUltimoMantenimiento', 'observacion'));
     jsonResponse([
         'success' => true, 'message' => 'Herramienta actualizada correctamente',
         'herramienta' => ['id' => $id],
@@ -116,9 +117,7 @@ function tools_handleDelete(): void
     if ($id <= 0) throw new \Exception('ID inválido');
     if (!$model->exists($id)) throw new \Exception('No existe la herramienta');
 
-    $oldData = $model->getById($id);
     $model->delete($id);
-    AuditLog::record('DEACTIVATE', 'herramienta', $id, $oldData, null);
     jsonResponse(['success' => true, 'message' => 'Herramienta desactivada correctamente', 'herramientaId' => $id]);
 }
 
@@ -149,8 +148,6 @@ function tools_recordUsageAjax(): void
 
     $model = new Herramienta();
     $usoId = $model->recordUsageWithStateUpdate($usageData);
-
-    AuditLog::record('CREATE', 'uso_herramienta', $usoId, null, $usageData);
 
     jsonResponse(['success' => true, 'message' => 'Uso de herramienta registrado', 'id_uso' => $usoId]);
 }

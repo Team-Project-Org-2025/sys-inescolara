@@ -3,7 +3,6 @@
 require_once __DIR__ . '/controller_helpers.php';
 
 use SysInescolara\models\UnidadMedida;
-use SysInescolara\models\AuditLog;
 
 function index(): void
 {
@@ -12,10 +11,10 @@ function index(): void
     if (isAjaxRequest() && $action !== '') {
         try {
             match ($_SERVER['REQUEST_METHOD'] . '_' . $action) {
-                'GET_get_units'     => units_getUnitsAjax(),
-                'POST_add_ajax'     => units_handleAddEdit('add'),
-                'POST_edit_ajax'    => units_handleAddEdit('edit'),
-                'POST_delete_ajax'  => units_handleDelete(),
+                'GET_get_units'     => get_units(),
+                'POST_add_ajax'     => add_ajax(),
+                'POST_edit_ajax'    => edit_ajax(),
+                'POST_delete_ajax'  => delete_ajax(),
                 default             => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
             };
         } catch (\Exception $e) {
@@ -34,9 +33,9 @@ function index(): void
 }
 
 function get_units(): void { checkModuleAuth(); units_getUnitsAjax(); }
-function add_ajax(): void { checkModuleAuth(); checkPermisoOrFail('UNIDADES_MEDIDA_CREATE'); units_handleAddEdit('add'); }
-function edit_ajax(): void { checkModuleAuth(); checkPermisoOrFail('UNIDADES_MEDIDA_EDIT'); units_handleAddEdit('edit'); }
-function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('UNIDADES_MEDIDA_DELETE'); units_handleDelete(); }
+function add_ajax(): void { checkModuleAuth(); checkPermisoOrFail('unidades_medida:crear'); units_handleAddEdit('add'); }
+function edit_ajax(): void { checkModuleAuth(); checkPermisoOrFail('unidades_medida:editar'); units_handleAddEdit('edit'); }
+function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('unidades_medida:eliminar'); units_handleDelete(); }
 
 function units_handleAddEdit(string $mode): void
 {
@@ -47,16 +46,13 @@ function units_handleAddEdit(string $mode): void
     if ($mode === 'add') {
         $model->add($nombre);
         $newId = $model->getLastInsertId() ?? 0;
-        AuditLog::record('CREATE', 'unidad_medida', $newId, null, ['nombre' => $nombre]);
         jsonResponse(['success' => true, 'message' => 'Unidad agregada correctamente', 'unit' => ['id' => $newId, 'nombre_unidad_medida' => $nombre]]);
     }
 
     $id = (int)($_POST['id'] ?? 0);
     if ($id <= 0) throw new \Exception('ID inválido');
 
-    $oldData = $model->getById($id);
     $model->update($id, $nombre);
-    AuditLog::record('UPDATE', 'unidad_medida', $id, $oldData, ['nombre' => $nombre]);
     jsonResponse(['success' => true, 'message' => 'Unidad actualizada correctamente', 'unit' => ['id' => $id, 'nombre_unidad_medida' => $nombre]]);
 }
 
@@ -68,9 +64,7 @@ function units_handleDelete(): void
     if (!$model->exists($id)) throw new \Exception('No existe la unidad de medida');
 
     try {
-        $oldData = $model->getById($id);
         $model->delete($id);
-        AuditLog::record('DEACTIVATE', 'unidad_medida', $id, $oldData, null);
         jsonResponse(['success' => true, 'message' => 'Unidad desactivada correctamente', 'unitId' => $id]);
     } catch (\PDOException $e) {
         if ($e->getCode() == 23000 || str_contains($e->getMessage(), '1451')) {

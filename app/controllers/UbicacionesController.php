@@ -3,7 +3,6 @@
 require_once __DIR__ . '/controller_helpers.php';
 
 use SysInescolara\models\Ubicacion;
-use SysInescolara\models\AuditLog;
 
 function index(): void
 {
@@ -12,10 +11,10 @@ function index(): void
     if (isAjaxRequest() && $action !== '') {
         try {
             match ($_SERVER['REQUEST_METHOD'] . '_' . $action) {
-                'GET_get_locations'  => locations_getLocationsAjax(),
-                'POST_add_ajax'      => locations_handleAddEdit('add'),
-                'POST_edit_ajax'     => locations_handleAddEdit('edit'),
-                'POST_delete_ajax'   => locations_handleDelete(),
+                'GET_get_locations'  => get_locations(),
+                'POST_add_ajax'      => add_ajax(),
+                'POST_edit_ajax'     => edit_ajax(),
+                'POST_delete_ajax'   => delete_ajax(),
                 default              => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
             };
         } catch (\Exception $e) {
@@ -34,9 +33,9 @@ function index(): void
 }
 
 function get_locations(): void { checkModuleAuth(); locations_getLocationsAjax(); }
-function add_ajax(): void { checkModuleAuth(); checkPermisoOrFail('UBICACIONES_CREATE'); locations_handleAddEdit('add'); }
-function edit_ajax(): void { checkModuleAuth(); checkPermisoOrFail('UBICACIONES_EDIT'); locations_handleAddEdit('edit'); }
-function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('UBICACIONES_DELETE'); locations_handleDelete(); }
+function add_ajax(): void { checkModuleAuth(); checkPermisoOrFail('ubicaciones:crear'); locations_handleAddEdit('add'); }
+function edit_ajax(): void { checkModuleAuth(); checkPermisoOrFail('ubicaciones:editar'); locations_handleAddEdit('edit'); }
+function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('ubicaciones:eliminar'); locations_handleDelete(); }
 
 function locations_getLocationsAjax(): void
 {
@@ -60,9 +59,6 @@ function locations_handleAddEdit(string $mode): void
     if ($mode === 'add') {
         $model->add($nombreUbicacion, $descripcion, $zona);
         $newId = $model->getLastInsertId() ?? 0;
-        AuditLog::record('CREATE', 'ubicacion', $newId, null, [
-            'nombre_ubicacion' => $nombreUbicacion, 'descripcion' => $descripcion, 'zona' => $zona,
-        ]);
         jsonResponse([
             'success' => true,
             'message' => 'Ubicación agregada correctamente',
@@ -76,12 +72,9 @@ function locations_handleAddEdit(string $mode): void
 
     $id = (int)($_POST['id'] ?? 0);
     if ($id <= 0) throw new \Exception('ID inválido');
-    $oldData = $model->getById($id);
-    if (!$oldData) throw new \Exception('La ubicación que intenta editar no existe.');
+    $data = $model->getById($id);
+    if (!$data) throw new \Exception('La ubicación que intenta editar no existe.');
     $model->update($id, $nombreUbicacion, $descripcion, $zona);
-    AuditLog::record('UPDATE', 'ubicacion', $id, $oldData, [
-        'nombre_ubicacion' => $nombreUbicacion, 'descripcion' => $descripcion, 'zona' => $zona,
-    ]);
     jsonResponse([
         'success' => true,
         'message' => 'Ubicación actualizada correctamente',
@@ -94,10 +87,9 @@ function locations_handleDelete(): void
     $model = new Ubicacion();
     $id = (int)($_POST['id'] ?? 0);
     if ($id <= 0) throw new \Exception('ID de ubicación inválido');
-    $oldData = $model->getById($id);
-    if (!$oldData) throw new \Exception('No existe la ubicación solicitada.');
+    $data = $model->getById($id);
+    if (!$data) throw new \Exception('No existe la ubicación solicitada.');
     $model->delete($id);
-    AuditLog::record('DEACTIVATE', 'ubicacion', $id, $oldData, null);
     jsonResponse([
         'success' => true,
         'message' => 'Ubicación desactivada correctamente',
