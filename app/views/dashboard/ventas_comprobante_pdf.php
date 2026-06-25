@@ -50,7 +50,7 @@
             </tr>
             <tr>
                 <td class="label">Cliente:</td>
-                <td><?= htmlspecialchars($venta['nombre_cliente'] ?? '') ?></td>
+                <td><?= htmlspecialchars($venta['nombre_cliente'] ?? '') ?> — <?= htmlspecialchars(($venta['tipo_cedula_cliente'] ?? '') . '-' . ($venta['cedula_cliente'] ?? '')) ?></td>
                 <td class="label">Vendedor:</td>
                 <td><?= htmlspecialchars(($venta['nombre_trabajador'] ?? '') . ' ' . ($venta['apellido_trabajador'] ?? '')) ?></td>
             </tr>

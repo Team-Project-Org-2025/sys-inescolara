@@ -40,7 +40,9 @@ class Ornato extends Database implements ReadableInterface, DeletableInterface
                         o.monto_total,
                         o.fecha,
                         o.activo,
-                        c.nombre_cliente
+                        CONCAT(c.nombre_cliente, ' ', c.apellido_cliente) AS nombre_cliente,
+                        c.tipo_cedula_cliente,
+                        c.cedula_cliente
                     FROM ornatos o
                     LEFT JOIN cliente c ON o.id_cliente = c.id_cliente AND c.activo = 1
                     WHERE o.activo = 1
@@ -58,7 +60,9 @@ class Ornato extends Database implements ReadableInterface, DeletableInterface
         try {
             $stmt = $this->db()->prepare("SELECT
                                             o.*,
-                                            c.nombre_cliente
+                                            CONCAT(c.nombre_cliente, ' ', c.apellido_cliente) AS nombre_cliente,
+                                            c.tipo_cedula_cliente,
+                                            c.cedula_cliente
                                         FROM ornatos o
                                         LEFT JOIN cliente c ON o.id_cliente = c.id_cliente
                                         WHERE o.id_ornato = :id");
@@ -269,6 +273,30 @@ class Ornato extends Database implements ReadableInterface, DeletableInterface
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
         } catch (\Throwable $e) {
             error_log('Error al obtener detalles de ornato: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    public function buscarClientes(string $query): array
+    {
+        try {
+            $stmt = $this->db()->prepare("SELECT
+                                            id_cliente,
+                                            CONCAT(nombre_cliente, ' ', apellido_cliente) AS nombre_cliente,
+                                            tipo_cedula_cliente,
+                                            cedula_cliente,
+                                            apellido_cliente,
+                                            contacto_cliente
+                                        FROM cliente
+                                        WHERE activo = 1
+                                        AND (nombre_cliente LIKE ? OR apellido_cliente LIKE ? OR contacto_cliente LIKE ? OR cedula_cliente LIKE ?)
+                                        ORDER BY nombre_cliente ASC, apellido_cliente ASC
+                                        LIMIT 10");
+            $searchTerm = "%{$query}%";
+            $stmt->execute([$searchTerm, $searchTerm, $searchTerm, $searchTerm]);
+            return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+        } catch (\Throwable $e) {
+            error_log('Error al buscar clientes en Ornato: ' . $e->getMessage());
             return [];
         }
     }

@@ -4,7 +4,6 @@ import { setupRealTimeValidation, validateForm } from '../utils/validation.js';
 import * as C from '../utils/components.js';
 
 const ventasRules = {
-  id_cliente: 'select',
   id_trabajador: 'select',
   tipo_venta: 'select',
   observaciones: null,
@@ -17,6 +16,7 @@ const Ventas = {
         this.fechaAutomatica();
         this.initDataTable();
         this.initBuscarLote();
+        this.initBuscarCliente();
         this.initPagos();
         this.initPagarCompleto();
         this.initForm();
@@ -55,6 +55,10 @@ const Ventas = {
                 { data: 'id_venta', className: 'text-center' },
                 { data: 'referencia' },
                 { data: 'nombre_cliente', defaultContent: '—' },
+                {
+                    data: null,
+                    render: (r) => r.tipo_cedula_cliente ? `${r.tipo_cedula_cliente}-${r.cedula_cliente}` : '—'
+                },
                 {
                     data: null,
                     render: (r) => r.nombre_trabajador ? `${r.nombre_trabajador} ${r.apellido_trabajador || ''}` : '—'
@@ -164,6 +168,85 @@ const Ventas = {
         } catch (e) {
             console.error('Error buscando lotes:', e);
         }
+    },
+
+    // ==================== CLIENTE ====================
+
+    initBuscarCliente() {
+        this.clienteInput = document.getElementById('buscarClienteInput');
+        this.clienteResultados = document.getElementById('clienteSearchResults');
+        this.clienteHidden = document.getElementById('idClienteHidden');
+        this.clienteSeleccionado = document.getElementById('clienteSeleccionado');
+        this.clienteSeleccionadoTexto = document.getElementById('clienteSeleccionadoTexto');
+        this.limpiarClienteBtn = document.getElementById('limpiarCliente');
+        let timeout;
+
+        this.clienteInput.addEventListener('input', () => {
+            clearTimeout(timeout);
+            const q = this.clienteInput.value.trim();
+            if (q.length < 2) {
+                this.clienteResultados.style.display = 'none';
+                return;
+            }
+            timeout = setTimeout(() => this.buscarClientes(q), 300);
+        });
+
+        this.clienteInput.addEventListener('blur', () => setTimeout(() => this.clienteResultados.style.display = 'none', 300));
+        this.clienteInput.addEventListener('focus', () => {
+            if (this.clienteResultados.children.length > 0) this.clienteResultados.style.display = 'block';
+        });
+
+        this.limpiarClienteBtn.addEventListener('click', () => this.limpiarCliente());
+    },
+
+    async buscarClientes(q) {
+        try {
+            const res = await fetch(`${urlBaseVentas}?accion=buscar_clientes&q=${encodeURIComponent(q)}`, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            const data = await res.json();
+            const cont = this.clienteResultados;
+            cont.innerHTML = '';
+            cont.style.display = 'none';
+
+            if (!data.success || !data.clientes?.length) return;
+
+            data.clientes.forEach(cl => {
+                const item = document.createElement('button');
+                item.type = 'button';
+                item.className = 'list-group-item list-group-item-action py-1 d-flex justify-content-between align-items-center';
+                const cedula = cl.tipo_cedula_cliente ? `${cl.tipo_cedula_cliente}-${cl.cedula_cliente}` : '';
+                item.innerHTML = `
+                    <div><strong>${cl.nombre_cliente}</strong> <small class="text-muted">${cedula}</small></div>
+                `;
+                item.addEventListener('click', () => {
+                    this.seleccionarCliente(cl.id_cliente, cl.nombre_cliente, cedula);
+                    cont.style.display = 'none';
+                });
+                cont.appendChild(item);
+            });
+            cont.style.display = 'block';
+        } catch (e) {
+            console.error('Error buscando clientes:', e);
+        }
+    },
+
+    seleccionarCliente(id, nombre, cedula) {
+        this.clienteHidden.value = id;
+        this.clienteInput.value = '';
+        this.clienteInput.placeholder = nombre;
+        this.clienteInput.classList.add('is-valid');
+        this.clienteSeleccionadoTexto.textContent = cedula ? `${nombre} — ${cedula}` : nombre;
+        this.clienteSeleccionado.classList.remove('d-none');
+        this.clienteResultados.style.display = 'none';
+    },
+
+    limpiarCliente() {
+        this.clienteHidden.value = '';
+        this.clienteInput.value = '';
+        this.clienteInput.placeholder = 'Buscar por C.I., nombre o apellido...';
+        this.clienteInput.classList.remove('is-valid');
+        this.clienteSeleccionado.classList.add('d-none');
     },
 
     agregarProducto(lote) {
@@ -359,6 +442,12 @@ const Ventas = {
             }
         });
 
+        if (!this.clienteHidden?.value) {
+            Swal.fire('Error', 'Debe seleccionar un cliente.', 'warning');
+            this.clienteInput?.focus();
+            return;
+        }
+
         if (productos.length === 0) {
             Swal.fire('Error', 'Debe agregar al menos un producto.', 'warning');
             return;
@@ -425,6 +514,7 @@ const Ventas = {
                 document.getElementById('sinProductos').style.display = 'block';
                 this.fechaAutomatica();
                 this.reiniciarPagos();
+                this.limpiarCliente();
                 this.calcularTotales();
                 this.tabla.ajax.reload();
             } else {
@@ -516,7 +606,7 @@ const Ventas = {
                 <div class="row mb-3">
                     <div class="col-6"><strong>Referencia:</strong> ${v.referencia || ''}</div>
                     <div class="col-6 text-end"><strong>Fecha:</strong> ${v.fecha_venta ? new Date(v.fecha_venta).toLocaleString('es-ES') : ''}</div>
-                    <div class="col-6 mt-2"><strong>Cliente:</strong> ${v.nombre_cliente || '—'}</div>
+                    <div class="col-6 mt-2"><strong>Cliente:</strong> ${v.nombre_cliente || '—'} ${v.tipo_cedula_cliente ? `— ${v.tipo_cedula_cliente}-${v.cedula_cliente}` : ''}</div>
                     <div class="col-6 mt-2"><strong>Vendedor:</strong> ${(v.nombre_trabajador || '') + ' ' + (v.apellido_trabajador || '')}</div>
                     <div class="col-6 mt-2"><strong>Tipo:</strong> ${v.tipo_venta || ''}</div>
                     <div class="col-6 mt-2"><strong>Estado:</strong> ${v.estado || ''}</div>
@@ -566,15 +656,17 @@ const Ventas = {
 
             document.getElementById('detalleContenido').innerHTML = html;
             const btnPdf = document.getElementById('btnDescargarPdf');
-            btnPdf.onclick = (e) => {
-                e.preventDefault();
-                const a = document.createElement('a');
-                a.href = `${urlBaseVentas}?accion=comprobante&id=${id}`;
-                a.download = `comprobante-${id}.pdf`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-            };
+            if (btnPdf) {
+                btnPdf.onclick = (e) => {
+                    e.preventDefault();
+                    const a = document.createElement('a');
+                    a.href = `${urlBaseVentas}?accion=comprobante&id=${id}`;
+                    a.download = `comprobante-${id}.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                };
+            }
             bootstrap.Modal.getOrCreateInstance(document.getElementById('detalleModal')).show();
 
         } catch (e) {

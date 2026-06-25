@@ -114,7 +114,7 @@ function cc_obtenerClientesAjax(): void
 
 function cc_registrarPagoAjax(): void
 {
-    $idVenta = (int)($_POST['id_venta'] ?? 0);
+    $idVenta = (int)($_POST['id'] ?? 0);
     $monto = floatval($_POST['monto'] ?? 0);
     $metodo = trim((string)($_POST['metodo'] ?? ''));
     $referencia = trim((string)($_POST['referencia'] ?? ''));
@@ -139,13 +139,22 @@ function cc_registrarPagoAjax(): void
         throw new \InvalidArgumentException('La fecha de pago no puede ser posterior al día de hoy.');
     }
 
+    $model = new CuentaCobrar();
+
+    $venta = $model->obtenerPorId($idVenta);
+    if (!$venta) {
+        throw new \Exception('Venta no encontrada.');
+    }
+    $fechaVenta = (new \DateTime($venta['fecha_venta']))->format('Y-m-d');
+    if ($fechaPago < $fechaVenta) {
+        throw new \InvalidArgumentException('La fecha de pago no puede ser anterior a la fecha de venta (' . $fechaVenta . ').');
+    }
+
     if (in_array($metodo, ['transferencia', 'pago_movil'], true)) {
         if ($referencia === '') throw new \Exception('La referencia es requerida para transferencias y pago movil.');
         if (!preg_match('/^\d{6}$/', $referencia)) throw new \Exception('La referencia debe tener exactamente 6 digitos numericos.');
         if ($banco === '') throw new \Exception('El banco es requerido para este metodo de pago.');
     }
-
-    $model = new CuentaCobrar();
 
     try {
         $model->iniciarTransaccion();

@@ -26,6 +26,19 @@ class Herramienta extends Database implements ReadableInterface, DeletableInterf
     public function __construct()
     {
         parent::__construct();
+        $this->bootstrapDefaults();
+    }
+
+    private function bootstrapDefaults(): void
+    {
+        try {
+            $columns = $this->db()->query("SHOW COLUMNS FROM herramienta")->fetchAll(PDO::FETCH_COLUMN);
+            if (!in_array('cantidad', $columns)) {
+                $this->db()->exec("ALTER TABLE herramienta ADD COLUMN cantidad INT(11) NOT NULL DEFAULT 1 AFTER nombre_herramienta");
+            }
+        } catch (\Throwable $e) {
+            error_log('Error en Herramienta::bootstrapDefaults: ' . $e->getMessage());
+        }
     }
 
     public function getAll(): array

@@ -45,6 +45,7 @@ include_once __DIR__ . '/../common/modal.php';
                                 <tr>
                                     <th>Fecha</th>
                                     <th>Cliente</th>
+                                    <th>C.I.</th>
                                     <th>Items Salida</th>
                                     <th>Items Entrada</th>
                                     <th>Gestor</th>
@@ -64,14 +65,15 @@ include_once __DIR__ . '/../common/modal.php';
         <div class="row g-3 mb-4">
             <div class="col-md-4">
                 <label class="form-label" for="id_cliente">Cliente</label>
-                <select class="form-select" name="id_cliente" id="id_cliente">
-                    <option value="">Seleccione (opcional)</option>
-                    <?php foreach ($clientes as $c): ?>
-                        <option value="<?= (int)$c['id'] ?>">
-                            <?= htmlspecialchars($c['nombre_cliente'] ?? '') ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
+                <div class="position-relative">
+                    <input type="text" class="form-control" id="buscarClienteAmp" placeholder="Buscar por C.I., nombre o apellido..." autocomplete="off">
+                    <input type="hidden" name="id_cliente" id="idClienteAmp">
+                    <div class="list-group position-absolute" id="clienteResultadosAmp" style="z-index:1000;display:none;max-height:200px;overflow-y:auto;width:100%;"></div>
+                    <div id="clienteSeleccionadoAmp" class="d-none mt-1">
+                        <span id="clienteSeleccionadoTextoAmp" class="badge bg-info text-dark"></span>
+                        <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-1" id="limpiarClienteAmp">&times;</button>
+                    </div>
+                </div>
             </div>
             <div class="col-md-4">
                 <label class="form-label" for="id_trabajador_gestor">Gestor <span class="text-danger">*</span></label>

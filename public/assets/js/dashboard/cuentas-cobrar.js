@@ -10,7 +10,7 @@ $(document).ready(function () {
   const reglasPago = {
     monto: 'precio',
     metodo: 'select',
-    fecha_pago: 'fechaFuturaCheck'
+    fecha_pago: 'fechaPagoCheck'
   };
 
   const iniciarTabla = () => {
@@ -33,6 +33,10 @@ $(document).ready(function () {
             : data
         },
         { data: 'nombre_cliente' },
+        {
+            data: null,
+            render: (r) => r.tipo_cedula_cliente ? `${r.tipo_cedula_cliente}-${r.cedula_cliente}` : '—'
+        },
         { data: 'contacto' },
         {
           data: 'fecha_venta',
@@ -158,7 +162,7 @@ $(document).ready(function () {
         <div class="col-md-6">
           <table class="table table-sm table-borderless">
             <tr><td class="text-muted">Referencia:</td><td><strong>${data.referencia}</strong></td></tr>
-            <tr><td class="text-muted">Cliente:</td><td><strong>${data.nombre_cliente}</strong></td></tr>
+            <tr><td class="text-muted">Cliente:</td><td><strong>${data.nombre_cliente}</strong> ${data.tipo_cedula_cliente ? `— ${data.tipo_cedula_cliente}-${data.cedula_cliente}` : ''}</td></tr>
             <tr><td class="text-muted">Contacto:</td><td>${data.contacto || '—'}</td></tr>
           </table>
         </div>
@@ -213,9 +217,13 @@ $(document).ready(function () {
     $('#detailModalBody').html(html);
   };
 
-  const abrirModalPago = (id, cliente, saldo, referencia) => {
+  const abrirModalPago = (id, cliente, saldo, referencia, fechaVenta) => {
     $('#payIdVenta').val(id);
     $('#payInfo').html(`<strong>${referencia}</strong> — ${cliente} — Saldo pendiente: <strong>Bs ${Number(saldo).toFixed(2)}</strong>`);
+    const $fechaInput = $('#paymentForm').find('[name="fecha_pago"]');
+    if (fechaVenta) {
+      $fechaInput.data('fecha-venta', fechaVenta.split(' ')[0]);
+    }
     $('#paymentForm')[0].reset();
     $('#payReferenceGroup').hide();
     $('#payMetodo').val('');
@@ -247,10 +255,12 @@ $(document).ready(function () {
   $(document).on('click', '.btn-pagar', function () {
     const row = tablaCuentas.row($(this).closest('tr')).data();
     const id = row.id_venta;
-    const cliente = row.nombre_cliente;
+    const cedula = row.tipo_cedula_cliente ? `${row.tipo_cedula_cliente}-${row.cedula_cliente}` : '';
+    const cliente = row.nombre_cliente + (cedula ? ` — ${cedula}` : '');
     const saldo = row.saldo_pendiente;
     const referencia = row.referencia;
-    abrirModalPago(id, cliente, saldo, referencia);
+    const fechaVenta = row.fecha_venta;
+    abrirModalPago(id, cliente, saldo, referencia, fechaVenta);
   });
 
   $('#paymentForm').on('submit', function (e) {
@@ -285,6 +295,7 @@ $(document).ready(function () {
   $('#paymentModal').on('hidden.bs.modal', function () {
     const $form = $(this).find('form');
     Helpers.resetForm($form);
+    $form.find('[name="fecha_pago"]').removeData('fecha-venta');
     $('#payReferenceGroup').hide();
   });
 
