@@ -38,7 +38,7 @@ $(document).ready(function () {
 
   const initDataTable = () => {
     if (typeof SkeletonHelper !== 'undefined') {
-      SkeletonHelper.showTableSkeleton('lotesTable', 5, 6);
+      SkeletonHelper.showTableSkeleton('lotesTable', 5, 13);
     }
     lotesTable = $('#lotesTable').DataTable({
       ajax: {
@@ -49,13 +49,14 @@ $(document).ready(function () {
         dataSrc: 'lotes',
       },
       columns: [
+        { data: 'id' },
         {
           data: 'imagen',
           render: (data) => {
             const url = data ? `${window.BASE_URL || '/'}${data}` : null;
             return url
-              ? `<img src="${url}" class="lote-thumb" data-img="${url}" data-bs-toggle="modal" data-bs-target="#imageLightbox" title="Ver imagen">`
-              : `<div class="lote-thumb-placeholder"><i class="fas fa-leaf"></i></div>`;
+              ? `<img src="${url}" class="batch-thumb" data-img="${url}" data-bs-toggle="modal" data-bs-target="#imageLightbox" title="Ver imagen">`
+              : `<div class="batch-thumb-placeholder"><i class="fas fa-leaf"></i></div>`;
           },
           orderable: false,
         },
@@ -68,17 +69,44 @@ $(document).ready(function () {
           data: 'ubicacion_nombre',
           render: (data) => data || '<span class="text-muted">—</span>',
         },
+        {
+          data: 'fecha_siembra',
+          render: (data) => data ? Helpers.formatDate(data) : '—',
+        },
+        { data: 'cantidad_inicial' },
         { data: 'cantidad_actual' },
+        {
+          data: 'precio_unitario',
+          render: (data) => data ? Helpers.formatCurrencyBs(data) : '<span class="text-muted">—</span>',
+        },
         {
           data: 'estado',
           render: (data) => Helpers.getBadge(data),
+        },
+        {
+          data: 'categoria',
+          render: (data) => {
+            if (!data) return '<span class="text-muted">—</span>';
+            const colors = { germinado: 'success', en_crecimiento: 'info', para_cosechar: 'warning', maduro: 'danger' };
+            return `<span class="badge bg-${colors[data] || 'secondary'}">${data.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</span>`;
+          },
+        },
+        { data: 'origen' },
+        {
+          data: 'observacion',
+          render: (data) => {
+            if (!data) return '<span class="text-muted">—</span>';
+            const escaped = Helpers.escapeHtml(data);
+            return escaped.length > 80
+              ? `<span title="${escaped}">${Helpers.truncateText(escaped, 80)}</span>`
+              : escaped;
+          },
         },
         {
           data: null,
           orderable: false,
           render: () => {
             return C.btnGroup(
-              C.btnView('btn-view'),
               C.btnEdit('btn-edit'),
               C.btnDelete('btn-delete'),
             );
@@ -98,7 +126,7 @@ $(document).ready(function () {
           className: 'btn btn-outline-secondary btn-sm',
           action: () => {
             if (typeof SkeletonHelper !== 'undefined') {
-              SkeletonHelper.showTableSkeleton('lotesTable', 5, 6);
+              SkeletonHelper.showTableSkeleton('lotesTable', 5, 12);
             }
             lotesTable.ajax.reload(null, false);
           },
@@ -110,38 +138,13 @@ $(document).ready(function () {
   showImagePreview('addBatchImage', 'addBatchPreview');
   showImagePreview('editBatchImage', 'editBatchPreview');
 
-  $(document).on('click', '.lote-thumb', function () {
+  $(document).on('click', '.batch-thumb', function () {
     const src = $(this).data('img');
     $('#lightboxImg').attr('src', src);
   });
 
   $('#imageLightbox').on('hidden.bs.modal', function () {
     $('#lightboxImg').attr('src', '');
-  });
-
-  $(document).on('click', '.btn-view', function () {
-    const row = lotesTable.row($(this).closest('tr')).data();
-
-    const imgUrl = row.imagen ? `${window.BASE_URL || '/'}${row.imagen}` : '';
-    if (imgUrl) {
-      $('#viewBatchImage').attr('src', imgUrl).show();
-    } else {
-      $('#viewBatchImage').hide();
-    }
-
-    $('#viewBatchPlanta').text(row.planta_nombre || '—');
-    $('#viewBatchEspecie').text(row.especie_nombre || '—');
-    $('#viewBatchUbicacion').text(row.ubicacion_nombre || '—');
-    $('#viewBatchFecha').text(row.fecha_siembra ? Helpers.formatDate(row.fecha_siembra) : '—');
-    $('#viewBatchCantInicial').text(row.cantidad_inicial ?? '0');
-    $('#viewBatchCantActual').text(row.cantidad_actual ?? '0');
-    $('#viewBatchPrecio').text(row.precio_unitario ? Helpers.formatCurrencyBs(row.precio_unitario) : '—');
-    $('#viewBatchEstado').text(row.estado || '—');
-    $('#viewBatchCategoria').text(row.categoria ? row.categoria.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : '—');
-    $('#viewBatchOrigen').text(row.origen || '—');
-    $('#viewBatchObs').text(row.observacion || '—');
-
-    $('#viewBatchModal').modal({ focus: false }).modal('show');
   });
 
   $('#btnAddBatch').on('click', function () {

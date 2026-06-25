@@ -42,6 +42,13 @@ class Especie extends Database implements ReadableInterface, DeletableInterface
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 
+    public function hasActivePlants(int $id): bool
+    {
+        $stmt = $this->db()->prepare("SELECT COUNT(*) FROM plantas WHERE id_especie = ? AND activo = 1");
+        $stmt->execute([$id]);
+        return (int)$stmt->fetchColumn() > 0;
+    }
+
     public function exists(int $id): bool
     {
         $stmt = $this->db()->prepare("SELECT COUNT(*) FROM especie WHERE id_especie = :id");
