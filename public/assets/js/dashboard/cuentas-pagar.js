@@ -168,6 +168,7 @@ $(document).ready(function () {
           <button class="btn btn-success" id="btnPagarDesdeDetalle"
                   data-id="${Helpers.escapeHtml(c.id_cuenta_pagar)}"
                   data-saldo="${Helpers.escapeHtml(c.saldo_pendiente)}"
+                  data-fecha-compra="${Helpers.escapeHtml(c.fecha_compra)}"
                   data-proveedor="${Helpers.escapeHtml(c.proveedor_nombre || '')}">
               <i class="fas fa-money-bill"></i> Registrar Pago
           </button>` : ''}
@@ -184,22 +185,24 @@ $(document).ready(function () {
 
   $(document).on('click', '.btn-pagar', function () {
     const row = tablaCuentas.row($(this).closest('tr')).data();
-    abrirModalPago(row.id_cuenta_pagar, row.saldo_pendiente);
+    abrirModalPago(row.id_cuenta_pagar, row.saldo_pendiente, row.fecha_compra);
   });
 
   $(document).on('click', '#btnPagarDesdeDetalle', function () {
     $('#detalleModal').modal('hide');
     setTimeout(() => {
-      abrirModalPago($(this).data('id'), $(this).data('saldo'));
+      abrirModalPago($(this).data('id'), $(this).data('saldo'), $(this).data('fecha-compra'));
     }, 300);
   });
 
-  function abrirModalPago(idCuenta, saldo) {
+  function abrirModalPago(idCuenta, saldo, fechaCompra) {
     $('#pagoIdCuenta').val(idCuenta);
     $('#pagoMonto').val('');
     $('#pagoMonto').attr('max', saldo);
     $('#pagoSaldoInfo').text(Helpers.formatCurrencyBs(saldo));
     $('#pagoFecha').val(new Date().toISOString().split('T')[0]);
+    $('#pagoForm').data('fecha-compra', fechaCompra || '');
+    $('#pagoFechaError').remove();
     $('#pagoForm')[0].reset();
     $('#pagoIdCuenta').val(idCuenta);
     pagoRefRequired();
@@ -223,6 +226,23 @@ $(document).ready(function () {
 
   $(document).on('change', '#pagoTipo', pagoRefRequired);
 
+  $(document).on('change', '#pagoFecha', function () {
+    $('#pagoFechaError').remove();
+    const fechaPago = $(this).val();
+    const fechaCompra = $('#pagoForm').data('fecha-compra');
+    const today = new Date().toISOString().split('T')[0];
+
+    if (fechaCompra && fechaPago < fechaCompra) {
+      $(this).closest('.col-md-6').append(
+        '<small id="pagoFechaError" class="text-danger">La fecha de pago no puede ser anterior a la fecha de compra (' + fechaCompra + ').</small>'
+      );
+    } else if (fechaPago > today) {
+      $(this).closest('.col-md-6').append(
+        '<small id="pagoFechaError" class="text-danger">La fecha de pago no puede ser futura.</small>'
+      );
+    }
+  });
+
   // ============================================================
   //  Registrar pago
   // ============================================================
@@ -239,6 +259,26 @@ $(document).ready(function () {
     }
     if (monto > saldo) {
       Helpers.toast('error', `El monto (${Helpers.formatCurrencyBs(monto)}) supera el saldo pendiente (${Helpers.formatCurrencyBs(saldo)}).`);
+      return;
+    }
+
+    $('#pagoFechaError').remove();
+
+    const fechaPago = $('#pagoFecha').val();
+    const fechaCompra = $('#pagoForm').data('fecha-compra');
+    const today = new Date().toISOString().split('T')[0];
+
+    if (fechaCompra && fechaPago < fechaCompra) {
+      $('#pagoFecha').closest('.col-md-6').append(
+        '<small id="pagoFechaError" class="text-danger">La fecha de pago no puede ser anterior a la fecha de compra (' + fechaCompra + ').</small>'
+      );
+      return;
+    }
+
+    if (fechaPago > today) {
+      $('#pagoFecha').closest('.col-md-6').append(
+        '<small id="pagoFechaError" class="text-danger">La fecha de pago no puede ser futura.</small>'
+      );
       return;
     }
 
