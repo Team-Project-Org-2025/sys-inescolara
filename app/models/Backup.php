@@ -20,13 +20,40 @@ class Backup
         $this->mysqlPath = $this->findMysql();
     }
 
+    private function getConnectionOptions(string $dbHost, string $dbPort, bool $useSocketFallback = true): string
+    {
+        if ($useSocketFallback) {
+            $socket = $this->detectSocket();
+            if ($socket !== null) {
+                return sprintf('--socket=%s', escapeshellarg($socket));
+            }
+        }
+        return sprintf('--host=%s --port=%s', escapeshellarg($dbHost), escapeshellarg($dbPort));
+    }
+
+    private function detectSocket(): ?string
+    {
+        $possibleSockets = [
+            '/run/mysqld/mysqld.sock',
+            '/var/run/mysqld/mysqld.sock',
+            '/var/lib/mysql/mysql.sock',
+            '/tmp/mysql.sock',
+        ];
+        foreach ($possibleSockets as $socket) {
+            if (file_exists($socket)) {
+                return $socket;
+            }
+        }
+        return null;
+    }
+
     private function findMysqldump(): string
     {
         $xamppPath = 'C:\xampp\mysql\bin\mysqldump.exe';
         if (is_file($xamppPath)) {
             return $xamppPath;
         }
-        $which = trim(shell_exec('where mysqldump 2>nul') ?? '');
+        $which = trim(shell_exec('which mysqldump 2>/dev/null') ?? '');
         if ($which !== '') {
             return $which;
         }
@@ -39,7 +66,7 @@ class Backup
         if (is_file($xamppPath)) {
             return $xamppPath;
         }
-        $which = trim(shell_exec('where mysql 2>nul') ?? '');
+        $which = trim(shell_exec('which mysql 2>/dev/null') ?? '');
         if ($which !== '') {
             return $which;
         }
@@ -53,11 +80,12 @@ class Backup
         $filename = $label . $dbName . '_' . $timestamp . '.sql';
         $filepath = $this->backupDir . $filename;
 
+        $connectionOpts = $this->getConnectionOptions($dbHost, $dbPort);
+
         $cmd = sprintf(
-            '"%s" --host=%s --port=%s --user=%s --password=%s --routines --triggers --single-transaction --databases --default-character-set=utf8mb4 %s > "%s" 2>&1',
+            '"%s" %s --user=%s --password=%s --routines --triggers --single-transaction --databases --default-character-set=utf8mb4 %s 2>&1 > "%s"',
             $this->mysqldumpPath,
-            escapeshellarg($dbHost),
-            escapeshellarg($dbPort),
+            $connectionOpts,
             escapeshellarg($dbUser),
             escapeshellarg($dbPass),
             $dbName,
@@ -102,11 +130,12 @@ class Backup
             return ['success' => false, 'message' => "No se encontró configuración para la base de datos '$dbName'."];
         }
 
+        $connectionOpts = $this->getConnectionOptions($dbConfig['host'], $dbConfig['port']);
+
         $cmd = sprintf(
-            '"%s" --host=%s --port=%s --user=%s --password=%s "%s" < "%s" 2>&1',
+            '"%s" %s --user=%s --password=%s "%s" 2>&1 < "%s"',
             $this->mysqlPath,
-            escapeshellarg($dbConfig['host']),
-            escapeshellarg($dbConfig['port']),
+            $connectionOpts,
             escapeshellarg($dbConfig['user']),
             escapeshellarg($dbConfig['pass']),
             $dbConfig['name'],

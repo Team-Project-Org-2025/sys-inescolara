@@ -1,5 +1,5 @@
 (function () {
-    const BASE = document.querySelector('base')?.href || '/sys-inescolara/';
+    const BASE = document.querySelector('base')?.href || window.BASE_URL || '/sys-inescolara/';
 
     function actualizarBadge() {
         fetch(BASE + 'notifications/get_unread')
@@ -105,7 +105,8 @@
 })();
 
 function limpiarNotificaciones() {
-    fetch(BASE_URL + 'notifications/mark_all_read', { method: 'POST' })
+    const baseUrl = document.querySelector('base')?.href || window.BASE_URL || '/sys-inescolara/';
+    fetch(baseUrl + 'notifications/mark_all_read', { method: 'POST' })
         .then(function (r) { return r.json(); })
         .then(function (data) {
             if (data.success) {
