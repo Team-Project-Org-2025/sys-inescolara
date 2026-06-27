@@ -63,74 +63,67 @@ function plants_handleAddEdit(string $mode): void
         }
         $imagen = $result['data']['url'];
     }
-    
-    $planta = new Planta();
 
     if ($mode === 'add') {
+        $planta = new Planta([
+            'nombre_comun'   => $nombreComun,
+            'nombre_tecnico' => $nombreTecnico,
+            'id_especie'     => $especieId,
+            'imagen'         => $imagen,
+        ]);
+        if (!$planta->save()) {
+            throw new \Exception('Error al guardar la planta.');
+        }
+        jsonResponse([
+            'success' => true,
+            'message' => 'Planta agregada correctamente',
+            'plant' => [
+                'id'          => $planta->getId(),
+                'nombre_comun'=> $nombreComun,
+                'imagen'      => $imagen
+            ]
+        ]);
+    } else {
+        $id = (int)($_POST['id'] ?? 0);
+        if ($id <= 0) {
+            throw new \Exception('ID inválido');
+        }
+        $planta = Planta::find($id);
+        if (!$planta) {
+            throw new \Exception('No existe la planta');
+        }
+        if ($imagen === null) {
+            $imagen = $planta->getImagen();
+        } else {
+            if (!empty($planta->getImagen())) {
+                (new \SysInescolara\helpers\ImageUploader())->delete($planta->getImagen());
+            }
+        }
         $planta->setNombreComun($nombreComun)
                ->setNombreTecnico($nombreTecnico)
                ->setIdEspecie($especieId)
                ->setImagen($imagen);
-        
         if (!$planta->save()) {
-            throw new \Exception('Error al guardar la planta en la base de datos.');
+            throw new \Exception('Error al actualizar la planta.');
         }
-        
-        $newId = $planta->getId(); 
-        
         jsonResponse([
-            'success' => true, 
-            'message' => 'Planta agregada correctamente', 
-            'plant' => ['id' => $newId, 'nombre_comun' => $nombreComun, 'imagen' => $imagen]
+            'success' => true,
+            'message' => 'Planta actualizada correctamente',
+            'plant' => ['id' => $id, 'imagen' => $imagen]
         ]);
     }
- 
-    $id = (int)($_POST['id'] ?? 0);
-    if ($id <= 0) {
-        throw new \Exception('ID inválido');
-    }
-    
-    if (!$planta->loadById($id)) {
-        throw new \Exception('No existe la planta con ID: ' . $id);
-    }
-    
-    if ($imagen === null) {
-        $imagen = $planta->getImagen();
-    } else {
-        if (!empty($planta->getImagen())) {
-            (new \SysInescolara\helpers\ImageUploader())->delete($planta->getImagen());
-        }
-    }
-    
-    $planta->setNombreComun($nombreComun)
-           ->setNombreTecnico($nombreTecnico)
-           ->setIdEspecie($especieId)
-           ->setImagen($imagen);
-    
-    if (!$planta->save()) {
-        throw new \Exception('Error al actualizar la planta.');
-    }
-    
-    jsonResponse([
-        'success' => true, 
-        'message' => 'Planta actualizada correctamente', 
-        'plant' => ['id' => $id, 'imagen' => $imagen]
-    ]);
 }
 
 function plants_handleDelete(): void
 {
-    $planta = new Planta();
     $id = (int)($_POST['id'] ?? 0);
-    
     if ($id <= 0) {
         throw new \Exception('ID inválido');
     }
-    
-    if (!$planta->loadById($id)) {
+    $planta = Planta::find($id);
+    if (!$planta) {
         throw new \Exception('No existe la planta');
     }
-    
     try {
         if (!$planta->delete($id)) {
             throw new \Exception('Error al desactivar la planta.');
@@ -138,22 +131,21 @@ function plants_handleDelete(): void
     } catch (\PDOException $e) {
         if ((int)$e->getCode() === 23000 && str_contains($e->getMessage(), '1451')) {
             jsonResponse([
-                'success' => false, 
-                'message' => 'No se puede eliminar esta planta porque tiene lotes asociados.', 
-                'type' => 'foreign_key'
+                'success' => false,
+                'message' => 'No se puede eliminar esta planta porque tiene lotes asociados.',
+                'type'    => 'foreign_key'
             ]);
             return;
         }
         throw $e;
     }
-    
+    // Eliminar imagen si existe
     if (!empty($planta->getImagen())) {
         (new \SysInescolara\helpers\ImageUploader())->delete($planta->getImagen());
     }
-    
     jsonResponse([
-        'success' => true, 
-        'message' => 'Planta desactivada correctamente', 
+        'success' => true,
+        'message' => 'Planta desactivada correctamente',
         'plantId' => $id
     ]);
 }
@@ -161,9 +153,10 @@ function plants_handleDelete(): void
 function plants_getPlantsAjax(): void
 {
     $model = new Planta();
+    $plantas = $model->getAll();
     jsonResponse([
-        'success' => true, 
-        'plantas' => $model->getAll(), 
-        'count' => 0
+        'success' => true,
+        'plantas' => $plantas,
+        'count'   => count($plantas)
     ]);
 }
