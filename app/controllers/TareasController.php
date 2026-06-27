@@ -115,7 +115,7 @@ function tasks_assignAjax(): void
     $model = new Tarea();
     $asignacionId = $model->assignTaskWithConsumptions($assignmentData, $consumptions);
 
-    // Save tool usages
+    // Guardar uso de herramientas
     $rawTools = $data['tools'] ?? [];
     $toolModel = new Herramienta();
     foreach ($rawTools as $t) {
