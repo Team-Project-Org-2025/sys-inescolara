@@ -174,6 +174,27 @@ class Tarea extends Database implements ReadableInterface, DeletableInterface
         }
     }
 
+    public function getAll(): array
+    {
+        try {
+            $sql = "SELECT id_tarea AS id, nombre_tarea, descripcion, activo
+                    FROM tareas
+                    WHERE activo = 1
+                    ORDER BY id_tarea DESC";
+            $stmt = $this->db()->query($sql);
+            return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+        } catch (\Throwable $e) {
+            error_log('Error al obtener tareas: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    public function getById(int $id): ?array
+    {
+        $stmt = $this->db()->prepare("SELECT id_tarea AS id, nombre_tarea, descripcion FROM tareas WHERE id_tarea = :id");
+        $stmt->execute([':id' => $id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+    }
 
     public function assignTaskWithConsumptions(array $assignmentData, array $consumptions): int
     {
