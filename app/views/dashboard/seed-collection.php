@@ -112,8 +112,12 @@ include_once __DIR__ . '/../common/modal.php';
             <textarea class="form-control" name="descripcion" id="quick_descripcion" rows="2" maxlength="500"></textarea>
         </div>
         <div class="mb-3">
-            <label class="form-label" for="quick_zona">Zona</label>
-            <input type="text" class="form-control" name="zona" id="quick_zona" maxlength="50">
+            <label class="form-label" for="quick_tipo">Tipo</label>
+            <select class="form-select" name="tipo" id="quick_tipo">
+                <option value="">— Seleccionar —</option>
+                <option value="Interno">Interno</option>
+                <option value="Externo">Externo</option>
+            </select>
         </div>
     <?php modal_form_end('ubicacionQuickForm'); ?>
 

@@ -16,7 +16,7 @@ class Ubicacion extends Database implements ReadableInterface, DeletableInterfac
     protected array $validationRules = [
         'nombre_ubicacion' => ['type' => 'nombre', 'required' => true],
         'descripcion'      => ['type' => null,     'required' => false],
-        'zona'             => ['type' => 'nombre', 'required' => false],
+        'tipo'             => ['type' => null, 'required' => false],
     ];
 
     public function __construct()
@@ -27,7 +27,7 @@ class Ubicacion extends Database implements ReadableInterface, DeletableInterfac
     public function getAll(): array
     {
         try {
-            $sql = "SELECT id_ubicacion AS id, nombre_ubicacion, descripcion, zona, activo FROM ubicacion WHERE activo = 1 ORDER BY nombre_ubicacion ASC";
+            $sql = "SELECT id_ubicacion AS id, nombre_ubicacion, descripcion, tipo, activo FROM ubicacion WHERE activo = 1 ORDER BY nombre_ubicacion ASC";
             $stmt = $this->db()->query($sql);
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
         } catch (\Throwable $e) {
@@ -39,7 +39,7 @@ class Ubicacion extends Database implements ReadableInterface, DeletableInterfac
     public function getById(int $id): ?array
     {
         try {
-            $stmt = $this->db()->prepare("SELECT id_ubicacion AS id, nombre_ubicacion, descripcion, zona FROM ubicacion WHERE id_ubicacion = :id");
+            $stmt = $this->db()->prepare("SELECT id_ubicacion AS id, nombre_ubicacion, descripcion, tipo FROM ubicacion WHERE id_ubicacion = :id");
             $stmt->execute([':id' => $id]);
             return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
         } catch (\Throwable $e) {
@@ -108,23 +108,23 @@ class Ubicacion extends Database implements ReadableInterface, DeletableInterfac
         }
     }
 
-    public function add(string $nombreUbicacion, ?string $descripcion = null, ?string $zona = null): bool
+    public function add(string $nombreUbicacion, ?string $descripcion = null, ?string $tipo = null): bool
     {
         $this->validateData([
             'nombre_ubicacion' => $nombreUbicacion,
             'descripcion' => $descripcion,
-            'zona' => $zona,
+            'tipo' => $tipo,
         ]);
         try {
-            $stmt = $this->db()->prepare("INSERT INTO ubicacion (nombre_ubicacion, descripcion, zona) VALUES (?, ?, ?)");
-            $stmt->execute([trim($nombreUbicacion), $descripcion, $zona]);
+            $stmt = $this->db()->prepare("INSERT INTO ubicacion (nombre_ubicacion, descripcion, tipo) VALUES (?, ?, ?)");
+            $stmt->execute([trim($nombreUbicacion), $descripcion, $tipo]);
 
             $newId = (int) $this->db()->lastInsertId();
 
             AuditLog::record('CREATE', 'ubicacion', $newId, null, [
                 'nombre_ubicacion' => $nombreUbicacion,
                 'descripcion'      => $descripcion,
-                'zona'             => $zona,
+                'tipo'             => $tipo,
             ]);
 
             return true;
@@ -134,12 +134,12 @@ class Ubicacion extends Database implements ReadableInterface, DeletableInterfac
         }
     }
 
-    public function update(int $id, string $nombreUbicacion, ?string $descripcion = null, ?string $zona = null): bool
+    public function update(int $id, string $nombreUbicacion, ?string $descripcion = null, ?string $tipo = null): bool
     {
         $this->validateData([
             'nombre_ubicacion' => $nombreUbicacion,
             'descripcion' => $descripcion,
-            'zona' => $zona,
+            'tipo' => $tipo,
         ]);
         try {
             if (!$this->exists($id)) {
@@ -148,13 +148,13 @@ class Ubicacion extends Database implements ReadableInterface, DeletableInterfac
 
             $oldData = $this->getById($id);
 
-            $stmt = $this->db()->prepare("UPDATE ubicacion SET nombre_ubicacion = ?, descripcion = ?, zona = ? WHERE id_ubicacion = ?");
-            $stmt->execute([trim($nombreUbicacion), $descripcion, $zona, $id]);
+            $stmt = $this->db()->prepare("UPDATE ubicacion SET nombre_ubicacion = ?, descripcion = ?, tipo = ? WHERE id_ubicacion = ?");
+            $stmt->execute([trim($nombreUbicacion), $descripcion, $tipo, $id]);
 
             AuditLog::record('UPDATE', 'ubicacion', $id, $oldData, [
                 'nombre_ubicacion' => $nombreUbicacion,
                 'descripcion'      => $descripcion,
-                'zona'             => $zona,
+                'tipo'             => $tipo,
             ]);
 
             return true;

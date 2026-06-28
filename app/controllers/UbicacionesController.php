@@ -53,18 +53,18 @@ function locations_handleAddEdit(string $mode): void
     }
     $descripcion = trim((string)($_POST['descripcion'] ?? ''));
     if ($descripcion === '') $descripcion = null;
-    $zona = trim((string)($_POST['zona'] ?? ''));
-    if ($zona === '') $zona = null;
+    $tipo = trim((string)($_POST['tipo'] ?? ''));
+    if ($tipo === '') $tipo = null;
 
     if ($mode === 'add') {
-        $model->add($nombreUbicacion, $descripcion, $zona);
+        $model->add($nombreUbicacion, $descripcion, $tipo);
         $newId = $model->getLastInsertId() ?? 0;
         jsonResponse([
             'success' => true,
             'message' => 'Ubicación agregada correctamente',
             'ubicacion' => [
                 'id' => $newId, 'nombre_ubicacion' => $nombreUbicacion,
-                'descripcion' => $descripcion, 'zona' => $zona,
+                'descripcion' => $descripcion, 'tipo' => $tipo,
             ],
         ]);
         return;
@@ -74,11 +74,11 @@ function locations_handleAddEdit(string $mode): void
     if ($id <= 0) throw new \Exception('ID inválido');
     $data = $model->getById($id);
     if (!$data) throw new \Exception('La ubicación que intenta editar no existe.');
-    $model->update($id, $nombreUbicacion, $descripcion, $zona);
+    $model->update($id, $nombreUbicacion, $descripcion, $tipo);
     jsonResponse([
         'success' => true,
         'message' => 'Ubicación actualizada correctamente',
-        'ubicacion' => ['id' => $id, 'nombre_ubicacion' => $nombreUbicacion, 'descripcion' => $descripcion, 'zona' => $zona],
+        'ubicacion' => ['id' => $id, 'nombre_ubicacion' => $nombreUbicacion, 'descripcion' => $descripcion, 'tipo' => $tipo],
     ]);
 }
 

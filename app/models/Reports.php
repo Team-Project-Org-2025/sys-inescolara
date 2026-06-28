@@ -922,12 +922,12 @@ class Reports extends Database
         $where = $this->buildWhere($conds, $params);
 
         try {
-            $stmt = $this->db()->prepare("SELECT id_ubicacion, nombre_ubicacion, descripcion, zona FROM ubicacion $where ORDER BY nombre_ubicacion ASC");
+            $stmt = $this->db()->prepare("SELECT id_ubicacion, nombre_ubicacion, descripcion, tipo FROM ubicacion $where ORDER BY nombre_ubicacion ASC");
             $stmt->execute($params);
             $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             return [
-                'columns' => ['ID', 'Nombre', 'Descripción', 'Zona'],
+                'columns' => ['ID', 'Nombre', 'Descripción', 'Tipo'],
                 'rows' => $rows,
                 'chart' => null,
             ];
