@@ -65,28 +65,16 @@ include_once __DIR__ . '/../common/modal.php';
             <input type="number" class="form-control" name="cantidad" value="1" min="1" step="1" required oninput="this.value = this.value.replace(/[^0-9]/g,'')">
         </div>
         <div class="mb-3">
-            <label class="form-label">Tipo</label>
-            <input type="text" class="form-control" name="tipo" placeholder="Ej: Manual, Eléctrica, Mecánica" maxlength="50">
-        </div>
-        <div class="mb-3">
             <label class="form-label">Estado</label>
             <select class="form-select" name="estado">
                 <option value="disponible">Disponible</option>
-                <option value="en_uso">En Uso</option>
-                <option value="mantenimiento">En Mantenimiento</option>
-                <option value="danada">Dañada</option>
-                <option value="baja">De Baja</option>
+                <option value="en uso">En Uso</option>
+                <option value="dañado">Dañado</option>
             </select>
         </div>
-        <div class="row">
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Fecha de Adquisición</label>
-                <input type="date" class="form-control" name="fecha_adquisicion">
-            </div>
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Último Mantenimiento</label>
-                <input type="date" class="form-control" name="fecha_ultimo_mantenimiento">
-            </div>
+        <div class="mb-3">
+            <label class="form-label">Último Mantenimiento</label>
+            <input type="date" class="form-control" name="fecha_ultimo_mantenimiento">
         </div>
         <div class="mb-3">
             <label class="form-label">Observación</label>
@@ -105,28 +93,16 @@ include_once __DIR__ . '/../common/modal.php';
             <input type="number" class="form-control" name="cantidad" id="editToolCantidad" min="1" step="1" required oninput="this.value = this.value.replace(/[^0-9]/g,'')">
         </div>
         <div class="mb-3">
-            <label class="form-label">Tipo</label>
-            <input type="text" class="form-control" name="tipo" id="editToolType" placeholder="Ej: Manual, Eléctrica, Mecánica" maxlength="50">
-        </div>
-        <div class="mb-3">
             <label class="form-label">Estado</label>
             <select class="form-select" name="estado" id="editToolStatus">
                 <option value="disponible">Disponible</option>
-                <option value="en_uso">En Uso</option>
-                <option value="mantenimiento">En Mantenimiento</option>
-                <option value="danada">Dañada</option>
-                <option value="baja">De Baja</option>
+                <option value="en uso">En Uso</option>
+                <option value="dañado">Dañado</option>
             </select>
         </div>
-        <div class="row">
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Fecha de Adquisición</label>
-                <input type="date" class="form-control" name="fecha_adquisicion" id="editToolAcqDate">
-            </div>
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Último Mantenimiento</label>
-                <input type="date" class="form-control" name="fecha_ultimo_mantenimiento" id="editToolMaintDate">
-            </div>
+        <div class="mb-3">
+            <label class="form-label">Último Mantenimiento</label>
+            <input type="date" class="form-control" name="fecha_ultimo_mantenimiento" id="editToolMaintDate">
         </div>
         <div class="mb-3">
             <label class="form-label">Observación</label>
@@ -146,16 +122,8 @@ include_once __DIR__ . '/../common/modal.php';
                 <p class="fs-5 fw-medium" id="viewToolCantidad">—</p>
             </div>
             <div class="col-md-6">
-                <label class="form-label fw-semibold text-muted small text-uppercase">Tipo</label>
-                <p class="fs-5 fw-medium" id="viewToolTipo">—</p>
-            </div>
-            <div class="col-md-6">
                 <label class="form-label fw-semibold text-muted small text-uppercase">Estado</label>
                 <p class="fs-5 fw-medium" id="viewToolEstado">—</p>
-            </div>
-            <div class="col-md-6">
-                <label class="form-label fw-semibold text-muted small text-uppercase">Fecha de Adquisición</label>
-                <p class="fs-5 fw-medium" id="viewToolFechaAdq">—</p>
             </div>
             <div class="col-md-6">
                 <label class="form-label fw-semibold text-muted small text-uppercase">Último Mantenimiento</label>

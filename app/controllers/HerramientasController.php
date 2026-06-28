@@ -50,25 +50,8 @@ function tools_handleAddEdit(string $mode): void
         throw new \Exception('El nombre de la herramienta es requerido.');
     }
 
-    $tipo = trim((string)($_POST['tipo'] ?? ''));
-    if ($tipo === '') $tipo = null;
-
     $estado = trim((string)($_POST['estado'] ?? ''));
     if ($estado === '') $estado = 'disponible';
-
-    $fechaAdquisicion = trim((string)($_POST['fecha_adquisicion'] ?? ''));
-    if ($fechaAdquisicion === '') {
-        $fechaAdquisicion = null;
-    } else {
-        $d = \DateTime::createFromFormat('Y-m-d', $fechaAdquisicion);
-        if (!$d || $d->format('Y-m-d') !== $fechaAdquisicion) {
-            throw new \InvalidArgumentException('Formato de fecha de adquisición inválido.');
-        }
-        $todayStr = (new \DateTime('today'))->format('Y-m-d');
-        if ($fechaAdquisicion > $todayStr) {
-            throw new \InvalidArgumentException('La fecha de adquisición no puede ser posterior al día de hoy.');
-        }
-    }
 
     $fechaUltimoMantenimiento = trim((string)($_POST['fecha_ultimo_mantenimiento'] ?? ''));
     if ($fechaUltimoMantenimiento === '') {
@@ -90,18 +73,18 @@ function tools_handleAddEdit(string $mode): void
     $cantidad = max(1, (int)($_POST['cantidad'] ?? 1));
 
     if ($mode === 'add') {
-        $model->add($nombre, $cantidad, $tipo, $estado, $fechaAdquisicion, $fechaUltimoMantenimiento, $observacion);
+        $model->add($nombre, $cantidad, $estado, $fechaUltimoMantenimiento, $observacion);
         $newId = $model->getLastInsertId() ?? 0;
         jsonResponse([
             'success' => true, 'message' => 'Herramienta agregada correctamente',
-            'herramienta' => ['id' => $newId, 'nombre_herramienta' => $nombre, 'cantidad' => $cantidad, 'tipo' => $tipo, 'estado' => $estado],
+            'herramienta' => ['id' => $newId, 'nombre_herramienta' => $nombre, 'cantidad' => $cantidad, 'estado' => $estado],
         ]);
     }
 
     $id = (int)($_POST['id'] ?? 0);
     if ($id <= 0) throw new \Exception('ID inválido');
 
-    $model->update($id, $nombre, $cantidad, $tipo, $estado, $fechaAdquisicion, $fechaUltimoMantenimiento, $observacion);
+    $model->update($id, $nombre, $cantidad, $estado, $fechaUltimoMantenimiento, $observacion);
     jsonResponse([
         'success' => true, 'message' => 'Herramienta actualizada correctamente',
         'herramienta' => ['id' => $id],
@@ -137,7 +120,7 @@ function tools_recordUsageAjax(): void
         'id_herramienta'           => (int)($data['id_herramienta'] ?? 0),
         'fecha_uso'                => $data['fecha_uso'] ?? date('Y-m-d'),
         'observacion'              => trim((string)($data['observacion'] ?? '')),
-        'estado_herramienta_post_uso' => $data['estado_herramienta_post_uso'] ?? 'ok',
+        'estado_herramienta_post_uso' => $data['estado_herramienta_post_uso'] ?? 'disponible',
     ];
 
     if (!$usageData['id_asignacion'] || !$usageData['id_herramienta']) {
