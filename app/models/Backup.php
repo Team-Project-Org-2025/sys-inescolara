@@ -83,7 +83,7 @@ class Backup
         $connectionOpts = $this->getConnectionOptions($dbHost, $dbPort);
 
         $cmd = sprintf(
-            '"%s" %s --user=%s --password=%s --routines --triggers --single-transaction --databases --default-character-set=utf8mb4 %s 2>&1 > "%s"',
+            '"%s" %s --user=%s --password=%s --routines --triggers --single-transaction --databases --default-character-set=utf8mb4 %s 1> "%s" 2>&1',
             $this->mysqldumpPath,
             $connectionOpts,
             escapeshellarg($dbUser),
@@ -132,22 +132,48 @@ class Backup
 
         $connectionOpts = $this->getConnectionOptions($dbConfig['host'], $dbConfig['port']);
 
+        $filepath = str_replace('/', DIRECTORY_SEPARATOR, $filepath);
+
         $cmd = sprintf(
-            '"%s" %s --user=%s --password=%s "%s" 2>&1 < "%s"',
+            '"%s" %s --user=%s --password=%s "%s"',
             $this->mysqlPath,
             $connectionOpts,
             escapeshellarg($dbConfig['user']),
             escapeshellarg($dbConfig['pass']),
-            $dbConfig['name'],
-            $filepath
+            $dbConfig['name']
         );
 
-        $output = [];
-        $exitCode = 0;
-        exec($cmd, $output, $exitCode);
+        $descriptors = [
+            0 => ['pipe', 'r'],
+            1 => ['pipe', 'w'],
+            2 => ['pipe', 'w'],
+        ];
+
+        $process = proc_open($cmd, $descriptors, $pipes);
+        if (!is_resource($process)) {
+            return ['success' => false, 'message' => 'No se pudo iniciar el proceso mysql.'];
+        }
+
+        $input = fopen($filepath, 'rb');
+        if ($input) {
+            $bom = fread($input, 3);
+            if ($bom !== "\xEF\xBB\xBF") {
+                rewind($input);
+            }
+            stream_copy_to_stream($input, $pipes[0]);
+            fclose($input);
+        }
+        fclose($pipes[0]);
+
+        $stdout = stream_get_contents($pipes[1]);
+        fclose($pipes[1]);
+        $stderr = stream_get_contents($pipes[2]);
+        fclose($pipes[2]);
+
+        $exitCode = proc_close($process);
 
         if ($exitCode !== 0) {
-            $errorMsg = !empty($output) ? implode("\n", $output) : 'Error desconocido al restaurar';
+            $errorMsg = !empty($stderr) ? $stderr : (!empty($stdout) ? $stdout : 'Error desconocido al restaurar');
             return ['success' => false, 'message' => $errorMsg];
         }
 
