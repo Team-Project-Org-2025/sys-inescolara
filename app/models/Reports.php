@@ -106,18 +106,14 @@ class Reports extends Database
     {
         $estadoOptions = [['value' => '', 'label' => 'Todos']];
         try {
-            $stmt = $this->db()->query("SELECT DISTINCT estado FROM lote WHERE activo = 1 ORDER BY estado ASC");
-            foreach ($stmt ? $stmt->fetchAll(PDO::FETCH_COLUMN) : [] as $e) {
-                $estadoOptions[] = ['value' => $e, 'label' => $e];
-            }
+            $stmt = $this->db()->query("SELECT e.id_estado AS value, e.nombre AS label FROM estado e INNER JOIN lote l ON e.id_estado = l.id_estado WHERE l.activo = 1 GROUP BY e.id_estado, e.nombre ORDER BY e.nombre ASC");
+            $estadoOptions = array_merge($estadoOptions, $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : []);
         } catch (\Throwable $e) {}
 
         $catOptions = [['value' => '', 'label' => 'Todas']];
         try {
-            $stmt = $this->db()->query("SELECT DISTINCT categoria FROM lote WHERE activo = 1 AND categoria IS NOT NULL AND categoria != '' ORDER BY categoria ASC");
-            foreach ($stmt ? $stmt->fetchAll(PDO::FETCH_COLUMN) : [] as $c) {
-                $catOptions[] = ['value' => $c, 'label' => $c];
-            }
+            $stmt = $this->db()->query("SELECT c.id_categoria AS value, c.nombre AS label FROM categoria c INNER JOIN lote l ON c.id_categoria = l.id_categoria WHERE l.activo = 1 AND l.id_categoria IS NOT NULL GROUP BY c.id_categoria, c.nombre ORDER BY c.nombre ASC");
+            $catOptions = array_merge($catOptions, $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : []);
         } catch (\Throwable $e) {}
 
         return [
@@ -437,8 +433,8 @@ class Reports extends Database
     {
         $conds = []; $params = [];
         $this->aActivo($conds, $params, $filters, 'l');
-        $this->aCond($conds, $params, $filters, 'estado_lote', 'estado', 'l');
-        $this->aCond($conds, $params, $filters, 'categoria', 'categoria', 'l');
+        $this->aCond($conds, $params, $filters, 'estado_lote', 'id_estado', 'l');
+        $this->aCond($conds, $params, $filters, 'categoria', 'id_categoria', 'l');
         $this->aCond($conds, $params, $filters, 'id_ubicacion', 'id_ubicacion', 'l');
         $this->aCond($conds, $params, $filters, 'id_planta', 'id_planta', 'l');
         $this->aDateRange($conds, $params, $filters, 'fecha_siembra', 'l.fecha_siembra');
@@ -447,11 +443,13 @@ class Reports extends Database
         try {
             $sql = "SELECT l.id_lote, p.nombre_comun AS planta, e.nombre_especie AS especie,
                            u.nombre_ubicacion AS ubicacion, l.cantidad_inicial, l.cantidad_actual,
-                           l.estado, l.categoria, l.fecha_siembra
+                           es.nombre AS estado, ca.nombre AS categoria, l.fecha_siembra
                     FROM lote l
                     LEFT JOIN plantas p ON l.id_planta = p.id_planta AND p.activo = 1
                     LEFT JOIN especie e ON p.id_especie = e.id_especie AND e.activo = 1
                     LEFT JOIN ubicacion u ON l.id_ubicacion = u.id_ubicacion AND u.activo = 1
+                    LEFT JOIN estado es ON l.id_estado = es.id_estado
+                    LEFT JOIN categoria ca ON l.id_categoria = ca.id_categoria
                     $where
                     ORDER BY l.fecha_siembra DESC";
             $stmt = $this->db()->prepare($sql);

@@ -35,6 +35,11 @@ function index(): void
         error_log('[Lotes] Error loading locations: ' . $e->getMessage());
     }
 
+    $loteModel = new Lote();
+    $estados = $loteModel->getEstados();
+    $categorias = $loteModel->getCategorias();
+    $origenes = $loteModel->getOrigenes();
+
     $view = ROOT_PATH . 'app/views/dashboard/lotes.php';
     if (!is_file($view)) {
         http_response_code(500);
@@ -57,10 +62,10 @@ function batches_handleAddEdit(string $mode): void
     $fecha_siembra = trim((string)($_POST['fecha_siembra'] ?? ''));
     $cantidad_inicial = (int)($_POST['cantidad_inicial'] ?? 0);
     $cantidad_actual = (int)($_POST['cantidad_actual'] ?? 0);
-    $estado = trim((string)($_POST['estado'] ?? ''));
-    $categoria = trim((string)($_POST['categoria'] ?? ''));
-    if ($categoria === '') $categoria = null;
-    $origen = trim((string)($_POST['origen'] ?? ''));
+    $id_estado = (int)($_POST['id_estado'] ?? 0);
+    $id_categoria = (int)($_POST['id_categoria'] ?? 0);
+    if ($id_categoria <= 0) $id_categoria = null;
+    $id_origen = (int)($_POST['id_origen'] ?? 0);
     $observacion = trim((string)($_POST['observacion'] ?? ''));
     if ($observacion === '') $observacion = null;
 
@@ -69,7 +74,7 @@ function batches_handleAddEdit(string $mode): void
     if ($fecha_siembra === '') throw new \Exception('La fecha de siembra es requerida.');
     if ($cantidad_inicial <= 0) throw new \Exception('La cantidad inicial debe ser mayor a 0.');
     if ($cantidad_actual < 0) throw new \Exception('La cantidad actual no puede ser negativa.');
-    if ($estado === '') $estado = 'Activo';
+    if ($id_estado <= 0) $id_estado = null;
 
     $imagen = null;
     if (!empty($_FILES['imagen']) && $_FILES['imagen']['error'] === UPLOAD_ERR_OK) {
@@ -82,7 +87,7 @@ function batches_handleAddEdit(string $mode): void
     }
 
     if ($mode === 'add') {
-        $model->add($id_planta, $id_ubicacion, $fecha_siembra, $cantidad_inicial, $cantidad_actual, $estado, $categoria, $origen, $observacion, $imagen);
+        $model->add($id_planta, $id_ubicacion, $fecha_siembra, $cantidad_inicial, $cantidad_actual, $id_estado, $id_categoria, $id_origen, $observacion, $imagen);
         $newId = $model->getLastInsertId() ?? 0;
         jsonResponse([
             'success' => true, 'message' => 'Lote agregado correctamente',
@@ -103,7 +108,7 @@ function batches_handleAddEdit(string $mode): void
         }
     }
 
-    $model->update($id, $id_planta, $id_ubicacion, $fecha_siembra, $cantidad_inicial, $cantidad_actual, $estado, $categoria, $origen, $observacion, $imagen);
+    $model->update($id, $id_planta, $id_ubicacion, $fecha_siembra, $cantidad_inicial, $cantidad_actual, $id_estado, $id_categoria, $id_origen, $observacion, $imagen);
     jsonResponse([
         'success' => true, 'message' => 'Lote actualizado correctamente',
         'lote' => ['id' => $id, 'imagen' => $imagen],

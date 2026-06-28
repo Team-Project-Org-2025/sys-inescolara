@@ -13,8 +13,8 @@ $(document).ready(function () {
     fecha_siembra: 'fechaFuturaCheck',
     cantidad_inicial: 'cantidad',
     cantidad_actual: 'cantidad',
-    estado: 'select',
-    origen: 'select',
+    id_estado: 'select',
+    id_origen: 'select',
   };
 
   const showImagePreview = (inputId, previewId) => {
@@ -70,7 +70,7 @@ $(document).ready(function () {
         },
         { data: 'cantidad_actual' },
         {
-          data: 'estado',
+          data: 'estado_nombre',
           render: (data) => Helpers.getBadge(data),
         },
         {
@@ -135,10 +135,9 @@ $(document).ready(function () {
     $('#viewBatchFecha').text(row.fecha_siembra ? Helpers.formatDate(row.fecha_siembra) : '—');
     $('#viewBatchCantInicial').text(row.cantidad_inicial ?? '0');
     $('#viewBatchCantActual').text(row.cantidad_actual ?? '0');
-    $('#viewBatchPrecio').text(row.precio_unitario ? Helpers.formatCurrencyBs(row.precio_unitario) : '—');
-    $('#viewBatchEstado').text(row.estado || '—');
-    $('#viewBatchCategoria').text(row.categoria ? row.categoria.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : '—');
-    $('#viewBatchOrigen').text(row.origen || '—');
+    $('#viewBatchEstado').text(row.estado_nombre || '—');
+    $('#viewBatchCategoria').text(row.categoria_nombre || '—');
+    $('#viewBatchOrigen').text(row.origen_nombre || '—');
     $('#viewBatchObs').text(row.observacion || '—');
 
     $('#viewBatchModal').modal({ focus: false }).modal('show');
@@ -149,6 +148,17 @@ $(document).ready(function () {
     if ($editModal.hasClass('show')) {
       $editModal.modal('hide');
     }
+
+    const $qtyInit = $('#addBatchQtyInit');
+    const $qtyCurr = $('#addBatchQtyCurr');
+    $qtyInit.prop('readonly', false).val('');
+    $qtyCurr.prop('readonly', true).val('');
+    $qtyInit.off('.addBatch').on('input.addBatch', function () {
+      $qtyCurr.val(this.value);
+    });
+
+    $('#addBatchEstado').prop('disabled', true);
+
     $('#addBatchModal').modal({ focus: false }).modal('show');
   });
 
@@ -197,11 +207,11 @@ $(document).ready(function () {
     $('#editBatchPlant').val(row.id_planta);
     $('#editBatchLocation').val(row.id_ubicacion);
     $('#editBatchDate').val(row.fecha_siembra);
-    $('#editBatchQtyInit').val(row.cantidad_inicial);
-    $('#editBatchQtyCurr').val(row.cantidad_actual);
-    $('#editBatchStatus').val(row.estado);
-    $('#editBatchCategoria').val(row.categoria || '');
-    $('#editBatchOrigen').val(row.origen);
+    $('#editBatchQtyInit').val(row.cantidad_inicial).prop('readonly', true);
+    $('#editBatchQtyCurr').val(row.cantidad_actual).prop('readonly', false);
+    $('#editBatchEstado').val(row.id_estado).prop('disabled', false);
+    $('#editBatchCategoria').val(row.id_categoria || '');
+    $('#editBatchOrigen').val(row.id_origen);
     $('#editBatchObs').val(row.observacion);
 
     const imagen = row.imagen;
@@ -281,6 +291,11 @@ $(document).ready(function () {
     Helpers.resetForm($form);
     $(this).find('.img-preview').hide();
     $('#editImageCurrent').hide();
+    $('#addBatchQtyInit').prop('readonly', false).off('.addBatch');
+    $('#addBatchQtyCurr').prop('readonly', false);
+    $('#editBatchQtyInit').prop('readonly', false);
+    $('#editBatchQtyCurr').prop('readonly', false);
+    $('#addBatchEstado, #editBatchEstado').prop('disabled', false);
   });
 
   initDataTable();
