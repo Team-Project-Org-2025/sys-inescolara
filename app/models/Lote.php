@@ -8,10 +8,24 @@ use SysInescolara\interfaces\DeletableInterface;
 use SysInescolara\traits\ValidationTrait;
 use SysInescolara\models\AuditLog;
 use PDO;
+use Throwable;
 
 class Lote extends Database implements ReadableInterface, DeletableInterface
 {
     use ValidationTrait;
+
+    private ?int $id = null;
+    private ?int $idPlanta = null;
+    private ?int $idUbicacion = null;
+    private ?string $fechaSiembra = null;
+    private int $cantidadInicial = 0;
+    private int $cantidadActual = 0;
+    private ?int $idEstado = null;
+    private ?int $idCategoria = null;
+    private ?int $idOrigen = null;
+    private ?string $observacion = null;
+    private ?string $imagen = null;
+    private int $activo = 1;
 
     protected array $validationRules = [
         'id_planta'       => ['type' => null,      'required' => true],
@@ -25,13 +39,192 @@ class Lote extends Database implements ReadableInterface, DeletableInterface
         'observacion'     => ['type' => null,      'required' => false],
     ];
 
-    public function __construct()
+    protected array $fillable = [
+        'id_planta', 'id_ubicacion', 'fecha_siembra', 'cantidad_inicial', 'cantidad_actual',
+        'id_estado', 'id_categoria', 'id_origen', 'observacion', 'imagen', 'activo',
+    ];
+    protected array $guarded = ['id'];
+
+    public function __construct(array $attributes = [])
     {
         parent::__construct();
+        if (!empty($attributes)) {
+            $this->fill($attributes);
+        }
     }
 
-    public function getAll(): array
+    public function fill(array $attributes): self
     {
+        foreach ($attributes as $key => $value) {
+            if (empty($this->fillable) || in_array($key, $this->fillable, true)) {
+                $property = $this->mapColumnToProperty($key);
+                if (property_exists($this, $property)) {
+                    $this->$property = $value;
+                }
+            }
+        }
+        return $this;
+    }
+
+    private function mapColumnToProperty(string $column): string
+    {
+        $map = [
+            'id_lote'            => 'id',
+            'id_planta'          => 'idPlanta',
+            'id_ubicacion'       => 'idUbicacion',
+            'fecha_siembra'      => 'fechaSiembra',
+            'cantidad_inicial'   => 'cantidadInicial',
+            'cantidad_actual'    => 'cantidadActual',
+            'id_estado'          => 'idEstado',
+            'id_categoria'       => 'idCategoria',
+            'id_origen'          => 'idOrigen',
+            'observacion'        => 'observacion',
+            'imagen'             => 'imagen',
+            'activo'             => 'activo',
+        ];
+        return $map[$column] ?? $column;
+    }
+
+    public function getId(): ?int { return $this->id; }
+    public function getIdPlanta(): ?int { return $this->idPlanta; }
+    public function getIdUbicacion(): ?int { return $this->idUbicacion; }
+    public function getFechaSiembra(): ?string { return $this->fechaSiembra; }
+    public function getCantidadInicial(): int { return $this->cantidadInicial; }
+    public function getCantidadActual(): int { return $this->cantidadActual; }
+    public function getIdEstado(): ?int { return $this->idEstado; }
+    public function getIdCategoria(): ?int { return $this->idCategoria; }
+    public function getIdOrigen(): ?int { return $this->idOrigen; }
+    public function getObservacion(): ?string { return $this->observacion; }
+    public function getImagen(): ?string { return $this->imagen; }
+    public function isActivo(): bool { return $this->activo === 1; }
+
+    public function setId(int $id): self { $this->id = $id; return $this; }
+    public function setIdPlanta(int $idPlanta): self { $this->idPlanta = $idPlanta; return $this; }
+    public function setIdUbicacion(int $idUbicacion): self { $this->idUbicacion = $idUbicacion; return $this; }
+    public function setFechaSiembra(string $fechaSiembra): self { $this->fechaSiembra = $fechaSiembra; return $this; }
+    public function setCantidadInicial(int $cantidadInicial): self { $this->cantidadInicial = max(0, $cantidadInicial); return $this; }
+    public function setCantidadActual(int $cantidadActual): self { $this->cantidadActual = max(0, $cantidadActual); return $this; }
+    public function setIdEstado(?int $idEstado): self { $this->idEstado = $idEstado; return $this; }
+    public function setIdCategoria(?int $idCategoria): self { $this->idCategoria = $idCategoria; return $this; }
+    public function setIdOrigen(?int $idOrigen): self { $this->idOrigen = $idOrigen; return $this; }
+    public function setObservacion(?string $observacion): self { $this->observacion = $observacion ?: null; return $this; }
+    public function setImagen(?string $imagen): self { $this->imagen = $imagen; return $this; }
+    public function setActivo(bool $activo): self { $this->activo = $activo ? 1 : 0; return $this; }
+
+    private function validate(): void
+    {
+        $this->validateData([
+            'id_planta'       => $this->idPlanta,
+            'id_ubicacion'    => $this->idUbicacion,
+            'fecha_siembra'   => $this->fechaSiembra,
+            'cantidad_inicial'=> $this->cantidadInicial,
+            'cantidad_actual' => $this->cantidadActual,
+            'id_estado'       => $this->idEstado,
+            'id_categoria'    => $this->idCategoria,
+            'id_origen'       => $this->idOrigen,
+            'observacion'     => $this->observacion,
+        ]);
+    }
+
+    public function save(): bool
+    {
+        $this->validate();
+
+        try {
+            if ($this->id === null) {
+                if ($this->idEstado === null) $this->idEstado = $this->getIdEstadoVivo();
+                if ($this->idOrigen === null) $this->idOrigen = $this->getIdOrigenPorNombre('Siembra');
+
+                $stmt = $this->db()->prepare("
+                    INSERT INTO lote (id_planta, id_ubicacion, fecha_siembra, cantidad_inicial, cantidad_actual, id_estado, id_categoria, id_origen, observacion, imagen)
+                    VALUES (:id_planta, :id_ubicacion, :fecha_siembra, :cantidad_inicial, :cantidad_actual, :id_estado, :id_categoria, :id_origen, :observacion, :imagen)
+                ");
+                $success = $stmt->execute([
+                    ':id_planta'        => $this->idPlanta,
+                    ':id_ubicacion'     => $this->idUbicacion,
+                    ':fecha_siembra'    => $this->fechaSiembra,
+                    ':cantidad_inicial' => $this->cantidadInicial,
+                    ':cantidad_actual'  => $this->cantidadActual,
+                    ':id_estado'        => $this->idEstado,
+                    ':id_categoria'     => $this->idCategoria,
+                    ':id_origen'        => $this->idOrigen,
+                    ':observacion'      => $this->observacion,
+                    ':imagen'           => $this->imagen,
+                ]);
+                if ($success) {
+                    $this->id = (int) $this->db()->lastInsertId();
+                    AuditLog::record('CREATE', 'lote', $this->id, null, [
+                        'id_planta'        => $this->idPlanta,
+                        'id_ubicacion'     => $this->idUbicacion,
+                        'fecha_siembra'    => $this->fechaSiembra,
+                        'cantidad_inicial' => $this->cantidadInicial,
+                        'cantidad_actual'  => $this->cantidadActual,
+                        'id_estado'        => $this->idEstado,
+                        'id_origen'        => $this->idOrigen,
+                        'observacion'      => $this->observacion,
+                    ]);
+                }
+                return $success;
+            } else {
+                if ($this->idEstado === null) $this->idEstado = $this->getIdEstadoVivo();
+                if ($this->idOrigen === null) $this->idOrigen = $this->getIdOrigenPorNombre('Siembra');
+
+                $oldData = $this->getById($this->id);
+                $stmt = $this->db()->prepare("
+                    UPDATE lote SET id_planta = :id_planta, id_ubicacion = :id_ubicacion, fecha_siembra = :fecha_siembra,
+                        cantidad_inicial = :cantidad_inicial, cantidad_actual = :cantidad_actual,
+                        id_estado = :id_estado, id_categoria = :id_categoria, id_origen = :id_origen,
+                        observacion = :observacion, imagen = :imagen
+                    WHERE id_lote = :id
+                ");
+                $success = $stmt->execute([
+                    ':id'               => $this->id,
+                    ':id_planta'        => $this->idPlanta,
+                    ':id_ubicacion'     => $this->idUbicacion,
+                    ':fecha_siembra'    => $this->fechaSiembra,
+                    ':cantidad_inicial' => $this->cantidadInicial,
+                    ':cantidad_actual'  => $this->cantidadActual,
+                    ':id_estado'        => $this->idEstado,
+                    ':id_categoria'     => $this->idCategoria,
+                    ':id_origen'        => $this->idOrigen,
+                    ':observacion'      => $this->observacion,
+                    ':imagen'           => $this->imagen,
+                ]);
+                if ($success) {
+                    AuditLog::record('UPDATE', 'lote', $this->id, $oldData, [
+                        'id_planta'        => $this->idPlanta,
+                        'id_ubicacion'     => $this->idUbicacion,
+                        'fecha_siembra'    => $this->fechaSiembra,
+                        'cantidad_inicial' => $this->cantidadInicial,
+                        'cantidad_actual'  => $this->cantidadActual,
+                        'id_estado'        => $this->idEstado,
+                        'id_origen'        => $this->idOrigen,
+                        'observacion'      => $this->observacion,
+                    ]);
+                }
+                return $success;
+            }
+        } catch (Throwable $e) {
+            error_log('Error al guardar lote: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    public static function find(int $id): ?self
+    {
+        $instance = new static();
+        $stmt = $instance->db()->prepare("SELECT * FROM lote WHERE id_lote = :id");
+        $stmt->execute([':id' => $id]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$row) return null;
+        $lote = new static($row);
+        $lote->id = (int)$row['id_lote'];
+        return $lote;
+    }
+
+    public static function all(): array
+    {
+        $instance = new static();
         try {
             $sql = "SELECT
                         l.id_lote AS id, l.id_planta, l.id_ubicacion, l.fecha_siembra,
@@ -54,19 +247,17 @@ class Lote extends Database implements ReadableInterface, DeletableInterface
                     LEFT JOIN calculo_precio cp ON l.id_lote = cp.id_lote
                     WHERE l.activo = 1
                     ORDER BY l.fecha_siembra DESC";
-            $stmt = $this->db()->query($sql);
+            $stmt = $instance->db()->query($sql);
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
-        } catch (\Throwable $e) {
-            error_log('Error al obtener lote: ' . $e->getMessage());
+        } catch (Throwable $e) {
+            error_log('Error al obtener lotes: ' . $e->getMessage());
             return [];
         }
     }
 
-    public function exists(int $id): bool
+    public function getAll(): array
     {
-        $stmt = $this->db()->prepare("SELECT COUNT(*) FROM lote WHERE id_lote = :id");
-        $stmt->execute([':id' => $id]);
-        return $stmt->fetchColumn() > 0;
+        return self::all();
     }
 
     public function getById(int $id): ?array
@@ -89,13 +280,22 @@ class Lote extends Database implements ReadableInterface, DeletableInterface
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 
+    public function exists(int $id): bool
+    {
+        $stmt = $this->db()->prepare("SELECT COUNT(*) FROM lote WHERE id_lote = :id");
+        $stmt->execute([':id' => $id]);
+        return (int) $stmt->fetchColumn() > 0;
+    }
+
     public function delete(int $id): bool
     {
         $oldData = $this->getById($id);
         $stmt = $this->db()->prepare("UPDATE lote SET activo = 0 WHERE id_lote = ?");
-        $stmt->execute([$id]);
-        AuditLog::record('DEACTIVATE', 'lote', $id, $oldData, null);
-        return true;
+        $success = $stmt->execute([$id]);
+        if ($success) {
+            AuditLog::record('DEACTIVATE', 'lote', $id, $oldData, null);
+        }
+        return $success;
     }
 
     public function restore(int $id): bool
@@ -108,7 +308,7 @@ class Lote extends Database implements ReadableInterface, DeletableInterface
     {
         try {
             return (int)$this->db()->lastInsertId();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             return null;
         }
     }
@@ -144,101 +344,25 @@ class Lote extends Database implements ReadableInterface, DeletableInterface
         return (int)$stmt->fetchColumn();
     }
 
-    public function add($id_planta, $id_ubicacion, $fecha_siembra, $cantidad_inicial, $cantidad_actual, $id_estado = null, $id_categoria = null, $id_origen = null, $observacion = null, $imagen = null)
+    public function loadById(int $id): bool
     {
-        if ($id_estado === null) $id_estado = $this->getIdEstadoVivo();
-        if ($id_origen === null) $id_origen = $this->getIdOrigenPorNombre('Siembra');
-
-        $this->validateData([
-            'id_planta' => $id_planta,
-            'id_ubicacion' => $id_ubicacion,
-            'fecha_siembra' => $fecha_siembra,
-            'cantidad_inicial' => $cantidad_inicial,
-            'cantidad_actual' => $cantidad_actual,
-            'id_estado' => $id_estado,
-            'id_categoria' => $id_categoria,
-            'id_origen' => $id_origen,
-            'observacion' => $observacion,
-        ]);
-        $stmt = $this->db()->prepare("INSERT INTO lote (id_planta, id_ubicacion, fecha_siembra, cantidad_inicial, cantidad_actual, id_estado, id_categoria, id_origen, observacion, imagen) VALUES (:id_planta, :id_ubicacion, :fecha_siembra, :cantidad_inicial, :cantidad_actual, :id_estado, :id_categoria, :id_origen, :observacion, :imagen)");
-        $stmt->execute([
-            ':id_planta' => $id_planta,
-            ':id_ubicacion' => $id_ubicacion,
-            ':fecha_siembra' => $fecha_siembra,
-            ':cantidad_inicial' => $cantidad_inicial,
-            ':cantidad_actual' => $cantidad_actual,
-            ':id_estado' => $id_estado,
-            ':id_categoria' => $id_categoria,
-            ':id_origen' => $id_origen,
-            ':observacion' => $observacion,
-            ':imagen' => $imagen,
-        ]);
-
-        $newId = (int) $this->db()->lastInsertId();
-
-        AuditLog::record('CREATE', 'lote', $newId, null, [
-            'id_planta'        => $id_planta,
-            'id_ubicacion'     => $id_ubicacion,
-            'fecha_siembra'    => $fecha_siembra,
-            'cantidad_inicial' => $cantidad_inicial,
-            'cantidad_actual'  => $cantidad_actual,
-            'id_estado'        => $id_estado,
-            'id_origen'        => $id_origen,
-            'observacion'      => $observacion,
-        ]);
-
-        return true;
-    }
-
-    public function update($id, $id_planta, $id_ubicacion, $fecha_siembra, $cantidad_inicial, $cantidad_actual, $id_estado = null, $id_categoria = null, $id_origen = null, $observacion = null, $imagen = null)
-    {
-        if ($id_estado === null) $id_estado = $this->getIdEstadoVivo();
-        if ($id_origen === null) $id_origen = $this->getIdOrigenPorNombre('Siembra');
-
-        $this->validateData([
-            'id_planta' => $id_planta,
-            'id_ubicacion' => $id_ubicacion,
-            'fecha_siembra' => $fecha_siembra,
-            'cantidad_inicial' => $cantidad_inicial,
-            'cantidad_actual' => $cantidad_actual,
-            'id_estado' => $id_estado,
-            'id_categoria' => $id_categoria,
-            'id_origen' => $id_origen,
-            'observacion' => $observacion,
-        ]);
-        if (!$this->exists($id)) {
-            throw new \Exception("No existe el lote con ID: $id");
+        $found = self::find($id);
+        if ($found) {
+            $this->id = $found->getId();
+            $this->idPlanta = $found->getIdPlanta();
+            $this->idUbicacion = $found->getIdUbicacion();
+            $this->fechaSiembra = $found->getFechaSiembra();
+            $this->cantidadInicial = $found->getCantidadInicial();
+            $this->cantidadActual = $found->getCantidadActual();
+            $this->idEstado = $found->getIdEstado();
+            $this->idCategoria = $found->getIdCategoria();
+            $this->idOrigen = $found->getIdOrigen();
+            $this->observacion = $found->getObservacion();
+            $this->imagen = $found->getImagen();
+            $this->activo = $found->isActivo() ? 1 : 0;
+            return true;
         }
-
-        $oldData = $this->getById($id);
-
-        $stmt = $this->db()->prepare("UPDATE lote SET id_planta = :id_planta, id_ubicacion = :id_ubicacion, fecha_siembra = :fecha_siembra, cantidad_inicial = :cantidad_inicial, cantidad_actual = :cantidad_actual, id_estado = :id_estado, id_categoria = :id_categoria, id_origen = :id_origen, observacion = :observacion, imagen = :imagen WHERE id_lote = :id");
-        $stmt->execute([
-            ':id' => $id,
-            ':id_planta' => $id_planta,
-            ':id_ubicacion' => $id_ubicacion,
-            ':fecha_siembra' => $fecha_siembra,
-            ':cantidad_inicial' => $cantidad_inicial,
-            ':cantidad_actual' => $cantidad_actual,
-            ':id_estado' => $id_estado,
-            ':id_categoria' => $id_categoria,
-            ':id_origen' => $id_origen,
-            ':observacion' => $observacion,
-            ':imagen' => $imagen,
-        ]);
-
-        AuditLog::record('UPDATE', 'lote', $id, $oldData, [
-            'id_planta'        => $id_planta,
-            'id_ubicacion'     => $id_ubicacion,
-            'fecha_siembra'    => $fecha_siembra,
-            'cantidad_inicial' => $cantidad_inicial,
-            'cantidad_actual'  => $cantidad_actual,
-            'id_estado'        => $id_estado,
-            'id_origen'        => $id_origen,
-            'observacion'      => $observacion,
-        ]);
-
-        return true;
+        return false;
     }
 
     protected function deductStock(int $id, int $cantidad): bool
@@ -251,5 +375,40 @@ class Lote extends Database implements ReadableInterface, DeletableInterface
     {
         $stmt = $this->db()->prepare("UPDATE lote SET cantidad_actual = cantidad_actual + :cantidad WHERE id_lote = :id");
         return $stmt->execute([':cantidad' => $cantidad, ':id' => $id]);
+    }
+
+    public function add($id_planta, $id_ubicacion, $fecha_siembra, $cantidad_inicial, $cantidad_actual, $id_estado = null, $id_categoria = null, $id_origen = null, $observacion = null, $imagen = null)
+    {
+        return $this->fill([
+            'id_planta' => $id_planta,
+            'id_ubicacion' => $id_ubicacion,
+            'fecha_siembra' => $fecha_siembra,
+            'cantidad_inicial' => $cantidad_inicial,
+            'cantidad_actual' => $cantidad_actual,
+            'id_estado' => $id_estado,
+            'id_categoria' => $id_categoria,
+            'id_origen' => $id_origen,
+            'observacion' => $observacion,
+            'imagen' => $imagen,
+        ])->save();
+    }
+
+    public function update($id, $id_planta, $id_ubicacion, $fecha_siembra, $cantidad_inicial, $cantidad_actual, $id_estado = null, $id_categoria = null, $id_origen = null, $observacion = null, $imagen = null)
+    {
+        if (!$this->exists($id)) {
+            throw new \Exception("No existe el lote con ID: $id");
+        }
+        return $this->setId($id)->fill([
+            'id_planta' => $id_planta,
+            'id_ubicacion' => $id_ubicacion,
+            'fecha_siembra' => $fecha_siembra,
+            'cantidad_inicial' => $cantidad_inicial,
+            'cantidad_actual' => $cantidad_actual,
+            'id_estado' => $id_estado,
+            'id_categoria' => $id_categoria,
+            'id_origen' => $id_origen,
+            'observacion' => $observacion,
+            'imagen' => $imagen,
+        ])->save();
     }
 }

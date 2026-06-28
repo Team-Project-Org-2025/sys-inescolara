@@ -15,9 +15,7 @@ class Herramienta extends Database implements ReadableInterface, DeletableInterf
 
     protected array $validationRules = [
         'nombre'                    => ['type' => 'nombreProducto', 'required' => true],
-        'tipo'                      => ['type' => null,            'required' => false],
         'estado'                    => ['type' => null,            'required' => false],
-        'fecha_adquisicion'         => ['type' => null,            'required' => false],
         'fecha_ultimo_mantenimiento'=> ['type' => null,            'required' => false],
         'observacion'               => ['type' => null,            'required' => false],
         'cantidad'                  => ['type' => 'cantidad',      'required' => true],
@@ -45,8 +43,8 @@ class Herramienta extends Database implements ReadableInterface, DeletableInterf
     {
         try {
             $stmt = $this->db()->query("
-                SELECT id_herramienta AS id, nombre_herramienta, cantidad, tipo, estado,
-                       fecha_adquisicion, fecha_ultimo_mantenimiento, observacion, activo
+                SELECT id_herramienta AS id, nombre_herramienta, cantidad, estado,
+                       fecha_ultimo_mantenimiento, observacion, activo
                 FROM herramienta
                 WHERE activo = 1
                 ORDER BY nombre_herramienta ASC
@@ -66,8 +64,8 @@ class Herramienta extends Database implements ReadableInterface, DeletableInterf
     {
         try {
             $stmt = $this->db()->prepare("
-                SELECT id_herramienta AS id, nombre_herramienta, cantidad, tipo, estado,
-                       fecha_adquisicion, fecha_ultimo_mantenimiento, observacion
+                SELECT id_herramienta AS id, nombre_herramienta, cantidad, estado,
+                       fecha_ultimo_mantenimiento, observacion
                 FROM herramienta
                 WHERE id_herramienta = :id
             ");
@@ -90,27 +88,23 @@ class Herramienta extends Database implements ReadableInterface, DeletableInterf
         return $stmt->fetchColumn() > 0;
     }
 
-    public function add(string $nombre, int $cantidad = 1, ?string $tipo = null, string $estado = 'disponible', ?string $fechaAdquisicion = null, ?string $fechaUltimoMantenimiento = null, ?string $observacion = null): int
+    public function add(string $nombre, int $cantidad = 1, string $estado = 'disponible', ?string $fechaUltimoMantenimiento = null, ?string $observacion = null): int
     {
         $this->validateData([
             'nombre' => $nombre,
-            'tipo' => $tipo,
             'estado' => $estado,
-            'fecha_adquisicion' => $fechaAdquisicion,
             'fecha_ultimo_mantenimiento' => $fechaUltimoMantenimiento,
             'observacion' => $observacion,
             'cantidad' => $cantidad,
         ]);
         $stmt = $this->db()->prepare("
-            INSERT INTO herramienta (nombre_herramienta, cantidad, tipo, estado, fecha_adquisicion, fecha_ultimo_mantenimiento, observacion)
-            VALUES (:nombre, :cantidad, :tipo, :estado, :fecha_adquisicion, :fecha_ultimo_mantenimiento, :observacion)
+            INSERT INTO herramienta (nombre_herramienta, cantidad, estado, fecha_ultimo_mantenimiento, observacion)
+            VALUES (:nombre, :cantidad, :estado, :fecha_ultimo_mantenimiento, :observacion)
         ");
         $stmt->execute([
             ':nombre' => $nombre,
             ':cantidad' => $cantidad,
-            ':tipo' => $tipo,
             ':estado' => $estado,
-            ':fecha_adquisicion' => $fechaAdquisicion,
             ':fecha_ultimo_mantenimiento' => $fechaUltimoMantenimiento,
             ':observacion' => $observacion,
         ]);
@@ -118,13 +112,11 @@ class Herramienta extends Database implements ReadableInterface, DeletableInterf
         return (int) $this->db()->lastInsertId();
     }
 
-    public function update(int $id, string $nombre, int $cantidad = 1, ?string $tipo = null, string $estado = 'disponible', ?string $fechaAdquisicion = null, ?string $fechaUltimoMantenimiento = null, ?string $observacion = null): bool
+    public function update(int $id, string $nombre, int $cantidad = 1, string $estado = 'disponible', ?string $fechaUltimoMantenimiento = null, ?string $observacion = null): bool
     {
         $this->validateData([
             'nombre' => $nombre,
-            'tipo' => $tipo,
             'estado' => $estado,
-            'fecha_adquisicion' => $fechaAdquisicion,
             'fecha_ultimo_mantenimiento' => $fechaUltimoMantenimiento,
             'observacion' => $observacion,
             'cantidad' => $cantidad,
@@ -139,9 +131,7 @@ class Herramienta extends Database implements ReadableInterface, DeletableInterf
             UPDATE herramienta
             SET nombre_herramienta = :nombre,
                 cantidad = :cantidad,
-                tipo = :tipo,
                 estado = :estado,
-                fecha_adquisicion = :fecha_adquisicion,
                 fecha_ultimo_mantenimiento = :fecha_ultimo_mantenimiento,
                 observacion = :observacion
             WHERE id_herramienta = :id
@@ -150,18 +140,14 @@ class Herramienta extends Database implements ReadableInterface, DeletableInterf
             ':id' => $id,
             ':nombre' => $nombre,
             ':cantidad' => $cantidad,
-            ':tipo' => $tipo,
             ':estado' => $estado,
-            ':fecha_adquisicion' => $fechaAdquisicion,
             ':fecha_ultimo_mantenimiento' => $fechaUltimoMantenimiento,
             ':observacion' => $observacion,
         ]);
 
         AuditLog::record('UPDATE', 'herramienta', $id, $oldData, [
             'nombre' => $nombre,
-            'tipo' => $tipo,
             'estado' => $estado,
-            'fecha_adquisicion' => $fechaAdquisicion,
             'fecha_ultimo_mantenimiento' => $fechaUltimoMantenimiento,
             'observacion' => $observacion,
             'cantidad' => $cantidad,
@@ -206,13 +192,13 @@ class Herramienta extends Database implements ReadableInterface, DeletableInterf
                 ':id_herramienta'           => $usageData['id_herramienta'],
                 ':fecha_uso'                => $usageData['fecha_uso'],
                 ':observacion'              => $usageData['observacion'] ?? null,
-                ':estado_herramienta_post_uso' => $usageData['estado_herramienta_post_uso'] ?? 'ok',
+                ':estado_herramienta_post_uso' => $usageData['estado_herramienta_post_uso'] ?? 'disponible',
             ]);
             $usoId = (int)$this->db()->lastInsertId();
 
             $stmt = $this->db()->prepare("UPDATE herramienta SET estado = :estado WHERE id_herramienta = :id");
             $stmt->execute([
-                ':estado' => $usageData['estado_herramienta_post_uso'] ?? 'ok',
+                ':estado' => $usageData['estado_herramienta_post_uso'] ?? 'disponible',
                 ':id'     => $usageData['id_herramienta'],
             ]);
 
