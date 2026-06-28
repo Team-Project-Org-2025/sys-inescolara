@@ -37,7 +37,7 @@ include_once __DIR__ . '/../common/modal.php';
                 <?php endif; ?>
             </div>
 
-            <div class="card shadow-sm">
+                    <div class="card shadow-sm">
                 <div class="card-body">
                     <div class="table-responsive">
                         <table id="trazabilidadTable" class="table table-striped table-hover w-100">
@@ -47,8 +47,6 @@ include_once __DIR__ . '/../common/modal.php';
                                     <th>Planta</th>
                                     <th>Cantidad en Cuarentena</th>
                                     <th>Estado de Salud</th>
-                                    <th>Fecha de Cuarentena</th>
-                                    <th>Observación</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
@@ -76,13 +74,12 @@ include_once __DIR__ . '/../common/modal.php';
                 <div class="form-text">Cantidad de ejemplares que pasarán a cuarentena.</div>
             </div>
             <div class="col-md-6">
-                <label class="form-label" for="estado_salud">Estado de Salud <span class="text-danger">*</span></label>
-                    <select class="form-select" name="estado_salud" id="estado_salud" required>
+                <label class="form-label" for="id_estado">Estado de Salud <span class="text-danger">*</span></label>
+                    <select class="form-select" name="id_estado" id="id_estado" required>
                         <option value="">Seleccione un estado</option>
-                        <option value="Sospechoso">Sospechoso</option>
-                        <option value="Enfermo">Enfermo</option>
-                        <option value="Plaga">Plaga</option>
-                        <option value="Bajo observación">Bajo observación</option>
+                        <?php foreach ($estados as $e): ?>
+                        <option value="<?= $e['id'] ?>"><?= htmlspecialchars($e['nombre']) ?></option>
+                        <?php endforeach; ?>
                     </select>
             </div>
             <div class="col-md-6">
@@ -96,8 +93,56 @@ include_once __DIR__ . '/../common/modal.php';
         </div>
     <?php modal_form_end('trazabilidadForm'); ?>
 
+    <!-- Modal Editar Estado (quick) -->
+    <?php modal_form(['id' => 'editEstadoModal', 'title' => 'Cambiar Estado de Salud', 'formId' => 'editEstadoForm', 'hasHiddenId' => true, 'hiddenId' => 'editEstadoId', 'submitId' => 'editEstadoSubmitBtn', 'saveText' => 'Cambiar Estado']); ?>
+        <div class="mb-3">
+            <label class="form-label" for="editEstadoSelect">Nuevo Estado <span class="text-danger">*</span></label>
+            <select class="form-select" name="id_estado" id="editEstadoSelect" required>
+                <option value="">Seleccione...</option>
+                <?php foreach ($estados as $e): ?>
+                <option value="<?= $e['id'] ?>"><?= htmlspecialchars($e['nombre']) ?></option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <div class="alert alert-info mb-0" id="editEstadoAlert" style="display:none;">
+            <i class="fas fa-info-circle"></i> <span id="editEstadoAlertMsg"></span>
+        </div>
+    <?php modal_form_end('editEstadoForm'); ?>
+
+    <!-- Modal Ver Detalle -->
+    <?php modal_detail_start(['id' => 'viewTrazabilidadModal', 'title' => 'Detalle de Trazabilidad']); ?>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label fw-semibold text-muted small text-uppercase">Lote</label>
+                <p class="fs-5 fw-medium" id="viewTrazaLote">—</p>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-semibold text-muted small text-uppercase">Planta</label>
+                <p class="fs-5 fw-medium" id="viewTrazaPlanta">—</p>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-semibold text-muted small text-uppercase">Cantidad en Cuarentena</label>
+                <p class="fs-5 fw-medium" id="viewTrazaCantidad">—</p>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-semibold text-muted small text-uppercase">Estado de Salud</label>
+                <p class="fs-5 fw-medium" id="viewTrazaEstado">—</p>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-semibold text-muted small text-uppercase">Fecha de Cuarentena</label>
+                <p class="fs-5 fw-medium" id="viewTrazaFecha">—</p>
+            </div>
+            <div class="col-md-12">
+                <label class="form-label fw-semibold text-muted small text-uppercase">Observación</label>
+                <p class="fs-5 fw-medium" id="viewTrazaObs">—</p>
+            </div>
+        </div>
+    <?php modal_detail_end(); ?>
+
     <script>
         window.userPermisos = <?= json_encode($permisos) ?>;
+        window.estadoVivoId = <?= (int)$estadoVivoId ?>;
+        window.isAdmin = <?= \SysInescolara\helpers\Auth::isAdmin() ? 'true' : 'false' ?>;
     </script>
     <script src="<?= BASE_URL ?>public/assets/js/dashboard/notifications.js"></script>
     <?= $scripts_links ?>

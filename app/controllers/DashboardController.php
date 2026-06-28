@@ -683,6 +683,10 @@ function trazabilidad(): void
 
     require_once ROOT_PATH . 'vendor/autoload.php';
 
+    $loteModel = new \SysInescolara\models\Lote();
+    $estados = $loteModel->getEstados();
+    $estadoVivoId = $loteModel->getIdEstadoVivo();
+
     $view = ROOT_PATH . 'app/views/dashboard/trazabilidad.php';
 
     if (!is_file($view)) {
