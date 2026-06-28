@@ -76,7 +76,7 @@ include_once __DIR__ . '/../common/modal.php';
     </main>
 
     <!-- Restore Confirmation Modal -->
-    <?php modal_form(['id' => 'restoreModal', 'title' => 'Restaurar Respaldo', 'formId' => 'restoreForm', 'saveText' => 'Restaurar', 'saveClass' => 'warning']); ?>
+    <?php modal_form(['id' => 'restoreModal', 'title' => 'Restaurar Respaldo', 'formId' => 'restoreForm', 'saveText' => 'Restaurar', 'saveClass' => 'warning', 'submitId' => 'confirmRestoreBtn']); ?>
         <p class="mb-2"><strong>¿Estás seguro de que deseas restaurar este respaldo?</strong></p>
         <p class="text-danger mb-0"><i class="fas fa-ban"></i> Esta acción <strong>sobrescribirá</strong> los datos actuales de la base de datos. No se puede deshacer.</p>
         <hr>

@@ -197,23 +197,23 @@ class Backup
         $dbMain = getenv('DB_NAME') ?: 'sysinescolara';
         $dbSecName = getenv('DB_SEC_NAME') !== false ? getenv('DB_SEC_NAME') : 'SysInescolara-Seguridad';
 
-        if ($dbName === $dbMain) {
+        if (strcasecmp($dbName, $dbMain) === 0) {
             return [
                 'host' => $dbHost,
                 'port' => $dbPort,
                 'user' => $dbUser,
                 'pass' => $dbPass,
-                'name' => $dbName,
+                'name' => $dbMain,
             ];
         }
 
-        if ($dbName === $dbSecName) {
+        if (strcasecmp($dbName, $dbSecName) === 0) {
             return [
                 'host' => getenv('DB_SEC_HOST') !== false ? getenv('DB_SEC_HOST') : $dbHost,
                 'port' => getenv('DB_SEC_PORT') !== false ? getenv('DB_SEC_PORT') : $dbPort,
                 'user' => getenv('DB_SEC_USER') !== false ? getenv('DB_SEC_USER') : $dbUser,
                 'pass' => getenv('DB_SEC_PASSWORD') !== false ? getenv('DB_SEC_PASSWORD') : $dbPass,
-                'name' => $dbName,
+                'name' => $dbSecName,
             ];
         }
 
