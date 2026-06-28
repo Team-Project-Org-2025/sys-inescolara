@@ -160,7 +160,10 @@ class AsignarTarea extends Database implements ReadableInterface
         $stmt = $instance->db()->prepare("SELECT * FROM asignar_tarea WHERE id_asignacion = :id");
         $stmt->execute([':id' => $id]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $row ? new static($row) : null;
+        if (!$row) return null;
+        $assignment = new static($row);
+        $assignment->id = (int)$row['id_asignacion'];
+        return $assignment;
     }
 
     public static function all(): array

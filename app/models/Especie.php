@@ -135,7 +135,10 @@ class Especie extends Database implements ReadableInterface, DeletableInterface
         $stmt = $instance->db()->prepare("SELECT * FROM especie WHERE id_especie = :id");
         $stmt->execute([':id' => $id]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $row ? new static($row) : null;
+        if (!$row) return null;
+        $species = new static($row);
+        $species->id = (int)$row['id_especie'];
+        return $species;
     }
 
     public static function all(): array

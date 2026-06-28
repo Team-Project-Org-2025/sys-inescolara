@@ -189,7 +189,10 @@ class Planta extends Database implements ReadableInterface, DeletableInterface
         $stmt = $instance->db()->prepare("SELECT * FROM plantas WHERE id_planta = :id");
         $stmt->execute([':id' => $id]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $row ? new static($row) : null;
+        if (!$row) return null;
+        $plant = new static($row);
+        $plant->id = (int)$row['id_planta'];
+        return $plant;
     }
 
     public static function all(): array

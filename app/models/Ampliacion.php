@@ -237,11 +237,13 @@ class Ampliacion extends Database implements ReadableInterface
 
             $stmtUpdateLot = $this->db()->prepare("UPDATE lote SET cantidad_actual = GREATEST(0, cantidad_actual - :cantidad) WHERE id_lote = :id AND cantidad_actual >= :cantidad2");
 
+            $idEstadoVivoAmpliacion = (int)$this->db()->query("SELECT id_estado FROM estado WHERE nombre = 'vivo' LIMIT 1")->fetchColumn();
+            $idOrigenIntercambio = (int)$this->db()->query("SELECT id_origen FROM origen WHERE nombre = 'Ampliación' LIMIT 1")->fetchColumn();
             $stmtFindLot = $this->db()->prepare("SELECT id_lote FROM lote WHERE id_planta = :id_planta AND id_ubicacion = :id_ubicacion AND activo = 1 LIMIT 1");
 
             $stmtCreateLot = $this->db()->prepare("
-                INSERT INTO lote (id_planta, id_ubicacion, fecha_siembra, cantidad_inicial, cantidad_actual, estado, origen, observacion)
-                VALUES (:id_planta, :id_ubicacion, :fecha, :cantidad_ini, :cantidad_act, 'Activo', 'Intercambio', :observacion)
+                INSERT INTO lote (id_planta, id_ubicacion, fecha_siembra, cantidad_inicial, cantidad_actual, id_estado, id_origen, observacion)
+                VALUES (:id_planta, :id_ubicacion, :fecha, :cantidad_ini, :cantidad_act, :id_estado, :id_origen, :observacion)
             ");
 
             $stmtIncreaseLot = $this->db()->prepare("UPDATE lote SET cantidad_actual = cantidad_actual + :cantidad WHERE id_lote = :id");
@@ -305,6 +307,8 @@ class Ampliacion extends Database implements ReadableInterface
                         ':fecha' => $fecha,
                         ':cantidad_ini' => $cantidad,
                         ':cantidad_act' => $cantidad,
+                        ':id_estado' => $idEstadoVivoAmpliacion,
+                        ':id_origen' => $idOrigenIntercambio,
                         ':observacion' => $observacion,
                     ]);
                     $idLote = (int)$this->db()->lastInsertId();

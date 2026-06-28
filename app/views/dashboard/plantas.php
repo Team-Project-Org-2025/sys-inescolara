@@ -186,10 +186,6 @@ include_once __DIR__ . '/../common/modal.php';
                 <label class="form-label fw-semibold text-muted small text-uppercase">Cantidad Total</label>
                 <p class="fs-5 fw-medium" id="viewPlantCantidad">—</p>
             </div>
-            <div class="col-md-6">
-                <label class="form-label fw-semibold text-muted small text-uppercase">Precio Vigente</label>
-                <p class="fs-5 fw-medium" id="viewPlantPrecio">—</p>
-            </div>
         </div>
     <?php modal_detail_end(); ?>
 

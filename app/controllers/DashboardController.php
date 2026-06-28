@@ -193,6 +193,11 @@ function lotes(): void
     $plants = $plantModel->getAll();
     $locationModel = new \SysInescolara\models\Ubicacion();
     $locations = $locationModel->getAll();
+    $loteModel = new \SysInescolara\models\Lote();
+    $estados = $loteModel->getEstados();
+    $categorias = $loteModel->getCategorias();
+    $origenes = $loteModel->getOrigenes();
+    $estadoVivoId = $loteModel->getIdEstadoVivo();
 
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'lotes.php';
@@ -677,6 +682,10 @@ function trazabilidad(): void
     dashboardCheckPermiso('trazabilidad:ver');
 
     require_once ROOT_PATH . 'vendor/autoload.php';
+
+    $loteModel = new \SysInescolara\models\Lote();
+    $estados = $loteModel->getEstados();
+    $estadoVivoId = $loteModel->getIdEstadoVivo();
 
     $view = ROOT_PATH . 'app/views/dashboard/trazabilidad.php';
 

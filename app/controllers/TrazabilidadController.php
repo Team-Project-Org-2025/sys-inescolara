@@ -16,6 +16,8 @@ function index(): void
                 'GET_get_batches'          => get_batches(),
                 'POST_add_ajax'            => add_ajax(),
                 'POST_edit_ajax'           => edit_ajax(),
+                'POST_update_estado_ajax'  => update_estado_ajax(),
+                'POST_restore_ajax'        => restore_ajax(),
                 'POST_delete_ajax'         => delete_ajax(),
                 default                    => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
             };
@@ -24,6 +26,10 @@ function index(): void
         }
         return;
     }
+
+    $loteModel = new Lote();
+    $estados = $loteModel->getEstados();
+    $estadoVivoId = $loteModel->getIdEstadoVivo();
 
     $view = ROOT_PATH . 'app/views/dashboard/trazabilidad.php';
     if (!is_file($view)) {
@@ -39,6 +45,8 @@ function get_batches(): void { checkModuleAuth(); trazabilidad_getBatchesAjax();
 function add_ajax(): void { checkModuleAuth(); checkPermisoOrFail('trazabilidad:crear'); trazabilidad_handleAddEdit('add'); }
 function edit_ajax(): void { checkModuleAuth(); checkPermisoOrFail('trazabilidad:editar'); trazabilidad_handleAddEdit('edit'); }
 function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('trazabilidad:eliminar'); trazabilidad_handleDelete(); }
+function update_estado_ajax(): void { checkModuleAuth(); checkPermisoOrFail('trazabilidad:editar'); trazabilidad_handleUpdateEstado(); }
+function restore_ajax(): void { checkModuleAuth(); checkPermisoOrFail('trazabilidad:editar'); trazabilidad_handleRestore(); }
 
 function trazabilidad_handleAddEdit(string $mode): void
 {
@@ -63,8 +71,8 @@ function trazabilidad_handleAddEdit(string $mode): void
         }
     }
 
-    $estadoSalud = trim((string)($_POST['estado_salud'] ?? ''));
-    if ($estadoSalud === '') throw new \Exception('El estado de salud es requerido.');
+    $idEstado = (int)($_POST['id_estado'] ?? 0);
+    if ($idEstado <= 0) throw new \Exception('El estado de salud es requerido.');
 
     $fechaRegistro = trim((string)($_POST['fecha_registro'] ?? ''));
     if ($fechaRegistro === '') throw new \Exception('La fecha de cuarentena es requerida.');
@@ -84,7 +92,7 @@ function trazabilidad_handleAddEdit(string $mode): void
         try {
             $model->beginTransaction();
 
-            $model->add($idLote, $cantidad, $estadoSalud, $fechaRegistro, $observacion);
+            $model->add($idLote, $cantidad, $idEstado, $fechaRegistro, $observacion);
             $newId = $model->getLastInsertId() ?? 0;
 
             $model->deductBatchStock($idLote, $cantidad);
@@ -116,7 +124,7 @@ function trazabilidad_handleAddEdit(string $mode): void
         try {
             $model->restoreBatchStock($oldLoteId, $oldCantidad);
             $model->deductBatchStock($idLote, $cantidad);
-            $model->update($id, $idLote, $cantidad, $estadoSalud, $fechaRegistro, $observacion);
+            $model->update($id, $idLote, $cantidad, $idEstado, $fechaRegistro, $observacion);
             $model->commit();
         } catch (\Exception $e) {
             $model->rollback();
@@ -139,17 +147,72 @@ function trazabilidad_handleAddEdit(string $mode): void
             } else {
                 $model->restoreBatchStock($idLote, abs($diff));
             }
-            $model->update($id, $idLote, $cantidad, $estadoSalud, $fechaRegistro, $observacion);
+            $model->update($id, $idLote, $cantidad, $idEstado, $fechaRegistro, $observacion);
             $model->commit();
         } catch (\Exception $e) {
             $model->rollback();
             throw $e;
         }
     } else {
-        $model->update($id, $idLote, $cantidad, $estadoSalud, $fechaRegistro, $observacion);
+        $model->update($id, $idLote, $cantidad, $idEstado, $fechaRegistro, $observacion);
     }
 
     jsonResponse(['success' => true, 'message' => 'Monitoreo actualizado correctamente.']);
+}
+
+function trazabilidad_handleUpdateEstado(): void
+{
+    $model = new Trazabilidad();
+
+    $id = (int)($_POST['id'] ?? 0);
+    if ($id <= 0) throw new \Exception('ID inválido');
+
+    $idEstado = (int)($_POST['id_estado'] ?? 0);
+    if ($idEstado <= 0) throw new \Exception('Debe seleccionar un estado.');
+
+    $data = $model->getById($id);
+    if (!$data) throw new \Exception('No existe el registro de trazabilidad');
+
+    $model->update($id, (int)$data['id_lote'], (int)$data['cantidad'], $idEstado, $data['fecha_registro'], $data['observacion']);
+
+    jsonResponse(['success' => true, 'message' => 'Estado actualizado correctamente.']);
+}
+
+function trazabilidad_handleRestore(): void
+{
+    $model = new Trazabilidad();
+    $batchModel = new Lote();
+    $estadoVivoId = $batchModel->getIdEstadoVivo();
+
+    $id = (int)($_POST['id'] ?? 0);
+    if ($id <= 0) throw new \Exception('ID inválido');
+
+    $data = $model->getById($id);
+    if (!$data) throw new \Exception('No existe el registro de trazabilidad');
+
+    $idLote = (int)($data['id_lote'] ?? 0);
+    $cantidad = (int)($data['cantidad'] ?? 0);
+
+    try {
+        $model->beginTransaction();
+
+        $model->update($id, $idLote, $cantidad, $estadoVivoId, $data['fecha_registro'], $data['observacion']);
+        $model->delete($id);
+
+        if ($idLote > 0 && $cantidad > 0) {
+            $lote = $batchModel->getById($idLote);
+            if ($lote) {
+                $model->restoreBatchStock($idLote, $cantidad);
+            }
+        }
+
+        $model->commit();
+
+        jsonResponse(['success' => true, 'message' => 'Ejemplar restaurado correctamente. Stock devuelto al lote.']);
+    } catch (\Exception $e) {
+        $model->rollback();
+        throw $e;
+    }
 }
 
 function trazabilidad_handleDelete(): void

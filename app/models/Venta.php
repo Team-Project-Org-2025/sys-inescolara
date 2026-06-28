@@ -138,7 +138,7 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
                 throw new \Exception('No se encontraron detalles para esta venta.');
             }
 
-            $stmtStockLote = $this->db()->prepare("UPDATE lote SET cantidad_actual = cantidad_actual + :cantidad, estado = IF(cantidad_actual + :cantidad2 > 0, 'Activo', estado) WHERE id_lote = :id_lote");
+            $stmtStockLote = $this->db()->prepare("UPDATE lote SET cantidad_actual = cantidad_actual + :cantidad, id_estado = IF(cantidad_actual + :cantidad2 > 0, (SELECT id_estado FROM estado WHERE nombre = 'vivo' LIMIT 1), id_estado) WHERE id_lote = :id_lote");
             $stmtStockInsumo = $this->db()->prepare("UPDATE insumo SET stock_actual = stock_actual + :cantidad WHERE id_insumo = :id_insumo");
             foreach ($detalles as $det) {
                 if (($det['tipo_item'] ?? 'planta') === 'insumo') {
