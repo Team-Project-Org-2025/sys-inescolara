@@ -1007,7 +1007,7 @@ class Reports extends Database
 
         try {
             $sql = "SELECT c.id_calculo, p.nombre_comun AS planta, l.id_lote, l.cantidad_actual,
-                           c.costo_mano_obra, c.costo_total_insumo, c.porcentaje_ganancia,
+                           c.precio_planta_base, c.costo_total_insumo, c.porcentaje_ganancia,
                            c.precio_final_sugerido, c.fecha_calculo
                     FROM calculo_precio c
                     LEFT JOIN lote l ON c.id_lote = l.id_lote
@@ -1025,7 +1025,7 @@ class Reports extends Database
             $chartValues = array_map('floatval', array_column($rows, 'precio_final_sugerido'));
 
             return [
-                'columns' => ['ID', 'Planta', 'Lote', 'Stock', 'Mano Obra', 'Costo Insumos', '% Ganancia', 'Precio Final', 'Fecha Cálculo'],
+                'columns' => ['ID', 'Planta', 'Lote', 'Stock', 'Precio Base', 'Costo Insumos', '% Ganancia', 'Precio Final', 'Fecha Cálculo'],
                 'rows' => $rows,
                 'chart' => [
                     'type' => 'bar',

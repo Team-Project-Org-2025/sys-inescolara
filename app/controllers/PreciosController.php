@@ -3,6 +3,7 @@
 require_once __DIR__ . '/controller_helpers.php';
 
 use SysInescolara\models\CalculoPrecio;
+use SysInescolara\models\Insumo;
 use SysInescolara\models\Lote;
 use SysInescolara\models\Planta;
 
@@ -13,12 +14,14 @@ function index(): void
     if (isAjaxRequest() && $action !== '') {
         try {
             match ($_SERVER['REQUEST_METHOD'] . '_' . $action) {
-                'GET_get_prices'         => get_prices(),
-                'POST_edit_ajax'         => edit_ajax(),
-                'POST_delete_ajax'       => delete_ajax(),
-                'GET_calcular_por_planta' => calcular_por_planta(),
-                'POST_guardar_por_planta' => guardar_por_planta(),
-                default                  => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
+                'GET_get_prices'    => get_prices(),
+                'GET_get_detalle'   => get_detalle(),
+                'GET_get_lotes'     => get_lotes(),
+                'GET_get_insumos'   => get_insumos(),
+                'POST_add_ajax'     => add_ajax(),
+                'POST_edit_ajax'    => edit_ajax(),
+                'POST_delete_ajax'  => delete_ajax(),
+                default            => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
             };
         } catch (\Exception $e) {
             handleError($e, true);
@@ -39,35 +42,86 @@ function index(): void
 }
 
 function get_prices(): void { checkModuleAuth(); prices_getPricesAjax(); }
-function calcular_por_planta(): void { checkModuleAuth(); prices_calcularPorPlantaAjax(); }
-function guardar_por_planta(): void { checkModuleAuth(); checkPermisoOrFail('precios:crear'); prices_guardarPorPlantaAjax(); }
+function get_detalle(): void { checkModuleAuth(); prices_getDetalleAjax(); }
+function get_lotes(): void { checkModuleAuth(); prices_getLotesAjax(); }
+function get_insumos(): void { checkModuleAuth(); prices_getInsumosAjax(); }
+function add_ajax(): void { checkModuleAuth(); checkPermisoOrFail('precios:crear'); prices_handleAdd(); }
 function edit_ajax(): void { checkModuleAuth(); checkPermisoOrFail('precios:editar'); prices_handleEdit(); }
 function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('precios:eliminar'); prices_handleDelete(); }
+
+function prices_handleAdd(): void
+{
+    $model = new CalculoPrecio();
+    $data = getRequestData();
+
+    $idLote = (int)($data['id_lote'] ?? 0);
+    $precioPlantaBase = (float)($data['precio_planta_base'] ?? 0);
+    $porcentajeGanancia = (float)($data['porcentaje_ganancia'] ?? 0);
+    $costoTotalInsumo = (float)($data['costo_total_insumo'] ?? 0);
+    $precioFinalSugerido = (float)($data['precio_final_sugerido'] ?? 0);
+    $detalles = $data['detalles'] ?? [];
+
+    if ($idLote <= 0 || $precioPlantaBase <= 0) {
+        jsonResponse(['success' => false, 'message' => 'Datos inválidos: lote y precio base requeridos.'], 400);
+    }
+
+    $loteModel = new Lote();
+    if (!$loteModel->exists($idLote)) {
+        jsonResponse(['success' => false, 'message' => 'El lote seleccionado no existe.'], 400);
+    }
+
+    $fechaCalculo = !empty($data['fecha_calculo']) ? $data['fecha_calculo'] : date('Y-m-d');
+
+    if ($precioFinalSugerido <= 0) {
+        $precioFinalSugerido = ($precioPlantaBase + $costoTotalInsumo) * (1 + $porcentajeGanancia / 100);
+    }
+
+    $success = $model->add($idLote, $precioPlantaBase, $costoTotalInsumo, $porcentajeGanancia, $precioFinalSugerido, $fechaCalculo);
+    if (!$success) {
+        jsonResponse(['success' => false, 'message' => 'Error al guardar el cálculo.'], 500);
+    }
+
+    $idCalculo = $model->getLastInsertId();
+    if (!empty($detalles) && is_array($detalles)) {
+        foreach ($detalles as $d) {
+            $idInsumo = (int)($d['id_insumo'] ?? 0);
+            $monto = (float)($d['monto'] ?? 0);
+            if ($idInsumo > 0 && $monto > 0) {
+                $model->addDetalle($idCalculo, $idInsumo, $monto);
+            }
+        }
+        $model->recalcularTotalInsumo($idCalculo);
+    }
+
+    jsonResponse(['success' => true, 'message' => 'Cálculo de precio creado correctamente', 'id' => $idCalculo]);
+}
 
 function prices_handleEdit(): void
 {
     $model = new CalculoPrecio();
-    $batchModel = new Lote();
+    $data = getRequestData();
 
-    $id = (int)($_POST['id'] ?? 0);
+    $id = (int)($data['id'] ?? 0);
     if ($id <= 0) throw new \Exception('ID inválido');
 
-    $idLote = (int)($_POST['id_lote'] ?? 0);
+    $idLote = (int)($data['id_lote'] ?? 0);
+    $precioPlantaBase = (float)($data['precio_planta_base'] ?? 0);
+    $porcentajeGanancia = (float)($data['porcentaje_ganancia'] ?? 0);
+    $costoTotalInsumo = (float)($data['costo_total_insumo'] ?? 0);
+    $precioFinalSugerido = (float)($data['precio_final_sugerido'] ?? 0);
+    $detalles = $data['detalles'] ?? [];
+
     if ($idLote <= 0) throw new \Exception('El lote es requerido.');
-    if (!$batchModel->exists($idLote)) throw new \Exception('El lote seleccionado no existe.');
-
-    $costoTotalInsumo = isset($_POST['costo_total_insumo']) ? floatval($_POST['costo_total_insumo']) : 0;
-    $porcentajeGanancia = isset($_POST['porcentaje_ganancia']) ? floatval($_POST['porcentaje_ganancia']) : 0;
-
-    $precioFinalSugerido = isset($_POST['precio_final_sugerido']) ? floatval($_POST['precio_final_sugerido']) : 0;
     if ($precioFinalSugerido <= 0) throw new \Exception('El precio final sugerido debe ser mayor a cero.');
 
-    $fechaCalculo = trim((string)($_POST['fecha_calculo'] ?? ''));
-    if ($fechaCalculo === '') $fechaCalculo = date('Y-m-d');
+    $fechaCalculo = !empty($data['fecha_calculo']) ? $data['fecha_calculo'] : date('Y-m-d');
 
-    $model->update($id, $idLote, 0, $costoTotalInsumo, $porcentajeGanancia, $precioFinalSugerido, $fechaCalculo);
+    $model->update($id, $idLote, $precioPlantaBase, $costoTotalInsumo, $porcentajeGanancia, $precioFinalSugerido, $fechaCalculo);
 
-    jsonResponse(['success' => true, 'message' => 'Cálculo de precio actualizado correctamente', 'price' => ['id' => $id]]);
+    $model->saveDetalles($id, $detalles);
+    $model->recalcularTotalInsumo($id);
+
+    jsonResponse(['success' => true, 'message' => 'Cálculo de precio actualizado correctamente', 'id' => $id]);
 }
 
 function prices_handleDelete(): void
@@ -78,7 +132,7 @@ function prices_handleDelete(): void
     if (!$model->exists($id)) throw new \Exception('No existe el cálculo de precio');
 
     $model->delete($id);
-    jsonResponse(['success' => true, 'message' => 'Cálculo de precio eliminado correctamente', 'priceId' => $id]);
+    jsonResponse(['success' => true, 'message' => 'Cálculo de precio desactivado correctamente', 'priceId' => $id]);
 }
 
 function prices_getPricesAjax(): void
@@ -88,65 +142,46 @@ function prices_getPricesAjax(): void
     jsonResponse(['success' => true, 'prices' => $prices, 'count' => count($prices)]);
 }
 
-function prices_calcularPorPlantaAjax(): void
+function prices_getDetalleAjax(): void
 {
-    $idPlanta = (int)($_GET['id_planta'] ?? 0);
-    $categoria = !empty($_GET['categoria']) ? $_GET['categoria'] : null;
-    if ($idPlanta <= 0) {
-        jsonResponse(['success' => false, 'message' => 'Seleccione una planta.'], 400);
+    $idCalculo = (int)($_GET['id_calculo'] ?? 0);
+    if ($idCalculo <= 0) {
+        jsonResponse(['success' => false, 'message' => 'ID inválido'], 400);
     }
     $model = new CalculoPrecio();
-    $result = $model->calcularCostoPorPlanta($idPlanta, $categoria);
-    jsonResponse(['success' => true, 'data' => $result]);
+    $detalles = $model->getDetalles($idCalculo);
+    jsonResponse(['success' => true, 'detalles' => $detalles]);
 }
 
-function prices_guardarPorPlantaAjax(): void
+function prices_getLotesAjax(): void
 {
-    $data = getRequestData();
-    $idPlanta = (int)($data['id_planta'] ?? 0);
-    $porcentajeGanancia = (float)($data['porcentaje_ganancia'] ?? 0);
-    $categoria = !empty($data['categoria']) ? $data['categoria'] : null;
-    $precioFinalSugerido = (float)($data['precio_final_sugerido'] ?? 0);
-    $fechaCalculo = $data['fecha_calculo'] ?? date('Y-m-d');
-    $loteIds = isset($data['lote_ids']) ? (array)$data['lote_ids'] : [];
-    $loteCostos = isset($data['lote_costos']) && is_array($data['lote_costos']) ? $data['lote_costos'] : [];
-
-    if ($idPlanta <= 0 || $precioFinalSugerido <= 0) {
-        jsonResponse(['success' => false, 'message' => 'Datos inválidos.'], 400);
+    $loteModel = new Lote();
+    $lotes = $loteModel->all();
+    $data = [];
+    foreach ($lotes as $l) {
+        $data[] = [
+            'id_lote'        => (int)$l['id'],
+            'id_planta'      => (int)($l['id_planta'] ?? 0),
+            'planta_nombre'  => $l['planta_nombre'] ?? '',
+            'categoria'      => $l['categoria_nombre'] ?? '',
+            'cantidad_actual'=> (int)($l['cantidad_actual'] ?? 0),
+        ];
     }
+    jsonResponse(['success' => true, 'lotes' => $data]);
+}
 
-    $model = new CalculoPrecio();
-    $batchModel = new Lote();
-    $saved = 0;
-
-    foreach ($loteIds as $idLote) {
-        $idLote = (int)$idLote;
-        if ($idLote <= 0) continue;
-
-        $costoTotal = isset($loteCostos[$idLote]) ? (float)$loteCostos[$idLote] : 0;
-
-        if ($model->existsByBatch($idLote)) {
-            $existing = $model->getAll();
-            $existingId = null;
-            foreach ($existing as $e) {
-                if ((int)$e['id_lote'] === $idLote) {
-                    $existingId = (int)$e['id'];
-                    break;
-                }
-            }
-            if ($existingId) {
-                $model->update($existingId, $idLote, 0, $costoTotal, $porcentajeGanancia, $precioFinalSugerido, $fechaCalculo);
-            }
-        } else {
-            $model->add($idLote, 0, $costoTotal, $porcentajeGanancia, $precioFinalSugerido, $fechaCalculo);
-            $existingId = $model->getLastInsertId() ?? 0;
-        }
-        $saved++;
+function prices_getInsumosAjax(): void
+{
+    $insumoModel = new Insumo();
+    $insumos = $insumoModel->getAll();
+    $data = [];
+    foreach ($insumos as $i) {
+        $data[] = [
+            'id_insumo'      => (int)$i['id_insumo'],
+            'nombre_insumo'  => $i['nombre_insumo'] ?? '',
+            'simbolo'        => $i['simbolo'] ?? '',
+            'costo_unitario' => (float)($i['costo_unitario_actual'] ?? 0),
+        ];
     }
-
-    AuditLog::record('CREATE', 'calculo_precio_por_planta', $idPlanta, null, [
-        'lotes' => $saved, 'ganancia' => $porcentajeGanancia, 'precio' => $precioFinalSugerido,
-    ]);
-
-    jsonResponse(['success' => true, 'message' => "Precio guardado para $saved lote(s) correctamente."]);
+    jsonResponse(['success' => true, 'insumos' => $data]);
 }

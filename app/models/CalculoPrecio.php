@@ -15,8 +15,7 @@ class CalculoPrecio extends Database implements ReadableInterface, DeletableInte
 
     protected array $validationRules = [
         'id_lote'              => ['type' => null,   'required' => true],
-        'costo_mano_obra'      => ['type' => 'precio','required' => true],
-        'costo_total_insumo'   => ['type' => 'precio','required' => true],
+        'precio_planta_base'   => ['type' => 'precio','required' => true],
         'porcentaje_ganancia'  => ['type' => 'precio','required' => true],
         'precio_final_sugerido'=> ['type' => 'precio','required' => true],
         'fecha_calculo'        => ['type' => null,   'required' => true],
@@ -38,9 +37,9 @@ class CalculoPrecio extends Database implements ReadableInterface, DeletableInte
     {
         try {
             $sql = "SELECT
-                        c.id_calculo AS id, c.id_lote, c.costo_mano_obra, c.costo_total_insumo,
-                        c.porcentaje_ganancia,
-                        c.precio_final_sugerido, c.fecha_calculo,
+                        c.id_calculo AS id, c.id_lote, c.precio_planta_base,
+                        c.costo_total_insumo, c.porcentaje_ganancia,
+                        c.precio_final_sugerido, c.fecha_calculo, c.vigente,
                         l.cantidad_actual,
                         p.nombre_comun AS planta_nombre,
                         p.id_planta
@@ -66,9 +65,12 @@ class CalculoPrecio extends Database implements ReadableInterface, DeletableInte
                 LEFT JOIN plantas p ON l.id_planta = p.id_planta
                 WHERE c.id_calculo = :id
             ");
-            // c.* incluye costo_agua_lote; se ignora (columna mantenida por compatibilidad BD)
             $stmt->execute([':id' => $id]);
-            return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($row) {
+                $row['detalles'] = $this->getDetalles($id);
+            }
+            return $row ?: null;
         } catch (\Throwable $e) {
             error_log('Error en CalculoPrecio::getById: ' . $e->getMessage());
             return null;
@@ -86,89 +88,65 @@ class CalculoPrecio extends Database implements ReadableInterface, DeletableInte
     {
         try {
             $oldData = $this->getById($id);
-            $this->db()->beginTransaction();
-            $stmt = $this->db()->prepare("DELETE FROM calculo_precio WHERE id_calculo = :id");
+            $stmt = $this->db()->prepare("UPDATE calculo_precio SET vigente = 0 WHERE id_calculo = :id");
             $stmt->execute([':id' => $id]);
-            $this->db()->commit();
-            AuditLog::record('DELETE', 'calculo_precio', $id, $oldData, null);
+            AuditLog::record('DEACTIVATE', 'calculo_precio', $id, $oldData, null);
             return true;
         } catch (\Throwable $e) {
-            $this->db()->rollBack();
             error_log('Error en CalculoPrecio::delete: ' . $e->getMessage());
             return false;
         }
     }
 
-    public function existsByBatch(int $idLote, ?int $excludeId = null): bool
-    {
-        $sql = "SELECT COUNT(*) FROM calculo_precio WHERE id_lote = :id_lote";
-        $params = [':id_lote' => $idLote];
-        if ($excludeId !== null) {
-            $sql .= " AND id_calculo != :exclude_id";
-            $params[':exclude_id'] = $excludeId;
-        }
-        $stmt = $this->db()->prepare($sql);
-        $stmt->execute($params);
-        return $stmt->fetchColumn() > 0;
-    }
-
-    public function getBatchIdsWithPrices(): array
-    {
-        try {
-            $stmt = $this->db()->query("SELECT DISTINCT id_lote FROM calculo_precio");
-            return $stmt ? $stmt->fetchAll(PDO::FETCH_COLUMN) : [];
-        } catch (\Throwable $e) {
-            return [];
-        }
-    }
-
     public function add(
         int $idLote,
-        float $costoManoObra,
+        float $precioPlantaBase,
         float $costoTotalInsumo,
         float $porcentajeGanancia,
         float $precioFinalSugerido,
         string $fechaCalculo
     ): bool {
         $this->validateData([
-            'id_lote' => $idLote,
-            'costo_mano_obra' => $costoManoObra,
-            'costo_total_insumo' => $costoTotalInsumo,
-            'porcentaje_ganancia' => $porcentajeGanancia,
-            'precio_final_sugerido' => $precioFinalSugerido,
-            'fecha_calculo' => $fechaCalculo,
+            'id_lote'              => $idLote,
+            'precio_planta_base'   => $precioPlantaBase,
+            'porcentaje_ganancia'  => $porcentajeGanancia,
+            'precio_final_sugerido'=> $precioFinalSugerido,
+            'fecha_calculo'        => $fechaCalculo,
         ]);
         try {
             $this->db()->beginTransaction();
 
+            $this->desmarcarVigentes($idLote);
+
             $stmt = $this->db()->prepare("
                 INSERT INTO calculo_precio
-                    (id_lote, costo_mano_obra, costo_total_insumo,
+                    (id_lote, precio_planta_base, costo_total_insumo,
                      porcentaje_ganancia, precio_final_sugerido,
-                     fecha_calculo)
+                     fecha_calculo, vigente)
                 VALUES
-                    (:id_lote, :costo_mano_obra, :costo_total_insumo,
+                    (:id_lote, :precio_planta_base, :costo_total_insumo,
                      :porcentaje_ganancia, :precio_final_sugerido,
-                     :fecha_calculo)
+                     :fecha_calculo, 1)
             ");
             $stmt->execute([
-                ':id_lote' => $idLote,
-                ':costo_mano_obra' => $costoManoObra,
-                ':costo_total_insumo' => $costoTotalInsumo,
-                ':porcentaje_ganancia' => $porcentajeGanancia,
-                ':precio_final_sugerido' => $precioFinalSugerido,
-                ':fecha_calculo' => $fechaCalculo,
+                ':id_lote'              => $idLote,
+                ':precio_planta_base'   => $precioPlantaBase,
+                ':costo_total_insumo'   => $costoTotalInsumo,
+                ':porcentaje_ganancia'  => $porcentajeGanancia,
+                ':precio_final_sugerido'=> $precioFinalSugerido,
+                ':fecha_calculo'        => $fechaCalculo,
             ]);
 
             $this->_lastInsertId = (int)$this->db()->lastInsertId();
             $this->db()->commit();
             AuditLog::record('CREATE', 'calculo_precio', $this->_lastInsertId, null, [
-                'id_lote' => $idLote,
-                'costo_mano_obra' => $costoManoObra,
-                'costo_total_insumo' => $costoTotalInsumo,
-                'porcentaje_ganancia' => $porcentajeGanancia,
-                'precio_final_sugerido' => $precioFinalSugerido,
-                'fecha_calculo' => $fechaCalculo,
+                'id_lote'              => $idLote,
+                'precio_planta_base'   => $precioPlantaBase,
+                'costo_total_insumo'   => $costoTotalInsumo,
+                'porcentaje_ganancia'  => $porcentajeGanancia,
+                'precio_final_sugerido'=> $precioFinalSugerido,
+                'fecha_calculo'        => $fechaCalculo,
+                'vigente'              => 1,
             ]);
             return true;
         } catch (\Throwable $e) {
@@ -181,19 +159,18 @@ class CalculoPrecio extends Database implements ReadableInterface, DeletableInte
     public function update(
         int $id,
         int $idLote,
-        float $costoManoObra,
+        float $precioPlantaBase,
         float $costoTotalInsumo,
         float $porcentajeGanancia,
         float $precioFinalSugerido,
         string $fechaCalculo
     ): bool {
         $this->validateData([
-            'id_lote' => $idLote,
-            'costo_mano_obra' => $costoManoObra,
-            'costo_total_insumo' => $costoTotalInsumo,
-            'porcentaje_ganancia' => $porcentajeGanancia,
-            'precio_final_sugerido' => $precioFinalSugerido,
-            'fecha_calculo' => $fechaCalculo,
+            'id_lote'              => $idLote,
+            'precio_planta_base'   => $precioPlantaBase,
+            'porcentaje_ganancia'  => $porcentajeGanancia,
+            'precio_final_sugerido'=> $precioFinalSugerido,
+            'fecha_calculo'        => $fechaCalculo,
         ]);
         if (!$this->exists($id)) {
             throw new \Exception('No existe el cálculo de precio solicitado para modificar.');
@@ -204,115 +181,150 @@ class CalculoPrecio extends Database implements ReadableInterface, DeletableInte
         $stmt = $this->db()->prepare("
             UPDATE calculo_precio
             SET id_lote = ?,
-                costo_mano_obra = ?,
+                precio_planta_base = ?,
                 costo_total_insumo = ?,
                 porcentaje_ganancia = ?,
                 precio_final_sugerido = ?,
                 fecha_calculo = ?
             WHERE id_calculo = ?
         ");
-        $stmt->execute([$idLote, $costoManoObra, $costoTotalInsumo, $porcentajeGanancia, $precioFinalSugerido, $fechaCalculo, $id]);
+        $stmt->execute([$idLote, $precioPlantaBase, $costoTotalInsumo, $porcentajeGanancia, $precioFinalSugerido, $fechaCalculo, $id]);
 
         AuditLog::record('UPDATE', 'calculo_precio', $id, $oldData, [
-            'id_lote' => $idLote,
-            'costo_mano_obra' => $costoManoObra,
-            'costo_total_insumo' => $costoTotalInsumo,
-            'porcentaje_ganancia' => $porcentajeGanancia,
-            'precio_final_sugerido' => $precioFinalSugerido,
-            'fecha_calculo' => $fechaCalculo,
+            'id_lote'              => $idLote,
+            'precio_planta_base'   => $precioPlantaBase,
+            'costo_total_insumo'   => $costoTotalInsumo,
+            'porcentaje_ganancia'  => $porcentajeGanancia,
+            'precio_final_sugerido'=> $precioFinalSugerido,
+            'fecha_calculo'        => $fechaCalculo,
         ]);
 
         return true;
     }
 
-    public function getLotesByPlanta(int $idPlanta, ?string $categoria = null): array
+    // ---- Detalle de insumos ----
+
+    public function addDetalle(int $idCalculo, int $idInsumo, float $monto): bool
     {
         try {
-            $sql = "SELECT
-                        l.id_lote,
-                        l.cantidad_actual,
-                        l.categoria,
-                        COALESCE(cp.costo_mano_obra, 0) AS costo_mano_obra,
-                        COALESCE(cp.costo_total_insumo, 0) AS costo_insumos,
-                        COALESCE(cp.costo_agua_lote, 0) AS costo_agua,
-                        COALESCE(cp.costo_mano_obra, 0) + COALESCE(cp.costo_total_insumo, 0) + COALESCE(cp.costo_agua_lote, 0) AS costo_total_lote,
-                        CASE
-                            WHEN cp.id_calculo IS NOT NULL THEN 1
-                            ELSE 0
-                        END AS tiene_calculo,
-                        p.nombre_comun AS planta_nombre
-                    FROM lote l
-                    JOIN plantas p ON l.id_planta = p.id_planta
-                    LEFT JOIN calculo_precio cp ON cp.id_lote = l.id_lote
-                    WHERE l.id_planta = :id_planta AND l.activo = 1";
-            $params = [':id_planta' => $idPlanta];
-            if ($categoria !== null) {
-                $sql .= " AND l.categoria = :categoria";
-                $params[':categoria'] = $categoria;
-            }
-            $sql .= " ORDER BY l.fecha_siembra DESC";
-            $stmt = $this->db()->prepare($sql);
-            $stmt->execute($params);
-            $lotes = $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
-
-            // Para lotes sin calculo_precio, calcular costo desde consumos
-            foreach ($lotes as &$lote) {
-                $lote['costo_mano_obra'] = (float)$lote['costo_mano_obra'];
-                $lote['costo_insumos'] = (float)$lote['costo_insumos'];
-                $lote['costo_agua'] = (float)$lote['costo_agua'];
-                if ((int)$lote['tiene_calculo'] === 0) {
-                    $insumos = $this->getCostoInsumosByLote((int)$lote['id_lote']);
-                    $lote['costo_insumos'] = $insumos;
-                    $lote['costo_mano_obra'] = 0;
-                    $lote['costo_agua'] = 0;
-                }
-                $lote['costo_total_lote'] = $lote['costo_mano_obra'] + $lote['costo_insumos'] + $lote['costo_agua'];
-            }
-            return $lotes;
+            $stmt = $this->db()->prepare("
+                INSERT INTO calculo_precio_detalle (id_calculo, id_insumo, monto)
+                VALUES (:id_calculo, :id_insumo, :monto)
+            ");
+            $stmt->execute([
+                ':id_calculo' => $idCalculo,
+                ':id_insumo'  => $idInsumo,
+                ':monto'      => $monto,
+            ]);
+            return true;
         } catch (\Throwable $e) {
-            error_log('Error en CalculoPrecio::getLotesByPlanta: ' . $e->getMessage());
+            error_log('Error en CalculoPrecio::addDetalle: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function getDetalles(int $idCalculo): array
+    {
+        try {
+            $stmt = $this->db()->prepare("
+                SELECT d.id_detalle, d.id_insumo, d.monto, i.nombre_insumo, i.costo_unitario_actual, u.simbolo
+                FROM calculo_precio_detalle d
+                LEFT JOIN insumo i ON d.id_insumo = i.id_insumo
+                LEFT JOIN unidad_medida u ON i.id_unidad_medida = u.id_unidad_medida
+                WHERE d.id_calculo = :id_calculo
+                ORDER BY d.id_detalle ASC
+            ");
+            $stmt->execute([':id_calculo' => $idCalculo]);
+            return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+        } catch (\Throwable $e) {
+            error_log('Error en CalculoPrecio::getDetalles: ' . $e->getMessage());
             return [];
         }
     }
 
-    public function calcularCostoPorPlanta(int $idPlanta, ?string $categoria = null): array
+    public function removeDetalle(int $idDetalle): bool
     {
-        $lotes = $this->getLotesByPlanta($idPlanta, $categoria);
-        if (empty($lotes)) {
-            return [
-                'lotes' => [],
-                'total_costos' => 0,
-                'total_plantas' => 0,
-                'costo_por_planta' => 0,
-            ];
+        try {
+            $stmt = $this->db()->prepare("DELETE FROM calculo_precio_detalle WHERE id_detalle = :id");
+            $stmt->execute([':id' => $idDetalle]);
+            return true;
+        } catch (\Throwable $e) {
+            error_log('Error en CalculoPrecio::removeDetalle: ' . $e->getMessage());
+            return false;
         }
-        $totalCostos = array_sum(array_column($lotes, 'costo_total_lote'));
-        $totalPlantas = array_sum(array_column($lotes, 'cantidad_actual'));
-        $costoPorPlanta = $totalPlantas > 0 ? $totalCostos / $totalPlantas : 0;
-        $plantaNombre = !empty($lotes) ? ($lotes[0]['planta_nombre'] ?? '') : '';
-        return [
-            'lotes' => $lotes,
-            'total_costos' => round($totalCostos, 2),
-            'total_plantas' => $totalPlantas,
-            'costo_por_planta' => round($costoPorPlanta, 2),
-            'planta_nombre' => $plantaNombre,
-        ];
     }
 
-    private function getCostoInsumosByLote(int $idLote): float
+    public function updateDetalleMonto(int $idDetalle, float $monto): bool
+    {
+        try {
+            $stmt = $this->db()->prepare("UPDATE calculo_precio_detalle SET monto = :monto WHERE id_detalle = :id");
+            $stmt->execute([':monto' => $monto, ':id' => $idDetalle]);
+            return true;
+        } catch (\Throwable $e) {
+            error_log('Error en CalculoPrecio::updateDetalleMonto: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function recalcularTotalInsumo(int $idCalculo): float
+    {
+        $stmt = $this->db()->prepare("SELECT COALESCE(SUM(monto), 0) FROM calculo_precio_detalle WHERE id_calculo = :id");
+        $stmt->execute([':id' => $idCalculo]);
+        $total = (float)$stmt->fetchColumn();
+        $stmt2 = $this->db()->prepare("UPDATE calculo_precio SET costo_total_insumo = ? WHERE id_calculo = ?");
+        $stmt2->execute([$total, $idCalculo]);
+        return $total;
+    }
+
+    // ---- Helpers ----
+
+    private function desmarcarVigentes(int $idLote): void
+    {
+        $stmt = $this->db()->prepare("UPDATE calculo_precio SET vigente = 0 WHERE id_lote = ? AND vigente = 1");
+        $stmt->execute([$idLote]);
+    }
+
+    public function getVigenteByLote(int $idLote): ?array
     {
         try {
             $stmt = $this->db()->prepare("
-                SELECT COALESCE(SUM(ci.cantidad_usada * ci.costo_unitario), 0)
-                FROM consumo_insumos ci
-                JOIN asignar_tarea a ON ci.id_asignacion = a.id_asignacion
-                WHERE a.id_lote = :id_lote
+                SELECT c.*, p.nombre_comun AS planta_nombre
+                FROM calculo_precio c
+                LEFT JOIN lote l ON c.id_lote = l.id_lote
+                LEFT JOIN plantas p ON l.id_planta = p.id_planta
+                WHERE c.id_lote = :id_lote AND c.vigente = 1
+                LIMIT 1
             ");
             $stmt->execute([':id_lote' => $idLote]);
-            return (float)$stmt->fetchColumn();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($row) {
+                $row['detalles'] = $this->getDetalles((int)$row['id_calculo']);
+            }
+            return $row ?: null;
         } catch (\Throwable $e) {
-            error_log('Error en CalculoPrecio::getCostoInsumosByLote: ' . $e->getMessage());
-            return 0;
+            error_log('Error en CalculoPrecio::getVigenteByLote: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    public function saveDetalles(int $idCalculo, array $detalles): void
+    {
+        $keepIds = [];
+        foreach ($detalles as $d) {
+            $idDetalle = (int)($d['id_detalle'] ?? 0);
+            $idInsumo  = (int)($d['id_insumo'] ?? 0);
+            $monto     = (float)($d['monto'] ?? 0);
+            if ($idDetalle > 0) {
+                $this->updateDetalleMonto($idDetalle, $monto);
+                $keepIds[] = $idDetalle;
+            } elseif ($idInsumo > 0 && $monto > 0) {
+                $this->addDetalle($idCalculo, $idInsumo, $monto);
+            }
+        }
+        if (!empty($keepIds)) {
+            $placeholders = implode(',', array_fill(0, count($keepIds), '?'));
+            $stmt = $this->db()->prepare("DELETE FROM calculo_precio_detalle WHERE id_calculo = ? AND id_detalle NOT IN ($placeholders)");
+            $stmt->execute(array_merge([$idCalculo], $keepIds));
         }
     }
 }

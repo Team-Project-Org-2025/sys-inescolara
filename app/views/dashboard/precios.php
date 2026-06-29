@@ -24,134 +24,23 @@ include_once __DIR__ . '/../common/links.php';
 
         <div class="dashboard-content">
 
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                    <h1>Cálculo de Precios por Planta</h1>
-                    <p style="color: var(--text-secondary);">
-                        Seleccione una planta y su categoría para calcular el precio unitario sumando todos los lotes.
-                    </p>
-                </div>
-            </div>
-
-            <div class="card shadow-sm mb-4">
-                <div class="card-body">
-                    <div class="row g-3 align-items-end mb-3">
-                        <div class="col-md-4">
-                            <label class="form-label">Planta *</label>
-                            <select class="form-select" id="calcPlanta">
-                                <option value="">Seleccione...</option>
-                                <?php if (empty($plants)): ?>
-                                <option value="" disabled>No hay plantas disponibles</option>
-                                <?php else: ?>
-                                <?php foreach ($plants as $p): ?>
-                                <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['nombre_comun']) ?></option>
-                                <?php endforeach; ?>
-                                <?php endif; ?>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Categoría</label>
-                            <select class="form-select" id="calcCategoria">
-                                <option value="">Todas</option>
-                                <option value="germinado">Germinado</option>
-                                <option value="en_crecimiento">En Crecimiento</option>
-                                <option value="para_cosechar">Para Cosechar</option>
-                                <option value="maduro">Maduro</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">% Ganancia</label>
-                            <input type="number" class="form-control" id="calcGanancia" step="0.01" min="0" value="30">
-                        </div>
-                        <div class="col-md-2">
-                            <button class="btn btn-primary w-100" id="btnCalcularPlanta">
-                                <i class="fas fa-calculator"></i> Calcular
-                            </button>
-                        </div>
-                    </div>
-
-                    <div id="calcResultContainer" class="d-none">
-                        <hr>
-                        <div class="row mb-3">
-                            <div class="col-md-3">
-                                <div class="alert alert-secondary py-2 mb-0 text-center">
-                                    <small class="d-block text-muted">Total Costos</small>
-                                    <strong id="calcTotalInsumos" class="fs-5">Bs 0,00</strong>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="alert alert-secondary py-2 mb-0 text-center">
-                                    <small class="d-block text-muted">Total Plantas</small>
-                                    <strong id="calcTotalPlantas" class="fs-5">0</strong>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="alert alert-info py-2 mb-0 text-center">
-                                    <small class="d-block text-muted">Costo por Planta</small>
-                                    <strong id="calcCostoPlanta" class="fs-5">Bs 0,00</strong>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="alert alert-success py-2 mb-0 text-center">
-                                    <small class="d-block text-muted">Precio Sugerido</small>
-                                    <strong id="calcPrecioSugerido" class="fs-5">Bs 0,00</strong>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="alert alert-info">
-                            <i class="fas fa-info-circle"></i>
-                            <strong>¿Cómo se calcula?</strong><br>
-                            1. Se suman los costos (mano de obra + insumos + agua) de <strong>todos los lotes</strong> de la planta con la categoría seleccionada.<br>
-                            2. Se suman las cantidades de plantas de esos lotes.<br>
-                            3. <strong>Costo por Planta</strong> = Total Costos &divide; Total Plantas.<br>
-                            4. <strong>Precio Sugerido</strong> = Costo por Planta &times; (1 + %Ganancia/100).
-                        </div>
-
-                        <div class="table-responsive mb-3">
-                            <table class="table table-sm table-bordered">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th># Lote</th>
-                                        <th>Categoría</th>
-                                        <th>Cant. Actual</th>
-                                        <th class="text-end">Mano de Obra</th>
-                                        <th class="text-end">Insumos</th>
-                                        <th class="text-end">Agua</th>
-                                        <th class="text-end">Costo Total</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="calcLotesBody"></tbody>
-                            </table>
-                        </div>
-
-                            <div class="d-flex gap-2 align-items-center">
-                                <button class="btn btn-success" id="btnGuardarPlanta">
-                                <i class="fas fa-save"></i> Guardar Precio Unitario para Todos los Lotes
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <div class="card shadow-sm">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <span>Precios Registrados</span>
-                    <button class="btn btn-outline-secondary btn-sm" onclick="if(typeof preciosTable !== 'undefined') preciosTable.ajax.reload(null, false)">
-                        <i class="fas fa-sync-alt"></i> Actualizar
-                    </button>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-primary btn-sm" id="btnNuevoPrecio">
+                            <i class="fas fa-plus"></i> Nuevo Precio
+                        </button>
+                    </div>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
                         <table id="preciosTable" class="table table-striped table-hover w-100">
                             <thead>
                                 <tr>
-                                    <th>Lote</th>
                                     <th>Planta</th>
-                                    <th>Costo Insumos</th>
-                                    <th>Ganancia</th>
                                     <th>Precio Sugerido</th>
-                                    <th>Fecha</th>
+                                    <th>Vigencia</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
@@ -163,6 +52,133 @@ include_once __DIR__ . '/../common/links.php';
 
         </div>
     </main>
+
+    <!-- Modal Nuevo/Editar Precio -->
+    <div class="modal fade" id="precioModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="precioModalTitle">Nuevo Cálculo de Precio</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="editId" value="0">
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Lote *</label>
+                            <select class="form-select" id="selLote">
+                                <option value="">Seleccione un lote...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Categoría</label>
+                            <input type="text" class="form-control" id="txtCategoria" readonly>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Cant. Plantas</label>
+                            <input type="text" class="form-control" id="txtCantidad" readonly>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Precio Base ($) *</label>
+                            <input type="number" class="form-control" id="precioPlantaBase" step="0.01" min="0" placeholder="0.00">
+                        </div>
+                    </div>
+
+                    <hr>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label class="form-label mb-0 fw-semibold">Insumos</label>
+                        <button type="button" class="btn btn-outline-primary btn-sm" id="btnAgregarInsumo">
+                            <i class="fas fa-plus"></i> Agregar
+                        </button>
+                    </div>
+                    <div class="table-responsive mb-3">
+                        <table class="table table-sm table-bordered" id="insumosDetalleTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Insumo</th>
+                                    <th class="text-end" style="width:150px">Monto ($)</th>
+                                    <th style="width:50px"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="insumosDetalleBody">
+                                <tr id="noInsumosRow">
+                                    <td colspan="3" class="text-center text-muted">No hay insumos agregados</td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th class="text-end">Total Insumos:</th>
+                                    <th class="text-end" id="totalInsumosLabel">$0.00</th>
+                                    <th></th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    <hr>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">% Ganancia *</label>
+                            <input type="number" class="form-control" id="porcentajeGanancia" step="0.01" min="0" value="30" placeholder="30">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Precio Final Sugerido ($)</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="precioFinalSugerido" step="0.01" min="0" readonly>
+                                <button class="btn btn-outline-secondary" type="button" id="btnRecalcular" title="Recalcular">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                            </div>
+                            <small class="text-muted">(Base + Insumos) × (1 + %/100)</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="btnGuardarPrecio">
+                        <i class="fas fa-save"></i> Guardar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Selector de Insumo (small modal) -->
+    <div class="modal fade" id="insumoSelectorModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-sm modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h6 class="modal-title">Agregar Insumo</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-2">
+                        <label class="form-label">Insumo</label>
+                        <select class="form-select" id="selInsumo">
+                            <option value="">Seleccione...</option>
+                        </select>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Costo Unitario ($)</label>
+                        <input type="text" class="form-control" id="insumoCostoUnitario" readonly>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Cantidad *</label>
+                        <input type="number" class="form-control" id="insumoCantidad" step="0.01" min="0" placeholder="0">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Monto Total ($)</label>
+                        <input type="text" class="form-control" id="insumoMontoTotal" readonly>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="btnConfirmarInsumo">Agregar</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script src="<?= BASE_URL ?>public/assets/js/dashboard/notifications.js"></script>
     <?= $scripts_links ?>
