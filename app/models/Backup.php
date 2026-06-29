@@ -104,6 +104,8 @@ class Backup
             return ['success' => false, 'message' => $errorMsg];
         }
 
+        $this->sanitizeDump($filepath);
+
         return [
             'success' => true,
             'filename' => $filename,
@@ -134,50 +136,48 @@ class Backup
 
         $filepath = str_replace('/', DIRECTORY_SEPARATOR, $filepath);
 
+        $this->sanitizeDump($filepath);
+
         $cmd = sprintf(
-            '"%s" %s --user=%s --password=%s "%s"',
+            '"%s" %s --user=%s --password=%s "%s" < "%s"',
             $this->mysqlPath,
             $connectionOpts,
             escapeshellarg($dbConfig['user']),
             escapeshellarg($dbConfig['pass']),
-            $dbConfig['name']
+            $dbConfig['name'],
+            $filepath
         );
 
-        $descriptors = [
-            0 => ['pipe', 'r'],
-            1 => ['pipe', 'w'],
-            2 => ['pipe', 'w'],
-        ];
-
-        $process = proc_open($cmd, $descriptors, $pipes);
-        if (!is_resource($process)) {
-            return ['success' => false, 'message' => 'No se pudo iniciar el proceso mysql.'];
-        }
-
-        $input = fopen($filepath, 'rb');
-        if ($input) {
-            $bom = fread($input, 3);
-            if ($bom !== "\xEF\xBB\xBF") {
-                rewind($input);
-            }
-            stream_copy_to_stream($input, $pipes[0]);
-            fclose($input);
-        }
-        fclose($pipes[0]);
-
-        $stdout = stream_get_contents($pipes[1]);
-        fclose($pipes[1]);
-        $stderr = stream_get_contents($pipes[2]);
-        fclose($pipes[2]);
-
-        $exitCode = proc_close($process);
+        $output = [];
+        $exitCode = 0;
+        exec("$cmd 2>&1", $output, $exitCode);
 
         if ($exitCode !== 0) {
-            $errorMsg = !empty($stderr) ? $stderr : (!empty($stdout) ? $stdout : 'Error desconocido al restaurar');
+            $errorMsg = !empty($output) ? implode("\n", $output) : 'Error desconocido al restaurar';
             return ['success' => false, 'message' => $errorMsg];
         }
 
         return ['success' => true, 'message' => "Base de datos '$dbName' restaurada correctamente."];
+    }
+
+    private function sanitizeDump(string $filepath): void
+    {
+        $content = file_get_contents($filepath);
+        if ($content === false || $content === '') {
+            return;
+        }
+
+        if (str_starts_with($content, "\xEF\xBB\xBF")) {
+            $content = substr($content, 3);
+        }
+
+        $content = preg_replace('%/\*M!\d*[^*]*\*/%', '', $content);
+        $content = preg_replace('%/\*!(\d+)?\s*(.*?)\*/%s', '$2', $content);
+        $content = preg_replace('/^\s*\\\\.[^\n]*\n?/m', '', $content);
+        $content = preg_replace('/\sDEFINER\s*=\s*`[^`]+`@`[^`]+`\s*/i', ' ', $content);
+        $content = preg_replace('/\n{3,}/', "\n\n", $content);
+
+        file_put_contents($filepath, $content);
     }
 
     private function detectDatabaseFromFile(string $filepath): ?string
