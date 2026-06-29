@@ -15,7 +15,7 @@ $(document).ready(function () {
 
   const initDataTable = () => {
     if (typeof SkeletonHelper !== 'undefined') {
-      SkeletonHelper.showTableSkeleton('recoleccionTable', 5, 7);
+      SkeletonHelper.showTableSkeleton('recoleccionTable', 5, 5);
     }
     recoleccionTable = $('#recoleccionTable').DataTable({
       ajax: {
@@ -30,26 +30,12 @@ $(document).ready(function () {
         { data: 'nombre_ubicacion' },
         { data: 'fecha_asignacion' },
         {
-          data: 'fecha_recoleccion',
-          render: (data) => data || '<span class="text-muted">—</span>',
-        },
-        {
           data: 'estatus',
           render: (data) => {
             if (data === 'Pendiente') {
               return '<span class="badge bg-warning text-dark">Pendiente</span>';
             }
             return '<span class="badge bg-success">Realizada</span>';
-          },
-        },
-        {
-          data: 'total_detalles',
-          render: (data) => {
-            const count = parseInt(data);
-            if (count > 0) {
-              return `<span class="badge bg-info text-dark"><i class="fas fa-seedling"></i> ${count} tipo(s)</span>`;
-            }
-            return '<span class="text-muted">—</span>';
           },
         },
         {
@@ -73,7 +59,7 @@ $(document).ready(function () {
             }
 
             if (data.total_detalles && parseInt(data.total_detalles) > 0) {
-              btns.push(`<span class="text-success" style="font-size:0.85rem;"><i class="fas fa-check-circle"></i> ${data.total_detalles} tipo(s)</span>`);
+              btns.push(C.btnView('btn-view'));
             }
 
             return `<div class="d-flex gap-1">${btns.join('')}</div>`;
@@ -93,7 +79,7 @@ $(document).ready(function () {
           className: 'btn btn-outline-secondary btn-sm',
           action: () => {
             if (typeof SkeletonHelper !== 'undefined') {
-              SkeletonHelper.showTableSkeleton('recoleccionTable', 5, 7);
+              SkeletonHelper.showTableSkeleton('recoleccionTable', 5, 5);
             }
             recoleccionTable.ajax.reload(null, false);
           },
@@ -180,6 +166,55 @@ $(document).ready(function () {
     );
   });
 
+  $(document).on('click', '.btn-view', function () {
+    const row = recoleccionTable.row($(this).closest('tr')).data();
+    const id = row.id;
+    $.getJSON(`${baseUrl}?action=get_details&id=${id}`, { 'X-Requested-With': 'XMLHttpRequest' })
+      .done((res) => {
+        if (!res.success) {
+          Helpers.toast('error', res.message);
+          return;
+        }
+        const r = res.recoleccion;
+        const detalles = res.detalles;
+        let html = `
+          <div class="mb-3">
+            <table class="table table-sm table-bordered">
+              <tbody>
+                <tr><th style="width:35%;">Trabajador</th><td>${Helpers.escapeHtml(r.trabajador_nombre)}</td></tr>
+                <tr><th>Sitio de Recolección</th><td>${Helpers.escapeHtml(r.nombre_ubicacion)}</td></tr>
+                <tr><th>Fecha Asignación</th><td>${Helpers.escapeHtml(r.fecha_asignacion)}</td></tr>
+                <tr><th>Fecha Recolección</th><td>${r.fecha_recoleccion ? Helpers.escapeHtml(r.fecha_recoleccion) : '<span class="text-muted">—</span>'}</td></tr>
+                <tr><th>Estatus</th><td>${Helpers.escapeHtml(r.estatus)}</td></tr>
+                ${r.observacion ? `<tr><th>Observación</th><td>${Helpers.escapeHtml(r.observacion)}</td></tr>` : ''}
+              </tbody>
+            </table>
+          </div>`;
+        if (detalles.length > 0) {
+          html += `<h6 class="mb-2">Semillas Registradas</h6><div class="table-responsive"><table class="table table-sm table-bordered">
+            <thead class="table-light"><tr><th>Planta Origen</th><th>Nombre Semilla</th><th>Cantidad</th><th>Unidad</th><th>Insumo</th></tr></thead>
+            <tbody>`;
+          detalles.forEach((d) => {
+            html += `<tr>
+              <td>${d.planta_origen ? Helpers.escapeHtml(d.planta_origen) : '<span class="text-muted">—</span>'}</td>
+              <td>${Helpers.escapeHtml(d.nombre_semilla)}</td>
+              <td>${d.cantidad}</td>
+              <td>${Helpers.escapeHtml(d.simbolo || d.nombre_unidad_medida || '')}</td>
+              <td>${d.insumo_nombre ? Helpers.escapeHtml(d.insumo_nombre) : '<span class="text-muted">—</span>'}</td>
+            </tr>`;
+          });
+          html += '</tbody></table></div>';
+        } else {
+          html += '<p class="text-muted">No se han registrado semillas para esta recolección.</p>';
+        }
+        $('#detailModalBody').html(html);
+        $('#detailModal').modal({ focus: false }).modal('show');
+      })
+      .fail(() => {
+        Helpers.toast('error', 'Error al obtener los detalles');
+      });
+  });
+
   $(document).on('click', '.btn-completar', function () {
     const row = recoleccionTable.row($(this).closest('tr')).data();
     const id = row.id;
@@ -242,17 +277,9 @@ $(document).ready(function () {
         if (response.success) {
           Helpers.toast('success', 'Ubicación agregada correctamente');
           $('#ubicacionQuickModal').modal('hide');
-          $.getJSON(`${window.BASE_URL || '/'}ubicaciones?action=get_locations`, { 'X-Requested-With': 'XMLHttpRequest' })
-            .done((res) => {
-              if (res.success) {
-                const $select = $('#id_ubicacion');
-                $select.find('option:not(:first)').remove();
-                res.ubicaciones.forEach((loc) => {
-                  $select.append(`<option value="${loc.id}">${Helpers.escapeHtml(loc.nombre_ubicacion)}</option>`);
-                });
-                $select.val(response.id || '');
-              }
-            });
+          const $select = $('#id_ubicacion');
+          $select.append(`<option value="${response.ubicacion.id}">${Helpers.escapeHtml(response.ubicacion.nombre_ubicacion)}</option>`);
+          $select.val(response.ubicacion.id);
         } else {
           Helpers.toast('error', response.message);
         }
@@ -262,11 +289,10 @@ $(document).ready(function () {
       });
   });
 
-  const addInsumoRow = (planta, nombre, unidad, cantidad) => {
+  const addInsumoRow = (planta, nombre, cantidad) => {
     const $template = $($('#insumoRowTemplate').html());
     if (planta) $template.find('.insumo-planta').val(planta);
     if (nombre) $template.find('.insumo-nombre').val(nombre);
-    if (unidad) $template.find('.insumo-unidad').val(unidad);
     if (cantidad) $template.find('.insumo-cantidad').val(cantidad);
     $('#insumosTableBody').append($template);
   };
@@ -276,12 +302,12 @@ $(document).ready(function () {
     const id = row.id;
     $('#insumoRecoleccionId').val(id);
     $('#insumosTableBody').empty();
-    addInsumoRow('', '', '', '');
+    addInsumoRow('', '', '');
     $('#insumoModal').modal({ focus: false }).modal('show');
   });
 
   $('#btnAddInsumoRow').on('click', function () {
-    addInsumoRow('', '', '', '');
+    addInsumoRow('', '', '');
   });
 
   $(document).on('click', '.btn-remove-insumo-row', function () {
@@ -312,10 +338,9 @@ $(document).ready(function () {
       const $row = $(this);
       const plantaOrigen = $row.find('.insumo-planta').val() || '';
       const nombreSemilla = $row.find('.insumo-nombre').val().trim();
-      const idUnidadMedida = $row.find('.insumo-unidad').val();
       const cantidad = parseFloat($row.find('.insumo-cantidad').val());
 
-      if (!nombreSemilla || !idUnidadMedida || !cantidad || cantidad <= 0) {
+      if (!nombreSemilla || !cantidad || cantidad <= 0) {
         valid = false;
         $row.addClass('table-danger');
         return;
@@ -324,7 +349,7 @@ $(document).ready(function () {
       items.push({
         planta_origen: plantaOrigen,
         nombre_semilla: nombreSemilla,
-        id_unidad_medida: parseInt(idUnidadMedida),
+        id_unidad_medida: 5,
         cantidad: cantidad,
       });
     });
@@ -366,7 +391,7 @@ $(document).ready(function () {
       });
   });
 
-  $('#recoleccionModal, #completarModal, #insumoModal, #ubicacionQuickModal').on('hidden.bs.modal', function () {
+  $('#recoleccionModal, #completarModal, #insumoModal, #ubicacionQuickModal, #detailModal').on('hidden.bs.modal', function () {
     const $form = $(this).find('form');
     Helpers.resetForm($form);
     clearValidation($form);

@@ -637,7 +637,7 @@ function seedcollection(): void
 
     require_once ROOT_PATH . 'vendor/autoload.php';
     $locationModel = new \SysInescolara\models\Ubicacion();
-    $ubicaciones = $locationModel->getAll();
+    $ubicaciones = $locationModel->getByTipo('externo');
     $employeeModel = new \SysInescolara\models\Empleado();
     $trabajadores = $employeeModel->getAll();
     $plantModel = new \SysInescolara\models\Planta();
