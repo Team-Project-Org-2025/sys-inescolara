@@ -36,6 +36,23 @@ class Ubicacion extends Database implements ReadableInterface, DeletableInterfac
         }
     }
 
+    public function getByTipo(string $tipo): array
+    {
+        try {
+            $stmt = $this->db()->prepare("
+                SELECT id_ubicacion AS id, nombre_ubicacion, descripcion, tipo
+                FROM ubicacion
+                WHERE activo = 1 AND tipo = :tipo
+                ORDER BY nombre_ubicacion ASC
+            ");
+            $stmt->execute([':tipo' => $tipo]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (\Throwable $e) {
+            error_log('Error al obtener ubicaciones por tipo: ' . $e->getMessage());
+            return [];
+        }
+    }
+
     public function getById(int $id): ?array
     {
         try {

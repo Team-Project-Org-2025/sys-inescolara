@@ -46,9 +46,7 @@ include_once __DIR__ . '/../common/modal.php';
                                     <th>Trabajador</th>
                                     <th>Sitio de Recolección</th>
                                     <th>Fecha Asignación</th>
-                                    <th>Fecha Recolección</th>
                                     <th>Estatus</th>
-                                    <th>Semillas Registradas</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
@@ -112,12 +110,9 @@ include_once __DIR__ . '/../common/modal.php';
             <textarea class="form-control" name="descripcion" id="quick_descripcion" rows="2" maxlength="500"></textarea>
         </div>
         <div class="mb-3">
-            <label class="form-label" for="quick_tipo">Tipo</label>
-            <select class="form-select" name="tipo" id="quick_tipo">
-                <option value="">— Seleccionar —</option>
-                <option value="Interno">Interno</option>
-                <option value="Externo">Externo</option>
-            </select>
+            <label class="form-label">Tipo</label>
+            <input type="hidden" name="tipo" value="Externo">
+            <input type="text" class="form-control" value="Externo" disabled>
         </div>
     <?php modal_form_end('ubicacionQuickForm'); ?>
 
@@ -139,9 +134,8 @@ include_once __DIR__ . '/../common/modal.php';
                     <tr>
                         <th style="width:28%;">Planta de origen</th>
                         <th style="width:28%;">Nombre de la Semilla</th>
-                        <th style="width:18%;">U. Medida</th>
-                        <th style="width:16%;">Cantidad</th>
-                        <th style="width:10%;"></th>
+                        <th style="width:24%;">Cantidad</th>
+                        <th style="width:auto;"></th>
                     </tr>
                 </thead>
                 <tbody id="insumosTableBody">
@@ -171,16 +165,6 @@ include_once __DIR__ . '/../common/modal.php';
                 <input type="text" class="form-control form-control-sm insumo-nombre" placeholder="Ej: Semillas de Araguaney" required maxlength="50">
             </td>
             <td>
-                <select class="form-select form-select-sm insumo-unidad" required>
-                    <option value="">Seleccione</option>
-                    <?php foreach ($unidades as $un): ?>
-                        <option value="<?= (int)$un['id'] ?>" <?= ((int)$un['id'] === 5) ? 'selected' : '' ?>>
-                            <?= htmlspecialchars($un['nombre_unidad_medida'] ?? '') ?> (<?= htmlspecialchars($un['simbolo'] ?? '') ?>)
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            </td>
-            <td>
                 <input type="number" step="0.01" min="0.01" class="form-control form-control-sm insumo-cantidad" placeholder="0.00" required>
             </td>
             <td class="text-center">
@@ -190,6 +174,10 @@ include_once __DIR__ . '/../common/modal.php';
             </td>
         </tr>
     </template>
+
+    <!-- Modal Detalle de Recolección -->
+    <?php modal_detail_start(['id' => 'detailModal', 'title' => 'Detalle de Recolección', 'size' => 'modal-lg', 'bodyId' => 'detailModalBody']); ?>
+    <?php modal_detail_end(); ?>
 
     <script src="<?= BASE_URL ?>public/assets/js/dashboard/notifications.js"></script>
     <?= $scripts_links ?>

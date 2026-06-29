@@ -601,8 +601,7 @@ $userAvatar = \SysInescolara\helpers\Auth::avatar();
                                             $fecha = $activity['fecha_accion'] ?? '';
                                             if ($fecha) {
                                                 try {
-                                                    $dt = new DateTime($fecha, new DateTimeZone('UTC'));
-                                                    $dt->setTimezone(new DateTimeZone('America/Caracas'));
+                                                    $dt = new DateTime($fecha);
                                                     echo htmlspecialchars($dt->format('d/m/Y h:i A'));
                                                 } catch (\Throwable $e) {
                                                     echo htmlspecialchars($fecha);
