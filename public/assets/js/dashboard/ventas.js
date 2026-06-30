@@ -13,25 +13,15 @@ const Ventas = {
     tabla: null,
 
     init() {
-        this.fechaAutomatica();
         this.initDataTable();
-        this.initBuscarLote();
+        this.initSelectProducto();
         this.initBuscarCliente();
         this.initPagos();
         this.initPagarCompleto();
+        this.initWizard();
         this.initForm();
         this.initAcciones();
         setupRealTimeValidation($('#ventaForm'), ventasRules);
-    },
-
-    fechaAutomatica() {
-        const now = new Date();
-        const local = now.toISOString().slice(0, 16);
-        const el = document.getElementById('fechaVenta');
-        if (el) {
-            el.value = local;
-            el.setAttribute('readonly', true);
-        }
     },
 
     // ==================== DATATABLE ====================
@@ -45,32 +35,21 @@ const Ventas = {
                 headers: { 'X-Requested-With': 'XMLHttpRequest' },
                 dataSrc: (res) => {
                     if (res.success) {
-                        this.actualizarStats(res.ventas);
                         return res.ventas;
                     }
                     return [];
                 }
             },
             columns: [
-                { data: 'id_venta', className: 'text-center' },
                 { data: 'referencia' },
                 { data: 'nombre_cliente', defaultContent: '—' },
-                {
-                    data: null,
-                    render: (r) => r.tipo_cedula_cliente ? `${r.tipo_cedula_cliente}-${r.cedula_cliente}` : '—'
-                },
                 {
                     data: null,
                     render: (r) => r.nombre_trabajador ? `${r.nombre_trabajador} ${r.apellido_trabajador || ''}` : '—'
                 },
                 {
                     data: 'fecha_venta',
-                    render: (d) => d ? new Date(d).toLocaleString('es-ES') : '—'
-                },
-                {
-                    data: null,
-                    className: 'text-end',
-                    render: (r) => `Bs. ${parseFloat(r.monto_total || 0).toLocaleString('es-ES', { minimumFractionDigits: 2 })}`
+                    render: (d) => d ? new Date(d).toLocaleDateString('es-ES') : '—'
                 },
                 {
                     data: 'estado',
@@ -97,102 +76,78 @@ const Ventas = {
                 }
             ],
             language: { url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json' },
-            order: [[0, 'desc']],
+            order: [[3, 'desc']],
             pageLength: 25,
         });
     },
 
-    actualizarStats(ventas) {
-        const total = ventas.length;
-        const completadas = ventas.filter(v => v.estado === 'completada').length;
-        const pendientes = ventas.filter(v => v.estado === 'pendiente').length;
-        const totalBs = ventas.reduce((s, v) => s + parseFloat(v.monto_total || 0), 0);
+    // ==================== SELECT PRODUCTO ====================
 
-        document.getElementById('totalVentas').textContent = total;
-        document.getElementById('totalCompletadas').textContent = completadas;
-        document.getElementById('totalPendientes').textContent = pendientes;
-        document.getElementById('totalIngresos').textContent = `Bs. ${totalBs.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`;
-    },
-
-    // ==================== LOTES ====================
-
-    initBuscarLote() {
-        this.buscarInput = document.getElementById('buscarLote');
-        this.buscarResultados = document.getElementById('resultadosLotes');
-        this.searchSpinner = document.getElementById('searchSpinner');
-        let timeout;
-
-        this.buscarInput.addEventListener('input', () => {
-            clearTimeout(timeout);
-            const q = this.buscarInput.value.trim();
-            if (q.length < 2) {
-                this.buscarResultados.style.display = 'none';
-                this.searchSpinner.classList.add('d-none');
-                return;
+    initSelectProducto() {
+        const modal = document.getElementById('ventaModal');
+        if (modal) {
+            modal.addEventListener('shown.bs.modal', () => this.cargarProductos());
+        }
+        document.getElementById('productoSelect').addEventListener('change', (e) => {
+            const opt = e.target.selectedOptions[0];
+            if (!opt || !opt.value) return;
+            try {
+                const item = JSON.parse(opt.dataset.item);
+                this.agregarProducto(item);
+            } catch (err) {
+                console.error('Error al parsear item:', err);
             }
-            this.searchSpinner.classList.remove('d-none');
-            timeout = setTimeout(() => this.buscarLotes(q), 250);
-        });
-
-        this.buscarInput.addEventListener('blur', () => setTimeout(() => this.buscarResultados.style.display = 'none', 300));
-        this.buscarInput.addEventListener('focus', () => {
-            if (this.buscarResultados.children.length > 0) this.buscarResultados.style.display = 'block';
+            e.target.value = '';
         });
     },
 
-    async buscarLotes(q) {
+    async cargarProductos() {
+        const select = document.getElementById('productoSelect');
+        if (select.dataset.cargado) return;
+        select.innerHTML = '<option value="">Cargando...</option>';
         try {
-            const res = await fetch(`${urlBaseVentas}?accion=buscar_lotes&q=${encodeURIComponent(q)}`, {
+            const res = await fetch(`${urlBaseVentas}?accion=buscar_lotes&q=`, {
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
             });
             const data = await res.json();
-            const cont = this.buscarResultados;
-            cont.innerHTML = '';
-            this.searchSpinner.classList.add('d-none');
-
+            select.innerHTML = '<option value="">Seleccione un producto...</option>';
             if (!data.success || !data.lotes?.length) {
-                cont.innerHTML = `<div class="list-group-item text-muted text-center small py-2">Sin resultados para "<strong>${this.escapeHtml(q)}</strong>"</div>`;
-                cont.style.display = 'block';
+                select.innerHTML += '<option value="" disabled>No hay productos disponibles</option>';
                 return;
             }
+            const plantas = data.lotes.filter(l => l.tipo_item === 'planta');
+            const insumos = data.lotes.filter(l => l.tipo_item === 'insumo');
+            const fmt = (n) => parseFloat(n || 0).toLocaleString('es-ES', { minimumFractionDigits: 2 });
 
-            data.lotes.forEach(l => {
-                const esInsumo = l.tipo_item === 'insumo';
-                const badgeHtml = esInsumo
-                    ? '<span class="badge badge-tipo-insumo">Insumo</span>'
-                    : '<span class="badge badge-tipo-planta">Planta</span>';
-                const detalle = l.especie_nombre
-                    ? `<small class="text-muted">${esInsumo ? '' : '('}${l.especie_nombre}${esInsumo ? '' : ')'}</small>`
-                    : '';
-                const item = document.createElement('button');
-                item.type = 'button';
-                item.className = 'list-group-item list-group-item-action py-2 d-flex justify-content-between align-items-center';
-                item.innerHTML = `
-                    <div>
-                        <strong>${l.planta_nombre || l.nombre || ''}</strong>
-                        ${detalle}
-                        ${badgeHtml}
-                    </div>
-                    <div class="text-end small">Stock: <strong>${l.cantidad_actual}</strong> ${l.unidad_simbolo || ''} | Bs. ${parseFloat(l.precio_unitario || 0).toLocaleString('es-ES', { minimumFractionDigits: 2 })}</div>
-                `;
-                item.addEventListener('click', () => {
-                    this.agregarProducto(l);
-                    cont.style.display = 'none';
-                    this.buscarInput.value = '';
+            if (plantas.length) {
+                const og = document.createElement('optgroup');
+                og.label = '🌱 Plantas';
+                plantas.forEach(l => {
+                    const o = document.createElement('option');
+                    o.value = `planta|${l.id_lote}`;
+                    o.dataset.item = JSON.stringify(l);
+                    o.textContent = `${l.planta_nombre} — Bs. ${fmt(l.precio_unitario)} (Stock: ${l.cantidad_actual})`;
+                    og.appendChild(o);
                 });
-                cont.appendChild(item);
-            });
-            cont.style.display = 'block';
+                select.appendChild(og);
+            }
+            if (insumos.length) {
+                const og = document.createElement('optgroup');
+                og.label = '📦 Insumos';
+                insumos.forEach(l => {
+                    const o = document.createElement('option');
+                    o.value = `insumo|${l.id_insumo}`;
+                    o.dataset.item = JSON.stringify(l);
+                    o.textContent = `${l.nombre} — Bs. ${fmt(l.precio_unitario)} (Stock: ${l.cantidad_actual} ${l.unidad_simbolo || ''})`;
+                    og.appendChild(o);
+                });
+                select.appendChild(og);
+            }
+            select.dataset.cargado = '1';
         } catch (e) {
-            this.searchSpinner.classList.add('d-none');
-            console.error('Error buscando productos:', e);
+            select.innerHTML = '<option value="">Error al cargar productos</option>';
+            console.error('Error cargando productos:', e);
         }
-    },
-
-    escapeHtml(str) {
-        const div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
     },
 
     // ==================== CLIENTE ====================
@@ -444,6 +399,51 @@ const Ventas = {
         });
     },
 
+    initWizard() {
+        const step1Panel = document.getElementById('step1Panel');
+        const step2Panel = document.getElementById('step2Panel');
+        const step1Circle = document.getElementById('step1Circle');
+        const step2Circle = document.getElementById('step2Circle');
+        const step2Label = document.getElementById('step2Label');
+        const btnSig = document.getElementById('btnSiguiente');
+        const btnAnt = document.getElementById('btnAnterior');
+        const btnGuardar = document.getElementById('btnGuardarVenta');
+
+        btnSig.addEventListener('click', () => {
+            const products = document.querySelectorAll('#productosContainer .card');
+            if (products.length === 0) {
+                Swal.fire('Atención', 'Debe agregar al menos un producto.', 'warning');
+                return;
+            }
+            step1Panel.classList.add('d-none');
+            step2Panel.classList.remove('d-none');
+            step1Circle.style.background = '#2e7d32';
+            step1Circle.textContent = '✓';
+            step2Circle.style.background = '#e5a835';
+            step2Circle.style.color = '#fff';
+            step2Label.style.color = '#424242';
+            step2Label.style.fontWeight = '600';
+            btnSig.classList.add('d-none');
+            btnAnt.classList.remove('d-none');
+            btnGuardar.classList.remove('d-none');
+            this.calcularTotales();
+        });
+
+        btnAnt.addEventListener('click', () => {
+            step1Panel.classList.remove('d-none');
+            step2Panel.classList.add('d-none');
+            step1Circle.style.background = '#e5a835';
+            step1Circle.textContent = '1';
+            step2Circle.style.background = '#e0e0e0';
+            step2Circle.style.color = '#9e9e9e';
+            step2Label.style.color = '#9e9e9e';
+            step2Label.style.fontWeight = '500';
+            btnSig.classList.remove('d-none');
+            btnAnt.classList.add('d-none');
+            btnGuardar.classList.add('d-none');
+        });
+    },
+
     actualizarBalancePagos(total) {
         let pagado = 0;
         document.querySelectorAll('.monto-pago').forEach(inp => {
@@ -570,7 +570,6 @@ const Ventas = {
                 form.reset();
                 document.getElementById('productosContainer').innerHTML = '';
                 document.getElementById('sinProductos').style.display = 'block';
-                this.fechaAutomatica();
                 this.reiniciarPagos();
                 this.limpiarCliente();
                 this.calcularTotales();
@@ -611,6 +610,25 @@ const Ventas = {
         `;
         const primerMetodo = document.querySelector('.metodo-pago');
         if (primerMetodo) this.toggleRef(primerMetodo);
+
+        const st1 = document.getElementById('step1Panel');
+        const st2 = document.getElementById('step2Panel');
+        const s1c = document.getElementById('step1Circle');
+        const s2c = document.getElementById('step2Circle');
+        const s2l = document.getElementById('step2Label');
+        const bs = document.getElementById('btnSiguiente');
+        const ba = document.getElementById('btnAnterior');
+        const bg = document.getElementById('btnGuardarVenta');
+        if (st1 && st2) {
+            st1.classList.remove('d-none');
+            st2.classList.add('d-none');
+        }
+        if (s1c) { s1c.style.background = '#e5a835'; s1c.textContent = '1'; }
+        if (s2c) { s2c.style.background = '#e0e0e0'; s2c.style.color = '#9e9e9e'; }
+        if (s2l) { s2l.style.color = '#9e9e9e'; s2l.style.fontWeight = '500'; }
+        if (bs) bs.classList.remove('d-none');
+        if (ba) ba.classList.add('d-none');
+        if (bg) bg.classList.add('d-none');
     },
 
     // ==================== ACCIONES ====================
