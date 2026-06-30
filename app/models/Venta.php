@@ -285,8 +285,7 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
             VALUES (:id_venta, :tipo_item, :id_lote, :id_insumo, :cantidad, :precio_unitario)");
 
         $stmtStockLote = $this->db()->prepare("UPDATE lote SET
-            cantidad_actual = cantidad_actual - :cantidad,
-            estado = IF(cantidad_actual - :cantidad2 <= 0, 'Agotado', estado)
+            cantidad_actual = cantidad_actual - :cantidad
             WHERE id_lote = :id_lote");
 
         $stmtStockInsumo = $this->db()->prepare("UPDATE insumo SET
@@ -354,7 +353,6 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
 
                 $stmtStockLote->execute([
                     ':cantidad'  => $cantidad,
-                    ':cantidad2' => $cantidad,
                     ':id_lote'   => $idLote,
                 ]);
             }
@@ -455,28 +453,39 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
     {
         try {
             $searchTerm = "%{$query}%";
+            $hasFilter = $query !== '';
 
-            $stmt = $this->db()->prepare("SELECT
-                                            l.id_lote,
-                                            'planta' AS tipo_item,
-                                            l.cantidad_actual,
-                                            l.estado,
-                                            p.nombre_comun AS planta_nombre,
-                                            p.nombre_comun AS nombre,
-                                            e.nombre_especie AS especie_nombre,
-                                            e.nombre_especie AS detalle,
-                                            c.precio_final_sugerido AS precio_unitario,
-                                            NULL AS unidad_simbolo
-                                        FROM lote l
-                                        JOIN plantas p ON l.id_planta = p.id_planta AND p.activo = 1
-                                        LEFT JOIN especie e ON p.id_especie = e.id_especie
-                                        LEFT JOIN calculo_precio c ON l.id_lote = c.id_lote
-                                        WHERE l.activo = 1
-                                        AND l.cantidad_actual > 0
-                                        AND (p.nombre_comun LIKE ? OR e.nombre_especie LIKE ? OR p.nombre_tecnico LIKE ?)
-                                        ORDER BY p.nombre_comun ASC
-                                        LIMIT 20");
-            $stmt->execute([$searchTerm, $searchTerm, $searchTerm]);
+            $plantaSql = "SELECT
+                            l.id_lote,
+                            'planta' AS tipo_item,
+                            l.cantidad_actual,
+                            p.nombre_comun AS planta_nombre,
+                            p.nombre_comun AS nombre,
+                            e.nombre_especie AS especie_nombre,
+                            e.nombre_especie AS detalle,
+                            c.precio_final_sugerido AS precio_unitario,
+                            NULL AS unidad_simbolo
+                        FROM lote l
+                        JOIN plantas p ON l.id_planta = p.id_planta AND p.activo = 1
+                        LEFT JOIN especie e ON p.id_especie = e.id_especie
+                        LEFT JOIN calculo_precio c ON l.id_lote = c.id_lote AND c.vigente = 1
+                        WHERE l.activo = 1
+                        AND l.cantidad_actual > 0
+                        AND c.id_calculo IS NOT NULL";
+            if ($hasFilter) {
+                $plantaSql .= " AND (p.nombre_comun LIKE ? OR e.nombre_especie LIKE ? OR p.nombre_tecnico LIKE ?)";
+            }
+            $plantaSql .= " ORDER BY p.nombre_comun ASC";
+            if ($hasFilter) {
+                $plantaSql .= " LIMIT 20";
+            }
+
+            $stmt = $this->db()->prepare($plantaSql);
+            if ($hasFilter) {
+                $stmt->execute([$searchTerm, $searchTerm, $searchTerm]);
+            } else {
+                $stmt->execute();
+            }
             $plantas = $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
 
             foreach ($plantas as &$p) {
@@ -484,26 +493,37 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
             }
             unset($p);
 
-            $stmt2 = $this->db()->prepare("SELECT
-                                            i.id_insumo AS id_lote,
-                                            'insumo' AS tipo_item,
-                                            i.stock_actual AS cantidad_actual,
-                                            i.categoria AS estado,
-                                            i.nombre_insumo AS planta_nombre,
-                                            i.nombre_insumo AS nombre,
-                                            u.simbolo AS especie_nombre,
-                                            u.simbolo AS detalle,
-                                            i.costo_unitario_actual AS precio_unitario,
-                                            u.simbolo AS unidad_simbolo,
-                                            i.id_insumo
-                                        FROM insumo i
-                                        LEFT JOIN unidad_medida u ON i.id_unidad_medida = u.id_unidad_medida AND u.activo = 1
-                                        WHERE i.activo = 1
-                                        AND i.stock_actual > 0
-                                        AND (i.nombre_insumo LIKE ? OR i.categoria LIKE ?)
-                                        ORDER BY i.nombre_insumo ASC
-                                        LIMIT 10");
-            $stmt2->execute([$searchTerm, $searchTerm]);
+            $insumoSql = "SELECT
+                            i.id_insumo AS id_lote,
+                            'insumo' AS tipo_item,
+                            i.stock_actual AS cantidad_actual,
+                            i.categoria AS estado,
+                            i.nombre_insumo AS planta_nombre,
+                            i.nombre_insumo AS nombre,
+                            u.simbolo AS especie_nombre,
+                            u.simbolo AS detalle,
+                            i.costo_unitario_actual AS precio_unitario,
+                            u.simbolo AS unidad_simbolo,
+                            i.id_insumo
+                        FROM insumo i
+                        LEFT JOIN unidad_medida u ON i.id_unidad_medida = u.id_unidad_medida AND u.activo = 1
+                        WHERE i.activo = 1
+                        AND i.stock_actual > 0
+                        AND i.costo_unitario_actual > 0";
+            if ($hasFilter) {
+                $insumoSql .= " AND (i.nombre_insumo LIKE ? OR i.categoria LIKE ?)";
+            }
+            $insumoSql .= " ORDER BY i.nombre_insumo ASC";
+            if ($hasFilter) {
+                $insumoSql .= " LIMIT 10";
+            }
+
+            $stmt2 = $this->db()->prepare($insumoSql);
+            if ($hasFilter) {
+                $stmt2->execute([$searchTerm, $searchTerm]);
+            } else {
+                $stmt2->execute();
+            }
             $insumos = $stmt2 ? $stmt2->fetchAll(PDO::FETCH_ASSOC) : [];
 
             return array_merge($plantas, $insumos);
