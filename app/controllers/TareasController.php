@@ -158,6 +158,24 @@ function tasks_assignAjax(): void
         ]);
     }
 
+    // Notificar al trabajador asignado
+    try {
+        $userModel = new \SysInescolara\models\Usuario();
+        $trabajadorUser = $userModel->getByTrabajadorId($assignmentData['id_trabajador']);
+        if ($trabajadorUser) {
+            $notifModel = new \SysInescolara\models\Notification();
+            $notifModel->create(
+                (int)$trabajadorUser['id_usuario'],
+                'Nueva tarea asignada',
+                "Se te ha asignado la tarea: {$assignmentData['nombre_tarea']}",
+                'task_assigned',
+                'dashboard/tareas'
+            );
+        }
+    } catch (\Throwable $e) {
+        error_log('Error al crear notificación: ' . $e->getMessage());
+    }
+
     jsonResponse(['success' => true, 'message' => 'Tarea asignada correctamente', 'id_asignacion' => $asignacionId]);
 }
 
@@ -280,6 +298,18 @@ function tasks_completeAssignmentAjax(): void
         $model->updateToolEstados($id, $toolEstados);
     }
 
+    // Marcar notificación como leída
+    try {
+        $userModel = new \SysInescolara\models\Usuario();
+        $trabajadorUser = $userModel->getByTrabajadorId((int)$assignment['id_trabajador']);
+        if ($trabajadorUser) {
+            $notifModel = new \SysInescolara\models\Notification();
+            $notifModel->markTaskAssignedAsRead((int)$trabajadorUser['id_usuario'], $assignment['nombre_tarea']);
+        }
+    } catch (\Throwable $e) {
+        error_log('Error al marcar notificación como leída: ' . $e->getMessage());
+    }
+
     jsonResponse(['success' => true, 'message' => 'Tarea completada correctamente']);
 }
 
@@ -293,6 +323,19 @@ function tasks_cancelAssignmentAjax(): void
     if (!$assignment) jsonResponse(['success' => false, 'message' => 'Asignación no encontrada'], 404);
 
     $model->cancelAssignment($id);
+
+    // Marcar notificación como leída
+    try {
+        $userModel = new \SysInescolara\models\Usuario();
+        $trabajadorUser = $userModel->getByTrabajadorId((int)$assignment['id_trabajador']);
+        if ($trabajadorUser) {
+            $notifModel = new \SysInescolara\models\Notification();
+            $notifModel->markTaskAssignedAsRead((int)$trabajadorUser['id_usuario'], $assignment['nombre_tarea']);
+        }
+    } catch (\Throwable $e) {
+        error_log('Error al marcar notificación como leída: ' . $e->getMessage());
+    }
+
     jsonResponse(['success' => true, 'message' => 'Tarea cancelada correctamente']);
 }
 
