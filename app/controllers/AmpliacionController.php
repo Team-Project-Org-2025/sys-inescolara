@@ -19,6 +19,7 @@ function index(): void
                 'GET_get_especies'       => get_especies(),
                 'GET_buscar_clientes'    => buscar_clientes(),
                 'POST_add_ajax'          => add_ajax(),
+                'POST_edit_ajax'         => edit_ajax(),
                 'POST_delete_ajax'       => delete_ajax(),
                 default                  => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
             };
@@ -40,6 +41,7 @@ function get_ubicaciones(): void { checkModuleAuth(); ampliacion_getUbicacionesA
 function get_especies(): void { checkModuleAuth(); ampliacion_getEspeciesAjax(); }
 function buscar_clientes(): void { checkModuleAuth(); ampliacion_buscarClientesAjax(); }
 function add_ajax(): void { checkModuleAuth(); checkPermisoOrFail('ampliacion:crear'); ampliacion_handleAdd(); }
+function edit_ajax(): void { checkModuleAuth(); checkPermisoOrFail('ampliacion:editar'); ampliacion_handleEdit(); }
 function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('ampliacion:eliminar'); ampliacion_handleDelete(); }
 
 function ampliacion_handleAdd(): void
@@ -92,6 +94,58 @@ function ampliacion_handleAdd(): void
     $newId = $model->registerExchange($payload);
 
     jsonResponse(['success' => true, 'message' => 'Ampliación de especies registrada correctamente', 'id' => $newId]);
+}
+
+function ampliacion_handleEdit(): void
+{
+    $data = getRequestData();
+    $id = (int)($data['id'] ?? 0);
+    if ($id <= 0) throw new \Exception('ID inválido');
+
+    $idCliente = (int)($data['id_cliente'] ?? 0);
+    $idTrabajador = (int)($data['id_trabajador_gestor'] ?? 0);
+    if ($idTrabajador <= 0) throw new \Exception('El trabajador gestor es requerido.');
+
+    $salidaItems = isset($data['salida_items']) ? json_decode($data['salida_items'], true) : [];
+    $entradaItems = isset($data['entrada_items']) ? json_decode($data['entrada_items'], true) : [];
+    if (!is_array($salidaItems)) $salidaItems = [];
+    if (!is_array($entradaItems)) $entradaItems = [];
+
+    if (empty($salidaItems) && empty($entradaItems)) {
+        throw new \Exception('Debe agregar al menos un item de salida o entrada.');
+    }
+
+    foreach ($salidaItems as $item) {
+        if ((int)($item['id_lote'] ?? 0) <= 0 || (int)($item['cantidad'] ?? 0) <= 0) {
+            throw new \Exception('Complete correctamente todos los items de salida.');
+        }
+    }
+
+    foreach ($entradaItems as $item) {
+        $idPlanta = (int)($item['id_planta'] ?? 0);
+        $idUbicacion = (int)($item['id_ubicacion'] ?? 0);
+        $cantidad = (int)($item['cantidad'] ?? 0);
+        $hasNewPlantName = !empty(trim((string)($item['nueva_planta_nombre'] ?? '')));
+        if ($idUbicacion <= 0 || $cantidad <= 0) {
+            throw new \Exception('Complete correctamente todos los items de entrada.');
+        }
+        if ($idPlanta <= 0 && !$hasNewPlantName) {
+            throw new \Exception('Seleccione una planta existente o agregue una nueva.');
+        }
+    }
+
+    $model = new Ampliacion();
+    $payload = [
+        'id_cliente' => $idCliente,
+        'id_trabajador_gestor' => $idTrabajador,
+        'fecha_movimiento' => trim((string)($data['fecha_movimiento'] ?? '')),
+        'observacion' => trim((string)($data['observacion'] ?? '')),
+        'salida_items' => $salidaItems,
+        'entrada_items' => $entradaItems,
+    ];
+
+    $model->update($id, $payload);
+    jsonResponse(['success' => true, 'message' => 'Ampliación actualizada correctamente']);
 }
 
 function ampliacion_handleDelete(): void

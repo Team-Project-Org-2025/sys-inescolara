@@ -116,6 +116,8 @@ class Ampliacion extends Database implements ReadableInterface
             $stmt = $this->db()->prepare("
                 SELECT d.*,
                        l.cantidad_actual AS lote_stock_actual,
+                       l.id_planta,
+                       l.id_ubicacion,
                        p.nombre_comun AS planta_nombre,
                        u.nombre_ubicacion AS ubicacion_nombre
                 FROM movimiento_planta_detalle d
@@ -140,7 +142,7 @@ class Ampliacion extends Database implements ReadableInterface
                         l.id_lote AS id,
                         l.id_lote,
                         l.cantidad_actual,
-                        l.estado,
+                        l.id_estado,
                         COALESCE(NULLIF(p.nombre_comun, ''), p.nombre_tecnico, 'Sin nombre') AS planta_nombre,
                         u.nombre_ubicacion AS ubicacion_nombre
                     FROM lote l
@@ -342,6 +344,146 @@ class Ampliacion extends Database implements ReadableInterface
         } catch (\Throwable $e) {
             if ($this->db()->inTransaction()) $this->db()->rollBack();
             error_log('Error en Ampliacion::registerExchange: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    public function update(int $id, array $data): bool
+    {
+        $oldMain = $this->getById($id);
+        if (!$oldMain) {
+            throw new \Exception('No existe la ampliación');
+        }
+        $oldDetails = $oldMain['detalles'] ?? [];
+
+        $idCliente = (int)($data['id_cliente'] ?? 0);
+        $idTrabajador = (int)($data['id_trabajador_gestor'] ?? 0);
+        $fecha = trim((string)($data['fecha_movimiento'] ?? date('Y-m-d')));
+        $observacion = trim((string)($data['observacion'] ?? ''));
+        if ($observacion === '') $observacion = null;
+
+        $salidaItems = $data['salida_items'] ?? [];
+        $entradaItems = $data['entrada_items'] ?? [];
+
+        try {
+            $this->db()->beginTransaction();
+
+            // 1) Reverse old stock
+            foreach ($oldDetails as $det) {
+                if ($det['tipo'] === 'salida') {
+                    $this->db()->prepare("UPDATE lote SET cantidad_actual = cantidad_actual + :cant WHERE id_lote = :id")
+                        ->execute([':cant' => (int)$det['cantidad'], ':id' => (int)$det['id_lote']]);
+                } elseif ($det['tipo'] === 'entrada') {
+                    $stmt = $this->db()->prepare("UPDATE lote SET cantidad_actual = GREATEST(0, cantidad_actual - :cant) WHERE id_lote = :id AND cantidad_actual >= :cant2");
+                    $stmt->execute([':cant' => (int)$det['cantidad'], ':id' => (int)$det['id_lote'], ':cant2' => (int)$det['cantidad']]);
+                    if ($stmt->rowCount() === 0) {
+                        throw new \Exception("Stock insuficiente para revertir entrada del lote #{$det['id_lote']}.");
+                    }
+                }
+            }
+
+            // 2) Soft-delete old details
+            $this->db()->prepare("UPDATE movimiento_planta_detalle SET activo = 0 WHERE id_movimiento_planta = :id")
+                ->execute([':id' => $id]);
+
+            // 3) Update main record
+            $this->db()->prepare("UPDATE movimiento_planta SET id_cliente = :cli, id_trabajador_gestor = :tra, fecha_movimiento = :fec, observacion = :obs WHERE id_movimiento_planta = :id")
+                ->execute([
+                    ':cli' => $idCliente > 0 ? $idCliente : null,
+                    ':tra' => $idTrabajador,
+                    ':fec' => $fecha,
+                    ':obs' => $observacion,
+                    ':id'  => $id,
+                ]);
+
+            // 4) Insert new items (same logic as registerExchange)
+            $stmtDetail = $this->db()->prepare("
+                INSERT INTO movimiento_planta_detalle (id_movimiento_planta, id_lote, tipo, cantidad, precio_unitario, sub_total)
+                VALUES (:id_mov, :id_lote, :tipo, :cantidad, NULL, NULL)
+            ");
+            $stmtUpdateLot = $this->db()->prepare("UPDATE lote SET cantidad_actual = GREATEST(0, cantidad_actual - :cantidad) WHERE id_lote = :id AND cantidad_actual >= :cantidad2");
+            $idEstadoVivo = (int)$this->db()->query("SELECT id_estado FROM estado WHERE nombre = 'vivo' LIMIT 1")->fetchColumn();
+            $idOrigenIntercambio = (int)$this->db()->query("SELECT id_origen FROM origen WHERE nombre = 'Ampliación' LIMIT 1")->fetchColumn();
+            $stmtFindLot = $this->db()->prepare("SELECT id_lote FROM lote WHERE id_planta = :id_planta AND id_ubicacion = :id_ubicacion AND activo = 1 LIMIT 1");
+            $stmtCreateLot = $this->db()->prepare("
+                INSERT INTO lote (id_planta, id_ubicacion, fecha_siembra, cantidad_inicial, cantidad_actual, id_estado, id_origen, observacion)
+                VALUES (:id_planta, :id_ubicacion, :fecha, :cantidad_ini, :cantidad_act, :id_estado, :id_origen, :observacion)
+            ");
+            $stmtIncreaseLot = $this->db()->prepare("UPDATE lote SET cantidad_actual = cantidad_actual + :cantidad WHERE id_lote = :id");
+
+            $itemCount = 0;
+
+            foreach ($salidaItems as $item) {
+                $idLote = (int)($item['id_lote'] ?? 0);
+                $cantidad = (int)($item['cantidad'] ?? 0);
+                if ($idLote <= 0 || $cantidad <= 0) continue;
+
+                $stmtUpdateLot->execute([':cantidad' => $cantidad, ':id' => $idLote, ':cantidad2' => $cantidad]);
+                if ($stmtUpdateLot->rowCount() === 0) {
+                    throw new \Exception("Stock insuficiente en el lote seleccionado para salida.");
+                }
+                $stmtDetail->execute([':id_mov' => $id, ':id_lote' => $idLote, ':tipo' => 'salida', ':cantidad' => $cantidad]);
+                $itemCount++;
+            }
+
+            foreach ($entradaItems as $item) {
+                $idPlanta = (int)($item['id_planta'] ?? 0);
+                $idUbicacion = (int)($item['id_ubicacion'] ?? 0);
+                $cantidad = (int)($item['cantidad'] ?? 0);
+                if ($idUbicacion <= 0 || $cantidad <= 0) continue;
+
+                if ($idPlanta <= 0 && !empty($item['nueva_planta_nombre'])) {
+                    $nuevoNombre = trim((string)$item['nueva_planta_nombre']);
+                    $nuevoTecnico = !empty($item['nueva_planta_tecnico']) ? trim((string)$item['nueva_planta_tecnico']) : null;
+                    $nuevoIdEspecie = (int)($item['nueva_planta_id_especie'] ?? 0);
+                    if ($nuevoIdEspecie <= 0) {
+                        throw new \Exception("Debe seleccionar una especie para la nueva planta '{$nuevoNombre}'.");
+                    }
+                    $idPlanta = $this->createPlant($nuevoNombre, $nuevoTecnico, $nuevoIdEspecie);
+                }
+                if ($idPlanta <= 0) continue;
+
+                $stmtFindLot->execute([':id_planta' => $idPlanta, ':id_ubicacion' => $idUbicacion]);
+                $existingLot = $stmtFindLot->fetch(PDO::FETCH_ASSOC);
+
+                if ($existingLot) {
+                    $idLote = (int)$existingLot['id_lote'];
+                    $stmtIncreaseLot->execute([':cantidad' => $cantidad, ':id' => $idLote]);
+                } else {
+                    $stmtCreateLot->execute([
+                        ':id_planta' => $idPlanta,
+                        ':id_ubicacion' => $idUbicacion,
+                        ':fecha' => $fecha,
+                        ':cantidad_ini' => $cantidad,
+                        ':cantidad_act' => $cantidad,
+                        ':id_estado' => $idEstadoVivo,
+                        ':id_origen' => $idOrigenIntercambio,
+                        ':observacion' => $observacion,
+                    ]);
+                    $idLote = (int)$this->db()->lastInsertId();
+                }
+
+                $stmtDetail->execute([':id_mov' => $id, ':id_lote' => $idLote, ':tipo' => 'entrada', ':cantidad' => $cantidad]);
+                $itemCount++;
+            }
+
+            if ($itemCount === 0) {
+                $this->db()->rollBack();
+                throw new \Exception('No se registró ningún item. Verifique los datos.');
+            }
+
+            $this->db()->commit();
+
+            AuditLog::record('UPDATE', 'movimiento_planta', $id, [
+                'old' => ['id_cliente' => $oldMain['id_cliente'], 'fecha' => $oldMain['fecha_movimiento'], 'detalles_count' => count($oldDetails)],
+            ], [
+                'new' => ['id_cliente' => $idCliente, 'fecha' => $fecha, 'salida_count' => count($salidaItems), 'entrada_count' => count($entradaItems)],
+            ]);
+
+            return true;
+        } catch (\Throwable $e) {
+            if ($this->db()->inTransaction()) $this->db()->rollBack();
+            error_log('Error en Ampliacion::update: ' . $e->getMessage());
             throw $e;
         }
     }
