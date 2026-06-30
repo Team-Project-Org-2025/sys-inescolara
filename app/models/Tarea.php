@@ -429,7 +429,7 @@ class Tarea extends Database implements ReadableInterface, DeletableInterface
 
     public function getToolUsages(int $asignacionId): array
     {
-        $sql = "SELECT u.*, h.nombre_herramienta, h.tipo
+        $sql = "SELECT u.*, h.nombre_herramienta
                 FROM uso_herramienta u
                 LEFT JOIN herramienta h ON u.id_herramienta = h.id_herramienta
                 WHERE u.id_asignacion = :id_asignacion

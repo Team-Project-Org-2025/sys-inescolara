@@ -47,10 +47,8 @@ include_once __DIR__ . '/../common/modal.php';
                         <table id="assignmentsTable" class="table table-striped table-hover w-100">
                             <thead>
                                 <tr>
-                                    <th>#</th>
                                     <th>Trabajador</th>
                                     <th>Tarea</th>
-                                    <th>Lote</th>
                                     <th>Fecha Asignación</th>
                                     <th>Estatus</th>
                                     <th>Acciones</th>
@@ -69,11 +67,11 @@ include_once __DIR__ . '/../common/modal.php';
     <?php modal_form(['id' => 'assignTaskModal', 'title' => 'Asignar Tarea', 'formId' => 'assignTaskForm', 'size' => 'modal-lg', 'hasHiddenId' => true, 'saveText' => 'Guardar Asignación']); ?>
         <input type="hidden" name="id_asignacion">
         <div class="row">
-            <div class="col-md-6 mb-3">
+            <div class="col-md-4 mb-3">
                 <label class="form-label">Nombre de la tarea *</label>
                 <input type="text" class="form-control" name="nombre_tarea" required placeholder="Ej: Regar plantas, Podar rosales" maxlength="50">
             </div>
-            <div class="col-md-3 mb-3">
+            <div class="col-md-4 mb-3">
                 <label class="form-label">Trabajador *</label>
                 <select class="form-select" name="id_trabajador" required>
                     <option value="">Seleccione...</option>
@@ -82,7 +80,7 @@ include_once __DIR__ . '/../common/modal.php';
                     <?php endforeach; ?>
                 </select>
             </div>
-            <div class="col-md-3 mb-3">
+            <div class="col-md-4 mb-3">
                 <label class="form-label">Lote *</label>
                 <select class="form-select" name="id_lote" required>
                     <option value="">Seleccione...</option>
@@ -112,12 +110,10 @@ include_once __DIR__ . '/../common/modal.php';
                 <table class="table table-sm table-bordered mb-2">
                     <thead>
                         <tr>
-                            <th style="width:28%">Insumo</th>
-                            <th style="width:12%">Stock</th>
-                            <th style="width:18%">Cantidad</th>
-                            <th style="width:15%">Costo Unit.</th>
-                            <th style="width:15%">Fecha</th>
-                            <th style="width:12%"></th>
+                            <th style="width:35%">Insumo</th>
+                            <th style="width:15%">Stock</th>
+                            <th style="width:25%">Cantidad</th>
+                            <th style="width:25%"></th>
                         </tr>
                     </thead>
                     <tbody id="consumptionsBody">
@@ -139,10 +135,9 @@ include_once __DIR__ . '/../common/modal.php';
                 <table class="table table-sm table-bordered mb-2">
                     <thead>
                         <tr>
-                            <th style="width:40%">Herramienta</th>
-                            <th style="width:20%">Fecha</th>
-                            <th>Observación</th>
-                            <th style="width:10%"></th>
+                            <th style="width:55%">Herramienta</th>
+                            <th style="width:20%">Disp.</th>
+                            <th style="width:25%"></th>
                         </tr>
                     </thead>
                     <tbody id="toolsBody">

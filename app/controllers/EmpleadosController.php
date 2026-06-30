@@ -13,6 +13,7 @@ function index(): void
         try {
             match ($_SERVER['REQUEST_METHOD'] . '_' . $action) {
                 'GET_get_employees' => get_employees(),
+                'GET_get_detail'    => get_detail(),
                 'POST_add_ajax'     => add_ajax(),
                 'POST_edit_ajax'    => edit_ajax(),
                 'POST_delete_ajax'  => delete_ajax(),
@@ -43,6 +44,7 @@ function index(): void
 }
 
 function get_employees(): void { checkModuleAuth(); employees_getEmployeesAjax(); }
+function get_detail(): void { checkModuleAuth(); employees_getDetailAjax(); }
 function add_ajax(): void { checkModuleAuth(); checkPermisoOrFail('empleados:crear'); employees_handleAddEdit('add'); }
 function edit_ajax(): void { checkModuleAuth(); checkPermisoOrFail('empleados:editar'); employees_handleAddEdit('edit'); }
 function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('empleados:eliminar'); employees_handleDelete(); }
@@ -85,6 +87,18 @@ function employees_handleDelete(): void
 
     $model->delete($id);
     jsonResponse(['success' => true, 'message' => 'Trabajador desactivado correctamente', 'employeeId' => $id]);
+}
+
+function employees_getDetailAjax(): void
+{
+    $id = (int)($_GET['id'] ?? 0);
+    if ($id <= 0) jsonResponse(['success' => false, 'message' => 'ID inválido'], 400);
+
+    $model = new Empleado();
+    $employee = $model->getById($id);
+    if (!$employee) jsonResponse(['success' => false, 'message' => 'Empleado no encontrado'], 404);
+
+    jsonResponse(['success' => true, 'employee' => $employee]);
 }
 
 function employees_getEmployeesAjax(): void

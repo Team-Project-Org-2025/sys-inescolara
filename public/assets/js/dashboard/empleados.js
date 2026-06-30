@@ -16,7 +16,7 @@ $(document).ready(function () {
 
   const initDataTable = () => {
     if (typeof SkeletonHelper !== 'undefined') {
-      SkeletonHelper.showTableSkeleton('empleadosTable', 5, 7);
+      SkeletonHelper.showTableSkeleton('empleadosTable', 5, 5);
     }
     empleadosTable = $('#empleadosTable').DataTable({
       ajax: {
@@ -37,21 +37,14 @@ $(document).ready(function () {
           render: (data) => data || '<span class="text-muted">—</span>',
         },
         {
-          data: 'telefono_trabajador',
-          render: (data) => data || '<span class="text-muted">—</span>',
-        },
-        {
           data: 'cargo',
           render: (data) => data || '<span class="text-muted">—</span>',
         },
         {
-          data: 'activo',
-          render: (data) => data ? '<span class="badge bg-success">Sí</span>' : '<span class="badge bg-secondary">No</span>',
-        },
-        {
           data: null,
           orderable: false,
-          render: () => C.btnGroup(
+          render: (data) => C.btnGroup(
+              C.btnView('btn-view'),
               C.btnEdit('btn-edit'),
               C.btnDelete('btn-delete'),
             ),
@@ -169,6 +162,38 @@ $(document).ready(function () {
       });
   });
 
+  // Ver detalle empleado
+  $(document).on('click', '.btn-view', function () {
+    const row = empleadosTable.row($(this).closest('tr')).data();
+    const id = row.id;
+    $.getJSON(`${baseUrl}?action=get_detail&id=${id}`, { 'X-Requested-With': 'XMLHttpRequest' })
+      .done((res) => {
+        if (!res.success) {
+          Helpers.toast('error', res.message);
+          return;
+        }
+        const e = res.employee;
+        let html = `
+          <div class="mb-3">
+            <table class="table table-sm table-bordered">
+              <tbody>
+                <tr><th style="width:35%;">Nombre</th><td>${Helpers.escapeHtml(e.nombre_trabajador || '')}</td></tr>
+                <tr><th>Apellido</th><td>${Helpers.escapeHtml(e.apellido_trabajador || '')}</td></tr>
+                <tr><th>Cédula</th><td>${Helpers.escapeHtml(e.cedula_trabajador || '')}</td></tr>
+                <tr><th>Teléfono</th><td>${Helpers.escapeHtml(e.telefono_trabajador || '')}</td></tr>
+                <tr><th>Cargo</th><td>${Helpers.escapeHtml(e.cargo || '')}</td></tr>
+                <tr><th>Activo</th><td>${e.activo ? '<span class="badge bg-success">Sí</span>' : '<span class="badge bg-secondary">No</span>'}</td></tr>
+              </tbody>
+            </table>
+          </div>`;
+        $('#detailEmployeeBody').html(html);
+        $('#detailEmployeeModal').modal({ focus: false }).modal('show');
+      })
+      .fail(() => {
+        Helpers.toast('error', 'Error al obtener los detalles del empleado');
+      });
+  });
+
   // Eliminar empleado
   $(document).on('click', '.btn-delete', function () {
     const row = empleadosTable.row($(this).closest('tr')).data();
@@ -197,7 +222,7 @@ $(document).ready(function () {
   });
 
   // Limpiar modales
-  $('#addEmployeeModal, #editEmployeeModal').on('hidden.bs.modal', function () {
+  $('#addEmployeeModal, #editEmployeeModal, #detailEmployeeModal').on('hidden.bs.modal', function () {
     const $form = $(this).find('form');
     Helpers.resetForm($form);
   });

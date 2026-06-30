@@ -25,7 +25,7 @@ const completeRules = {
 // ============================================================
 function initAssignmentsTable() {
     if (typeof SkeletonHelper !== 'undefined') {
-        SkeletonHelper.showTableSkeleton('assignmentsTable', 5, 7);
+        SkeletonHelper.showTableSkeleton('assignmentsTable', 5, 5);
     }
     assignmentsTable = $('#assignmentsTable').DataTable({
         ajax: {
@@ -36,13 +36,11 @@ function initAssignmentsTable() {
             dataSrc: 'assignments',
         },
         columns: [
-            { data: 'id_asignacion' },
             {
                 data: null,
                 render: (d) => `${Helpers.escapeHtml(d.nombre_trabajador || '')} ${Helpers.escapeHtml(d.apellido_trabajador || '')}`,
             },
             { data: 'nombre_tarea' },
-            { data: 'codigo_lote' },
             { data: 'fecha_asignacion' },
             {
                 data: 'estatus_tarea',
@@ -102,7 +100,7 @@ function addConsumptionRow() {
     let opts = '<option value="">Seleccione...</option>';
     insumos.forEach((i) => {
         const stock = parseFloat(i.stock_actual || 0);
-        opts += `<option value="${i.id}" data-costo="${i.costo_unitario_actual || 0}" data-stock="${stock}" data-simbolo="${Helpers.escapeHtml(i.simbolo || '')}">
+        opts += `<option value="${i.id}" data-stock="${stock}" data-simbolo="${Helpers.escapeHtml(i.simbolo || '')}">
             ${Helpers.escapeHtml(i.nombre_insumo)} (Stock: ${stock} ${Helpers.escapeHtml(i.simbolo || '')})
         </option>`;
     });
@@ -116,12 +114,7 @@ function addConsumptionRow() {
                 <input type="number" step="0.01" min="0.01" class="form-control form-control-sm cantidad-input" name="consumptions[${idx}][cantidad_usada]" required placeholder="0.00">
                 <small class="stock-hint text-muted"></small>
             </td>
-            <td>
-                <input type="number" step="0.01" min="0" class="form-control form-control-sm costo-input" name="consumptions[${idx}][costo_unitario]" readonly required placeholder="0.00">
-            </td>
-            <td>
-                <input type="date" class="form-control form-control-sm" name="consumptions[${idx}][fecha_consumo]" value="${hoy}">
-            </td>
+
             <td class="text-center">
                 <button type="button" class="btn btn-sm btn-outline-danger btn-remove-row"><i class="fas fa-trash"></i></button>
             </td>
@@ -148,11 +141,9 @@ function updateStockHint($input) {
 
 $(document).on('change', '#consumptionsBody select[name$="[id_insumo]"]', function () {
     const $option = $(this).find('option:selected');
-    const costo = $option.data('costo') || 0;
     const stock = parseFloat($option.data('stock') || 0);
     const simbolo = $option.data('simbolo') || '';
     const $tr = $(this).closest('tr');
-    $tr.find('.costo-input').val(parseFloat(costo).toFixed(2));
     $tr.find('.stock-display').text(stock.toFixed(2) + ' ' + simbolo);
     updateStockHint($tr.find('.cantidad-input'));
 });
@@ -188,29 +179,30 @@ function addToolRow() {
     const $tbody = $('#toolsBody');
     const idx = $tbody.children().length;
     const herramientas = DATA.herramientas || [];
-    const hoy = DATA.hoy || new Date().toISOString().split('T')[0];
     let opts = '<option value="">Seleccione...</option>';
     herramientas.forEach((h) => {
         if (h.estado !== 'disponible') return;
-        opts += `<option value="${h.id}">${Helpers.escapeHtml(h.nombre_herramienta)} (${Helpers.escapeHtml(h.tipo || '')})</option>`;
+        opts += `<option value="${h.id}" data-cantidad="${h.cantidad || 0}">${Helpers.escapeHtml(h.nombre_herramienta)} (${h.cantidad || 0} disp.)</option>`;
     });
     const row = `
         <tr>
             <td>
                 <select class="form-select form-select-sm" name="tools[${idx}][id_herramienta]" required>${opts}</select>
             </td>
-            <td>
-                <input type="date" class="form-control form-control-sm" name="tools[${idx}][fecha_uso]" value="${hoy}">
-            </td>
-            <td>
-                <input type="text" class="form-control form-control-sm" name="tools[${idx}][observacion]" placeholder="Opcional">
-            </td>
+            <td class="text-center align-middle disp-display">—</td>
             <td class="text-center">
                 <button type="button" class="btn btn-sm btn-outline-danger btn-remove-tool-row"><i class="fas fa-trash"></i></button>
             </td>
         </tr>`;
     $tbody.append(row);
 }
+
+$(document).on('change', '#toolsBody select[name$="[id_herramienta]"]', function () {
+    const $option = $(this).find('option:selected');
+    const cantidad = parseFloat($option.data('cantidad') || 0);
+    const $tr = $(this).closest('tr');
+    $tr.find('.disp-display').text(cantidad > 0 ? cantidad.toFixed(0) : '—');
+});
 
 $(document).on('click', '.btn-remove-tool-row', function () {
     $(this).closest('tr').remove();
@@ -248,8 +240,7 @@ $('#assignTaskForm').on('submit', function (e) {
         const $row = $(this);
         const idInsumo = parseInt($row.find('select').val()) || 0;
         const cantidad = parseFloat($row.find('input[name$="[cantidad_usada]"]').val()) || 0;
-        const costo = parseFloat($row.find('input[name$="[costo_unitario]"]').val()) || 0;
-        const fecha = $row.find('input[name$="[fecha_consumo]"]').val() || DATA.hoy;
+
         if (idInsumo) {
             if (cantidad <= 0) {
                 hasConsumptionError = true;
@@ -261,7 +252,7 @@ $('#assignTaskForm').on('submit', function (e) {
                 hasConsumptionError = true;
                 $row.find('.cantidad-input').addClass('is-invalid');
             }
-            data.consumptions.push({ id_insumo: idInsumo, cantidad_usada: cantidad, costo_unitario: costo, fecha_consumo: fecha });
+            data.consumptions.push({ id_insumo: idInsumo, cantidad_usada: cantidad });
         }
     });
 
@@ -274,11 +265,7 @@ $('#assignTaskForm').on('submit', function (e) {
         const $row = $(this);
         const idHerramienta = parseInt($row.find('select').val()) || 0;
         if (!idHerramienta) return;
-        data.tools.push({
-            id_herramienta: idHerramienta,
-            fecha_uso: $row.find('input[name$="[fecha_uso]"]').val() || DATA.hoy,
-            observacion: $row.find('input[name$="[observacion]"]').val() || '',
-        });
+        data.tools.push({ id_herramienta: idHerramienta });
     });
 
     const idAsignacion = parseInt($form.find('[name="id_asignacion"]').val()) || 0;
@@ -471,13 +458,6 @@ $(document).on('click', '.btn-view-assign', function () {
                                 <span class="fw-semibold">${Helpers.escapeHtml(a.fecha_cumplimiento || '—')}</span>
                             </div>` : ''}
                         </div>
-                        ${a.estatus_tarea === 'completada' ? `
-                        <div class="row">
-                            <div class="col-md-4 mb-2">
-                                <small class="text-muted d-block">Horas Dedicadas</small>
-                                <span class="fw-semibold">${a.horas_dedicadas || '—'}</span>
-                            </div>
-                        </div>` : ''}
                     </div>
                 </div>
 
@@ -524,11 +504,10 @@ $(document).on('click', '.btn-view-assign', function () {
                     <div class="card-body p-2">
                         ${tools.length === 0 ? '<p class="text-muted mb-0">No se registró uso de herramientas.</p>' : `
                         <table class="table table-sm table-bordered mb-0">
-                            <thead><tr><th>Herramienta</th><th>Tipo</th><th>Fecha</th></tr></thead>
+                            <thead><tr><th>Herramienta</th><th>Fecha</th></tr></thead>
                             <tbody>
                                 ${tools.map(t => `<tr>
                                     <td>${Helpers.escapeHtml(t.nombre_herramienta || '—')}</td>
-                                    <td>${Helpers.escapeHtml(t.tipo || '—')}</td>
                                     <td>${Helpers.escapeHtml(t.fecha_uso || '—')}</td>
                                 </tr>`).join('')}
                             </tbody>
@@ -582,15 +561,12 @@ $(document).on('click', '.btn-edit-assign', function () {
                 const $row = $('#consumptionsBody tr:last');
                 $row.find('select').val(c.id_insumo).trigger('change');
                 $row.find('.cantidad-input').val(c.cantidad_usada);
-                $row.find('input[name$="[fecha_consumo]"]').val(c.fecha_consumo || DATA.hoy);
             });
 
             tools.forEach(function (t) {
                 addToolRow();
                 const $row = $('#toolsBody tr:last');
-                $row.find('select').val(t.id_herramienta);
-                $row.find('input[name$="[fecha_uso]"]').val(t.fecha_uso || DATA.hoy);
-                $row.find('input[name$="[observacion]"]').val(t.observacion || '');
+                $row.find('select').val(t.id_herramienta).trigger('change');
             });
 
             $('#assignTaskModal .modal-title').text('Editar Tarea');
