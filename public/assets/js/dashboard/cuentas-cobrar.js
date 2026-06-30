@@ -21,9 +21,6 @@ $(document).ready(function () {
         dataType: 'json',
         headers: { 'X-Requested-With': 'XMLHttpRequest' },
         dataSrc: 'data',
-        data: function (d) {
-          d.estado = $('#filterEstado').val();
-        }
       },
       columns: [
         {
@@ -37,25 +34,12 @@ $(document).ready(function () {
             data: null,
             render: (r) => r.tipo_cedula_cliente ? `${r.tipo_cedula_cliente}-${r.cedula_cliente}` : '—'
         },
-        { data: 'contacto' },
         {
           data: 'fecha_venta',
           render: (data) => data ? data.split(' ')[0] : '—'
         },
         {
-          data: 'fecha_vencimiento',
-          render: (data) => data || '<span class="text-muted">—</span>'
-        },
-        {
           data: 'monto_total',
-          render: (data) => `Bs ${Number(data).toFixed(2)}`
-        },
-        {
-          data: 'total_pagado',
-          render: (data) => `Bs ${Number(data).toFixed(2)}`
-        },
-        {
-          data: 'saldo_pendiente',
           render: (data) => `Bs ${Number(data).toFixed(2)}`
         },
         {
@@ -99,28 +83,6 @@ $(document).ready(function () {
         },
       ],
     });
-  };
-
-  const cargarEstadisticas = () => {
-    $.ajax({
-      url: `${urlBase}?action=obtener_estadisticas`,
-      method: 'GET',
-      dataType: 'json',
-      headers: { 'X-Requested-With': 'XMLHttpRequest' },
-    })
-      .done((response) => {
-        if (response.success) {
-          const d = response.data;
-          $('#statPorCobrar').text(`Bs ${Number(d.total_por_cobrar).toFixed(2)}`);
-          $('#statVencidoMonto').text(`Bs ${Number(d.monto_vencido).toFixed(2)}`);
-          $('#statVigenteMonto').text(`Bs ${Number(d.monto_vigente).toFixed(2)}`);
-          $('#statCobradoMes').text(`Bs ${Number(d.cobrado_mes).toFixed(2)}`);
-          $('#statCuentas').text(`${d.total_cuentas} cuentas`);
-          $('#statVencidas').text(`${d.total_vencidas} cuentas`);
-          $('#statVigentes').text(`${d.total_vigentes} cuentas`);
-          $('#statPagadas').text(`${d.total_pagadas} cuentas pagadas`);
-        }
-      });
   };
 
   const cargarDetalle = (id) => {
@@ -239,12 +201,6 @@ $(document).ready(function () {
     }
   });
 
-  $('#btnFilter').on('click', function () {
-    if (tablaCuentas) {
-      tablaCuentas.ajax.reload(null, false);
-    }
-  });
-
   $(document).on('click', '.ver-detalle', function (e) {
     e.preventDefault();
     const row = tablaCuentas.row($(this).closest('tr')).data();
@@ -282,7 +238,6 @@ $(document).ready(function () {
           Helpers.toast('success', response.message);
           $('#paymentModal').modal('hide');
           tablaCuentas.ajax.reload(null, false);
-          cargarEstadisticas();
         } else {
           Helpers.toast('error', response.message);
         }
@@ -304,5 +259,4 @@ $(document).ready(function () {
   }
 
   iniciarTabla();
-  cargarEstadisticas();
 });

@@ -31,7 +31,6 @@ function inicializarTabla()
             dataSrc: 'ornatos',
         },
         columns: [
-            { data: 'id_ornato' },
             { data: 'nombre_cliente', render: (d) => d || '<span class="text-muted">--</span>' },
             {
                 data: null,
@@ -245,7 +244,7 @@ function configurarEventos()
         limpiarCliente();
         $('#cuerpoDetalle').empty();
         editando = false;
-        $('#inputMontoTotal').val('0.00');
+        $('#inputMontoTotal').text('0.00');
         $('#inputMontoTotalHidden').val('0.00');
         $('#totalDetalle').text('$0.00');
     });
@@ -259,7 +258,7 @@ function abrirModalParaAgregar()
     $('#tituloModal').text('Agregar Ornato');
     limpiarCliente();
     $('#inputFecha').val(new Date().toISOString().split('T')[0]);
-    $('#inputMontoTotal').val('0.00');
+    $('#inputMontoTotal').text('0.00');
     $('#inputMontoTotalHidden').val('0.00');
     $('#totalDetalle').text('$0.00');
     $('#cuerpoDetalle').empty();
@@ -279,7 +278,7 @@ function abrirModalParaEditar(row)
     $('#inputFecha').val(row.fecha);
     $('#inputUbicacion').val(row.ubicacion || '');
     $('#inputDescripcion').val(row.descripcion || '');
-    $('#inputMontoTotal').val(Ayuda.formatCurrency(row.monto_total));
+    $('#inputMontoTotal').text(Ayuda.formatCurrency(row.monto_total));
     $('#inputMontoTotalHidden').val(row.monto_total);
 
     // Cargar detalles vía AJAX
@@ -341,7 +340,7 @@ function recalcularTotal()
         total += parseFloat($(this).val()) || 0;
     });
     $('#totalDetalle').text(Ayuda.formatCurrency(total));
-    $('#inputMontoTotal').val(Ayuda.formatCurrency(total));
+    $('#inputMontoTotal').text(Ayuda.formatCurrency(total));
     $('#inputMontoTotalHidden').val(total.toFixed(2));
 }
 
