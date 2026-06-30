@@ -14,8 +14,6 @@ include_once __DIR__ . '/../common/modal.php';
         .badge-vigente { background-color: #0d6efd; color: #fff; }
         .badge-vencido { background-color: #dc3545; color: #fff; }
         .badge-pagado { background-color: #198754; color: #fff; }
-        .stat-card { border-radius: 0.75rem; border: none; transition: transform 0.2s; }
-        .stat-card:hover { transform: translateY(-2px); }
     </style>
 </head>
 <body>
@@ -39,63 +37,6 @@ include_once __DIR__ . '/../common/modal.php';
                 </div>
             </div>
 
-            <!-- Stats Cards -->
-            <div class="row g-3 mb-4" id="statsContainer">
-                <div class="col-6 col-md-3">
-                    <div class="card stat-card shadow-sm p-3 text-center">
-                        <div class="text-muted small">Por Cobrar</div>
-                        <div class="h3 mb-0 fw-bold" id="statPorCobrar">0,00</div>
-                        <div class="small text-muted" id="statCuentas">0 cuentas</div>
-                    </div>
-                </div>
-                <div class="col-6 col-md-3">
-                    <div class="card stat-card shadow-sm p-3 text-center" style="border-left: 4px solid #dc3545;">
-                        <div class="text-muted small">Vencido</div>
-                        <div class="h3 mb-0 fw-bold text-danger" id="statVencidoMonto">0,00</div>
-                        <div class="small text-danger" id="statVencidas">0 cuentas</div>
-                    </div>
-                </div>
-                <div class="col-6 col-md-3">
-                    <div class="card stat-card shadow-sm p-3 text-center" style="border-left: 4px solid #0d6efd;">
-                        <div class="text-muted small">Vigente</div>
-                        <div class="h3 mb-0 fw-bold text-primary" id="statVigenteMonto">0,00</div>
-                        <div class="small text-primary" id="statVigentes">0 cuentas</div>
-                    </div>
-                </div>
-                <div class="col-6 col-md-3">
-                    <div class="card stat-card shadow-sm p-3 text-center" style="border-left: 4px solid #198754;">
-                        <div class="text-muted small">Cobrado este Mes</div>
-                        <div class="h3 mb-0 fw-bold text-success" id="statCobradoMes">0,00</div>
-                        <div class="small text-success" id="statPagadas">0 cuentas pagadas</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Filters -->
-            <div class="card shadow-sm mb-4">
-                <div class="card-body">
-                    <div class="row g-2 align-items-end">
-                        <div class="col-md-3">
-                            <label class="form-label">Estado</label>
-                            <select class="form-select" id="filterEstado">
-                                <option value="">Todos</option>
-                                <option value="vigente">Vigente</option>
-                                <option value="vencido">Vencido</option>
-                                <option value="pagado">Pagado</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3 d-grid">
-                            <button class="btn btn-outline-secondary" id="btnFilter">
-                                <i class="fas fa-filter"></i> Filtrar
-                            </button>
-                        </div>
-                        <div class="col-md-6 text-md-end">
-                            <small class="text-muted">Los montos se calculan automáticamente desde los detalles de venta y pagos registrados.</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <!-- DataTable -->
             <div class="card shadow-sm">
                 <div class="card-body">
@@ -106,12 +47,8 @@ include_once __DIR__ . '/../common/modal.php';
                                     <th>Referencia</th>
                                     <th>Cliente</th>
                                     <th>C.I.</th>
-                                    <th>Contacto</th>
-                                    <th>Fecha Venta</th>
-                                    <th>Vencimiento</th>
+                                    <th>Fecha</th>
                                     <th>Monto Total</th>
-                                    <th>Pagado</th>
-                                    <th>Saldo</th>
                                     <th>Estado</th>
                                     <th>Acciones</th>
                                 </tr>
