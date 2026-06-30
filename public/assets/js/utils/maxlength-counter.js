@@ -20,7 +20,9 @@
     });
 
     if ($field.is(':visible')) {
-      $field.closest('.mb-3, .mb-2').find('> .form-label, > label').first().after($counter);
+      $counter.css({ position: 'absolute', bottom: '-1.25rem', right: '0.75rem' });
+      $wrapper.css('position', 'relative');
+      $wrapper.css('padding-bottom', '1.25rem');
     } else {
       $wrapper.append($counter);
     }

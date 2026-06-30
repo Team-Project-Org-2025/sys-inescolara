@@ -304,26 +304,6 @@ function compras(): void
     require $view;
 }
 
-function tasks(): void
-{
-    dashboardCheckPermiso('tareas:ver');
-    $employeeModel = new \SysInescolara\models\Empleado();
-    $trabajadores = $employeeModel->getAll();
-    $batchModel = new \SysInescolara\models\Lote();
-    $lotes = $batchModel->getAll();
-    $suppliesModel = new \SysInescolara\models\Insumo();
-    $insumos = $suppliesModel->getAll();
-    $toolModel = new \SysInescolara\models\Herramienta();
-    $herramientas = $toolModel->getAll();
-    $view = ROOT_PATH . 'app/views/dashboard/task.php';
-    if (!is_file($view)) {
-        http_response_code(500);
-        echo 'Vista de tareas no encontrada.';
-        return;
-    }
-    require $view;
-}
-
 function empleados(): void
 {
     dashboardCheckPermiso('empleados:ver');

@@ -27,7 +27,6 @@
             <div class="notif-dropdown" id="notifDropdown">
                 <div class="notif-dropdown-header">
                     <span>Notificaciones</span>
-                    <button class="notif-clear-btn" id="clearNotifBtn" style="display:none" onclick="limpiarNotificaciones()">Limpiar todo</button>
                 </div>
                 <div class="notif-dropdown-list"></div>
                 <div class="notif-dropdown-empty" style="display:none">No hay notificaciones nuevas.</div>
