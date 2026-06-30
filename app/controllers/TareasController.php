@@ -118,9 +118,17 @@ function tasks_assignAjax(): void
     // Guardar uso de herramientas
     $rawTools = $data['tools'] ?? [];
     $toolModel = new Herramienta();
+
+    // Contar herramientas repetidas en la misma solicitud
+    $toolCounts = [];
     foreach ($rawTools as $t) {
         $idHerramienta = (int)($t['id_herramienta'] ?? 0);
         if ($idHerramienta <= 0) continue;
+        $toolCounts[$idHerramienta] = ($toolCounts[$idHerramienta] ?? 0) + 1;
+    }
+
+    // Validar disponibilidad por cantidad
+    foreach ($toolCounts as $idHerramienta => $solicitadas) {
         $herramienta = $toolModel->getById($idHerramienta);
         if (!$herramienta || ($herramienta['estado'] ?? '') !== 'disponible') {
             jsonResponse([
@@ -128,12 +136,25 @@ function tasks_assignAjax(): void
                 'message' => "La herramienta '{$herramienta['nombre_herramienta']}' no está disponible.",
             ], 400);
         }
+        $usosActivos = $model->countActiveToolUsages($idHerramienta);
+        $disponibles = (int)($herramienta['cantidad'] ?? 0);
+        if ($usosActivos + $solicitadas > $disponibles) {
+            jsonResponse([
+                'success' => false,
+                'message' => "No hay suficientes {$herramienta['nombre_herramienta']} disponibles. En uso: $usosActivos, solicitadas: $solicitadas, disponibles: $disponibles.",
+            ], 400);
+        }
+    }
+
+    foreach ($rawTools as $t) {
+        $idHerramienta = (int)($t['id_herramienta'] ?? 0);
+        if ($idHerramienta <= 0) continue;
         $toolModel->recordUsageWithStateUpdate([
             'id_asignacion'               => $asignacionId,
             'id_herramienta'              => $idHerramienta,
             'fecha_uso'                   => $t['fecha_uso'] ?? date('Y-m-d'),
             'observacion'                 => $t['observacion'] ?? '',
-            'estado_herramienta_post_uso' => 'ok',
+            'estado_herramienta_post_uso' => 'disponible',
         ]);
     }
 
@@ -195,6 +216,32 @@ function tasks_editAjax(): void
     $rawTools = $data['tools'] ?? [];
     $tools = [];
     $toolModel = new Herramienta();
+
+    // Contar herramientas repetidas en la misma solicitud
+    $toolCounts = [];
+    foreach ($rawTools as $t) {
+        $idHerramienta = (int)($t['id_herramienta'] ?? 0);
+        if ($idHerramienta <= 0) continue;
+        $toolCounts[$idHerramienta] = ($toolCounts[$idHerramienta] ?? 0) + 1;
+    }
+
+    // Validar disponibilidad por cantidad (excluyendo la asignación actual)
+    $model = new Tarea();
+    foreach ($toolCounts as $idHerramienta => $solicitadas) {
+        $herramienta = $toolModel->getById($idHerramienta);
+        if (!$herramienta) {
+            jsonResponse(['success' => false, 'message' => "Herramienta ID $idHerramienta no encontrada."], 400);
+        }
+        $usosActivos = $model->countActiveToolUsages($idHerramienta, $idAsignacion);
+        $disponibles = (int)($herramienta['cantidad'] ?? 0);
+        if ($usosActivos + $solicitadas > $disponibles) {
+            jsonResponse([
+                'success' => false,
+                'message' => "No hay suficientes {$herramienta['nombre_herramienta']} disponibles. En uso: $usosActivos, solicitadas: $solicitadas, disponibles: $disponibles.",
+            ], 400);
+        }
+    }
+
     foreach ($rawTools as $t) {
         $idHerramienta = (int)($t['id_herramienta'] ?? 0);
         if ($idHerramienta <= 0) continue;
@@ -206,7 +253,6 @@ function tasks_editAjax(): void
         ];
     }
 
-    $model = new Tarea();
     $model->updateAssignmentWithConsumptions($idAsignacion, $assignmentData, $consumptions, $tools);
 
     jsonResponse(['success' => true, 'message' => 'Tarea actualizada correctamente', 'id_asignacion' => $idAsignacion]);
@@ -219,12 +265,15 @@ function tasks_completeAssignmentAjax(): void
     if ($id <= 0) jsonResponse(['success' => false, 'message' => 'ID inválido'], 400);
 
     $fechaCumplimiento = $data['fecha_cumplimiento'] ?? date('Y-m-d');
+    $horasDedicadas = isset($data['horas_dedicadas']) && $data['horas_dedicadas'] !== ''
+        ? (float)$data['horas_dedicadas']
+        : null;
 
     $model = new Tarea();
     $assignment = $model->getAssignmentById($id);
     if (!$assignment) jsonResponse(['success' => false, 'message' => 'Asignación no encontrada'], 404);
 
-    $model->completeAssignment($id, $fechaCumplimiento);
+    $model->completeAssignment($id, $fechaCumplimiento, $horasDedicadas);
 
     $toolEstados = $data['tool_estados'] ?? [];
     if (!empty($toolEstados)) {

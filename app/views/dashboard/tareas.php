@@ -158,6 +158,10 @@ include_once __DIR__ . '/../common/modal.php';
             <label class="form-label">Fecha de Cumplimiento</label>
             <input type="date" class="form-control" name="fecha_cumplimiento">
         </div>
+        <div class="mb-3">
+            <label class="form-label">Horas Dedicadas</label>
+            <input type="number" class="form-control" name="horas_dedicadas" step="0.25" min="0" max="999.99" placeholder="ej: 2.5">
+        </div>
         <div class="card border-primary">
             <div class="card-header d-flex justify-content-between align-items-center py-2 bg-primary bg-opacity-10 text-primary">
                 <h6 class="mb-0"><i class="fas fa-wrench"></i> Estado de Herramientas</h6>

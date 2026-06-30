@@ -439,23 +439,41 @@ class Tarea extends Database implements ReadableInterface, DeletableInterface
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function completeAssignment(int $id, string $fechaCumplimiento): void
+    public function countActiveToolUsages(int $idHerramienta, ?int $excludeAsignacionId = null): int
+    {
+        $sql = "SELECT COUNT(*) FROM uso_herramienta uh
+                JOIN asignar_tarea a ON uh.id_asignacion = a.id_asignacion
+                WHERE uh.id_herramienta = :id_herramienta
+                AND a.estatus_tarea = 'pendiente'";
+        $params = [':id_herramienta' => $idHerramienta];
+        if ($excludeAsignacionId !== null) {
+            $sql .= " AND a.id_asignacion != :exclude";
+            $params[':exclude'] = $excludeAsignacionId;
+        }
+        $stmt = $this->db()->prepare($sql);
+        $stmt->execute($params);
+        return (int)$stmt->fetchColumn();
+    }
+
+    public function completeAssignment(int $id, string $fechaCumplimiento, ?float $horasDedicadas = null): void
     {
         $this->db()->beginTransaction();
         try {
             $stmt = $this->db()->prepare("
                 UPDATE asignar_tarea
-                SET estatus_tarea = 'completada', fecha_cumplimiento = :fecha
+                SET estatus_tarea = 'completada', fecha_cumplimiento = :fecha, horas_dedicadas = :horas
                 WHERE id_asignacion = :id
             ");
             $stmt->execute([
                 ':id'    => $id,
                 ':fecha' => $fechaCumplimiento,
+                ':horas' => $horasDedicadas,
             ]);
             $this->db()->commit();
             AuditLog::record('UPDATE', 'asignar_tarea', $id, null, [
                 'estatus_tarea' => 'completada',
                 'fecha_cumplimiento' => $fechaCumplimiento,
+                'horas_dedicadas' => $horasDedicadas,
             ]);
         } catch (\Exception $e) {
             $this->db()->rollBack();
@@ -465,8 +483,28 @@ class Tarea extends Database implements ReadableInterface, DeletableInterface
 
     public function cancelAssignment(int $id): void
     {
-        $stmt = $this->db()->prepare("UPDATE asignar_tarea SET estatus_tarea = 'cancelada' WHERE id_asignacion = ?");
-        $stmt->execute([$id]);
-        AuditLog::record('UPDATE', 'asignar_tarea', $id, null, ['estatus_tarea' => 'cancelada']);
+        $this->db()->beginTransaction();
+        try {
+            $oldConsumptions = $this->getConsumptions($id);
+            foreach ($oldConsumptions as $oc) {
+                $stmt = $this->db()->prepare("UPDATE insumo SET stock_actual = stock_actual + :cantidad WHERE id_insumo = :id_insumo");
+                $stmt->execute([':cantidad' => $oc['cantidad_usada'], ':id_insumo' => $oc['id_insumo']]);
+            }
+
+            $oldTools = $this->getToolUsages($id);
+            foreach ($oldTools as $ot) {
+                $stmt = $this->db()->prepare("UPDATE herramienta SET estado = 'disponible' WHERE id_herramienta = :id");
+                $stmt->execute([':id' => $ot['id_herramienta']]);
+            }
+
+            $stmt = $this->db()->prepare("UPDATE asignar_tarea SET estatus_tarea = 'cancelada' WHERE id_asignacion = ?");
+            $stmt->execute([$id]);
+
+            $this->db()->commit();
+            AuditLog::record('UPDATE', 'asignar_tarea', $id, null, ['estatus_tarea' => 'cancelada']);
+        } catch (\Exception $e) {
+            $this->db()->rollBack();
+            throw $e;
+        }
     }
 }

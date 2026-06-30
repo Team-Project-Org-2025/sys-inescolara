@@ -18,6 +18,7 @@ const assignRules = {
 
 const completeRules = {
   fecha_cumplimiento: 'fechaFuturaCheck',
+  horas_dedicadas: 'numeric',
 };
 
 // ============================================================
@@ -74,7 +75,7 @@ function initAssignmentsTable() {
         pageLength: 10,
         responsive: true,
         autoWidth: false,
-        order: [[4, 'desc']],
+        order: [[2, 'desc']],
         language: {
             url: 'https://cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json',
         },
@@ -316,7 +317,7 @@ $(document).on('click', '.btn-complete-assign', function () {
                 $('#completeToolsContainer').html('<p class="text-muted small">No se registraron herramientas en esta asignación.</p>');
                 return;
             }
-            const estados = ['ok', 'requiere_mantenimiento', 'danado'];
+            const estados = ['disponible', 'requiere_mantenimiento', 'dañado'];
             const estadosOpts = estados.map(e =>
                 `<option value="${e}">${e.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase())}</option>`
             ).join('');
@@ -344,6 +345,7 @@ $('#completeAssignForm').on('submit', function (e) {
     const data = {
         id: parseInt($form.find('[name="id"]').val()) || 0,
         fecha_cumplimiento: $form.find('[name="fecha_cumplimiento"]').val() || DATA.hoy,
+        horas_dedicadas: $form.find('[name="horas_dedicadas"]').val() || '',
         tool_estados: [],
     };
     if (!data.id) { Helpers.toast('error', 'ID inválido'); return; }
@@ -456,6 +458,10 @@ $(document).on('click', '.btn-view-assign', function () {
                             <div class="col-md-4 mb-2">
                                 <small class="text-muted d-block">Fecha Cumplimiento</small>
                                 <span class="fw-semibold">${Helpers.escapeHtml(a.fecha_cumplimiento || '—')}</span>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <small class="text-muted d-block">Horas Dedicadas</small>
+                                <span class="fw-semibold">${a.horas_dedicadas ? parseFloat(a.horas_dedicadas).toFixed(2) + ' h' : '—'}</span>
                             </div>` : ''}
                         </div>
                     </div>
