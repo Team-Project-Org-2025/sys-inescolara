@@ -39,32 +39,52 @@ function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('unidades_m
 
 function units_handleAddEdit(string $mode): void
 {
-    $model = new UnidadMedida();
     $nombre = trim((string)($_POST['nombre'] ?? ''));
     if ($nombre === '') throw new \Exception('El nombre de la unidad es requerido.');
 
     if ($mode === 'add') {
-        $model->add($nombre);
-        $newId = $model->getLastInsertId() ?? 0;
-        jsonResponse(['success' => true, 'message' => 'Unidad agregada correctamente', 'unit' => ['id' => $newId, 'nombre_unidad_medida' => $nombre]]);
+        $unit = new UnidadMedida([
+            'nombre_unidad_medida' => $nombre,
+        ]);
+        if (!$unit->save()) {
+            throw new \Exception('Error al guardar la unidad de medida.');
+        }
+        jsonResponse([
+            'success' => true, 'message' => 'Unidad agregada correctamente',
+            'unit' => ['id' => $unit->getId(), 'nombre_unidad_medida' => $nombre],
+        ]);
+        return;
     }
 
     $id = (int)($_POST['id'] ?? 0);
     if ($id <= 0) throw new \Exception('ID inválido');
 
-    $model->update($id, $nombre);
-    jsonResponse(['success' => true, 'message' => 'Unidad actualizada correctamente', 'unit' => ['id' => $id, 'nombre_unidad_medida' => $nombre]]);
+    $unit = UnidadMedida::find($id);
+    if (!$unit) throw new \Exception('No existe la unidad de medida solicitada.');
+
+    $unit->setNombreUnidadMedida($nombre);
+    if (!$unit->save()) {
+        throw new \Exception('Error al actualizar la unidad de medida.');
+    }
+
+    jsonResponse([
+        'success' => true, 'message' => 'Unidad actualizada correctamente',
+        'unit' => ['id' => $id, 'nombre_unidad_medida' => $nombre],
+    ]);
 }
 
 function units_handleDelete(): void
 {
-    $model = new UnidadMedida();
     $id = (int)($_POST['id'] ?? 0);
     if ($id <= 0) throw new \Exception('ID inválido');
-    if (!$model->exists($id)) throw new \Exception('No existe la unidad de medida');
+
+    $unit = UnidadMedida::find($id);
+    if (!$unit) throw new \Exception('No existe la unidad de medida');
 
     try {
-        $model->delete($id);
+        if (!$unit->delete($id)) {
+            throw new \Exception('Error al desactivar la unidad de medida.');
+        }
         jsonResponse(['success' => true, 'message' => 'Unidad desactivada correctamente', 'unitId' => $id]);
     } catch (\PDOException $e) {
         if ($e->getCode() == 23000 || str_contains($e->getMessage(), '1451')) {
