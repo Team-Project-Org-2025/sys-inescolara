@@ -6,52 +6,230 @@ use SysInescolara\core\Database;
 use SysInescolara\interfaces\ReadableInterface;
 use SysInescolara\interfaces\DeletableInterface;
 use SysInescolara\traits\ValidationTrait;
-use PDO;
 use SysInescolara\models\AuditLog;
+use PDO;
+use Throwable;
 
 class Trazabilidad extends Database implements ReadableInterface, DeletableInterface
 {
     use ValidationTrait;
 
+    private ?int $id = null;
+    private ?int $idLote = null;
+    private int $cantidad = 0;
+    private ?int $idEstado = null;
+    private ?string $fechaRegistro = null;
+    private ?string $observacion = null;
+    private int $activo = 1;
+
     protected array $validationRules = [
-        'id_lote'       => ['type' => null,      'required' => true],
-        'cantidad'      => ['type' => 'cantidad','required' => true],
-        'id_estado'     => ['type' => 'cantidad','required' => true],
-        'fecha_registro'=> ['type' => null,      'required' => true],
-        'observacion'   => ['type' => null,      'required' => false],
+        'id_lote'       => ['type' => null,       'required' => true],
+        'cantidad'      => ['type' => 'cantidad', 'required' => true],
+        'id_estado'     => ['type' => 'cantidad', 'required' => true],
+        'fecha_registro'=> ['type' => null,       'required' => true],
+        'observacion'   => ['type' => null,       'required' => false],
     ];
 
-    public function __construct()
+    protected array $fillable = ['id_lote', 'cantidad', 'id_estado', 'fecha_registro', 'observacion', 'activo'];
+    protected array $guarded = ['id'];
+
+    public function __construct(array $attributes = [])
     {
         parent::__construct();
+        if (!empty($attributes)) {
+            $this->fill($attributes);
+        }
     }
 
-    public function getAll(): array
+    public function fill(array $attributes): self
     {
-        try {
-            $sql = "SELECT
-                        t.id_trazabilidad AS id,
-                        t.id_lote,
-                        t.cantidad,
-                        t.id_estado,
-                        e.nombre AS estado_salud,
-                        t.observacion,
-                        t.fecha_registro,
-                        t.activo,
-                        l.cantidad_actual AS lote_cantidad_actual,
-                        COALESCE(p.nombre_comun, CONCAT('Planta #', CAST(l.id_planta AS CHAR))) AS planta_nombre
-                    FROM trazabilidad t
-                    LEFT JOIN lote l ON t.id_lote = l.id_lote
-                    LEFT JOIN plantas p ON l.id_planta = p.id_planta
-                    LEFT JOIN estado e ON t.id_estado = e.id_estado
-                    WHERE t.activo = 1
-                    ORDER BY t.fecha_registro DESC, t.id_trazabilidad DESC";
-            $stmt = $this->db()->query($sql);
-            return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
-        } catch (\Throwable $e) {
-            error_log('Error en Trazabilidad::getAll: ' . $e->getMessage());
-            return [];
+        foreach ($attributes as $key => $value) {
+            if (empty($this->fillable) || in_array($key, $this->fillable, true)) {
+                $property = $this->mapColumnToProperty($key);
+                if (property_exists($this, $property)) {
+                    $this->$property = $value;
+                }
+            }
         }
+        return $this;
+    }
+
+    private function mapColumnToProperty(string $column): string
+    {
+        $map = [
+            'id_trazabilidad' => 'id',
+            'id_lote'         => 'idLote',
+            'cantidad'        => 'cantidad',
+            'id_estado'       => 'idEstado',
+            'fecha_registro'  => 'fechaRegistro',
+            'observacion'     => 'observacion',
+            'activo'          => 'activo',
+        ];
+        return $map[$column] ?? $column;
+    }
+
+    // --- Getters y Setters ---
+    public function getId(): ?int { return $this->id; }
+    public function getIdLote(): ?int { return $this->idLote; }
+    public function getCantidad(): int { return $this->cantidad; }
+    public function getIdEstado(): ?int { return $this->idEstado; }
+    public function getFechaRegistro(): ?string { return $this->fechaRegistro; }
+    public function getObservacion(): ?string { return $this->observacion; }
+    public function isActivo(): bool { return $this->activo === 1; }
+
+    public function setIdLote(?int $idLote): self
+    {
+        $this->idLote = $idLote;
+        return $this;
+    }
+
+    public function setCantidad(int $cantidad): self
+    {
+        $this->cantidad = max(0, $cantidad);
+        return $this;
+    }
+
+    public function setIdEstado(?int $idEstado): self
+    {
+        $this->idEstado = $idEstado;
+        return $this;
+    }
+
+    public function setFechaRegistro(?string $fechaRegistro): self
+    {
+        $this->fechaRegistro = $fechaRegistro;
+        return $this;
+    }
+
+    public function setObservacion(?string $observacion): self
+    {
+        $this->observacion = $observacion ? trim($observacion) : null;
+        return $this;
+    }
+
+    public function setActivo(bool $activo): self
+    {
+        $this->activo = $activo ? 1 : 0;
+        return $this;
+    }
+
+    private function validate(): void
+    {
+        $this->validateData([
+            'id_lote'       => $this->idLote,
+            'cantidad'      => $this->cantidad,
+            'id_estado'     => $this->idEstado,
+            'fecha_registro'=> $this->fechaRegistro,
+            'observacion'   => $this->observacion,
+        ]);
+    }
+
+    public function save(): bool
+    {
+        $this->validate();
+
+        try {
+            if ($this->id === null) {
+                $sql = "INSERT INTO trazabilidad (id_lote, cantidad, id_estado, fecha_registro, observacion, activo) 
+                        VALUES (:id_lote, :cantidad, :id_estado, :fecha_registro, :observacion, :activo)";
+                $stmt = $this->db()->prepare($sql);
+                $success = $stmt->execute([
+                    ':id_lote'       => $this->idLote,
+                    ':cantidad'      => $this->cantidad,
+                    ':id_estado'     => $this->idEstado,
+                    ':fecha_registro'=> $this->fechaRegistro,
+                    ':observacion'   => $this->observacion,
+                    ':activo'        => $this->activo,
+                ]);
+
+                if ($success) {
+                    $this->id = (int) $this->db()->lastInsertId();
+                    AuditLog::record('CREATE', 'trazabilidad', $this->id, null, [
+                        'id_lote'       => $this->idLote,
+                        'cantidad'      => $this->cantidad,
+                        'id_estado'     => $this->idEstado,
+                        'fecha_registro'=> $this->fechaRegistro,
+                        'observacion'   => $this->observacion,
+                    ]);
+                }
+                return $success;
+            } else {
+                $oldData = $this->getById($this->id);
+                $sql = "UPDATE trazabilidad SET id_lote = :id_lote, cantidad = :cantidad, 
+                        id_estado = :id_estado, fecha_registro = :fecha_registro, 
+                        observacion = :observacion, activo = :activo
+                        WHERE id_trazabilidad = :id";
+                $stmt = $this->db()->prepare($sql);
+                $success = $stmt->execute([
+                    ':id'            => $this->id,
+                    ':id_lote'       => $this->idLote,
+                    ':cantidad'      => $this->cantidad,
+                    ':id_estado'     => $this->idEstado,
+                    ':fecha_registro'=> $this->fechaRegistro,
+                    ':observacion'   => $this->observacion,
+                    ':activo'        => $this->activo,
+                ]);
+                if ($success) {
+                    AuditLog::record('UPDATE', 'trazabilidad', $this->id, $oldData, [
+                        'id_lote'       => $this->idLote,
+                        'cantidad'      => $this->cantidad,
+                        'id_estado'     => $this->idEstado,
+                        'fecha_registro'=> $this->fechaRegistro,
+                        'observacion'   => $this->observacion,
+                    ]);
+                }
+                return $success;
+            }
+        } catch (Throwable $e) {
+            error_log('Error al guardar trazabilidad: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    public static function find(int $id): ?self
+    {
+        $instance = new static();
+        $stmt = $instance->db()->prepare("SELECT * FROM trazabilidad WHERE id_trazabilidad = :id");
+        $stmt->execute([':id' => $id]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$row) return null;
+        $trace = new static($row);
+        $trace->id = (int)$row['id_trazabilidad'];
+        return $trace;
+    }
+
+    public static function all(): array
+    {
+        $instance = new static();
+        $sql = "SELECT
+                    t.id_trazabilidad AS id,
+                    t.id_lote,
+                    t.cantidad,
+                    t.id_estado,
+                    e.nombre AS estado_salud,
+                    t.observacion,
+                    t.fecha_registro,
+                    t.activo,
+                    l.cantidad_actual AS lote_cantidad_actual,
+                    COALESCE(p.nombre_comun, CONCAT('Planta #', CAST(l.id_planta AS CHAR))) AS planta_nombre
+                FROM trazabilidad t
+                LEFT JOIN lote l ON t.id_lote = l.id_lote
+                LEFT JOIN plantas p ON l.id_planta = p.id_planta
+                LEFT JOIN estado e ON t.id_estado = e.id_estado
+                WHERE t.activo = 1
+                ORDER BY t.fecha_registro DESC, t.id_trazabilidad DESC";
+        $stmt = $instance->db()->query($sql);
+        return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+    }
+
+    public static function where(string $column, $value, string $operator = '='): array
+    {
+        $instance = new static();
+        $sql = "SELECT * FROM trazabilidad WHERE $column $operator :value AND activo = 1";
+        $stmt = $instance->db()->prepare($sql);
+        $stmt->execute([':value' => $value]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return array_map(fn($row) => new static($row), $rows);
     }
 
     public function getById(int $id): ?array
@@ -70,110 +248,81 @@ class Trazabilidad extends Database implements ReadableInterface, DeletableInter
             ");
             $stmt->execute([':id' => $id]);
             return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             error_log('Error en Trazabilidad::getById: ' . $e->getMessage());
             return null;
         }
     }
 
+    public function getAll(): array
+    {
+        return self::all();
+    }
+
     public function exists(int $id): bool
     {
-        $stmt = $this->db()->prepare("SELECT COUNT(*) FROM trazabilidad WHERE id_trazabilidad = :id");
-        $stmt->execute([':id' => $id]);
-        return $stmt->fetchColumn() > 0;
+        try {
+            $stmt = $this->db()->prepare("SELECT COUNT(*) FROM trazabilidad WHERE id_trazabilidad = :id");
+            $stmt->execute([':id' => $id]);
+            return (int) $stmt->fetchColumn() > 0;
+        } catch (Throwable $e) {
+            return false;
+        }
     }
 
     public function delete(int $id): bool
     {
-        $oldData = $this->getById($id);
-        $stmt = $this->db()->prepare("UPDATE trazabilidad SET activo = 0 WHERE id_trazabilidad = :id");
-        $result = $stmt->execute([':id' => $id]);
-        AuditLog::record('DEACTIVATE', 'trazabilidad', $id, $oldData, null);
-        return $result;
+        try {
+            $oldData = $this->getById($id);
+            $stmt = $this->db()->prepare("UPDATE trazabilidad SET activo = 0 WHERE id_trazabilidad = :id");
+            $result = $stmt->execute([':id' => $id]);
+            if ($result) {
+                AuditLog::record('DEACTIVATE', 'trazabilidad', $id, $oldData, null);
+            }
+            return $result;
+        } catch (Throwable $e) {
+            error_log('Error al desactivar trazabilidad: ' . $e->getMessage());
+            return false;
+        }
     }
 
     public function restore(int $id): bool
     {
-        $stmt = $this->db()->prepare("UPDATE trazabilidad SET activo = 1 WHERE id_trazabilidad = :id");
-        return $stmt->execute([':id' => $id]);
+        try {
+            $stmt = $this->db()->prepare("UPDATE trazabilidad SET activo = 1 WHERE id_trazabilidad = :id");
+            return $stmt->execute([':id' => $id]);
+        } catch (Throwable $e) {
+            error_log('Error al restaurar trazabilidad: ' . $e->getMessage());
+            return false;
+        }
     }
 
     public function getLastInsertId(): ?int
     {
         try {
-            return (int)$this->db()->lastInsertId();
-        } catch (\Throwable $e) {
+            return (int) $this->db()->lastInsertId();
+        } catch (Throwable $e) {
             return null;
         }
     }
 
-    public function add(int $idLote, int $cantidad, int $idEstado, string $fechaRegistro, ?string $observacion = null): bool
+    public function loadById(int $id): bool
     {
-        $this->validateData([
-            'id_lote'       => $idLote,
-            'cantidad'      => $cantidad,
-            'id_estado'     => $idEstado,
-            'fecha_registro'=> $fechaRegistro,
-            'observacion'   => $observacion,
-        ]);
-        $stmt = $this->db()->prepare("
-            INSERT INTO trazabilidad (id_lote, cantidad, id_estado, fecha_registro, observacion)
-            VALUES (:id_lote, :cantidad, :id_estado, :fecha_registro, :observacion)
-        ");
-        $result = $stmt->execute([
-            ':id_lote'       => $idLote,
-            ':cantidad'      => $cantidad,
-            ':id_estado'     => $idEstado,
-            ':fecha_registro' => $fechaRegistro,
-            ':observacion'   => $observacion,
-        ]);
-        if ($result) {
-            AuditLog::record('CREATE', 'trazabilidad', $this->db()->lastInsertId(), null, [
-                'id_lote' => $idLote, 'cantidad' => $cantidad,
-                'id_estado' => $idEstado, 'fecha_registro' => $fechaRegistro,
-                'observacion' => $observacion,
-            ]);
+        $found = self::find($id);
+        if ($found) {
+            $this->id = $found->getId();
+            $this->idLote = $found->getIdLote();
+            $this->cantidad = $found->getCantidad();
+            $this->idEstado = $found->getIdEstado();
+            $this->fechaRegistro = $found->getFechaRegistro();
+            $this->observacion = $found->getObservacion();
+            $this->activo = $found->isActivo() ? 1 : 0;
+            return true;
         }
-        return $result;
+        return false;
     }
 
-    public function update(int $id, int $idLote, int $cantidad, int $idEstado, string $fechaRegistro, ?string $observacion = null): bool
-    {
-        $this->validateData([
-            'id_lote'       => $idLote,
-            'cantidad'      => $cantidad,
-            'id_estado'     => $idEstado,
-            'fecha_registro'=> $fechaRegistro,
-            'observacion'   => $observacion,
-        ]);
-        if (!$this->exists($id)) {
-            throw new \Exception("No existe el registro de trazabilidad con ID: $id");
-        }
-        $stmt = $this->db()->prepare("
-            UPDATE trazabilidad
-            SET id_lote = :id_lote,
-                cantidad = :cantidad,
-                id_estado = :id_estado,
-                fecha_registro = :fecha_registro,
-                observacion = :observacion
-            WHERE id_trazabilidad = :id
-        ");
-        $oldData = $this->getById($id);
-        $result = $stmt->execute([
-            ':id'            => $id,
-            ':id_lote'       => $idLote,
-            ':cantidad'      => $cantidad,
-            ':id_estado'     => $idEstado,
-            ':fecha_registro' => $fechaRegistro,
-            ':observacion'   => $observacion,
-        ]);
-        AuditLog::record('UPDATE', 'trazabilidad', $id, $oldData, [
-            'id_lote' => $idLote, 'cantidad' => $cantidad,
-            'id_estado' => $idEstado, 'fecha_registro' => $fechaRegistro,
-            'observacion' => $observacion,
-        ]);
-        return $result;
-    }
+    // --- Métodos específicos de negocio ---
 
     public function getAvailableBatches(?int $includeId = null): array
     {
@@ -197,7 +346,7 @@ class Trazabilidad extends Database implements ReadableInterface, DeletableInter
             $stmt = $this->db()->prepare($sql);
             $stmt->execute($params);
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             error_log('Error en Trazabilidad::getAvailableBatches: ' . $e->getMessage());
             return [];
         }
@@ -205,13 +354,23 @@ class Trazabilidad extends Database implements ReadableInterface, DeletableInter
 
     public function deductBatchStock(int $idLote, int $cantidad): bool
     {
-        $stmt = $this->db()->prepare("UPDATE lote SET cantidad_actual = GREATEST(0, cantidad_actual - :cantidad) WHERE id_lote = :id AND cantidad_actual >= :check");
-        return $stmt->execute([':cantidad' => $cantidad, ':id' => $idLote, ':check' => $cantidad]);
+        try {
+            $stmt = $this->db()->prepare("UPDATE lote SET cantidad_actual = GREATEST(0, cantidad_actual - :cantidad) WHERE id_lote = :id AND cantidad_actual >= :check");
+            return $stmt->execute([':cantidad' => $cantidad, ':id' => $idLote, ':check' => $cantidad]);
+        } catch (Throwable $e) {
+            error_log('Error en Trazabilidad::deductBatchStock: ' . $e->getMessage());
+            return false;
+        }
     }
 
     public function restoreBatchStock(int $idLote, int $cantidad): bool
     {
-        $stmt = $this->db()->prepare("UPDATE lote SET cantidad_actual = cantidad_actual + :cantidad WHERE id_lote = :id");
-        return $stmt->execute([':cantidad' => $cantidad, ':id' => $idLote]);
+        try {
+            $stmt = $this->db()->prepare("UPDATE lote SET cantidad_actual = cantidad_actual + :cantidad WHERE id_lote = :id");
+            return $stmt->execute([':cantidad' => $cantidad, ':id' => $idLote]);
+        } catch (Throwable $e) {
+            error_log('Error en Trazabilidad::restoreBatchStock: ' . $e->getMessage());
+            return false;
+        }
     }
 }
