@@ -13,16 +13,232 @@ class SeedCollection extends Database implements ReadableInterface, DeletableInt
 {
     use ValidationTrait;
 
+    private ?int $id = null;
+    private ?int $idTrabajador = null;
+    private ?int $idUbicacion = null;
+    private ?string $fechaAsignacion = null;
+    private ?string $fechaRecoleccion = null;
+    private string $estatus = 'Pendiente';
+    private ?string $observacion = null;
+    private int $activo = 1;
+
     protected array $validationRules = [
-        'id_trabajador'   => ['type' => null, 'required' => true],
-        'id_ubicacion'    => ['type' => null, 'required' => true],
-        'fecha_asignacion'=> ['type' => null, 'required' => true],
-        'observacion'     => ['type' => null, 'required' => false],
+        'id_trabajador'    => ['type' => 'cantidad','required' => true],
+        'id_ubicacion'     => ['type' => 'cantidad','required' => true],
+        'fecha_asignacion' => ['type' => null,      'required' => true],
+        'observacion'      => ['type' => null,      'required' => false],
     ];
 
-    public function __construct()
+    protected array $fillable = ['id_trabajador', 'id_ubicacion', 'fecha_asignacion', 'fecha_recoleccion', 'estatus', 'observacion', 'activo'];
+    protected array $guarded = ['id_recoleccion'];
+
+    public function __construct(array $attributes = [])
     {
         parent::__construct();
+        if (!empty($attributes)) {
+            $this->fill($attributes);
+        }
+    }
+
+    public function fill(array $attributes): self
+    {
+        foreach ($attributes as $key => $value) {
+            if (empty($this->fillable) || in_array($key, $this->fillable, true)) {
+                $property = $this->mapColumnToProperty($key);
+                if (property_exists($this, $property)) {
+                    $this->$property = $value;
+                }
+            }
+        }
+        return $this;
+    }
+
+    private function mapColumnToProperty(string $column): string
+    {
+        $map = [
+            'id_recoleccion'    => 'id',
+            'id_trabajador'     => 'idTrabajador',
+            'id_ubicacion'      => 'idUbicacion',
+            'fecha_asignacion'  => 'fechaAsignacion',
+            'fecha_recoleccion' => 'fechaRecoleccion',
+            'estatus'           => 'estatus',
+            'observacion'       => 'observacion',
+            'activo'            => 'activo',
+        ];
+        return $map[$column] ?? $column;
+    }
+
+    // --- Getters ---
+    public function getId(): ?int { return $this->id; }
+    public function getIdTrabajador(): ?int { return $this->idTrabajador; }
+    public function getIdUbicacion(): ?int { return $this->idUbicacion; }
+    public function getFechaAsignacion(): ?string { return $this->fechaAsignacion; }
+    public function getFechaRecoleccion(): ?string { return $this->fechaRecoleccion; }
+    public function getEstatus(): string { return $this->estatus; }
+    public function getObservacion(): ?string { return $this->observacion; }
+    public function isActivo(): bool { return $this->activo === 1; }
+
+    // --- Setters ---
+    public function setIdTrabajador(?int $idTrabajador): self
+    {
+        $this->idTrabajador = $idTrabajador;
+        return $this;
+    }
+
+    public function setIdUbicacion(?int $idUbicacion): self
+    {
+        $this->idUbicacion = $idUbicacion;
+        return $this;
+    }
+
+    public function setFechaAsignacion(?string $fechaAsignacion): self
+    {
+        $this->fechaAsignacion = $fechaAsignacion;
+        return $this;
+    }
+
+    public function setFechaRecoleccion(?string $fechaRecoleccion): self
+    {
+        $this->fechaRecoleccion = $fechaRecoleccion;
+        return $this;
+    }
+
+    public function setEstatus(string $estatus): self
+    {
+        $this->estatus = $estatus;
+        return $this;
+    }
+
+    public function setObservacion(?string $observacion): self
+    {
+        $this->observacion = $observacion;
+        return $this;
+    }
+
+    public function setActivo(bool $activo): self
+    {
+        $this->activo = $activo ? 1 : 0;
+        return $this;
+    }
+
+    private function validate(): void
+    {
+        $this->validateData([
+            'id_trabajador'    => $this->idTrabajador,
+            'id_ubicacion'     => $this->idUbicacion,
+            'fecha_asignacion' => $this->fechaAsignacion,
+            'observacion'      => $this->observacion,
+        ]);
+    }
+
+    public function save(): bool
+    {
+        $this->validate();
+
+        try {
+            if ($this->id === null) {
+                $sql = "INSERT INTO recoleccion_semillas (id_trabajador, id_ubicacion, fecha_asignacion, fecha_recoleccion, estatus, observacion, activo)
+                        VALUES (:id_trabajador, :id_ubicacion, :fecha_asignacion, :fecha_recoleccion, :estatus, :observacion, :activo)";
+                $stmt = $this->db()->prepare($sql);
+                $success = $stmt->execute([
+                    ':id_trabajador'     => $this->idTrabajador,
+                    ':id_ubicacion'      => $this->idUbicacion,
+                    ':fecha_asignacion'  => $this->fechaAsignacion,
+                    ':fecha_recoleccion' => $this->fechaRecoleccion,
+                    ':estatus'           => $this->estatus,
+                    ':observacion'       => $this->observacion,
+                    ':activo'            => $this->activo,
+                ]);
+
+                if ($success) {
+                    $this->id = (int) $this->db()->lastInsertId();
+                    AuditLog::record('CREATE', 'recoleccion_semillas', $this->id, null, [
+                        'id_trabajador'    => $this->idTrabajador,
+                        'id_ubicacion'     => $this->idUbicacion,
+                        'fecha_asignacion' => $this->fechaAsignacion,
+                        'estatus'          => $this->estatus,
+                        'observacion'      => $this->observacion,
+                    ]);
+                }
+                return $success;
+            } else {
+                $oldData = $this->getById($this->id);
+                $sql = "UPDATE recoleccion_semillas SET id_trabajador = :id_trabajador, id_ubicacion = :id_ubicacion,
+                        fecha_asignacion = :fecha_asignacion, fecha_recoleccion = :fecha_recoleccion,
+                        estatus = :estatus, observacion = :observacion, activo = :activo
+                        WHERE id_recoleccion = :id";
+                $stmt = $this->db()->prepare($sql);
+                $success = $stmt->execute([
+                    ':id'                => $this->id,
+                    ':id_trabajador'     => $this->idTrabajador,
+                    ':id_ubicacion'      => $this->idUbicacion,
+                    ':fecha_asignacion'  => $this->fechaAsignacion,
+                    ':fecha_recoleccion' => $this->fechaRecoleccion,
+                    ':estatus'           => $this->estatus,
+                    ':observacion'       => $this->observacion,
+                    ':activo'            => $this->activo,
+                ]);
+                if ($success) {
+                    AuditLog::record('UPDATE', 'recoleccion_semillas', $this->id, $oldData, [
+                        'id_trabajador'    => $this->idTrabajador,
+                        'id_ubicacion'     => $this->idUbicacion,
+                        'fecha_asignacion' => $this->fechaAsignacion,
+                        'estatus'          => $this->estatus,
+                        'observacion'      => $this->observacion,
+                    ]);
+                }
+                return $success;
+            }
+        } catch (Throwable $e) {
+            error_log('Error al guardar recolección: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    public static function find(int $id): ?self
+    {
+        $instance = new static();
+        $stmt = $instance->db()->prepare("SELECT * FROM recoleccion_semillas WHERE id_recoleccion = :id");
+        $stmt->execute([':id' => $id]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$row) return null;
+        $rec = new static($row);
+        $rec->id = (int)$row['id_recoleccion'];
+        return $rec;
+    }
+
+    public static function all(): array
+    {
+        $instance = new static();
+        $stmt = $instance->db()->query("SELECT * FROM recoleccion_semillas WHERE activo = 1 ORDER BY fecha_asignacion DESC, id_recoleccion DESC");
+        return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+    }
+
+    public static function where(string $column, $value, string $operator = '='): array
+    {
+        $instance = new static();
+        $sql = "SELECT * FROM recoleccion_semillas WHERE $column $operator :value AND activo = 1";
+        $stmt = $instance->db()->prepare($sql);
+        $stmt->execute([':value' => $value]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return array_map(fn($row) => new static($row), $rows);
+    }
+
+    public function loadById(int $id): bool
+    {
+        $found = self::find($id);
+        if ($found) {
+            $this->id = $found->getId();
+            $this->idTrabajador = $found->getIdTrabajador();
+            $this->idUbicacion = $found->getIdUbicacion();
+            $this->fechaAsignacion = $found->getFechaAsignacion();
+            $this->fechaRecoleccion = $found->getFechaRecoleccion();
+            $this->estatus = $found->getEstatus();
+            $this->observacion = $found->getObservacion();
+            $this->activo = $found->isActivo() ? 1 : 0;
+            return true;
+        }
+        return false;
     }
 
     public function getAll(): array
@@ -106,63 +322,28 @@ class SeedCollection extends Database implements ReadableInterface, DeletableInt
 
     public function add(int $idTrabajador, int $idUbicacion, string $fechaAsignacion, ?string $observacion = null): bool
     {
-        $this->validateData([
-            'id_trabajador' => $idTrabajador,
-            'id_ubicacion' => $idUbicacion,
+        $this->fill([
+            'id_trabajador'    => $idTrabajador,
+            'id_ubicacion'     => $idUbicacion,
             'fecha_asignacion' => $fechaAsignacion,
-            'observacion' => $observacion,
+            'estatus'          => 'Pendiente',
+            'observacion'      => $observacion,
         ]);
-        $stmt = $this->db()->prepare("
-            INSERT INTO recoleccion_semillas (id_trabajador, id_ubicacion, fecha_asignacion, estatus, observacion)
-            VALUES (:id_trabajador, :id_ubicacion, :fecha_asignacion, 'Pendiente', :observacion)
-        ");
-        $result = $stmt->execute([
-            ':id_trabajador'   => $idTrabajador,
-            ':id_ubicacion'    => $idUbicacion,
-            ':fecha_asignacion' => $fechaAsignacion,
-            ':observacion'     => $observacion,
-        ]);
-        if ($result) {
-            AuditLog::record('CREATE', 'recoleccion_semillas', $this->db()->lastInsertId(), null, [
-                'id_trabajador' => $idTrabajador, 'id_ubicacion' => $idUbicacion,
-                'fecha_asignacion' => $fechaAsignacion, 'observacion' => $observacion,
-            ]);
-        }
-        return $result;
+        return $this->save();
     }
 
     public function update(int $id, int $idTrabajador, int $idUbicacion, string $fechaAsignacion, ?string $observacion = null): bool
     {
-        $this->validateData([
-            'id_trabajador' => $idTrabajador,
-            'id_ubicacion' => $idUbicacion,
-            'fecha_asignacion' => $fechaAsignacion,
-            'observacion' => $observacion,
-        ]);
-        if (!$this->exists($id)) {
+        if (!$this->loadById($id)) {
             throw new \Exception('No existe la recolección solicitada para modificar.');
         }
-        $stmt = $this->db()->prepare("
-            UPDATE recoleccion_semillas
-            SET id_trabajador = :id_trabajador,
-                id_ubicacion = :id_ubicacion,
-                fecha_asignacion = :fecha_asignacion,
-                observacion = :observacion
-            WHERE id_recoleccion = :id
-        ");
-        $oldData = $this->getById($id);
-        $result = $stmt->execute([
-            ':id' => $id,
-            ':id_trabajador' => $idTrabajador,
-            ':id_ubicacion' => $idUbicacion,
-            ':fecha_asignacion' => $fechaAsignacion,
-            ':observacion' => $observacion,
+        $this->fill([
+            'id_trabajador'    => $idTrabajador,
+            'id_ubicacion'     => $idUbicacion,
+            'fecha_asignacion' => $fechaAsignacion,
+            'observacion'      => $observacion,
         ]);
-        AuditLog::record('UPDATE', 'recoleccion_semillas', $id, $oldData, [
-            'id_trabajador' => $idTrabajador, 'id_ubicacion' => $idUbicacion,
-            'fecha_asignacion' => $fechaAsignacion, 'observacion' => $observacion,
-        ]);
-        return $result;
+        return $this->save();
     }
 
     public function complete(int $id, string $fechaRecoleccion): bool

@@ -13,6 +13,13 @@ class Proveedor extends Database implements ReadableInterface, DeletableInterfac
 {
     use ValidationTrait;
 
+    private ?int $id = null;
+    private string $nombreProveedor = '';
+    private ?string $rifProveedor = null;
+    private ?string $contactoVendedor = null;
+    private ?string $telefonoProveedor = null;
+    private int $activo = 1;
+
     protected array $validationRules = [
         'nombre_proveedor'   => ['type' => 'nombre',   'required' => true],
         'rif_proveedor'      => ['type' => 'rif',       'required' => false],
@@ -20,9 +27,15 @@ class Proveedor extends Database implements ReadableInterface, DeletableInterfac
         'telefono_proveedor' => ['type' => 'telefono',  'required' => false],
     ];
 
-    public function __construct()
+    protected array $fillable = ['nombre_proveedor', 'rif_proveedor', 'contacto_vendedor', 'telefono_proveedor', 'activo'];
+    protected array $guarded = ['id_proveedor'];
+
+    public function __construct(array $attributes = [])
     {
         parent::__construct();
+        if (!empty($attributes)) {
+            $this->fill($attributes);
+        }
         $this->bootstrapDefaults();
     }
 
@@ -64,6 +77,182 @@ class Proveedor extends Database implements ReadableInterface, DeletableInterfac
         } catch (\Throwable $e) {
             error_log('Error al migrar proveedores: ' . $e->getMessage());
         }
+    }
+
+    public function fill(array $attributes): self
+    {
+        foreach ($attributes as $key => $value) {
+            if (empty($this->fillable) || in_array($key, $this->fillable, true)) {
+                $property = $this->mapColumnToProperty($key);
+                if (property_exists($this, $property)) {
+                    $this->$property = $value;
+                }
+            }
+        }
+        return $this;
+    }
+
+    private function mapColumnToProperty(string $column): string
+    {
+        $map = [
+            'id_proveedor'       => 'id',
+            'nombre_proveedor'   => 'nombreProveedor',
+            'rif_proveedor'      => 'rifProveedor',
+            'contacto_vendedor'  => 'contactoVendedor',
+            'telefono_proveedor' => 'telefonoProveedor',
+            'activo'             => 'activo',
+        ];
+        return $map[$column] ?? $column;
+    }
+
+    // --- Getters ---
+    public function getId(): ?int { return $this->id; }
+    public function getNombreProveedor(): string { return $this->nombreProveedor; }
+    public function getRifProveedor(): ?string { return $this->rifProveedor; }
+    public function getContactoVendedor(): ?string { return $this->contactoVendedor; }
+    public function getTelefonoProveedor(): ?string { return $this->telefonoProveedor; }
+    public function isActivo(): bool { return $this->activo === 1; }
+
+    // --- Setters ---
+    public function setNombreProveedor(string $nombreProveedor): self
+    {
+        $this->nombreProveedor = trim($nombreProveedor);
+        return $this;
+    }
+
+    public function setRifProveedor(?string $rifProveedor): self
+    {
+        $this->rifProveedor = $rifProveedor ? trim($rifProveedor) : null;
+        return $this;
+    }
+
+    public function setContactoVendedor(?string $contactoVendedor): self
+    {
+        $this->contactoVendedor = $contactoVendedor ? trim($contactoVendedor) : null;
+        return $this;
+    }
+
+    public function setTelefonoProveedor(?string $telefonoProveedor): self
+    {
+        $this->telefonoProveedor = $telefonoProveedor ? trim($telefonoProveedor) : null;
+        return $this;
+    }
+
+    public function setActivo(bool $activo): self
+    {
+        $this->activo = $activo ? 1 : 0;
+        return $this;
+    }
+
+    private function validate(): void
+    {
+        $this->validateData([
+            'nombre_proveedor'   => $this->nombreProveedor,
+            'rif_proveedor'      => $this->rifProveedor,
+            'contacto_vendedor'  => $this->contactoVendedor,
+            'telefono_proveedor' => $this->telefonoProveedor,
+        ]);
+    }
+
+    public function save(): bool
+    {
+        $this->validate();
+
+        try {
+            if ($this->id === null) {
+                $sql = "INSERT INTO proveedores (nombre_proveedor, rif_proveedor, contacto_vendedor, telefono_proveedor, activo)
+                        VALUES (:nombre_proveedor, :rif_proveedor, :contacto_vendedor, :telefono_proveedor, :activo)";
+                $stmt = $this->db()->prepare($sql);
+                $success = $stmt->execute([
+                    ':nombre_proveedor'   => $this->nombreProveedor,
+                    ':rif_proveedor'      => $this->rifProveedor,
+                    ':contacto_vendedor'  => $this->contactoVendedor,
+                    ':telefono_proveedor' => $this->telefonoProveedor,
+                    ':activo'             => $this->activo,
+                ]);
+
+                if ($success) {
+                    $this->id = (int) $this->db()->lastInsertId();
+                    AuditLog::record('CREATE', 'proveedores', $this->id, null, [
+                        'nombre_proveedor'   => $this->nombreProveedor,
+                        'rif_proveedor'      => $this->rifProveedor,
+                        'contacto_vendedor'  => $this->contactoVendedor,
+                        'telefono_proveedor' => $this->telefonoProveedor,
+                    ]);
+                }
+                return $success;
+            } else {
+                $oldData = $this->getById($this->id);
+                $sql = "UPDATE proveedores SET nombre_proveedor = :nombre_proveedor, rif_proveedor = :rif_proveedor,
+                        contacto_vendedor = :contacto_vendedor, telefono_proveedor = :telefono_proveedor,
+                        activo = :activo WHERE id_proveedor = :id";
+                $stmt = $this->db()->prepare($sql);
+                $success = $stmt->execute([
+                    ':id'                  => $this->id,
+                    ':nombre_proveedor'   => $this->nombreProveedor,
+                    ':rif_proveedor'      => $this->rifProveedor,
+                    ':contacto_vendedor'  => $this->contactoVendedor,
+                    ':telefono_proveedor' => $this->telefonoProveedor,
+                    ':activo'             => $this->activo,
+                ]);
+                if ($success) {
+                    AuditLog::record('UPDATE', 'proveedores', $this->id, $oldData, [
+                        'nombre_proveedor'   => $this->nombreProveedor,
+                        'rif_proveedor'      => $this->rifProveedor,
+                        'contacto_vendedor'  => $this->contactoVendedor,
+                        'telefono_proveedor' => $this->telefonoProveedor,
+                    ]);
+                }
+                return $success;
+            }
+        } catch (Throwable $e) {
+            error_log('Error al guardar proveedor: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    public static function find(int $id): ?self
+    {
+        $instance = new static();
+        $stmt = $instance->db()->prepare("SELECT * FROM proveedores WHERE id_proveedor = :id");
+        $stmt->execute([':id' => $id]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$row) return null;
+        $prov = new static($row);
+        $prov->id = (int)$row['id_proveedor'];
+        return $prov;
+    }
+
+    public static function all(): array
+    {
+        $instance = new static();
+        $stmt = $instance->db()->query("SELECT * FROM proveedores WHERE activo = 1 ORDER BY nombre_proveedor ASC");
+        return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+    }
+
+    public static function where(string $column, $value, string $operator = '='): array
+    {
+        $instance = new static();
+        $sql = "SELECT * FROM proveedores WHERE $column $operator :value AND activo = 1";
+        $stmt = $instance->db()->prepare($sql);
+        $stmt->execute([':value' => $value]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return array_map(fn($row) => new static($row), $rows);
+    }
+
+    public function loadById(int $id): bool
+    {
+        $found = self::find($id);
+        if ($found) {
+            $this->id = $found->getId();
+            $this->nombreProveedor = $found->getNombreProveedor();
+            $this->rifProveedor = $found->getRifProveedor();
+            $this->contactoVendedor = $found->getContactoVendedor();
+            $this->telefonoProveedor = $found->getTelefonoProveedor();
+            $this->activo = $found->isActivo() ? 1 : 0;
+            return true;
+        }
+        return false;
     }
 
     public function getAll(): array
@@ -125,51 +314,26 @@ class Proveedor extends Database implements ReadableInterface, DeletableInterfac
 
     public function add(string $nombreProveedor, ?string $rifProveedor = null, ?string $contactoVendedor = null, ?string $telefonoProveedor = null)
     {
-        $this->validateData([
-            'nombre_proveedor' => $nombreProveedor,
-            'rif_proveedor' => $rifProveedor,
-            'contacto_vendedor' => $contactoVendedor,
-            'telefono_proveedor' => $telefonoProveedor,
-        ]);
-        $stmt = $this->db()->prepare("INSERT INTO proveedores (nombre_proveedor, rif_proveedor, contacto_vendedor, telefono_proveedor) VALUES (?, ?, ?, ?)");
-        $stmt->execute([$nombreProveedor, $rifProveedor, $contactoVendedor, $telefonoProveedor]);
-
-        $newId = (int) $this->db()->lastInsertId();
-
-        AuditLog::record('CREATE', 'proveedores', $newId, null, [
+        $this->fill([
             'nombre_proveedor'   => $nombreProveedor,
             'rif_proveedor'      => $rifProveedor,
             'contacto_vendedor'  => $contactoVendedor,
             'telefono_proveedor' => $telefonoProveedor,
         ]);
-
-        return true;
+        return $this->save();
     }
 
     public function update(int $id, string $nombreProveedor, ?string $rifProveedor = null, ?string $contactoVendedor = null, ?string $telefonoProveedor = null)
     {
-        $this->validateData([
-            'nombre_proveedor' => $nombreProveedor,
-            'rif_proveedor' => $rifProveedor,
-            'contacto_vendedor' => $contactoVendedor,
-            'telefono_proveedor' => $telefonoProveedor,
-        ]);
-        if (!$this->exists($id)) {
+        if (!$this->loadById($id)) {
             throw new \Exception("No existe el proveedor con ID: $id");
         }
-
-        $oldData = $this->getById($id);
-
-        $stmt = $this->db()->prepare("UPDATE proveedores SET nombre_proveedor = ?, rif_proveedor = ?, contacto_vendedor = ?, telefono_proveedor = ? WHERE id_proveedor = ?");
-        $stmt->execute([$nombreProveedor, $rifProveedor, $contactoVendedor, $telefonoProveedor, $id]);
-
-        AuditLog::record('UPDATE', 'proveedores', $id, $oldData, [
+        $this->fill([
             'nombre_proveedor'   => $nombreProveedor,
             'rif_proveedor'      => $rifProveedor,
             'contacto_vendedor'  => $contactoVendedor,
             'telefono_proveedor' => $telefonoProveedor,
         ]);
-
-        return true;
+        return $this->save();
     }
 }
