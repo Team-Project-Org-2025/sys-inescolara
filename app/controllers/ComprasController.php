@@ -278,9 +278,14 @@ function compras_agregarInsumoRapido(): void
         return;
     }
 
-    $modelo = new Insumo();
-    $modelo->add($nombre, $idUnidad, null, 0, 0);
-    $nuevoId = $modelo->getLastInsertId() ?? 0;
+    $modelo = new Insumo([
+        'nombre_insumo'          => $nombre,
+        'id_unidad_medida'       => $idUnidad,
+        'stock_actual'           => 0,
+        'costo_unitario_actual'  => 0,
+    ]);
+    $modelo->save();
+    $nuevoId = $modelo->getId() ?? 0;
 
     if ($nuevoId <= 0) {
         jsonResponse(['success' => false, 'message' => 'Error al crear el insumo.'], 500);

@@ -261,9 +261,16 @@ class SeedCollection extends Database implements ReadableInterface, DeletableInt
                     $supplyId = (int)$existing['id_insumo'];
                     $ok = $suppliesModel->increaseStock($supplyId, $cantidad);
                 } else {
-                    $ok = $suppliesModel->add($nombreSemilla, $idUnidadMedida, 'Semillas', $cantidad, 0);
+                    $nuevoInsumo = new Insumo([
+                        'nombre_insumo'          => $nombreSemilla,
+                        'id_unidad_medida'       => $idUnidadMedida,
+                        'categoria'              => 'Semillas',
+                        'stock_actual'           => $cantidad,
+                        'costo_unitario_actual'  => 0,
+                    ]);
+                    $ok = $nuevoInsumo->save();
                     if (!$ok) continue;
-                    $supplyId = $suppliesModel->getLastInsertId();
+                    $supplyId = $nuevoInsumo->getId();
                 }
 
                 if (!$ok) continue;
