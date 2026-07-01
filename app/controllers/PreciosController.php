@@ -51,7 +51,6 @@ function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('precios:el
 
 function prices_handleAdd(): void
 {
-    $model = new CalculoPrecio();
     $data = getRequestData();
 
     $idLote = (int)($data['id_lote'] ?? 0);
@@ -72,16 +71,26 @@ function prices_handleAdd(): void
 
     $fechaCalculo = !empty($data['fecha_calculo']) ? $data['fecha_calculo'] : date('Y-m-d');
 
-    if ($precioFinalSugerido <= 0) {
-        $precioFinalSugerido = ($precioPlantaBase + $costoTotalInsumo) * (1 + $porcentajeGanancia / 100);
-    }
+    $precioFinal = $precioFinalSugerido > 0
+        ? $precioFinalSugerido
+        : ($precioPlantaBase + $costoTotalInsumo) * (1 + $porcentajeGanancia / 100);
 
-    $success = $model->add($idLote, $precioPlantaBase, $costoTotalInsumo, $porcentajeGanancia, $precioFinalSugerido, $fechaCalculo);
-    if (!$success) {
+    $model = new CalculoPrecio([
+        'id_lote'              => $idLote,
+        'precio_planta_base'   => $precioPlantaBase,
+        'costo_total_insumo'   => $costoTotalInsumo,
+        'porcentaje_ganancia'  => $porcentajeGanancia,
+        'precio_final_sugerido'=> $precioFinal,
+        'fecha_calculo'        => $fechaCalculo,
+        'vigente'              => 1,
+    ]);
+
+    if (!$model->save()) {
         jsonResponse(['success' => false, 'message' => 'Error al guardar el cálculo.'], 500);
     }
 
-    $idCalculo = $model->getLastInsertId();
+    $idCalculo = $model->getId();
+
     if (!empty($detalles) && is_array($detalles)) {
         foreach ($detalles as $d) {
             $idInsumo = (int)($d['id_insumo'] ?? 0);
@@ -98,11 +107,13 @@ function prices_handleAdd(): void
 
 function prices_handleEdit(): void
 {
-    $model = new CalculoPrecio();
     $data = getRequestData();
 
     $id = (int)($data['id'] ?? 0);
     if ($id <= 0) throw new \Exception('ID inválido');
+
+    $calc = CalculoPrecio::find($id);
+    if (!$calc) throw new \Exception('No existe el cálculo de precio solicitado.');
 
     $idLote = (int)($data['id_lote'] ?? 0);
     $precioPlantaBase = (float)($data['precio_planta_base'] ?? 0);
@@ -116,22 +127,35 @@ function prices_handleEdit(): void
 
     $fechaCalculo = !empty($data['fecha_calculo']) ? $data['fecha_calculo'] : date('Y-m-d');
 
-    $model->update($id, $idLote, $precioPlantaBase, $costoTotalInsumo, $porcentajeGanancia, $precioFinalSugerido, $fechaCalculo);
+    $calc->setIdLote($idLote)
+         ->setPrecioPlantaBase($precioPlantaBase)
+         ->setCostoTotalInsumo($costoTotalInsumo)
+         ->setPorcentajeGanancia($porcentajeGanancia)
+         ->setPrecioFinalSugerido($precioFinalSugerido)
+         ->setFechaCalculo($fechaCalculo);
 
-    $model->saveDetalles($id, $detalles);
-    $model->recalcularTotalInsumo($id);
+    if (!$calc->save()) {
+        throw new \Exception('Error al actualizar el cálculo de precio.');
+    }
+
+    $calc->saveDetalles($id, $detalles);
+    $calc->recalcularTotalInsumo($id);
 
     jsonResponse(['success' => true, 'message' => 'Cálculo de precio actualizado correctamente', 'id' => $id]);
 }
 
 function prices_handleDelete(): void
 {
-    $model = new CalculoPrecio();
     $id = (int)($_POST['id'] ?? 0);
     if ($id <= 0) throw new \Exception('ID inválido');
-    if (!$model->exists($id)) throw new \Exception('No existe el cálculo de precio');
 
-    $model->delete($id);
+    $calc = CalculoPrecio::find($id);
+    if (!$calc) throw new \Exception('No existe el cálculo de precio');
+
+    if (!$calc->delete($id)) {
+        throw new \Exception('Error al desactivar el cálculo de precio.');
+    }
+
     jsonResponse(['success' => true, 'message' => 'Cálculo de precio desactivado correctamente', 'priceId' => $id]);
 }
 
