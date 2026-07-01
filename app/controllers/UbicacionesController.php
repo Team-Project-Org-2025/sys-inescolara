@@ -46,50 +46,87 @@ function locations_getLocationsAjax(): void
 
 function locations_handleAddEdit(string $mode): void
 {
-    $model = new Ubicacion();
     $nombreUbicacion = trim((string)($_POST['nombre_ubicacion'] ?? ''));
     if ($nombreUbicacion === '') {
         throw new \Exception('El nombre de la ubicación es requerido.');
     }
+
     $descripcion = trim((string)($_POST['descripcion'] ?? ''));
     if ($descripcion === '') $descripcion = null;
+
     $tipo = trim((string)($_POST['tipo'] ?? ''));
     if ($tipo === '') $tipo = null;
 
     if ($mode === 'add') {
-        $model->add($nombreUbicacion, $descripcion, $tipo);
-        $newId = $model->getLastInsertId() ?? 0;
+        $ubicacion = new Ubicacion([
+            'nombre_ubicacion' => $nombreUbicacion,
+            'descripcion'      => $descripcion,
+            'tipo'             => $tipo,
+        ]);
+        if (!$ubicacion->save()) {
+            throw new \Exception('Error al guardar la ubicación.');
+        }
         jsonResponse([
             'success' => true,
             'message' => 'Ubicación agregada correctamente',
             'ubicacion' => [
-                'id' => $newId, 'nombre_ubicacion' => $nombreUbicacion,
-                'descripcion' => $descripcion, 'tipo' => $tipo,
+                'id'               => $ubicacion->getId(),
+                'nombre_ubicacion' => $nombreUbicacion,
+                'descripcion'      => $descripcion,
+                'tipo'             => $tipo,
             ],
         ]);
-        return;
-    }
+    } else {
+        $id = (int)($_POST['id'] ?? 0);
+        if ($id <= 0) throw new \Exception('ID inválido');
 
-    $id = (int)($_POST['id'] ?? 0);
-    if ($id <= 0) throw new \Exception('ID inválido');
-    $data = $model->getById($id);
-    if (!$data) throw new \Exception('La ubicación que intenta editar no existe.');
-    $model->update($id, $nombreUbicacion, $descripcion, $tipo);
-    jsonResponse([
-        'success' => true,
-        'message' => 'Ubicación actualizada correctamente',
-        'ubicacion' => ['id' => $id, 'nombre_ubicacion' => $nombreUbicacion, 'descripcion' => $descripcion, 'tipo' => $tipo],
-    ]);
+        $ubicacion = Ubicacion::find($id);
+        if (!$ubicacion) throw new \Exception('La ubicación que intenta editar no existe.');
+
+        $ubicacion->setNombreUbicacion($nombreUbicacion)
+                  ->setDescripcion($descripcion)
+                  ->setTipo($tipo);
+
+        if (!$ubicacion->save()) {
+            throw new \Exception('Error al actualizar la ubicación.');
+        }
+        jsonResponse([
+            'success' => true,
+            'message' => 'Ubicación actualizada correctamente',
+            'ubicacion' => [
+                'id'               => $id,
+                'nombre_ubicacion' => $nombreUbicacion,
+                'descripcion'      => $descripcion,
+                'tipo'             => $tipo,
+            ],
+        ]);
+    }
 }
 
 function locations_handleDelete(): void
 {
-    $model = new Ubicacion();
     $id = (int)($_POST['id'] ?? 0);
     if ($id <= 0) throw new \Exception('ID de ubicación inválido');
-    $data = $model->getById($id);
-    if (!$data) throw new \Exception('No existe la ubicación solicitada.');
-    $model->delete($id);
+
+    $ubicacion = Ubicacion::find($id);
+    if (!$ubicacion) throw new \Exception('No existe la ubicación solicitada.');
+
+    try {
+        if (!$ubicacion->delete($id)) {
+            throw new \Exception('Error al desactivar la ubicación.');
+        }
+    } catch (\PDOException $e) {
+        if ((int)$e->getCode() === 23000 && str_contains($e->getMessage(), '1451')) {
+            jsonResponse([
+                'success' => false,
+                'message' => 'No se puede eliminar esta ubicación porque tiene registros asociados.',
+                'type'    => 'foreign_key'
+            ]);
+            return;
+        }
+        throw $e;
+    }
+
     jsonResponse([
         'success' => true,
         'message' => 'Ubicación desactivada correctamente',
