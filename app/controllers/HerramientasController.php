@@ -44,7 +44,6 @@ function get_usages(): void { checkModuleAuth(); tools_getUsagesAjax(); }
 
 function tools_handleAddEdit(string $mode): void
 {
-    $model = new Herramienta();
     $nombre = trim((string)($_POST['nombre_herramienta'] ?? ''));
     if ($nombre === '') {
         throw new \Exception('El nombre de la herramienta es requerido.');
@@ -73,18 +72,42 @@ function tools_handleAddEdit(string $mode): void
     $cantidad = max(1, (int)($_POST['cantidad'] ?? 1));
 
     if ($mode === 'add') {
-        $model->add($nombre, $cantidad, $estado, $fechaUltimoMantenimiento, $observacion);
-        $newId = $model->getLastInsertId() ?? 0;
+        $herramienta = new Herramienta([
+            'nombre_herramienta'         => $nombre,
+            'cantidad'                   => $cantidad,
+            'estado'                     => $estado,
+            'fecha_ultimo_mantenimiento' => $fechaUltimoMantenimiento,
+            'observacion'                => $observacion,
+        ]);
+        if (!$herramienta->save()) {
+            throw new \Exception('Error al guardar la herramienta.');
+        }
         jsonResponse([
             'success' => true, 'message' => 'Herramienta agregada correctamente',
-            'herramienta' => ['id' => $newId, 'nombre_herramienta' => $nombre, 'cantidad' => $cantidad, 'estado' => $estado],
+            'herramienta' => [
+                'id' => $herramienta->getId(), 'nombre_herramienta' => $nombre,
+                'cantidad' => $cantidad, 'estado' => $estado,
+            ],
         ]);
+        return;
     }
 
     $id = (int)($_POST['id'] ?? 0);
     if ($id <= 0) throw new \Exception('ID inválido');
 
-    $model->update($id, $nombre, $cantidad, $estado, $fechaUltimoMantenimiento, $observacion);
+    $herramienta = Herramienta::find($id);
+    if (!$herramienta) throw new \Exception('No existe la herramienta solicitada.');
+
+    $herramienta->setNombreHerramienta($nombre)
+                ->setCantidad($cantidad)
+                ->setEstado($estado)
+                ->setFechaUltimoMantenimiento($fechaUltimoMantenimiento)
+                ->setObservacion($observacion);
+
+    if (!$herramienta->save()) {
+        throw new \Exception('Error al actualizar la herramienta.');
+    }
+
     jsonResponse([
         'success' => true, 'message' => 'Herramienta actualizada correctamente',
         'herramienta' => ['id' => $id],
@@ -93,12 +116,16 @@ function tools_handleAddEdit(string $mode): void
 
 function tools_handleDelete(): void
 {
-    $model = new Herramienta();
     $id = (int)($_POST['id'] ?? 0);
     if ($id <= 0) throw new \Exception('ID inválido');
-    if (!$model->exists($id)) throw new \Exception('No existe la herramienta');
 
-    $model->delete($id);
+    $herramienta = Herramienta::find($id);
+    if (!$herramienta) throw new \Exception('No existe la herramienta');
+
+    if (!$herramienta->delete($id)) {
+        throw new \Exception('Error al desactivar la herramienta.');
+    }
+
     jsonResponse(['success' => true, 'message' => 'Herramienta desactivada correctamente', 'herramientaId' => $id]);
 }
 

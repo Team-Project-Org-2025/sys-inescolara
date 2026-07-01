@@ -309,9 +309,13 @@ function compras_agregarHerramientaRapido(): void
         return;
     }
 
-    $modelo = new Herramienta();
-    $modelo->add($nombre);
-    $nuevoId = $modelo->getLastInsertId() ?? 0;
+    $modelo = new Herramienta([
+        'nombre_herramienta' => $nombre,
+        'cantidad'           => 1,
+        'estado'             => 'disponible',
+    ]);
+    $modelo->save();
+    $nuevoId = $modelo->getId() ?? 0;
 
     if ($nuevoId <= 0) {
         jsonResponse(['success' => false, 'message' => 'Error al crear la herramienta.'], 500);
