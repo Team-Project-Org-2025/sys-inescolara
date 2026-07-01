@@ -4,14 +4,232 @@ namespace SysInescolara\models;
 
 use SysInescolara\core\Database;
 use SysInescolara\interfaces\ReadableInterface;
+use SysInescolara\traits\ValidationTrait;
 use PDO;
+use Throwable;
 use SysInescolara\models\AuditLog;
 
 class Ampliacion extends Database implements ReadableInterface
 {
-    public function __construct()
+    use ValidationTrait;
+
+    private ?int $id = null;
+    private string $tipoMovimiento = 'intercambio';
+    private ?int $idCliente = null;
+    private ?int $idTrabajadorGestor = null;
+    private ?string $fechaMovimiento = null;
+    private ?string $observacion = null;
+    private int $activo = 1;
+
+    protected array $validationRules = [
+        'tipo_movimiento'      => ['type' => null,      'required' => true],
+        'id_cliente'           => ['type' => 'cantidad','required' => false],
+        'id_trabajador_gestor' => ['type' => 'cantidad','required' => true],
+        'fecha_movimiento'     => ['type' => null,      'required' => true],
+        'observacion'          => ['type' => null,      'required' => false],
+    ];
+
+    protected array $fillable = ['tipo_movimiento', 'id_cliente', 'id_trabajador_gestor', 'fecha_movimiento', 'observacion', 'activo'];
+    protected array $guarded = ['id_movimiento_planta'];
+
+    public function __construct(array $attributes = [])
     {
         parent::__construct();
+        if (!empty($attributes)) {
+            $this->fill($attributes);
+        }
+    }
+
+    public function fill(array $attributes): self
+    {
+        foreach ($attributes as $key => $value) {
+            if (empty($this->fillable) || in_array($key, $this->fillable, true)) {
+                $property = $this->mapColumnToProperty($key);
+                if (property_exists($this, $property)) {
+                    $this->$property = $value;
+                }
+            }
+        }
+        return $this;
+    }
+
+    private function mapColumnToProperty(string $column): string
+    {
+        $map = [
+            'id_movimiento_planta'  => 'id',
+            'tipo_movimiento'       => 'tipoMovimiento',
+            'id_cliente'            => 'idCliente',
+            'id_trabajador_gestor'  => 'idTrabajadorGestor',
+            'fecha_movimiento'      => 'fechaMovimiento',
+            'observacion'           => 'observacion',
+            'activo'                => 'activo',
+        ];
+        return $map[$column] ?? $column;
+    }
+
+    // --- Getters ---
+    public function getId(): ?int { return $this->id; }
+    public function getTipoMovimiento(): string { return $this->tipoMovimiento; }
+    public function getIdCliente(): ?int { return $this->idCliente; }
+    public function getIdTrabajadorGestor(): ?int { return $this->idTrabajadorGestor; }
+    public function getFechaMovimiento(): ?string { return $this->fechaMovimiento; }
+    public function getObservacion(): ?string { return $this->observacion; }
+    public function isActivo(): bool { return $this->activo === 1; }
+
+    // --- Setters ---
+    public function setTipoMovimiento(string $tipoMovimiento): self
+    {
+        $this->tipoMovimiento = $tipoMovimiento;
+        return $this;
+    }
+
+    public function setIdCliente(?int $idCliente): self
+    {
+        $this->idCliente = $idCliente;
+        return $this;
+    }
+
+    public function setIdTrabajadorGestor(?int $idTrabajadorGestor): self
+    {
+        $this->idTrabajadorGestor = $idTrabajadorGestor;
+        return $this;
+    }
+
+    public function setFechaMovimiento(?string $fechaMovimiento): self
+    {
+        $this->fechaMovimiento = $fechaMovimiento;
+        return $this;
+    }
+
+    public function setObservacion(?string $observacion): self
+    {
+        $this->observacion = $observacion;
+        return $this;
+    }
+
+    public function setActivo(bool $activo): self
+    {
+        $this->activo = $activo ? 1 : 0;
+        return $this;
+    }
+
+    private function validate(): void
+    {
+        $this->validateData([
+            'tipo_movimiento'      => $this->tipoMovimiento,
+            'id_cliente'           => $this->idCliente,
+            'id_trabajador_gestor' => $this->idTrabajadorGestor,
+            'fecha_movimiento'     => $this->fechaMovimiento,
+            'observacion'          => $this->observacion,
+        ]);
+    }
+
+    public function save(): bool
+    {
+        $this->validate();
+
+        try {
+            if ($this->id === null) {
+                $sql = "INSERT INTO movimiento_planta (tipo_movimiento, id_cliente, id_trabajador_gestor, fecha_movimiento, observacion, activo)
+                        VALUES (:tipo_movimiento, :id_cliente, :id_trabajador_gestor, :fecha_movimiento, :observacion, :activo)";
+                $stmt = $this->db()->prepare($sql);
+                $success = $stmt->execute([
+                    ':tipo_movimiento'      => $this->tipoMovimiento,
+                    ':id_cliente'           => $this->idCliente,
+                    ':id_trabajador_gestor' => $this->idTrabajadorGestor,
+                    ':fecha_movimiento'     => $this->fechaMovimiento,
+                    ':observacion'          => $this->observacion,
+                    ':activo'               => $this->activo,
+                ]);
+
+                if ($success) {
+                    $this->id = (int) $this->db()->lastInsertId();
+                    AuditLog::record('CREATE', 'movimiento_planta', $this->id, null, [
+                        'tipo_movimiento'      => $this->tipoMovimiento,
+                        'id_cliente'           => $this->idCliente,
+                        'id_trabajador_gestor' => $this->idTrabajadorGestor,
+                        'fecha_movimiento'     => $this->fechaMovimiento,
+                        'observacion'          => $this->observacion,
+                    ]);
+                }
+                return $success;
+            } else {
+                $oldData = $this->getById($this->id);
+                $sql = "UPDATE movimiento_planta SET tipo_movimiento = :tipo_movimiento,
+                        id_cliente = :id_cliente, id_trabajador_gestor = :id_trabajador_gestor,
+                        fecha_movimiento = :fecha_movimiento, observacion = :observacion,
+                        activo = :activo
+                        WHERE id_movimiento_planta = :id";
+                $stmt = $this->db()->prepare($sql);
+                $success = $stmt->execute([
+                    ':id'                   => $this->id,
+                    ':tipo_movimiento'      => $this->tipoMovimiento,
+                    ':id_cliente'           => $this->idCliente,
+                    ':id_trabajador_gestor' => $this->idTrabajadorGestor,
+                    ':fecha_movimiento'     => $this->fechaMovimiento,
+                    ':observacion'          => $this->observacion,
+                    ':activo'               => $this->activo,
+                ]);
+                if ($success) {
+                    AuditLog::record('UPDATE', 'movimiento_planta', $this->id, $oldData, [
+                        'tipo_movimiento'      => $this->tipoMovimiento,
+                        'id_cliente'           => $this->idCliente,
+                        'id_trabajador_gestor' => $this->idTrabajadorGestor,
+                        'fecha_movimiento'     => $this->fechaMovimiento,
+                        'observacion'          => $this->observacion,
+                    ]);
+                }
+                return $success;
+            }
+        } catch (Throwable $e) {
+            error_log('Error al guardar ampliación: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    public static function find(int $id): ?self
+    {
+        $instance = new static();
+        $stmt = $instance->db()->prepare("SELECT * FROM movimiento_planta WHERE id_movimiento_planta = :id");
+        $stmt->execute([':id' => $id]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$row) return null;
+        $mov = new static($row);
+        $mov->id = (int)$row['id_movimiento_planta'];
+        return $mov;
+    }
+
+    public static function all(): array
+    {
+        $instance = new static();
+        $stmt = $instance->db()->query("SELECT * FROM movimiento_planta WHERE activo = 1 ORDER BY fecha_movimiento DESC, id_movimiento_planta DESC");
+        return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+    }
+
+    public static function where(string $column, $value, string $operator = '='): array
+    {
+        $instance = new static();
+        $sql = "SELECT * FROM movimiento_planta WHERE $column $operator :value AND activo = 1";
+        $stmt = $instance->db()->prepare($sql);
+        $stmt->execute([':value' => $value]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return array_map(fn($row) => new static($row), $rows);
+    }
+
+    public function loadById(int $id): bool
+    {
+        $found = self::find($id);
+        if ($found) {
+            $this->id = $found->getId();
+            $this->tipoMovimiento = $found->getTipoMovimiento();
+            $this->idCliente = $found->getIdCliente();
+            $this->idTrabajadorGestor = $found->getIdTrabajadorGestor();
+            $this->fechaMovimiento = $found->getFechaMovimiento();
+            $this->observacion = $found->getObservacion();
+            $this->activo = $found->isActivo() ? 1 : 0;
+            return true;
+        }
+        return false;
     }
 
     public function getAll(): array
