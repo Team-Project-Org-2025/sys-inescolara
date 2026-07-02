@@ -174,16 +174,70 @@ $('#btnAssignTask').on('click', function () {
 $('#btnAddConsumptionRow').on('click', addConsumptionRow);
 
 // ============================================================
-//  TOOLS — Add / Remove rows
+//  TOOLS — Add / Remove rows + quantity + availability
 // ============================================================
+function recalculateToolAvailability() {
+    const $rows = $('#toolsBody tr');
+    const requested = {};
+    $rows.each(function () {
+        const val = parseInt($(this).find('select').val()) || 0;
+        if (val) {
+            const cant = parseInt($(this).find('.tool-cantidad-input').val()) || 0;
+            requested[val] = (requested[val] || 0) + cant;
+        }
+    });
+    $rows.each(function () {
+        const $select = $(this).find('select');
+        const val = parseInt($select.val()) || 0;
+        if (val) {
+            const baseDisp = parseInt($select.find('option:selected').data('disponibles')) || 0;
+            const thisCant = parseInt($(this).find('.tool-cantidad-input').val()) || 0;
+            const remaining = Math.max(0, baseDisp - ((requested[val] || 0) - thisCant));
+            $(this).find('.disp-display').text(remaining);
+        } else {
+            $(this).find('.disp-display').text('—');
+        }
+    });
+}
+
+function updateToolStockHint($input) {
+    const $tr = $input.closest('tr');
+    const $select = $tr.find('select');
+    const val = parseInt($select.val()) || 0;
+    if (!val) return;
+    const $option = $select.find('option:selected');
+    const baseDisp = parseInt($option.data('disponibles')) || 0;
+    const cantidad = parseInt($input.val()) || 0;
+    const $rows = $('#toolsBody tr');
+    let totalSolicitadas = 0;
+    $rows.each(function () {
+        if (this === $tr[0]) return;
+        const $rowSelect = $(this).find('select');
+        if (parseInt($rowSelect.val()) === val) {
+            totalSolicitadas += parseInt($(this).find('.tool-cantidad-input').val()) || 0;
+        }
+    });
+    const remaining = Math.max(0, baseDisp - totalSolicitadas);
+    const $hint = $tr.find('.tool-stock-hint');
+    if (cantidad > remaining) {
+        $hint.html('<span class="text-danger fw-semibold"><i class="fas fa-exclamation-triangle"></i> Disponible: ' + remaining + '</span>');
+        $input.addClass('is-invalid');
+    } else {
+        $hint.html(cantidad > 0 ? 'Disponible: ' + remaining : '');
+        $input.removeClass('is-invalid');
+    }
+}
+
 function addToolRow() {
     const $tbody = $('#toolsBody');
     const idx = $tbody.children().length;
     const herramientas = DATA.herramientas || [];
     let opts = '<option value="">Seleccione...</option>';
     herramientas.forEach((h) => {
-        if (h.estado !== 'disponible') return;
-        opts += `<option value="${h.id}" data-cantidad="${h.cantidad || 0}">${Helpers.escapeHtml(h.nombre_herramienta)} (${h.cantidad || 0} disp.)</option>`;
+        const disp = h.disponibles || 0;
+        opts += `<option value="${h.id}" data-cantidad="${h.cantidad || 0}" data-disponibles="${disp}" ${disp <= 0 ? 'disabled' : ''}>
+            ${Helpers.escapeHtml(h.nombre_herramienta)} (${disp} disp.)
+        </option>`;
     });
     const row = `
         <tr>
@@ -191,22 +245,32 @@ function addToolRow() {
                 <select class="form-select form-select-sm" name="tools[${idx}][id_herramienta]" required>${opts}</select>
             </td>
             <td class="text-center align-middle disp-display">—</td>
+            <td>
+                <input type="number" min="1" step="1" class="form-control form-control-sm tool-cantidad-input" name="tools[${idx}][cantidad]" required placeholder="1">
+                <small class="tool-stock-hint text-muted"></small>
+            </td>
             <td class="text-center">
                 <button type="button" class="btn btn-sm btn-outline-danger btn-remove-tool-row"><i class="fas fa-trash"></i></button>
             </td>
         </tr>`;
     $tbody.append(row);
+    recalculateToolAvailability();
 }
 
 $(document).on('change', '#toolsBody select[name$="[id_herramienta]"]', function () {
-    const $option = $(this).find('option:selected');
-    const cantidad = parseFloat($option.data('cantidad') || 0);
     const $tr = $(this).closest('tr');
-    $tr.find('.disp-display').text(cantidad > 0 ? cantidad.toFixed(0) : '—');
+    recalculateToolAvailability();
+    updateToolStockHint($tr.find('.tool-cantidad-input'));
+});
+
+$(document).on('input', '#toolsBody .tool-cantidad-input', function () {
+    recalculateToolAvailability();
+    updateToolStockHint($(this));
 });
 
 $(document).on('click', '.btn-remove-tool-row', function () {
     $(this).closest('tr').remove();
+    recalculateToolAvailability();
 });
 
 $('#btnAddToolRow').on('click', addToolRow);
@@ -262,12 +326,36 @@ $('#assignTaskForm').on('submit', function (e) {
         return;
     }
 
+    let hasToolError = false;
     $('#toolsBody tr').each(function () {
         const $row = $(this);
         const idHerramienta = parseInt($row.find('select').val()) || 0;
+        const cantidad = parseInt($row.find('.tool-cantidad-input').val()) || 0;
         if (!idHerramienta) return;
-        data.tools.push({ id_herramienta: idHerramienta });
+        if (cantidad <= 0) {
+            hasToolError = true;
+            $row.find('.tool-cantidad-input').addClass('is-invalid');
+            return;
+        }
+        const disp = parseInt($row.find('select option:selected').data('disponibles')) || 0;
+        const $allRows = $('#toolsBody tr');
+        let totalSolicitadas = 0;
+        $allRows.each(function () {
+            if (parseInt($(this).find('select').val()) === idHerramienta) {
+                totalSolicitadas += parseInt($(this).find('.tool-cantidad-input').val()) || 0;
+            }
+        });
+        if (totalSolicitadas > disp) {
+            hasToolError = true;
+            $row.find('.tool-cantidad-input').addClass('is-invalid');
+        }
+        data.tools.push({ id_herramienta: idHerramienta, cantidad: cantidad });
     });
+
+    if (hasToolError) {
+        Helpers.toast('error', 'Verifique las cantidades de herramientas: deben ser mayores a 0 y no superar las disponibles.');
+        return;
+    }
 
     const idAsignacion = parseInt($form.find('[name="id_asignacion"]').val()) || 0;
     const isEdit = idAsignacion > 0;
@@ -277,6 +365,8 @@ $('#assignTaskForm').on('submit', function (e) {
     Ajax.post(`${baseUrl}?action=${action}`, data)
         .then((r) => {
             if (r.success) {
+                if (r.herramientas) DATA.herramientas = r.herramientas;
+                if (r.insumos) DATA.insumos = r.insumos;
                 Helpers.toast('success', isEdit ? 'Tarea actualizada correctamente' : 'Tarea asignada correctamente');
                 $('#assignTaskModal').modal('hide');
                 assignmentsTable.ajax.reload(null, false);
@@ -510,12 +600,19 @@ $(document).on('click', '.btn-view-assign', function () {
                     <div class="card-body p-2">
                         ${tools.length === 0 ? '<p class="text-muted mb-0">No se registró uso de herramientas.</p>' : `
                         <table class="table table-sm table-bordered mb-0">
-                            <thead><tr><th>Herramienta</th><th>Fecha</th></tr></thead>
+                            <thead><tr><th>Herramienta</th><th>Cantidad</th></tr></thead>
                             <tbody>
-                                ${tools.map(t => `<tr>
-                                    <td>${Helpers.escapeHtml(t.nombre_herramienta || '—')}</td>
-                                    <td>${Helpers.escapeHtml(t.fecha_uso || '—')}</td>
-                                </tr>`).join('')}
+                                ${(() => {
+                                    const groups = {};
+                                    tools.forEach(t => {
+                                        const name = t.nombre_herramienta || '—';
+                                        groups[name] = (groups[name] || 0) + 1;
+                                    });
+                                    return Object.entries(groups).map(([name, count]) => `<tr>
+                                        <td>${Helpers.escapeHtml(name)}</td>
+                                        <td>${count}</td>
+                                    </tr>`).join('');
+                                })()}
                             </tbody>
                         </table>`}
                     </div>
@@ -569,10 +666,18 @@ $(document).on('click', '.btn-edit-assign', function () {
                 $row.find('.cantidad-input').val(c.cantidad_usada);
             });
 
+            const toolGroups = {};
             tools.forEach(function (t) {
+                const id = t.id_herramienta;
+                if (!toolGroups[id]) toolGroups[id] = 0;
+                toolGroups[id]++;
+            });
+            Object.keys(toolGroups).forEach(function (id) {
                 addToolRow();
                 const $row = $('#toolsBody tr:last');
-                $row.find('select').val(t.id_herramienta).trigger('change');
+                $row.find('select').val(parseInt(id)).trigger('change');
+                $row.find('.tool-cantidad-input').val(toolGroups[id]);
+                updateToolStockHint($row.find('.tool-cantidad-input'));
             });
 
             $('#assignTaskModal .modal-title').text('Editar Tarea');

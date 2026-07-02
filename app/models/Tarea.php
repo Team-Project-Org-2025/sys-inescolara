@@ -196,7 +196,7 @@ class Tarea extends Database implements ReadableInterface, DeletableInterface
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 
-    public function assignTaskWithConsumptions(array $assignmentData, array $consumptions): int
+    public function assignTaskWithConsumptions(array $assignmentData, array $consumptions, array $tools = []): int
     {
         $this->db()->beginTransaction();
         try {
@@ -248,10 +248,37 @@ class Tarea extends Database implements ReadableInterface, DeletableInterface
                 ]);
             }
 
+            foreach ($tools as $t) {
+                $idHerramienta = (int)$t['id_herramienta'];
+                $cantidad = (int)($t['cantidad'] ?? 1);
+
+                $stmt = $this->db()->prepare("SELECT estado FROM herramienta WHERE id_herramienta = :id");
+                $stmt->execute([':id' => $idHerramienta]);
+                $toolEstado = $stmt->fetchColumn();
+                if (!in_array($toolEstado, ['disponible', 'ok'])) {
+                    throw new \Exception("La herramienta no está disponible.");
+                }
+
+                $stmt = $this->db()->prepare("
+                    INSERT INTO uso_herramienta (id_asignacion, id_herramienta, cantidad_usada, fecha_uso, observacion, estado_herramienta_post_uso)
+                    VALUES (:id_asignacion, :id_herramienta, :cantidad_usada, :fecha_uso, :observacion, 'ok')
+                ");
+                $stmt->execute([
+                    ':id_asignacion'  => $asignacionId,
+                    ':id_herramienta' => $idHerramienta,
+                    ':cantidad_usada' => $cantidad,
+                    ':fecha_uso'      => $t['fecha_uso'] ?? date('Y-m-d'),
+                    ':observacion'    => $t['observacion'] ?? null,
+                ]);
+            }
+
             $this->db()->commit();
             AuditLog::record('CREATE', 'asignar_tarea', $asignacionId, null, $assignmentData);
             if (!empty($consumptions)) {
                 AuditLog::record('CREATE', 'consumo_insumos', $asignacionId, null, ['count' => count($consumptions)]);
+            }
+            if (!empty($tools)) {
+                AuditLog::record('CREATE', 'uso_herramienta', $asignacionId, null, ['count' => count($tools)]);
             }
             return $asignacionId;
         } catch (\Exception $e) {
@@ -331,26 +358,26 @@ class Tarea extends Database implements ReadableInterface, DeletableInterface
             }
 
             foreach ($tools as $t) {
+                $idHerramienta = (int)$t['id_herramienta'];
+                $cantidad = (int)($t['cantidad'] ?? 1);
                 $stmt = $this->db()->prepare("SELECT estado FROM herramienta WHERE id_herramienta = :id");
-                $stmt->execute([':id' => $t['id_herramienta']]);
+                $stmt->execute([':id' => $idHerramienta]);
                 $toolEstado = $stmt->fetchColumn();
-                if ($toolEstado !== 'disponible') {
+                if (!in_array($toolEstado, ['disponible', 'ok'])) {
                     throw new \Exception("La herramienta '{$t['nombre_herramienta']}' no está disponible.");
                 }
 
                 $stmt = $this->db()->prepare("
-                    INSERT INTO uso_herramienta (id_asignacion, id_herramienta, fecha_uso, observacion, estado_herramienta_post_uso)
-                    VALUES (:id_asignacion, :id_herramienta, :fecha_uso, :observacion, 'ok')
+                    INSERT INTO uso_herramienta (id_asignacion, id_herramienta, cantidad_usada, fecha_uso, observacion, estado_herramienta_post_uso)
+                    VALUES (:id_asignacion, :id_herramienta, :cantidad_usada, :fecha_uso, :observacion, 'ok')
                 ");
                 $stmt->execute([
                     ':id_asignacion'  => $asignacionId,
-                    ':id_herramienta' => $t['id_herramienta'],
+                    ':id_herramienta' => $idHerramienta,
+                    ':cantidad_usada' => $cantidad,
                     ':fecha_uso'      => $t['fecha_uso'],
                     ':observacion'    => $t['observacion'] ?? null,
                 ]);
-
-                $stmt = $this->db()->prepare("UPDATE herramienta SET estado = 'ok' WHERE id_herramienta = :id");
-                $stmt->execute([':id' => $t['id_herramienta']]);
             }
 
             $this->db()->commit();
@@ -441,7 +468,7 @@ class Tarea extends Database implements ReadableInterface, DeletableInterface
 
     public function countActiveToolUsages(int $idHerramienta, ?int $excludeAsignacionId = null): int
     {
-        $sql = "SELECT COUNT(*) FROM uso_herramienta uh
+        $sql = "SELECT SUM(COALESCE(uh.cantidad_usada, 1)) FROM uso_herramienta uh
                 JOIN asignar_tarea a ON uh.id_asignacion = a.id_asignacion
                 WHERE uh.id_herramienta = :id_herramienta
                 AND a.estatus_tarea = 'pendiente'";

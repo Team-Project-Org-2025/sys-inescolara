@@ -135,8 +135,9 @@ include_once __DIR__ . '/../common/modal.php';
                 <table class="table table-sm table-bordered mb-2">
                     <thead>
                         <tr>
-                            <th style="width:55%">Herramienta</th>
-                            <th style="width:20%">Disp.</th>
+                            <th style="width:35%">Herramienta</th>
+                            <th style="width:15%">Disponibles</th>
+                            <th style="width:25%">Cantidad</th>
                             <th style="width:25%"></th>
                         </tr>
                     </thead>
@@ -190,6 +191,6 @@ include_once __DIR__ . '/../common/modal.php';
             hoy: '<?= date('Y-m-d') ?>'
         };
     </script>
-    <script type="module" src="<?= BASE_URL ?>public/assets/js/dashboard/tareas.js"></script>
+    <script type="module" src="<?= BASE_URL ?>public/assets/js/dashboard/tareas.js?v=2"></script>
 </body>
 </html>
