@@ -36,7 +36,7 @@ function index(): void
     $suppliesModel = new Insumo();
     $insumos = $suppliesModel->getAll();
     $toolModel = new Herramienta();
-    $herramientas = $toolModel->getAll();
+    $herramientas = $toolModel->getAllWithAvailability();
 
     $view = ROOT_PATH . 'app/views/dashboard/tareas.php';
     if (!is_file($view)) {
@@ -112,51 +112,22 @@ function tasks_assignAjax(): void
         ];
     }
 
-    $model = new Tarea();
-    $asignacionId = $model->assignTaskWithConsumptions($assignmentData, $consumptions);
-
-    // Guardar uso de herramientas
     $rawTools = $data['tools'] ?? [];
-    $toolModel = new Herramienta();
-
-    // Contar herramientas repetidas en la misma solicitud
-    $toolCounts = [];
+    $tools = [];
     foreach ($rawTools as $t) {
         $idHerramienta = (int)($t['id_herramienta'] ?? 0);
-        if ($idHerramienta <= 0) continue;
-        $toolCounts[$idHerramienta] = ($toolCounts[$idHerramienta] ?? 0) + 1;
+        $cantidad = (int)($t['cantidad'] ?? 0);
+        if ($idHerramienta <= 0 || $cantidad <= 0) continue;
+        $tools[] = [
+            'id_herramienta' => $idHerramienta,
+            'cantidad'       => $cantidad,
+            'fecha_uso'      => $t['fecha_uso'] ?? date('Y-m-d'),
+            'observacion'    => $t['observacion'] ?? '',
+        ];
     }
 
-    // Validar disponibilidad por cantidad
-    foreach ($toolCounts as $idHerramienta => $solicitadas) {
-        $herramienta = $toolModel->getById($idHerramienta);
-        if (!$herramienta || ($herramienta['estado'] ?? '') !== 'disponible') {
-            jsonResponse([
-                'success' => false,
-                'message' => "La herramienta '{$herramienta['nombre_herramienta']}' no está disponible.",
-            ], 400);
-        }
-        $usosActivos = $model->countActiveToolUsages($idHerramienta);
-        $disponibles = (int)($herramienta['cantidad'] ?? 0);
-        if ($usosActivos + $solicitadas > $disponibles) {
-            jsonResponse([
-                'success' => false,
-                'message' => "No hay suficientes {$herramienta['nombre_herramienta']} disponibles. En uso: $usosActivos, solicitadas: $solicitadas, disponibles: $disponibles.",
-            ], 400);
-        }
-    }
-
-    foreach ($rawTools as $t) {
-        $idHerramienta = (int)($t['id_herramienta'] ?? 0);
-        if ($idHerramienta <= 0) continue;
-        $toolModel->recordUsageWithStateUpdate([
-            'id_asignacion'               => $asignacionId,
-            'id_herramienta'              => $idHerramienta,
-            'fecha_uso'                   => $t['fecha_uso'] ?? date('Y-m-d'),
-            'observacion'                 => $t['observacion'] ?? '',
-            'estado_herramienta_post_uso' => 'disponible',
-        ]);
-    }
+    $model = new Tarea();
+    $asignacionId = $model->assignTaskWithConsumptions($assignmentData, $consumptions, $tools);
 
     // Notificar al trabajador asignado
     try {
@@ -176,7 +147,17 @@ function tasks_assignAjax(): void
         error_log('Error al crear notificación: ' . $e->getMessage());
     }
 
-    jsonResponse(['success' => true, 'message' => 'Tarea asignada correctamente', 'id_asignacion' => $asignacionId]);
+    $toolModel = new Herramienta();
+    $freshHerramientas = $toolModel->getAllWithAvailability();
+    $freshInsumos = $suppliesModel->getAll();
+
+    jsonResponse([
+        'success' => true,
+        'message' => 'Tarea asignada correctamente',
+        'id_asignacion' => $asignacionId,
+        'herramientas' => $freshHerramientas,
+        'insumos' => $freshInsumos,
+    ]);
 }
 
 function tasks_editAjax(): void
@@ -235,12 +216,13 @@ function tasks_editAjax(): void
     $tools = [];
     $toolModel = new Herramienta();
 
-    // Contar herramientas repetidas en la misma solicitud
+    // Sumar cantidades por herramienta
     $toolCounts = [];
     foreach ($rawTools as $t) {
         $idHerramienta = (int)($t['id_herramienta'] ?? 0);
-        if ($idHerramienta <= 0) continue;
-        $toolCounts[$idHerramienta] = ($toolCounts[$idHerramienta] ?? 0) + 1;
+        $cantidad = (int)($t['cantidad'] ?? 0);
+        if ($idHerramienta <= 0 || $cantidad <= 0) continue;
+        $toolCounts[$idHerramienta] = ($toolCounts[$idHerramienta] ?? 0) + $cantidad;
     }
 
     // Validar disponibilidad por cantidad (excluyendo la asignación actual)
@@ -262,10 +244,12 @@ function tasks_editAjax(): void
 
     foreach ($rawTools as $t) {
         $idHerramienta = (int)($t['id_herramienta'] ?? 0);
-        if ($idHerramienta <= 0) continue;
+        $cantidad = (int)($t['cantidad'] ?? 0);
+        if ($idHerramienta <= 0 || $cantidad <= 0) continue;
         $tools[] = [
             'id_herramienta'  => $idHerramienta,
             'nombre_herramienta' => '',
+            'cantidad'        => $cantidad,
             'fecha_uso'       => $t['fecha_uso'] ?? date('Y-m-d'),
             'observacion'     => $t['observacion'] ?? '',
         ];
@@ -273,7 +257,16 @@ function tasks_editAjax(): void
 
     $model->updateAssignmentWithConsumptions($idAsignacion, $assignmentData, $consumptions, $tools);
 
-    jsonResponse(['success' => true, 'message' => 'Tarea actualizada correctamente', 'id_asignacion' => $idAsignacion]);
+    $freshHerramientas = $toolModel->getAllWithAvailability();
+    $freshInsumos = $suppliesModel->getAll();
+
+    jsonResponse([
+        'success' => true,
+        'message' => 'Tarea actualizada correctamente',
+        'id_asignacion' => $idAsignacion,
+        'herramientas' => $freshHerramientas,
+        'insumos' => $freshInsumos,
+    ]);
 }
 
 function tasks_completeAssignmentAjax(): void

@@ -319,14 +319,15 @@ class Herramienta extends Database implements ReadableInterface, DeletableInterf
         $this->db()->beginTransaction();
         try {
             $stmt = $this->db()->prepare("
-                INSERT INTO uso_herramienta (id_asignacion, id_herramienta, fecha_uso, observacion, estado_herramienta_post_uso)
-                VALUES (:id_asignacion, :id_herramienta, :fecha_uso, :observacion, :estado_herramienta_post_uso)
+                INSERT INTO uso_herramienta (id_asignacion, id_herramienta, cantidad_usada, fecha_uso, observacion, estado_herramienta_post_uso)
+                VALUES (:id_asignacion, :id_herramienta, :cantidad_usada, :fecha_uso, :observacion, :estado_herramienta_post_uso)
             ");
             $stmt->execute([
-                ':id_asignacion'            => $usageData['id_asignacion'],
-                ':id_herramienta'           => $usageData['id_herramienta'],
-                ':fecha_uso'                => $usageData['fecha_uso'],
-                ':observacion'              => $usageData['observacion'] ?? null,
+                ':id_asignacion'               => $usageData['id_asignacion'],
+                ':id_herramienta'              => $usageData['id_herramienta'],
+                ':cantidad_usada'              => $usageData['cantidad'] ?? 1,
+                ':fecha_uso'                   => $usageData['fecha_uso'],
+                ':observacion'                 => $usageData['observacion'] ?? null,
                 ':estado_herramienta_post_uso' => $usageData['estado_herramienta_post_uso'] ?? 'disponible',
             ]);
             $usoId = (int)$this->db()->lastInsertId();
@@ -344,6 +345,50 @@ class Herramienta extends Database implements ReadableInterface, DeletableInterf
             $this->db()->rollBack();
             error_log('Error en Herramienta::recordUsageWithStateUpdate: ' . $e->getMessage());
             throw $e;
+        }
+    }
+
+    public function getAllWithAvailability(): array
+    {
+        try {
+            $sql = "
+                SELECT
+                    h.id_herramienta AS id,
+                    h.nombre_herramienta,
+                    h.cantidad,
+                    h.estado,
+                    h.fecha_ultimo_mantenimiento,
+                    h.observacion,
+                    h.activo,
+                    COALESCE((
+                        SELECT SUM(COALESCE(uh.cantidad_usada, 1))
+                        FROM uso_herramienta uh
+                        JOIN asignar_tarea a ON uh.id_asignacion = a.id_asignacion
+                        WHERE uh.id_herramienta = h.id_herramienta
+                        AND a.estatus_tarea = 'pendiente'
+                    ), 0) AS en_uso,
+                    (h.cantidad - COALESCE((
+                        SELECT SUM(COALESCE(uh.cantidad_usada, 1))
+                        FROM uso_herramienta uh
+                        JOIN asignar_tarea a ON uh.id_asignacion = a.id_asignacion
+                        WHERE uh.id_herramienta = h.id_herramienta
+                        AND a.estatus_tarea = 'pendiente'
+                    ), 0)) AS disponibles
+                FROM herramienta h
+                WHERE h.activo = 1
+                ORDER BY h.nombre_herramienta ASC
+            ";
+            $stmt = $this->db()->query($sql);
+            $rows = $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+            foreach ($rows as &$row) {
+                $row['cantidad'] = (int)$row['cantidad'];
+                $row['en_uso'] = (int)$row['en_uso'];
+                $row['disponibles'] = (int)$row['disponibles'];
+            }
+            return $rows;
+        } catch (\Throwable $e) {
+            error_log('Error en Herramienta::getAllWithAvailability: ' . $e->getMessage());
+            return [];
         }
     }
 

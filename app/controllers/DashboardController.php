@@ -333,27 +333,8 @@ function empleados(): void
 function tareas(): void
 {
     dashboardCheckPermiso('tareas:ver');
-
-    require_once ROOT_PATH . 'vendor/autoload.php';
-    $employeeModel = new \SysInescolara\models\Empleado();
-    $trabajadores = $employeeModel->getAll();
-    $batchModel = new \SysInescolara\models\Lote();
-    $lotes = $batchModel->getAll();
-    $suppliesModel = new \SysInescolara\models\Insumo();
-    $insumos = $suppliesModel->getAll();
-    $toolModel = new \SysInescolara\models\Herramienta();
-    $herramientas = $toolModel->getAll();
-
-    $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
-        . 'dashboard' . DIRECTORY_SEPARATOR . 'tareas.php';
-
-    if (!is_file($view)) {
-        http_response_code(500);
-        echo 'Vista de tareas no encontrada.';
-        return;
-    }
-
-    require $view;
+    header('Location: ' . BASE_URL . 'tareas');
+    exit();
 }
 
 function clientes(): void
