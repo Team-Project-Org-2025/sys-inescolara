@@ -43,53 +43,89 @@ function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('insumos:el
 
 function supplies_handleAddEdit(string $mode): void
 {
-    $model = new Insumo();
     $nombre = trim((string)($_POST['nombre_insumo'] ?? ''));
     if ($nombre === '') {
         throw new \Exception('El nombre del insumo es requerido.');
     }
-    $id_unidad_medida = (int)($_POST['id_unidad_medida'] ?? 0);
-    if ($id_unidad_medida <= 0) {
+
+    $idUnidadMedida = (int)($_POST['id_unidad_medida'] ?? 0);
+    if ($idUnidadMedida <= 0) {
         throw new \Exception('La unidad de medida es requerida.');
     }
+
     $categoria = trim((string)($_POST['categoria'] ?? ''));
     if ($categoria === '') $categoria = null;
+
     $stock = isset($_POST['stock_actual']) ? floatval($_POST['stock_actual']) : null;
     if ($stock === null) {
         throw new \Exception('El stock actual es requerido.');
     }
+
     $costo = isset($_POST['costo_unitario_actual']) ? floatval($_POST['costo_unitario_actual']) : null;
     if ($costo === null) {
         throw new \Exception('El costo unitario es requerido.');
     }
 
     if ($mode === 'add') {
-        $model->add($nombre, $id_unidad_medida, $categoria, $stock, $costo);
-        $newId = $model->getLastInsertId() ?? 0;
+        $insumo = new Insumo([
+            'nombre_insumo'          => $nombre,
+            'id_unidad_medida'       => $idUnidadMedida,
+            'categoria'              => $categoria,
+            'stock_actual'           => $stock,
+            'costo_unitario_actual'  => $costo,
+        ]);
+        if (!$insumo->save()) {
+            throw new \Exception('Error al guardar el insumo.');
+        }
         jsonResponse([
             'success' => true, 'message' => 'Insumo agregado correctamente',
-            'supply' => ['id' => $newId, 'nombre_insumo' => $nombre, 'id_unidad_medida' => $id_unidad_medida, 'stock_actual' => $stock, 'costo_unitario_actual' => $costo],
+            'supply' => [
+                'id' => $insumo->getId(), 'nombre_insumo' => $nombre,
+                'id_unidad_medida' => $idUnidadMedida, 'stock_actual' => $stock,
+                'costo_unitario_actual' => $costo,
+            ],
         ]);
+        return;
     }
 
     $id = (int)($_POST['id'] ?? 0);
     if ($id <= 0) throw new \Exception('ID inválido');
 
-    $model->update($id, $nombre, $id_unidad_medida, $categoria, $stock, $costo);
+    $insumo = Insumo::find($id);
+    if (!$insumo) throw new \Exception('No existe el insumo solicitado.');
+
+    $insumo->setNombreInsumo($nombre)
+           ->setIdUnidadMedida($idUnidadMedida)
+           ->setCategoria($categoria)
+           ->setStockActual($stock)
+           ->setCostoUnitarioActual($costo);
+
+    if (!$insumo->save()) {
+        throw new \Exception('Error al actualizar el insumo.');
+    }
+
     jsonResponse([
         'success' => true, 'message' => 'Insumo actualizado correctamente',
-        'supply' => ['id' => $id, 'nombre_insumo' => $nombre, 'id_unidad_medida' => $id_unidad_medida, 'stock_actual' => $stock, 'costo_unitario_actual' => $costo],
+        'supply' => [
+            'id' => $id, 'nombre_insumo' => $nombre,
+            'id_unidad_medida' => $idUnidadMedida, 'stock_actual' => $stock,
+            'costo_unitario_actual' => $costo,
+        ],
     ]);
 }
 
 function supplies_handleDelete(): void
 {
-    $model = new Insumo();
     $id = (int)($_POST['id'] ?? 0);
     if ($id <= 0) throw new \Exception('ID inválido');
-    if (!$model->exists($id)) throw new \Exception('No existe el insumo');
 
-    $model->delete($id);
+    $insumo = Insumo::find($id);
+    if (!$insumo) throw new \Exception('No existe el insumo');
+
+    if (!$insumo->delete($id)) {
+        throw new \Exception('Error al desactivar el insumo.');
+    }
+
     jsonResponse(['success' => true, 'message' => 'Insumo desactivado correctamente', 'supplyId' => $id]);
 }
 

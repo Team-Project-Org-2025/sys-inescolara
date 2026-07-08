@@ -37,13 +37,10 @@ include_once __DIR__ . '/../common/modal.php';
                         <table id="cuentasTable" class="table table-striped table-hover w-100">
                             <thead>
                                 <tr>
-                                    <th>#</th>
                                     <th>Proveedor</th>
                                     <th>Compra</th>
-                                    <th>Monto Total</th>
+                                    <th>Monto</th>
                                     <th>Saldo Pendiente</th>
-                                    <th>Vencimiento</th>
-                                    <th>Pagos</th>
                                     <th>Estado</th>
                                     <th>Acciones</th>
                                 </tr>
@@ -96,6 +93,6 @@ include_once __DIR__ . '/../common/modal.php';
 
     <script src="<?= BASE_URL ?>public/assets/js/dashboard/notifications.js"></script>
     <?= $scripts_links ?>
-    <script type="module" src="<?= BASE_URL ?>public/assets/js/dashboard/cuentas-pagar.js"></script>
+    <script type="module" src="<?= BASE_URL ?>public/assets/js/dashboard/cuentas-pagar.js?v=<?= filemtime(__DIR__ . '/../../../public/assets/js/dashboard/cuentas-pagar.js') ?>"></script>
 </body>
 </html>

@@ -2,7 +2,7 @@ const btn = ({ label, icon, className, btnClass = 'btn-outline-primary', extraAt
   `<button class="btn btn-sm ${btnClass} ${className}" ${extraAttrs}><i class="fas ${icon}"></i> ${label}</button>`;
 
 export const btnEdit = (className = 'btn-edit', extraAttrs = '') =>
-  btn({ label: 'Editar', icon: 'fa-edit', className, extraAttrs });
+  btn({ label: 'Editar', icon: 'fa-edit', className, btnClass: 'btn-outline-warning', extraAttrs });
 
 export const btnDelete = (className = 'btn-delete', extraAttrs = '') =>
   btn({ label: 'Eliminar', icon: 'fa-trash', className, btnClass: 'btn-outline-danger', extraAttrs });

@@ -457,20 +457,23 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
                 $totalPlantas = (int)$g['cantidad'];
                 $costoUnitario = $totalPlantas > 0 ? round($g['costo_total'] / $totalPlantas, 2) : 0;
 
+                $idEstadoVivo = (int)$this->db()->query("SELECT id_estado FROM estado WHERE nombre = 'vivo' LIMIT 1")->fetchColumn();
+                $idOrigenCompra = (int)$this->db()->query("SELECT id_origen FROM origen WHERE nombre = 'Compra' LIMIT 1")->fetchColumn();
                 $stmt = $this->db()->prepare("
                     INSERT INTO lote
                         (id_planta, id_ubicacion, fecha_siembra, cantidad_inicial, cantidad_actual,
-                         estado, categoria, origen, costo_unitario, observacion)
+                         id_estado, id_origen, costo_unitario, observacion)
                     VALUES
                         (:id_planta, :id_ubicacion, CURDATE(), :cantidad_ini, :cantidad_act,
-                         'Activo', :categoria, 'Compra', :costo_unitario, :observacion)
+                         :id_estado, :id_origen, :costo_unitario, :observacion)
                 ");
                 $stmt->execute([
                     ':id_planta'       => $g['id_item'],
                     ':id_ubicacion'    => $g['ubicacion'],
                     ':cantidad_ini'    => $totalPlantas,
                     ':cantidad_act'    => $totalPlantas,
-                    ':categoria'       => $g['categoria'],
+                    ':id_estado'       => $idEstadoVivo,
+                    ':id_origen'       => $idOrigenCompra,
                     ':costo_unitario'  => $costoUnitario,
                     ':observacion'     => 'Ingresado por compra #' . $idCompra,
                 ]);

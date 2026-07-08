@@ -47,10 +47,8 @@ include_once __DIR__ . '/../common/modal.php';
                         <table id="assignmentsTable" class="table table-striped table-hover w-100">
                             <thead>
                                 <tr>
-                                    <th>#</th>
                                     <th>Trabajador</th>
                                     <th>Tarea</th>
-                                    <th>Lote</th>
                                     <th>Fecha Asignación</th>
                                     <th>Estatus</th>
                                     <th>Acciones</th>
@@ -69,11 +67,11 @@ include_once __DIR__ . '/../common/modal.php';
     <?php modal_form(['id' => 'assignTaskModal', 'title' => 'Asignar Tarea', 'formId' => 'assignTaskForm', 'size' => 'modal-lg', 'hasHiddenId' => true, 'saveText' => 'Guardar Asignación']); ?>
         <input type="hidden" name="id_asignacion">
         <div class="row">
-            <div class="col-md-6 mb-3">
+            <div class="col-md-4 mb-3">
                 <label class="form-label">Nombre de la tarea *</label>
                 <input type="text" class="form-control" name="nombre_tarea" required placeholder="Ej: Regar plantas, Podar rosales" maxlength="50">
             </div>
-            <div class="col-md-3 mb-3">
+            <div class="col-md-4 mb-3">
                 <label class="form-label">Trabajador *</label>
                 <select class="form-select" name="id_trabajador" required>
                     <option value="">Seleccione...</option>
@@ -82,7 +80,7 @@ include_once __DIR__ . '/../common/modal.php';
                     <?php endforeach; ?>
                 </select>
             </div>
-            <div class="col-md-3 mb-3">
+            <div class="col-md-4 mb-3">
                 <label class="form-label">Lote *</label>
                 <select class="form-select" name="id_lote" required>
                     <option value="">Seleccione...</option>
@@ -112,12 +110,10 @@ include_once __DIR__ . '/../common/modal.php';
                 <table class="table table-sm table-bordered mb-2">
                     <thead>
                         <tr>
-                            <th style="width:28%">Insumo</th>
-                            <th style="width:12%">Stock</th>
-                            <th style="width:18%">Cantidad</th>
-                            <th style="width:15%">Costo Unit.</th>
-                            <th style="width:15%">Fecha</th>
-                            <th style="width:12%"></th>
+                            <th style="width:35%">Insumo</th>
+                            <th style="width:15%">Stock</th>
+                            <th style="width:25%">Cantidad</th>
+                            <th style="width:25%"></th>
                         </tr>
                     </thead>
                     <tbody id="consumptionsBody">
@@ -139,10 +135,10 @@ include_once __DIR__ . '/../common/modal.php';
                 <table class="table table-sm table-bordered mb-2">
                     <thead>
                         <tr>
-                            <th style="width:40%">Herramienta</th>
-                            <th style="width:20%">Fecha</th>
-                            <th>Observación</th>
-                            <th style="width:10%"></th>
+                            <th style="width:35%">Herramienta</th>
+                            <th style="width:15%">Disponibles</th>
+                            <th style="width:25%">Cantidad</th>
+                            <th style="width:25%"></th>
                         </tr>
                     </thead>
                     <tbody id="toolsBody">
@@ -162,6 +158,10 @@ include_once __DIR__ . '/../common/modal.php';
         <div class="mb-3">
             <label class="form-label">Fecha de Cumplimiento</label>
             <input type="date" class="form-control" name="fecha_cumplimiento">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Horas Dedicadas</label>
+            <input type="number" class="form-control" name="horas_dedicadas" step="0.25" min="0" max="999.99" placeholder="ej: 2.5">
         </div>
         <div class="card border-primary">
             <div class="card-header d-flex justify-content-between align-items-center py-2 bg-primary bg-opacity-10 text-primary">
@@ -191,6 +191,6 @@ include_once __DIR__ . '/../common/modal.php';
             hoy: '<?= date('Y-m-d') ?>'
         };
     </script>
-    <script type="module" src="<?= BASE_URL ?>public/assets/js/dashboard/tareas.js"></script>
+    <script type="module" src="<?= BASE_URL ?>public/assets/js/dashboard/tareas.js?v=2"></script>
 </body>
 </html>

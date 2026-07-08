@@ -4,10 +4,10 @@ import { setupRealTimeValidation, validateForm } from '../utils/validation.js';
 import * as C from '../utils/components.js';
 
 $(document).ready(function () {
-  const trazabilidadRules = {
+    const trazabilidadRules = {
     id_lote: 'select',
     cantidad: 'cantidad',
-    estado_salud: 'select',
+    id_estado: 'select',
     fecha_registro: 'fechaFuturaCheck',
     observacion: null,
   };
@@ -16,7 +16,7 @@ $(document).ready(function () {
 
   const initDataTable = () => {
     if (typeof SkeletonHelper !== 'undefined') {
-      SkeletonHelper.showTableSkeleton('trazabilidadTable', 5, 7);
+      SkeletonHelper.showTableSkeleton('trazabilidadTable', 5, 5);
     }
     trazabilidadTable = $('#trazabilidadTable').DataTable({
       ajax: {
@@ -34,24 +34,12 @@ $(document).ready(function () {
           data: 'estado_salud',
           render: (data) => {
             const badges = {
-              Sospechoso: 'badge bg-warning text-dark',
-              Enfermo: 'badge bg-danger',
-              Plaga: 'badge bg-danger',
-              'Bajo observación': 'badge bg-secondary',
+              vivo: 'badge bg-success',
+              cuarentena: 'badge bg-warning text-dark',
+              muerto: 'badge bg-danger',
             };
             const cls = badges[data] || 'badge bg-secondary';
             return `<span class="${cls}">${Helpers.escapeHtml(data)}</span>`;
-          },
-        },
-        { data: 'fecha_registro' },
-        {
-          data: 'observacion',
-          render: (data) => {
-            if (!data) return '<span class="text-muted">—</span>';
-            const escaped = Helpers.escapeHtml(data);
-            return escaped.length > 80
-              ? `<span title="${escaped}">${Helpers.truncateText(escaped, 80)}</span>`
-              : escaped;
           },
         },
         {
@@ -59,13 +47,18 @@ $(document).ready(function () {
           orderable: false,
           render: (data) => {
             const perms = window.userPermisos || [];
+            const admin = window.isAdmin === true;
+            const hasEdit = admin || perms.includes('trazabilidad:editar');
+            const hasDelete = admin || perms.includes('trazabilidad:eliminar');
             const btns = [];
 
-            if (perms.includes('trazabilidad:editar')) {
+            btns.push(C.btnView('btn-view'));
+
+            if (hasEdit) {
               btns.push(C.btnEdit('btn-edit'));
             }
 
-            if (perms.includes('trazabilidad:eliminar')) {
+            if (hasDelete) {
               btns.push(C.btnDelete('btn-delete'));
             }
 
@@ -86,7 +79,7 @@ $(document).ready(function () {
           className: 'btn btn-outline-secondary btn-sm',
           action: () => {
             if (typeof SkeletonHelper !== 'undefined') {
-              SkeletonHelper.showTableSkeleton('trazabilidadTable', 5, 7);
+SkeletonHelper.showTableSkeleton('trazabilidadTable', 5, 5);
             }
             trazabilidadTable.ajax.reload(null, false);
           },
@@ -192,16 +185,23 @@ $(document).ready(function () {
       });
   });
 
+  $(document).on('click', '.btn-view', function () {
+    const row = trazabilidadTable.row($(this).closest('tr')).data();
+    $('#viewTrazaLote').text(`Lote #${row.id_lote}`);
+    $('#viewTrazaPlanta').text(row.planta_nombre || '—');
+    $('#viewTrazaCantidad').text(row.cantidad || '—');
+    $('#viewTrazaEstado').text(row.estado_salud || '—');
+    $('#viewTrazaFecha').text(row.fecha_registro || '—');
+    $('#viewTrazaObs').text(row.observacion || '—');
+    $('#viewTrazabilidadModal').modal({ focus: false }).modal('show');
+  });
+
   $(document).on('click', '.btn-edit', function () {
     const row = trazabilidadTable.row($(this).closest('tr')).data();
     $('#trazabilidadModalTitle').text('Editar Cuarentena');
     $('#trazabilidadId').val(row.id);
     $('#cantidad').val(row.cantidad);
-    const $estado = $('#estado_salud');
-    $estado.val(row.estado_salud);
-    if ($estado.val() !== row.estado_salud) {
-      $estado.append(`<option value="${Helpers.escapeHtml(row.estado_salud)}" selected>${Helpers.escapeHtml(row.estado_salud)}</option>`);
-    }
+    $('#id_estado').val(row.id_estado);
     $('#fecha_registro').val(row.fecha_registro);
     $('#observacion').val(row.observacion);
     $('#trazabilidadSubmitBtn').text('Actualizar');
@@ -238,6 +238,83 @@ $(document).ready(function () {
     const $form = $(this).find('form');
     Helpers.resetForm($form);
     $('#loteInfo').text('');
+  });
+
+  // ---- Editar Estado (mini modal) ----
+  $(document).on('click', '.btn-edit-estado', function () {
+    const row = trazabilidadTable.row($(this).closest('tr')).data();
+    $('#editEstadoId').val(row.id);
+    $('#editEstadoSelect').val(row.id_estado);
+    const isVivo = row.estado_salud === 'vivo';
+    const $alert = $('#editEstadoAlert');
+    const $msg = $('#editEstadoAlertMsg');
+    if (isVivo) {
+      $alert.show();
+      $msg.text('Si cambia a otro estado, el registro permanecerá en trazabilidad sin devolver stock.');
+    } else {
+      $alert.hide();
+    }
+    $('#editEstadoModal').modal({ focus: false }).modal('show');
+  });
+
+  $('#editEstadoForm').on('submit', function (e) {
+    e.preventDefault();
+    const id = $('#editEstadoId').val();
+    const idEstado = $('#editEstadoSelect').val();
+    if (!idEstado) {
+      Helpers.toast('error', 'Debe seleccionar un estado.');
+      return;
+    }
+    $.ajax({
+      url: `${baseUrl}?action=update_estado_ajax`,
+      method: 'POST',
+      data: { id, id_estado: idEstado },
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+      dataType: 'json',
+    })
+      .done((response) => {
+        if (response.success) {
+          Helpers.toast('success', response.message);
+          $('#editEstadoModal').modal('hide');
+          trazabilidadTable.ajax.reload(null, false);
+        } else {
+          Helpers.toast('error', response.message);
+        }
+      })
+      .fail((err) => {
+        Helpers.toast('error', err.responseJSON?.message || 'Error al cambiar estado');
+      });
+  });
+
+  // ---- Restaurar (vivo + delete + restore stock) ----
+  $(document).on('click', '.btn-restaurar', function () {
+    const row = trazabilidadTable.row($(this).closest('tr')).data();
+    const id = row.id;
+    Helpers.confirmDialog(
+      '¿Restaurar ejemplar?',
+      'Se marcará como <strong>vivo</strong>, se eliminará de trazabilidad y el stock volverá al lote original.',
+      () => {
+        $.ajax({
+          url: `${baseUrl}?action=restore_ajax`,
+          method: 'POST',
+          data: { id },
+          headers: { 'X-Requested-With': 'XMLHttpRequest' },
+          dataType: 'json',
+        })
+          .done((response) => {
+            if (response.success) {
+              Helpers.toast('success', response.message);
+              trazabilidadTable.ajax.reload(null, false);
+            } else {
+              Helpers.toast('error', response.message);
+            }
+          })
+          .fail((err) => {
+            Helpers.toast('error', err.responseJSON?.message || 'Error al restaurar');
+          });
+      },
+      'Sí, restaurar'
+    );
   });
 
   initDataTable();

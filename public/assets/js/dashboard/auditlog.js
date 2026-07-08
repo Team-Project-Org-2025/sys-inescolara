@@ -27,8 +27,9 @@ const tableLabel = (table) => {
 
 const formatDate = (dateStr) => {
   if (!dateStr) return '—';
-  const d = new Date(dateStr.replace(' ', 'T') + 'Z');
+  const d = new Date(dateStr.replace(' ', 'T'));
   return d.toLocaleString('es-VE', {
+    timeZone: 'America/Caracas',
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',

@@ -13,18 +13,238 @@ class Ornato extends Database implements ReadableInterface, DeletableInterface
 {
     use ValidationTrait;
 
+    private ?int $id = null;
+    private ?int $idCliente = null;
+    private string $tipoOrnato = 'Venta';
+    private ?string $descripcion = null;
+    private ?string $ubicacion = null;
+    private float $montoTotal = 0.00;
+    private ?string $fecha = null;
+    private int $activo = 1;
+
     protected array $validationRules = [
-        'id_cliente'  => ['type' => null,   'required' => false],
-        'tipo_ornato' => ['type' => null,   'required' => false],
-        'descripcion' => ['type' => null,   'required' => false],
-        'ubicacion'   => ['type' => null,   'required' => false],
-        'monto_total' => ['type' => 'precio','required' => false],
-        'fecha'       => ['type' => null,   'required' => true],
+        'id_cliente'  => ['type' => 'cantidad','required' => true],
+        'tipo_ornato' => ['type' => null,      'required' => true],
+        'descripcion' => ['type' => null,      'required' => false],
+        'ubicacion'   => ['type' => null,      'required' => false],
+        'monto_total' => ['type' => 'precio',  'required' => false],
+        'fecha'       => ['type' => null,      'required' => true],
     ];
 
-    public function __construct()
+    protected array $fillable = ['id_cliente', 'tipo_ornato', 'descripcion', 'ubicacion', 'monto_total', 'fecha', 'activo'];
+    protected array $guarded = ['id_ornato'];
+
+    public function __construct(array $attributes = [])
     {
         parent::__construct();
+        if (!empty($attributes)) {
+            $this->fill($attributes);
+        }
+    }
+
+    public function fill(array $attributes): self
+    {
+        foreach ($attributes as $key => $value) {
+            if (empty($this->fillable) || in_array($key, $this->fillable, true)) {
+                $property = $this->mapColumnToProperty($key);
+                if (property_exists($this, $property)) {
+                    $this->$property = $value;
+                }
+            }
+        }
+        return $this;
+    }
+
+    private function mapColumnToProperty(string $column): string
+    {
+        $map = [
+            'id_ornato'    => 'id',
+            'id_cliente'   => 'idCliente',
+            'tipo_ornato'  => 'tipoOrnato',
+            'descripcion'  => 'descripcion',
+            'ubicacion'    => 'ubicacion',
+            'monto_total'  => 'montoTotal',
+            'fecha'        => 'fecha',
+            'activo'       => 'activo',
+        ];
+        return $map[$column] ?? $column;
+    }
+
+    // --- Getters ---
+    public function getId(): ?int { return $this->id; }
+    public function getIdCliente(): ?int { return $this->idCliente; }
+    public function getTipoOrnato(): string { return $this->tipoOrnato; }
+    public function getDescripcion(): ?string { return $this->descripcion; }
+    public function getUbicacion(): ?string { return $this->ubicacion; }
+    public function getMontoTotal(): float { return $this->montoTotal; }
+    public function getFecha(): ?string { return $this->fecha; }
+    public function isActivo(): bool { return $this->activo === 1; }
+
+    // --- Setters ---
+    public function setIdCliente(?int $idCliente): self
+    {
+        $this->idCliente = $idCliente;
+        return $this;
+    }
+
+    public function setTipoOrnato(string $tipoOrnato): self
+    {
+        $this->tipoOrnato = $tipoOrnato;
+        return $this;
+    }
+
+    public function setDescripcion(?string $descripcion): self
+    {
+        $this->descripcion = $descripcion;
+        return $this;
+    }
+
+    public function setUbicacion(?string $ubicacion): self
+    {
+        $this->ubicacion = $ubicacion;
+        return $this;
+    }
+
+    public function setMontoTotal(float $montoTotal): self
+    {
+        $this->montoTotal = max(0, $montoTotal);
+        return $this;
+    }
+
+    public function setFecha(?string $fecha): self
+    {
+        $this->fecha = $fecha;
+        return $this;
+    }
+
+    public function setActivo(bool $activo): self
+    {
+        $this->activo = $activo ? 1 : 0;
+        return $this;
+    }
+
+    private function validate(): void
+    {
+        $this->validateData([
+            'id_cliente'  => $this->idCliente,
+            'tipo_ornato' => $this->tipoOrnato,
+            'descripcion' => $this->descripcion,
+            'ubicacion'   => $this->ubicacion,
+            'monto_total' => $this->montoTotal,
+            'fecha'       => $this->fecha,
+        ]);
+    }
+
+    public function save(): bool
+    {
+        $this->validate();
+
+        try {
+            if ($this->id === null) {
+                $sql = "INSERT INTO ornatos (id_cliente, tipo_ornato, descripcion, ubicacion, monto_total, fecha, activo)
+                        VALUES (:id_cliente, :tipo_ornato, :descripcion, :ubicacion, :monto_total, :fecha, :activo)";
+                $stmt = $this->db()->prepare($sql);
+                $success = $stmt->execute([
+                    ':id_cliente'  => $this->idCliente,
+                    ':tipo_ornato' => $this->tipoOrnato,
+                    ':descripcion' => $this->descripcion,
+                    ':ubicacion'   => $this->ubicacion,
+                    ':monto_total' => $this->montoTotal,
+                    ':fecha'       => $this->fecha,
+                    ':activo'      => $this->activo,
+                ]);
+
+                if ($success) {
+                    $this->id = (int) $this->db()->lastInsertId();
+                    AuditLog::record('CREATE', 'ornatos', $this->id, null, [
+                        'id_cliente'  => $this->idCliente,
+                        'tipo_ornato' => $this->tipoOrnato,
+                        'descripcion' => $this->descripcion,
+                        'ubicacion'   => $this->ubicacion,
+                        'monto_total' => $this->montoTotal,
+                        'fecha'       => $this->fecha,
+                    ]);
+                }
+                return $success;
+            } else {
+                $oldData = $this->getById($this->id);
+                $sql = "UPDATE ornatos SET id_cliente = :id_cliente, tipo_ornato = :tipo_ornato,
+                        descripcion = :descripcion, ubicacion = :ubicacion,
+                        monto_total = :monto_total, fecha = :fecha, activo = :activo
+                        WHERE id_ornato = :id";
+                $stmt = $this->db()->prepare($sql);
+                $success = $stmt->execute([
+                    ':id'          => $this->id,
+                    ':id_cliente'  => $this->idCliente,
+                    ':tipo_ornato' => $this->tipoOrnato,
+                    ':descripcion' => $this->descripcion,
+                    ':ubicacion'   => $this->ubicacion,
+                    ':monto_total' => $this->montoTotal,
+                    ':fecha'       => $this->fecha,
+                    ':activo'      => $this->activo,
+                ]);
+                if ($success) {
+                    AuditLog::record('UPDATE', 'ornatos', $this->id, $oldData, [
+                        'id_cliente'  => $this->idCliente,
+                        'tipo_ornato' => $this->tipoOrnato,
+                        'descripcion' => $this->descripcion,
+                        'ubicacion'   => $this->ubicacion,
+                        'monto_total' => $this->montoTotal,
+                        'fecha'       => $this->fecha,
+                    ]);
+                }
+                return $success;
+            }
+        } catch (Throwable $e) {
+            error_log('Error al guardar ornato: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    public static function find(int $id): ?self
+    {
+        $instance = new static();
+        $stmt = $instance->db()->prepare("SELECT * FROM ornatos WHERE id_ornato = :id");
+        $stmt->execute([':id' => $id]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$row) return null;
+        $ornato = new static($row);
+        $ornato->id = (int)$row['id_ornato'];
+        return $ornato;
+    }
+
+    public static function all(): array
+    {
+        $instance = new static();
+        $stmt = $instance->db()->query("SELECT * FROM ornatos WHERE activo = 1 ORDER BY fecha DESC, id_ornato DESC");
+        return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+    }
+
+    public static function where(string $column, $value, string $operator = '='): array
+    {
+        $instance = new static();
+        $sql = "SELECT * FROM ornatos WHERE $column $operator :value AND activo = 1";
+        $stmt = $instance->db()->prepare($sql);
+        $stmt->execute([':value' => $value]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return array_map(fn($row) => new static($row), $rows);
+    }
+
+    public function loadById(int $id): bool
+    {
+        $found = self::find($id);
+        if ($found) {
+            $this->id = $found->getId();
+            $this->idCliente = $found->getIdCliente();
+            $this->tipoOrnato = $found->getTipoOrnato();
+            $this->descripcion = $found->getDescripcion();
+            $this->ubicacion = $found->getUbicacion();
+            $this->montoTotal = $found->getMontoTotal();
+            $this->fecha = $found->getFecha();
+            $this->activo = $found->isActivo() ? 1 : 0;
+            return true;
+        }
+        return false;
     }
 
     public function getAll(): array
@@ -122,34 +342,8 @@ class Ornato extends Database implements ReadableInterface, DeletableInterface
 
     public function agregar(array $datos): bool
     {
-        $this->validateData([
-            'id_cliente'  => $datos['id_cliente'] ?? null,
-            'tipo_ornato' => $datos['tipo_ornato'] ?? null,
-            'descripcion' => $datos['descripcion'] ?? null,
-            'ubicacion'   => $datos['ubicacion'] ?? null,
-            'monto_total' => $datos['monto_total'] ?? null,
-            'fecha'       => $datos['fecha'] ?? null,
-        ]);
-        try {
-            $stmt = $this->db()->prepare("INSERT INTO ornatos
-                (id_cliente, tipo_ornato, descripcion, ubicacion, monto_total, fecha)
-                VALUES (:id_cliente, :tipo_ornato, :descripcion, :ubicacion, :monto_total, :fecha)");
-            $result = $stmt->execute([
-                ':id_cliente'  => $datos['id_cliente'],
-                ':tipo_ornato' => $datos['tipo_ornato'] ?? 'Venta',
-                ':descripcion' => $datos['descripcion'] ?? null,
-                ':ubicacion'   => $datos['ubicacion'] ?? null,
-                ':monto_total' => $datos['monto_total'] ?? 0.00,
-                ':fecha'       => $datos['fecha'],
-            ]);
-            if ($result) {
-                AuditLog::record('CREATE', 'ornatos', $this->db()->lastInsertId(), null, $datos);
-            }
-            return $result;
-        } catch (\Throwable $e) {
-            error_log('Error al agregar ornato: ' . $e->getMessage());
-            return false;
-        }
+        $this->fill($datos);
+        return $this->save();
     }
 
     public function agregarDetalles(int $idOrnato, array $items): bool
@@ -181,42 +375,11 @@ class Ornato extends Database implements ReadableInterface, DeletableInterface
 
     public function actualizar(int $id, array $datos): bool
     {
-        $this->validateData([
-            'id_cliente'  => $datos['id_cliente'] ?? null,
-            'tipo_ornato' => $datos['tipo_ornato'] ?? null,
-            'descripcion' => $datos['descripcion'] ?? null,
-            'ubicacion'   => $datos['ubicacion'] ?? null,
-            'monto_total' => $datos['monto_total'] ?? null,
-            'fecha'       => $datos['fecha'] ?? null,
-        ]);
-        try {
-            if (!$this->exists($id)) {
-                throw new \Exception("No existe el ornato con ID: $id");
-            }
-            $stmt = $this->db()->prepare("UPDATE ornatos SET
-                id_cliente  = :id_cliente,
-                tipo_ornato = :tipo_ornato,
-                descripcion = :descripcion,
-                ubicacion   = :ubicacion,
-                monto_total = :monto_total,
-                fecha       = :fecha
-                WHERE id_ornato = :id");
-            $oldData = $this->getById($id);
-            $result = $stmt->execute([
-                ':id'          => $id,
-                ':id_cliente'  => $datos['id_cliente'],
-                ':tipo_ornato' => $datos['tipo_ornato'] ?? 'Venta',
-                ':descripcion' => $datos['descripcion'] ?? null,
-                ':ubicacion'   => $datos['ubicacion'] ?? null,
-                ':monto_total' => $datos['monto_total'] ?? 0.00,
-                ':fecha'       => $datos['fecha'],
-            ]);
-            AuditLog::record('UPDATE', 'ornatos', $id, $oldData, $datos);
-            return $result;
-        } catch (\Throwable $e) {
-            error_log('Error al actualizar ornato: ' . $e->getMessage());
-            return false;
+        if (!$this->loadById($id)) {
+            throw new \Exception("No existe el ornato con ID: $id");
         }
+        $this->fill($datos);
+        return $this->save();
     }
 
     public function actualizarDetalles(int $idOrnato, array $items): bool

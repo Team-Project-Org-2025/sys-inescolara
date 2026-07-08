@@ -12,7 +12,7 @@ $(document).ready(function () {
 
   function inicializarDataTable() {
     if (typeof SkeletonHelper !== 'undefined') {
-      SkeletonHelper.showTableSkeleton('cuentasTable', 5, 9);
+      SkeletonHelper.showTableSkeleton('cuentasTable', 5, 6);
     }
     tablaCuentas = $('#cuentasTable').DataTable({
       ajax: {
@@ -23,7 +23,6 @@ $(document).ready(function () {
         dataSrc: 'cuentas',
       },
       columns: [
-        { data: 'id_cuenta_pagar', render: (data) => `#${data}` },
         { data: 'proveedor_nombre', render: (data) => data || '<span class="text-muted">&mdash;</span>' },
         {
           data: null,
@@ -38,11 +37,6 @@ $(document).ready(function () {
             return `<strong class="${cls}">${Helpers.formatCurrencyBs(data)}</strong>`;
           },
         },
-        {
-          data: 'fecha_vencimiento',
-          render: (data) => data || '<span class="text-muted">&mdash;</span>',
-        },
-        { data: 'pagos_count', className: 'text-center', render: (data) => data || 0 },
         {
           data: 'estado',
           className: 'text-center',

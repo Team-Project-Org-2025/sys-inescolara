@@ -6,6 +6,7 @@ import * as C from '../utils/components.js';
 $(document).ready(function () {
   const baseUrl = `${window.BASE_URL || '/'}ampliacion`;
   let ampliacionTable = null;
+  let editandoId = null;
   let lotesCache = [];
   let plantasCache = [];
   let ubicacionesCache = [];
@@ -19,21 +20,33 @@ $(document).ready(function () {
   const loadSelectData = () => {
     Ajax.get(`${baseUrl}?action=get_lotes`).then((res) => {
       if (res.success) lotesCache = res.lotes;
+    }).catch(() => {
+      console.error('Error al cargar lotes');
+      Helpers.toast('error', 'Error al cargar los lotes disponibles.');
     });
     Ajax.get(`${baseUrl}?action=get_plantas`).then((res) => {
       if (res.success) plantasCache = res.plantas;
+    }).catch(() => {
+      console.error('Error al cargar plantas');
+      Helpers.toast('error', 'Error al cargar las plantas.');
     });
     Ajax.get(`${baseUrl}?action=get_ubicaciones`).then((res) => {
       if (res.success) ubicacionesCache = res.ubicaciones;
+    }).catch(() => {
+      console.error('Error al cargar ubicaciones');
+      Helpers.toast('error', 'Error al cargar las ubicaciones.');
     });
     Ajax.get(`${baseUrl}?action=get_especies`).then((res) => {
       if (res.success) especiesCache = res.especies;
+    }).catch(() => {
+      console.error('Error al cargar especies');
+      Helpers.toast('error', 'Error al cargar las especies.');
     });
   };
 
   const initDataTable = () => {
     if (typeof SkeletonHelper !== 'undefined') {
-      SkeletonHelper.showTableSkeleton('ampliacionTable', 5, 6);
+      SkeletonHelper.showTableSkeleton('ampliacionTable', 5, 5);
     }
     ampliacionTable = $('#ampliacionTable').DataTable({
       ajax: {
@@ -46,10 +59,6 @@ $(document).ready(function () {
       columns: [
         { data: 'fecha_movimiento' },
         { data: 'cliente_nombre' },
-        {
-            data: null,
-            render: (r) => r.tipo_cedula_cliente ? `${r.tipo_cedula_cliente}-${r.cedula_cliente}` : '—'
-        },
         {
           data: 'total_salida',
           render: (data) => {
@@ -64,12 +73,12 @@ $(document).ready(function () {
             return n > 0 ? `<span class="badge bg-success">${n} item(s)</span>` : '<span class="text-muted">—</span>';
           },
         },
-        { data: 'gestor_nombre' },
         {
           data: null,
           orderable: false,
           render: () => C.btnGroup(
               C.btnView('btn-view'),
+              C.btnEdit('btn-edit'),
               C.btnDelete('btn-delete')
             ),
         },
@@ -175,6 +184,8 @@ $(document).ready(function () {
   };
 
   $('#btnAddAmpliacion').on('click', function () {
+    editandoId = null;
+    $('#ampliacionModal .modal-title').text('Nueva Ampliación de Especies');
     $('#ampliacionForm')[0].reset();
     clearValidation($('#ampliacionForm'));
     limpiarClienteAmp(
@@ -202,7 +213,10 @@ $(document).ready(function () {
 
   $('#ampliacionForm').on('submit', function (e) {
     e.preventDefault();
-    if (!validateForm($(this), ampliacionRules)) return;
+    if (!validateForm($(this), ampliacionRules)) {
+      Helpers.toast('error', 'Corrija los errores en el formulario antes de guardar.');
+      return;
+    }
 
     const salidaItems = [];
     const entradaItems = [];
@@ -251,8 +265,13 @@ $(document).ready(function () {
     formData.append('salida_items', JSON.stringify(salidaItems));
     formData.append('entrada_items', JSON.stringify(entradaItems));
 
+    const isEdit = editandoId !== null;
+    if (isEdit) {
+      formData.append('id', editandoId);
+    }
+
     $.ajax({
-      url: `${baseUrl}?action=add_ajax`,
+      url: isEdit ? `${baseUrl}?action=edit_ajax` : `${baseUrl}?action=add_ajax`,
       method: 'POST',
       data: formData,
       processData: false,
@@ -270,7 +289,7 @@ $(document).ready(function () {
         }
       })
       .fail((err) => {
-        Helpers.toast('error', err.responseJSON?.message || 'Error al registrar ampliación');
+        Helpers.toast('error', err.responseJSON?.message || 'Error al guardar ampliación');
       });
   });
 
@@ -295,6 +314,53 @@ $(document).ready(function () {
       },
       'Sí, eliminar'
     );
+  });
+
+  $(document).on('click', '.btn-edit', function () {
+    const id = ampliacionTable.row($(this).closest('tr')).data().id;
+
+    Ajax.get(`${baseUrl}?action=get_detail`, { id }).then((res) => {
+      if (!res.success || !res.ampliacion) {
+        Helpers.toast('error', 'Error al cargar datos de la ampliación.');
+        return;
+      }
+
+      const item = res.ampliacion;
+      editandoId = id;
+
+      $('#ampliacionForm')[0].reset();
+      clearValidation($('#ampliacionForm'));
+
+      if (item.id_cliente) {
+        document.getElementById('idClienteAmp').value = item.id_cliente;
+        const cedula = item.tipo_cedula_cliente ? `${item.tipo_cedula_cliente}-${item.cedula_cliente}` : '';
+        seleccionarClienteAmp(
+          item.id_cliente, item.cliente_nombre, cedula,
+          document.getElementById('buscarClienteAmp'),
+          document.getElementById('idClienteAmp'),
+          document.getElementById('clienteSeleccionadoAmp'),
+          document.getElementById('clienteSeleccionadoTextoAmp')
+        );
+      }
+
+      $('#id_trabajador_gestor').val(item.id_trabajador_gestor);
+      $('#fecha_movimiento').val(item.fecha_movimiento);
+      $('#observacion').val(item.observacion || '');
+
+      $('#salidaTableBody').empty();
+      $('#entradaTableBody').empty();
+
+      const salidas = (item.detalles || []).filter(d => d.tipo === 'salida');
+      salidas.forEach(d => addSalidaRow(d.id_lote, d.cantidad));
+
+      const entradas = (item.detalles || []).filter(d => d.tipo === 'entrada');
+      entradas.forEach(d => addEntradaRow(d.id_planta, d.id_ubicacion, d.cantidad));
+
+      $('#ampliacionModal .modal-title').text('Editar Ampliación de Especies');
+      $('#ampliacionModal').modal({ focus: false }).modal('show');
+    }).catch(() => {
+      Helpers.toast('error', 'Error al cargar datos para editar.');
+    });
   });
 
   $(document).on('click', '.btn-view', function () {
@@ -379,6 +445,8 @@ $(document).ready(function () {
       clearValidation($form);
     }
     if ($(this).is('#ampliacionModal')) {
+      editandoId = null;
+      $('#ampliacionModal .modal-title').text('Nueva Ampliación de Especies');
       limpiarClienteAmp(
         document.getElementById('buscarClienteAmp'),
         document.getElementById('idClienteAmp'),

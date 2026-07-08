@@ -1,5 +1,5 @@
 (function () {
-    const BASE = document.querySelector('base')?.href || '/sys-inescolara/';
+    const BASE = document.querySelector('base')?.href || window.BASE_URL || '/sys-inescolara/';
 
     function actualizarBadge() {
         fetch(BASE + 'notifications/get_unread')
@@ -16,10 +16,6 @@
                     }
                 }
                 const dropdown = document.getElementById('notifDropdown');
-                const clearBtn = document.getElementById('clearNotifBtn');
-                if (clearBtn) {
-                    clearBtn.style.display = data.count > 0 ? 'inline-block' : 'none';
-                }
                 if (dropdown && data.notifications) {
                     const list = dropdown.querySelector('.notif-dropdown-list');
                     const empty = dropdown.querySelector('.notif-dropdown-empty');
@@ -103,24 +99,3 @@
         }
     });
 })();
-
-function limpiarNotificaciones() {
-    fetch(BASE_URL + 'notifications/mark_all_read', { method: 'POST' })
-        .then(function (r) { return r.json(); })
-        .then(function (data) {
-            if (data.success) {
-                var badge = document.getElementById('notifBadge');
-                if (badge) badge.style.display = 'none';
-                var dropdown = document.getElementById('notifDropdown');
-                if (dropdown) {
-                    var list = dropdown.querySelector('.notif-dropdown-list');
-                    if (list) list.innerHTML = '';
-                    var empty = dropdown.querySelector('.notif-dropdown-empty');
-                    if (empty) empty.style.display = 'block';
-                }
-                var btn = document.getElementById('clearNotifBtn');
-                if (btn) btn.style.display = 'none';
-            }
-        })
-        .catch(function () {});
-}

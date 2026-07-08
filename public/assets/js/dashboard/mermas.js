@@ -69,9 +69,6 @@ $(document).ready(function () {
           },
         },
       ],
-      drawCallback: function () {
-        updateKpiCards();
-      },
     });
   };
 
@@ -118,28 +115,6 @@ $(document).ready(function () {
     } else {
       $('#quarantineStockInfo').text('');
     }
-  };
-
-  const updateKpiCards = () => {
-    if (!mermasTable) return;
-    const data = mermasTable.rows({ filter: 'applied' }).data().toArray();
-
-    let totalQuantity = 0;
-    let totalImpact = 0;
-    let lastDate = null;
-
-    data.forEach((row) => {
-      totalQuantity += parseInt(row.cantidad || 0);
-      totalImpact += parseFloat(row.impacto_economico || 0);
-      if (!lastDate || row.fecha_merma > lastDate) {
-        lastDate = row.fecha_merma;
-      }
-    });
-
-    $('#totalCount').text(data.length);
-    $('#totalQuantity').text(totalQuantity);
-    $('#totalImpact').text(Helpers.formatCurrency(totalImpact));
-    $('#lastDate').text(lastDate ? Helpers.formatDate(lastDate) : '—');
   };
 
   // Abrir Modal Registrar Merma

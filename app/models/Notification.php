@@ -101,6 +101,24 @@ class Notification extends Database
         }
     }
 
+    public function markTaskAssignedAsRead(int $userId, string $nombreTarea): bool
+    {
+        try {
+            $stmt = $this->db()->prepare("
+                UPDATE notificaciones SET leida = 1
+                WHERE id_usuario = :uid AND tipo = 'task_assigned' AND mensaje = :mensaje AND leida = 0
+                LIMIT 1
+            ");
+            return $stmt->execute([
+                ':uid' => $userId,
+                ':mensaje' => "Se te ha asignado la tarea: $nombreTarea",
+            ]);
+        } catch (\Throwable $e) {
+            error_log('Error al marcar notificación de tarea como leída: ' . $e->getMessage());
+            return false;
+        }
+    }
+
     public function create(int $userId, string $titulo, ?string $mensaje = null, string $tipo = 'info', ?string $link = null): bool
     {
         try {

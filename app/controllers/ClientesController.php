@@ -39,7 +39,6 @@ function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('clientes:e
 
 function clients_handleAddEdit(string $mode): void
 {
-    $model = new Cliente();
     $nombreCliente = trim((string)($_POST['nombre_cliente'] ?? ''));
     if ($nombreCliente === '') throw new \Exception('El nombre del cliente es requerido.');
 
@@ -56,26 +55,73 @@ function clients_handleAddEdit(string $mode): void
     if ($contactoCliente === '') $contactoCliente = null;
 
     if ($mode === 'add') {
-        $model->add($nombreCliente, $apellidoCliente, $tipoCedulaCliente, $cedulaCliente, $contactoCliente);
-        $newId = $model->getLastInsertId() ?? 0;
-        jsonResponse(['success' => true, 'message' => 'Cliente agregado correctamente', 'client' => ['id' => $newId, 'nombre_cliente' => $nombreCliente, 'apellido_cliente' => $apellidoCliente, 'nombre_completo' => trim("$nombreCliente $apellidoCliente"), 'tipo_cedula_cliente' => $tipoCedulaCliente, 'cedula_cliente' => $cedulaCliente, 'cedula_completa' => $tipoCedulaCliente ? "$tipoCedulaCliente-$cedulaCliente" : null, 'contacto_cliente' => $contactoCliente]]);
+        $cliente = new Cliente([
+            'nombre_cliente'      => $nombreCliente,
+            'apellido_cliente'    => $apellidoCliente,
+            'tipo_cedula_cliente' => $tipoCedulaCliente,
+            'cedula_cliente'      => $cedulaCliente,
+            'contacto_cliente'    => $contactoCliente,
+        ]);
+        if (!$cliente->save()) {
+            throw new \Exception('Error al guardar el cliente.');
+        }
+        jsonResponse([
+            'success' => true, 'message' => 'Cliente agregado correctamente',
+            'client' => [
+                'id' => $cliente->getId(), 'nombre_cliente' => $nombreCliente,
+                'apellido_cliente' => $apellidoCliente,
+                'nombre_completo' => trim("$nombreCliente $apellidoCliente"),
+                'tipo_cedula_cliente' => $tipoCedulaCliente,
+                'cedula_cliente' => $cedulaCliente,
+                'cedula_completa' => $tipoCedulaCliente ? "$tipoCedulaCliente-$cedulaCliente" : null,
+                'contacto_cliente' => $contactoCliente,
+            ],
+        ]);
+        return;
     }
 
     $id = (int)($_POST['id'] ?? 0);
     if ($id <= 0) throw new \Exception('ID inválido');
 
-    $model->update($id, $nombreCliente, $apellidoCliente, $tipoCedulaCliente, $cedulaCliente, $contactoCliente);
-    jsonResponse(['success' => true, 'message' => 'Cliente actualizado correctamente', 'client' => ['id' => $id, 'nombre_cliente' => $nombreCliente, 'apellido_cliente' => $apellidoCliente, 'nombre_completo' => trim("$nombreCliente $apellidoCliente"), 'tipo_cedula_cliente' => $tipoCedulaCliente, 'cedula_cliente' => $cedulaCliente, 'cedula_completa' => $tipoCedulaCliente ? "$tipoCedulaCliente-$cedulaCliente" : null, 'contacto_cliente' => $contactoCliente]]);
+    $cliente = Cliente::find($id);
+    if (!$cliente) throw new \Exception('No existe el cliente solicitado.');
+
+    $cliente->setNombreCliente($nombreCliente)
+            ->setApellidoCliente($apellidoCliente)
+            ->setTipoCedulaCliente($tipoCedulaCliente)
+            ->setCedulaCliente($cedulaCliente)
+            ->setContactoCliente($contactoCliente);
+
+    if (!$cliente->save()) {
+        throw new \Exception('Error al actualizar el cliente.');
+    }
+
+    jsonResponse([
+        'success' => true, 'message' => 'Cliente actualizado correctamente',
+        'client' => [
+            'id' => $id, 'nombre_cliente' => $nombreCliente,
+            'apellido_cliente' => $apellidoCliente,
+            'nombre_completo' => trim("$nombreCliente $apellidoCliente"),
+            'tipo_cedula_cliente' => $tipoCedulaCliente,
+            'cedula_cliente' => $cedulaCliente,
+            'cedula_completa' => $tipoCedulaCliente ? "$tipoCedulaCliente-$cedulaCliente" : null,
+            'contacto_cliente' => $contactoCliente,
+        ],
+    ]);
 }
 
 function clients_handleDelete(): void
 {
-    $model = new Cliente();
     $id = (int)($_POST['id'] ?? 0);
     if ($id <= 0) throw new \Exception('ID inválido');
-    if (!$model->exists($id)) throw new \Exception('No existe el cliente');
 
-    $model->delete($id);
+    $cliente = Cliente::find($id);
+    if (!$cliente) throw new \Exception('No existe el cliente');
+
+    if (!$cliente->delete($id)) {
+        throw new \Exception('Error al desactivar el cliente.');
+    }
+
     jsonResponse(['success' => true, 'message' => 'Cliente desactivado correctamente', 'clientId' => $id]);
 }
 
