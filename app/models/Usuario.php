@@ -256,6 +256,19 @@ class Usuario extends Database
         }
     }
 
+    public function getByTrabajadorId(int $idTrabajador): ?array
+    {
+        try {
+            $stmt = $this->db()->prepare("SELECT id_usuario, nombre_usuario, avatar, id_rol FROM usuarios WHERE id_trabajador_ref = :id LIMIT 1");
+            $stmt->execute([':id' => $idTrabajador]);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $user ?: null;
+        } catch (\Throwable $e) {
+            error_log("Error en getByTrabajadorId: " . $e->getMessage());
+            return null;
+        }
+    }
+
     public function getUserByEmail(string $email): ?array
     {
         try {

@@ -39,38 +39,75 @@ function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('especies:e
 
 function species_handleAddEdit(string $mode): void
 {
-    $model = new Especie();
     $nombreEspecie = trim((string)($_POST['nombre_especie'] ?? ''));
-    if ($nombreEspecie === '') throw new \Exception('El nombre de la especie es requerido.');
+    if ($nombreEspecie === '') {
+        throw new \Exception('El nombre de la especie es requerido.');
+    }
     $descripcion = trim((string)($_POST['descripcion'] ?? ''));
     if ($descripcion === '') $descripcion = null;
 
     if ($mode === 'add') {
-        $model->add($nombreEspecie, $descripcion);
-        $newId = $model->getLastInsertId() ?? 0;
-        jsonResponse(['success' => true, 'message' => 'Especie agregada correctamente', 'especie' => ['id' => $newId, 'nombre_especie' => $nombreEspecie, 'descripcion' => $descripcion]]);
+        $especie = new Especie([
+            'nombre_especie' => $nombreEspecie,
+            'descripcion'    => $descripcion,
+        ]);
+        if (!$especie->save()) {
+            throw new \Exception('Error al guardar la especie.');
+        }
+        jsonResponse([
+            'success' => true,
+            'message' => 'Especie agregada correctamente',
+            'especie' => [
+                'id'              => $especie->getId(),
+                'nombre_especie'  => $especie->getNombreEspecie(),
+                'descripcion'     => $especie->getDescripcion()
+            ]
+        ]);
+    } else {
+        $id = (int)($_POST['id'] ?? 0);
+        if ($id <= 0) {
+            throw new \Exception('ID inválido');
+        }
+        $especie = Especie::find($id);
+        if (!$especie) {
+            throw new \Exception('No existe la especie');
+        }
+        $especie->setNombreEspecie($nombreEspecie)
+                ->setDescripcion($descripcion);
+        if (!$especie->save()) {
+            throw new \Exception('Error al actualizar la especie.');
+        }
+        jsonResponse([
+            'success' => true,
+            'message' => 'Especie actualizada correctamente',
+            'especie' => [
+                'id'              => $especie->getId(),
+                'nombre_especie'  => $especie->getNombreEspecie(),
+                'descripcion'     => $especie->getDescripcion()
+            ]
+        ]);
     }
-
-    $id = (int)($_POST['id'] ?? 0);
-    if ($id <= 0) throw new \Exception('ID inválido');
-
-    $model->update($id, $nombreEspecie, $descripcion);
-    jsonResponse(['success' => true, 'message' => 'Especie actualizada correctamente', 'especie' => ['id' => $id, 'nombre_especie' => $nombreEspecie, 'descripcion' => $descripcion]]);
 }
 
 function species_handleDelete(): void
 {
-    $model = new Especie();
     $id = (int)($_POST['id'] ?? 0);
-    if ($id <= 0) throw new \Exception('ID inválido');
-    if (!$model->exists($id)) throw new \Exception('No existe la especie');
-
-    $model->delete($id);
+    if ($id <= 0) {
+        throw new \Exception('ID inválido');
+    }
+    $especie = Especie::find($id);
+    if (!$especie) {
+        throw new \Exception('No existe la especie');
+    }
+    if (!$especie->delete($id)) {
+        throw new \Exception('Error al desactivar la especie.');
+    }
     jsonResponse(['success' => true, 'message' => 'Especie desactivada correctamente', 'especieId' => $id]);
 }
 
 function species_getSpeciesAjax(): void
 {
     $model = new Especie();
-    jsonResponse(['success' => true, 'especies' => $model->getAll(), 'count' => 0]);
+    $especies = $model->getAll();
+    jsonResponse(['success' => true, 'especies' => $especies, 'count' => count($especies)]);
 }

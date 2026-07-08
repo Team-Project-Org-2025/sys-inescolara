@@ -119,7 +119,7 @@ $(document).ready(function () {
     $('#viewPlantEspecie').text(row.especie_nombre || 'Sin especie');
     $('#viewPlantStock').text(row.stock_lotes ?? '0');
     $('#viewPlantCantidad').text(row.cantidad_total ?? '0');
-    $('#viewPlantPrecio').text(row.precio_vigente ? Helpers.formatCurrencyBs(row.precio_vigente) : '—');
+
 
     $('#viewPlantModal').modal({ focus: false }).modal('show');
   });

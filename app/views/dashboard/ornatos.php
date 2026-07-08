@@ -39,7 +39,6 @@ include_once __DIR__ . '/../common/modal.php';
                         <table id="tablaOrnatos" class="table table-striped table-hover w-100">
                             <thead>
                                 <tr>
-                                    <th>ID</th>
                                     <th>Cliente</th>
                                     <th>C.I.</th>
                                     <th>Tipo</th>
@@ -59,30 +58,34 @@ include_once __DIR__ . '/../common/modal.php';
 
     <!-- Modal de Ornato (Agregar / Editar) -->
     <?php modal_form(['id' => 'modalOrnato', 'title' => 'Agregar Ornato', 'formId' => 'formOrnato', 'size' => 'modal-lg', 'hasHiddenId' => true, 'titleId' => 'tituloModal', 'hiddenId' => 'inputId']); ?>
-        <!-- Cabecera -->
-        <div class="row">
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Cliente *</label>
-                <div class="position-relative">
-                    <input type="text" class="form-control" id="buscarClienteOrnato" placeholder="Buscar por C.I., nombre o apellido..." autocomplete="off">
-                    <input type="hidden" name="id_cliente" id="idClienteOrnato">
-                    <div class="list-group position-absolute" id="clienteResultadosOrnato" style="z-index:1000;display:none;max-height:200px;overflow-y:auto;width:100%;"></div>
-                    <div id="clienteSeleccionadoOrnato" class="d-none mt-1">
-                        <span id="clienteSeleccionadoTextoOrnato" class="badge bg-info text-dark"></span>
-                        <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-1" id="limpiarClienteOrnato">&times;</button>
-                    </div>
+        <div class="mb-3">
+            <label class="form-label">Cliente *</label>
+            <div class="position-relative">
+                <input type="text" class="form-control" id="buscarClienteOrnato" placeholder="Buscar por C.I., nombre o apellido..." autocomplete="off">
+                <input type="hidden" name="id_cliente" id="idClienteOrnato">
+                <div class="list-group position-absolute" id="clienteResultadosOrnato" style="z-index:1000;display:none;max-height:200px;overflow-y:auto;width:100%;"></div>
+                <div id="clienteSeleccionadoOrnato" class="d-none mt-1">
+                    <span id="clienteSeleccionadoTextoOrnato" class="badge bg-info text-dark"></span>
+                    <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-1" id="limpiarClienteOrnato">&times;</button>
                 </div>
             </div>
-            <div class="col-md-3 mb-3">
+        </div>
+        <div class="row">
+            <div class="col-md-4 mb-3">
                 <label class="form-label">Tipo de ornato *</label>
                 <select class="form-select" name="tipo_ornato" id="inputTipo" required>
                     <option value="Venta">Venta</option>
                     <option value="Donacion">Donación</option>
                 </select>
             </div>
-            <div class="col-md-3 mb-3">
+            <div class="col-md-4 mb-3">
                 <label class="form-label">Fecha *</label>
                 <input type="date" class="form-control" name="fecha" id="inputFecha" required>
+            </div>
+            <div class="col-md-4 mb-3">
+                <label class="form-label">Monto Total</label>
+                <div class="form-control-plaintext fw-bold fs-5 text-end pe-2" id="inputMontoTotal" style="border-bottom:1px dashed #dee2e6;">$0.00</div>
+                <input type="hidden" name="monto_total" id="inputMontoTotalHidden" value="0.00">
             </div>
         </div>
         <div class="row">
@@ -91,14 +94,9 @@ include_once __DIR__ . '/../common/modal.php';
                 <input type="text" class="form-control" name="ubicacion" id="inputUbicacion" placeholder="Ej: Jardín frontal, Área de recepción" maxlength="50">
             </div>
             <div class="col-md-6 mb-3">
-                <label class="form-label">Monto Total</label>
-                <input type="text" class="form-control" id="inputMontoTotal" readonly style="font-weight:bold;font-size:1.1rem;" value="0.00">
-                <input type="hidden" name="monto_total" id="inputMontoTotalHidden" value="0.00">
+                <label class="form-label">Descripción</label>
+                <textarea class="form-control" name="descripcion" id="inputDescripcion" rows="2" placeholder="Detalles del servicio de ornato..." maxlength="500"></textarea>
             </div>
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Descripción</label>
-            <textarea class="form-control" name="descripcion" id="inputDescripcion" rows="2" placeholder="Detalles del servicio de ornato..." maxlength="500"></textarea>
         </div>
 
         <hr>
@@ -168,6 +166,6 @@ include_once __DIR__ . '/../common/modal.php';
 
     <script src="<?= BASE_URL ?>public/assets/js/dashboard/notifications.js"></script>
     <?= $scripts_links ?>
-    <script type="module" src="<?= BASE_URL ?>public/assets/js/dashboard/ornatos.js"></script>
+    <script type="module" src="<?= BASE_URL ?>public/assets/js/dashboard/ornatos.js?v=<?= filemtime(__DIR__ . '/../../../public/assets/js/dashboard/ornatos.js') ?>"></script>
 </body>
 </html>

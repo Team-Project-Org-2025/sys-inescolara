@@ -23,6 +23,9 @@ $css_links = '
     
     <!-- CSS del Sidebar -->
     <link rel="stylesheet" href="' . BASE_URL . 'public/assets/css/sidebar.css">
+
+    <!-- BASE_URL para JavaScript (cargado temprano para que cualquier script lo tenga disponible) -->
+    <script>window.BASE_URL = "' . BASE_URL . '";</script>
 ';
 
 // JS Links (cargados al final del body)
@@ -43,9 +46,6 @@ $scripts_links = '
     
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    
-    <!-- BASE_URL para JavaScript -->
-    <script>window.BASE_URL = "' . BASE_URL . '";</script>
     
     <!-- Utils Globales -->
     <script src="' . BASE_URL . 'public/assets/js/utils/skeleton.js"></script>

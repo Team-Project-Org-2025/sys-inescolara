@@ -42,7 +42,7 @@ include_once __DIR__ . '/../common/modal.php';
                                 <tr>
                                     <th>Nombre</th>
                                     <th>Descripción</th>
-                                    <th>Zona</th>
+                                    <th>Tipo</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
@@ -65,8 +65,12 @@ include_once __DIR__ . '/../common/modal.php';
             <textarea class="form-control" name="descripcion" rows="2" placeholder="Opcional" maxlength="500"></textarea>
         </div>
         <div class="mb-3">
-            <label class="form-label">Zona</label>
-            <input type="text" class="form-control" name="zona" placeholder="Ej: Producción, Cuarentena, Venta" maxlength="50">
+            <label class="form-label">Tipo</label>
+            <select class="form-select" name="tipo">
+                <option value="">— Seleccionar —</option>
+                <option value="Interno">Interno</option>
+                <option value="Externo">Externo</option>
+            </select>
         </div>
     <?php modal_form_end('addLocationForm'); ?>
 
@@ -81,9 +85,12 @@ include_once __DIR__ . '/../common/modal.php';
             <textarea class="form-control" name="descripcion" id="editLocationDesc" rows="2" placeholder="Opcional" maxlength="500"></textarea>
         </div>
         <div class="mb-3">
-            <label class="form-label">Zona</label>
-            <input type="text" class="form-control" name="zona" id="editLocationZona" placeholder="Ej: Producción, Cuarentena, Venta" maxlength="50">
-        </div>
+            <label class="form-label">Tipo</label>
+            <select class="form-select" name="tipo" id="editLocationTipo">
+                <option value="">— Seleccionar —</option>
+                <option value="Interno">Interno</option>
+                <option value="Externo">Externo</option>
+            </select>
     <?php modal_form_end('editLocationForm'); ?>
 
     <script src="<?= BASE_URL ?>public/assets/js/dashboard/notifications.js"></script>

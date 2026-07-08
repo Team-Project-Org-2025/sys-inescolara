@@ -45,10 +45,8 @@ include_once __DIR__ . '/../common/modal.php';
                                 <tr>
                                     <th>Fecha</th>
                                     <th>Cliente</th>
-                                    <th>C.I.</th>
                                     <th>Items Salida</th>
                                     <th>Items Entrada</th>
-                                    <th>Gestor</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>

@@ -43,9 +43,7 @@ include_once __DIR__ . '/../common/modal.php';
                                     <th>Nombre</th>
                                     <th>Apellido</th>
                                     <th>Cédula</th>
-                                    <th>Teléfono</th>
                                     <th>Cargo</th>
-                                    <th>Activo</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
@@ -124,6 +122,10 @@ include_once __DIR__ . '/../common/modal.php';
             <label class="form-check-label" for="editEmployeeActivo">Activo</label>
         </div>
     <?php modal_form_end('editEmployeeForm'); ?>
+
+    <!-- Modal Detalle Empleado -->
+    <?php modal_detail_start(['id' => 'detailEmployeeModal', 'title' => 'Detalle del Empleado', 'size' => '', 'bodyId' => 'detailEmployeeBody']); ?>
+    <?php modal_detail_end(); ?>
 
     <script src="<?= BASE_URL ?>public/assets/js/dashboard/notifications.js"></script>
     <?= $scripts_links ?>

@@ -3,13 +3,55 @@
 namespace SysInescolara\models;
 
 use SysInescolara\core\Database;
+use SysInescolara\traits\ValidationTrait;
 use PDO;
+use Throwable;
 
 class CuentaCobrar extends Database
 {
-    public function __construct()
+    use ValidationTrait;
+
+    protected array $validationRules = [
+        'id_venta'      => ['type' => 'cantidad', 'required' => true],
+        'monto'         => ['type' => 'precio',    'required' => true],
+        'metodo'        => ['type' => null,        'required' => true],
+        'referencia'    => ['type' => null,        'required' => false],
+        'fecha_pago'    => ['type' => null,        'required' => true],
+        'banco'         => ['type' => null,        'required' => false],
+        'id_trabajador' => ['type' => 'cantidad',   'required' => true],
+        'observaciones' => ['type' => null,        'required' => false],
+    ];
+
+    protected array $fillable = [];
+    protected array $guarded = ['id'];
+
+    public function __construct(array $attributes = [])
     {
         parent::__construct();
+        if (!empty($attributes)) {
+            $this->fill($attributes);
+        }
+    }
+
+    public function fill(array $attributes): self
+    {
+        foreach ($attributes as $key => $value) {
+            if (empty($this->fillable) || in_array($key, $this->fillable, true)) {
+                $property = $this->mapColumnToProperty($key);
+                if (property_exists($this, $property)) {
+                    $this->$property = $value;
+                }
+            }
+        }
+        return $this;
+    }
+
+    private function mapColumnToProperty(string $column): string
+    {
+        $map = [
+            'id_venta'  => 'id',
+        ];
+        return $map[$column] ?? $column;
     }
 
     public function obtenerTodos(int $start = 0, int $length = 10, string $search = '', string $estadoFilter = ''): array
@@ -107,6 +149,7 @@ class CuentaCobrar extends Database
 
     public function obtenerPorId(int $id): ?array
     {
+        if ($id <= 0) return null;
         try {
             $this->db()->exec("SET NAMES 'utf8mb4' COLLATE 'utf8mb4_unicode_ci'");
 
@@ -188,6 +231,8 @@ class CuentaCobrar extends Database
 
     public function registrarPago(int $idVenta, float $monto, string $metodo, ?string $referencia, string $fechaPago, ?string $banco, int $idTrabajador, ?string $observaciones): int
     {
+        $this->validarPago($idVenta, $monto, $metodo, $referencia, $fechaPago, $banco, $idTrabajador);
+
         try {
             $stmt = $this->db()->prepare("
                 INSERT INTO pago_venta (id_venta, metodo, monto, referencia, fecha_pago, banco, id_trabajador, observaciones)
@@ -205,9 +250,66 @@ class CuentaCobrar extends Database
             ]);
             $this->actualizarEstadoVenta($idVenta);
             return (int)$this->db()->lastInsertId();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             error_log('Error en CuentaCobrar::registrarPago: ' . $e->getMessage());
             throw $e;
+        }
+    }
+
+    private function validarPago(int $idVenta, float $monto, string $metodo, ?string $referencia, string $fechaPago, ?string $banco, int $idTrabajador): void
+    {
+        $this->validateData([
+            'id_venta'      => $idVenta,
+            'monto'         => $monto,
+            'metodo'        => $metodo,
+            'referencia'    => $referencia,
+            'fecha_pago'    => $fechaPago,
+            'banco'         => $banco,
+            'id_trabajador' => $idTrabajador,
+        ]);
+
+        if ($idVenta <= 0) {
+            throw new \InvalidArgumentException('ID de venta inválido.');
+        }
+        if ($monto <= 0) {
+            throw new \InvalidArgumentException('El monto debe ser mayor a cero.');
+        }
+        if ($idTrabajador <= 0) {
+            throw new \InvalidArgumentException('Debe seleccionar el trabajador que cobró.');
+        }
+
+        if (!in_array($metodo, ['efectivo', 'transferencia', 'punto', 'pago_movil', 'otro'], true)) {
+            throw new \InvalidArgumentException('Método de pago inválido.');
+        }
+
+        $d = \DateTime::createFromFormat('Y-m-d', $fechaPago);
+        if (!$d || $d->format('Y-m-d') !== $fechaPago) {
+            throw new \InvalidArgumentException('Formato de fecha de pago inválido (Y-m-d).');
+        }
+        $todayStr = (new \DateTime('today'))->format('Y-m-d');
+        if ($fechaPago > $todayStr) {
+            throw new \InvalidArgumentException('La fecha de pago no puede ser posterior al día de hoy.');
+        }
+
+        $venta = $this->obtenerPorId($idVenta);
+        if (!$venta) {
+            throw new \InvalidArgumentException('Venta no encontrada.');
+        }
+        $fechaVenta = (new \DateTime($venta['fecha_venta']))->format('Y-m-d');
+        if ($fechaPago < $fechaVenta) {
+            throw new \InvalidArgumentException('La fecha de pago no puede ser anterior a la fecha de venta (' . $fechaVenta . ').');
+        }
+
+        if (in_array($metodo, ['transferencia', 'pago_movil'], true)) {
+            if ($referencia === null || $referencia === '') {
+                throw new \InvalidArgumentException('La referencia es requerida para transferencias y pago móvil.');
+            }
+            if (!preg_match('/^\d{6}$/', $referencia)) {
+                throw new \InvalidArgumentException('La referencia debe tener exactamente 6 dígitos numéricos.');
+            }
+            if ($banco === null || $banco === '') {
+                throw new \InvalidArgumentException('El banco es requerido para este método de pago.');
+            }
         }
     }
 

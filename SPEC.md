@@ -1,4 +1,4 @@
-# SYSINECOLARA — Contexto del Proyecto
+# SYSINECOLARA — Contexto del Proyecto y especificaciones técnicas
 
 ## Descripción
 Sistema de gestión integral para el Vivero Institucional INECOLARA (Lara, Venezuela).
