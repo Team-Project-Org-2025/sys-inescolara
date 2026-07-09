@@ -197,29 +197,24 @@ class Planta extends Database implements ReadableInterface, DeletableInterface
 
     public static function all(): array
     {
-        try {
-            $instance = new static();
-            $sql = "SELECT
-                        p.id_planta AS id, p.nombre_comun, p.nombre_tecnico, p.id_especie AS especie_id, 
-                        p.imagen, p.activo, p.cantidad_total,
-                        e.nombre_especie AS especie_nombre,
-                        (SELECT COALESCE(SUM(l2.cantidad_actual), 0) FROM lote l2 WHERE l2.id_planta = p.id_planta AND l2.activo = 1) AS stock_lotes,
-                        (SELECT cp.precio_final_sugerido
-                         FROM calculo_precio cp
-                         JOIN lote l ON cp.id_lote = l.id_lote
-                         WHERE l.id_planta = p.id_planta
-                         ORDER BY cp.fecha_calculo DESC
-                         LIMIT 1) AS precio_vigente
-                    FROM plantas p
-                    LEFT JOIN especie e ON p.id_especie = e.id_especie AND e.activo = 1
-                    WHERE p.activo = 1
-                    ORDER BY p.nombre_comun ASC";
-            $stmt = $instance->db()->query($sql);
-            return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
-        } catch (\Throwable $e) {
-            error_log("Error en Planta::all(): " . $e->getMessage());
-            return [];
-        }
+        $instance = new static();
+        $sql = "SELECT
+                    p.id_planta AS id, p.nombre_comun, p.nombre_tecnico, p.id_especie AS especie_id, 
+                    p.imagen, p.activo, p.cantidad_total,
+                    e.nombre_especie AS especie_nombre,
+                    (SELECT COALESCE(SUM(l2.cantidad_actual), 0) FROM lote l2 WHERE l2.id_planta = p.id_planta AND l2.activo = 1) AS stock_lotes,
+                    (SELECT cp.precio_final_sugerido
+                     FROM calculo_precio cp
+                     JOIN lote l ON cp.id_lote = l.id_lote
+                     WHERE l.id_planta = p.id_planta
+                     ORDER BY cp.fecha_calculo DESC
+                     LIMIT 1) AS precio_vigente
+                FROM plantas p
+                LEFT JOIN especie e ON p.id_especie = e.id_especie AND e.activo = 1
+                WHERE p.activo = 1
+                ORDER BY p.nombre_comun ASC";
+        $stmt = $instance->db()->query($sql);
+        return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
     }
 
     public static function where(string $column, $value, string $operator = '='): array
