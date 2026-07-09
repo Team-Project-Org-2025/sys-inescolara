@@ -21,6 +21,8 @@ class Mailer
             self::$mail->SMTPSecure = getenv('SMTP_ENCRYPTION') ?: PHPMailer::ENCRYPTION_STARTTLS;
             self::$mail->Port = (int)(getenv('SMTP_PORT') ?: 587);
             self::$mail->CharSet = 'UTF-8';
+            self::$mail->Timeout = 15;
+            self::$mail->Timelimit = 15;
 
             $from = getenv('SMTP_FROM') ?: 'noreply@inecolara.gob.ve';
             $fromName = getenv('SMTP_FROM_NAME') ?: 'SYSINECOLARA';
@@ -55,6 +57,7 @@ class Mailer
             return $mail->send();
         } catch (Exception $e) {
             error_log("Mailer SMTP error: " . $e->getMessage());
+            self::$mail = null;
             return false;
         }
     }
