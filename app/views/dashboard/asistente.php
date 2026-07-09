@@ -1,7 +1,5 @@
 <?php
 include_once __DIR__ . '/../common/links.php';
-
-$bgImage = BASE_URL . 'public/assets/images/bg-chat.jpg';
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -15,7 +13,7 @@ $bgImage = BASE_URL . 'public/assets/images/bg-chat.jpg';
         main.main-content {
             height: 100vh;
             overflow: hidden;
-            background: url('<?= $bgImage ?>') center/cover fixed !important;
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 50%, #a5d6a7 100%) fixed !important;
             position: relative;
             display: flex;
             flex-direction: column;

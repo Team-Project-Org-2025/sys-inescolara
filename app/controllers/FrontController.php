@@ -172,7 +172,7 @@ class FrontController
 
     <title>Error 404 | Sys Inescolara</title>
 
-    <link rel=\"shortcut icon\" href=\"" . BASE_URL . "public/assets/icons/Logo - Sys Inescolara.webp\" type=\"image/x-icon\">
+    <link rel=\"shortcut icon\" href=\"" . BASE_URL . "public/assets/images/favicon.ico\" type=\"image/x-icon\">
 
     <style>
 
