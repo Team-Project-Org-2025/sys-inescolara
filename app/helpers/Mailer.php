@@ -57,6 +57,7 @@ class Mailer
             return $mail->send();
         } catch (Exception $e) {
             error_log("Mailer SMTP error: " . $e->getMessage());
+            self::$mail = null;
             return false;
         }
     }
