@@ -22,7 +22,6 @@ class Mailer
             self::$mail->Port = (int)(getenv('SMTP_PORT') ?: 587);
             self::$mail->CharSet = 'UTF-8';
             self::$mail->Timeout = 15;
-            self::$mail->Timelimit = 15;
 
             $from = getenv('SMTP_FROM') ?: 'noreply@inecolara.gob.ve';
             $fromName = getenv('SMTP_FROM_NAME') ?: 'SYSINECOLARA';
