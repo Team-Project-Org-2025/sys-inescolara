@@ -227,12 +227,33 @@ Control de inventario, ventas, producción, lotes, insumos, trabajadores, tareas
 - **Docker + Render:** contenerización y despliegue
 - **Correcciones Linux case-sensitive:** nombres de archivo normalizados
 - **Rama `testing`:** flujo feature/bugfix → testing → develop
+- **Mailer fixes:** timeout 15s (antes 300s), reset de instancia PHPMailer en fallo, eliminación de Timelimit (PHPMailer 7.x)
 
 ### Pendiente (Mejoras Futuras)
 - **Exchange Rate / BCV:** Servicio de tasa Bs/USD con caché
 - **Catálogo público dinámico:** "Desde BD" en frontend
 - **Capa de servicios:** `app/services/` actualmente vacía
 - **Mejoras transversales:** estandarización de auditoría, migración de interfaces, legibilidad de código
+
+## Bugs Conocidos (Pendientes de Resolver)
+
+### 1. Recuperación de Contraseña — Token expira al instante en Render
+- **Síntoma:** El email de recuperación se envía correctamente, pero al hacer clic en el enlace siempre muestra "El enlace de recuperación es inválido o ha expirado".
+- **Causa probable:** Discrepancia entre la zona horaria de PHP (America/Caracas, UTC-4) y MySQL (UTC en Render/Aiven). El token se crea con `date('Y-m-d H:i:s')` (PHP time) y se valida contra `NOW()` de MySQL. Aunque hay un fix en `Database.php` con `SET time_zone` y un cambio a `:now` (PHP time) en `PasswordReset`, aún no se ha logrado que funcione.
+- **Archivos involucrados:** `app/models/PasswordReset.php`, `app/controllers/RecuperarPasswordController.php`, `app/helpers/Mailer.php`
+- **Branch con cambios:** `fix/revert-dbname-trycatch` (pendiente de merge a develop/main)
+- **Logs de diagnóstico:** El método `debugToken()` en `PasswordReset` registra en error_log los valores de `expira_en`, `usado`, `php_now` para diagnosticar.
+
+### 2. Tabla de Usuarios no muestra registros en Render
+- **Síntoma:** La página de usuarios carga pero la tabla DataTable aparece vacía.
+- **Causa probable:** La query `Usuario::getAll()` hace un `LEFT JOIN \`sysinescolara\`.\`trabajadores\`` que asume que ambas bases de datos están en el mismo servidor MySQL. Si en Render las bases de datos están en servidores separados o el nombre de la BD principal es distinto, la consulta falla silenciosamente (try/catch retorna `[]`).
+- **Archivo:** `app/models/Usuario.php` (líneas 314-322 y 358-365)
+- **Nota:** Se intentó un fix con `DB_NAME` dinámico pero fue revertido.
+
+### 3. DataTables AJAX error en algunos módulos en Render
+- **Síntoma:** DataTables warning: Ajax error en tablas como `plantasTable`.
+- **Causa probable:** Queries SQL que referencian tablas o columnas que no existen en la base de datos de Render (esquema incompleto). Módulos sin try/catch lanzan excepción que se muestra como 500.
+- **Archivos:** `app/models/Planta.php`, `app/models/Especie.php` (sin try/catch tras revertir) y otros modelos con `all()` sin manejo de errores.
 
 ## Decisiones de Arquitectura
 
@@ -257,10 +278,23 @@ Control de inventario, ventas, producción, lotes, insumos, trabajadores, tareas
 ## Flujo de Ramas
 `feature/*` o `bugfix/*` → PR a `testing` → PR a `develop`. No se hace commit directo a `develop`.
 
+`main` se despliega en Render. `develop` debe estar siempre alineada con `main`.
+
+### Ramas Actuales
+| Rama | Propósito |
+|------|-----------|
+| `main` | Producción en Render |
+| `develop` | Integración de cambios |
+| `fix/revert-dbname-trycatch` | Reversión de DB_NAME dinámico, try/catch en Planta/Especie y timezone sync en Database.php. Pendiente de merge. |
+| `fix/mailer-smtp-error` | Fixes de Mailer (timeout, reset, Timelimit) — ya mergeado a main/develop |
+
 ## Datos Críticos
 - Admin: `admin@inecolara.gob.ve` / `Admin123!`
-- Timezone: `America/Caracas`
+- Timezone: `America/Caracas` (set en `index.php` vía `date_default_timezone_set`)
 - reCAPTCHA v2 (site + secret key en `.env`)
-- SMTP: configurar en `.env` para recovery de pass
+- SMTP: configurar en `.env` para recovery de pass. En Render usar Resend API (`SMTP_USER=resend` + `SMTP_PASS=re_...`)
 - PHP bin: `C:\xampp\php\php.exe`
 - URL base: configurable via `BASE_URL` en `.env`
+- Resend API key: `re_dg8G7ZZF_KTK4ep1EpfErSnKxmgdXdwR4`
+- SMTP_FROM para Render: `sysinescolara@nokx1z.dev`
+- Dominio verificado en Resend: `nokx1z.dev`
