@@ -52,8 +52,6 @@ abstract class Database
             }
 
             $this->pdo = new PDO($dsn, $username, $password, $options);
-            $offset = date('P');
-            $this->pdo->exec("SET time_zone = '{$offset}'");
         } catch (PDOException $e) {
             error_log("Database connection error: " . $e->getMessage());
             http_response_code(500);
