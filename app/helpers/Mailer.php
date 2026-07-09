@@ -54,8 +54,8 @@ class Mailer
 
             return $mail->send();
         } catch (Exception $e) {
-            error_log("Mailer error: " . $e->getMessage() . " — fallback a MailLogger");
-            return MailLogger::send($to, $toName, $subject, $htmlBody);
+            error_log("Mailer SMTP error: " . $e->getMessage());
+            return false;
         }
     }
 
