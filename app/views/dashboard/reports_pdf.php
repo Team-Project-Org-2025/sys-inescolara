@@ -26,8 +26,8 @@
     <div class="header">
         <h1>VIVERO INSTITUCIONAL INECOLARA</h1>
         <h2>Reporte de <?= htmlspecialchars($moduleName) ?></h2>
-        <p>RIF: J-XXXXXXXX-X | Av. Principal, Barquisimeto, Estado Lara</p>
-        <p>Tel: (0251) XXX-XXXX | Email: vivero@inecolara.gob.ve</p>
+        <p>RIF: <?= htmlspecialchars(getenv('VIVERORIF') ?: 'J-XXXXXXXX-X') ?> | <?= htmlspecialchars(getenv('VIVERODIR') ?: 'Av. Principal, Barquisimeto, Estado Lara') ?></p>
+        <p>Tel: <?= htmlspecialchars(getenv('VIVEROTLF') ?: '(0251) XXX-XXXX') ?> | Email: vivero@inecolara.gob.ve</p>
     </div>
 
     <div class="meta">

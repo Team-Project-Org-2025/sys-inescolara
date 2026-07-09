@@ -528,7 +528,7 @@ function locations(): void
     dashboardCheckPermiso('ubicaciones:ver');
 
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
-        . 'dashboard' . DIRECTORY_SEPARATOR . 'locations.php';
+        . 'dashboard' . DIRECTORY_SEPARATOR . 'ubicaciones.php';
 
     if (!is_file($view)) {
         http_response_code(500);
@@ -544,7 +544,7 @@ function tools(): void
     dashboardCheckPermiso('herramientas:ver');
 
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
-        . 'dashboard' . DIRECTORY_SEPARATOR . 'tools.php';
+        . 'dashboard' . DIRECTORY_SEPARATOR . 'herramientas.php';
 
     if (!is_file($view)) {
         http_response_code(500);
