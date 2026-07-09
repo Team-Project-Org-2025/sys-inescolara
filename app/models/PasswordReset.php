@@ -35,6 +35,7 @@ class PasswordReset extends Database
     {
         $token = bin2hex(random_bytes(32));
         $expira = date('Y-m-d H:i:s', strtotime('+1 hour'));
+        $now = date('Y-m-d H:i:s');
 
         $this->deleteExpiredTokens();
 
@@ -49,13 +50,16 @@ class PasswordReset extends Database
             ':expira' => $expira,
         ]);
 
+        error_log("PasswordReset: token creado para usuario {$usuarioId} | expira_en={$expira} | php_now={$now} | token_preview=" . substr($token, 0, 12) . "...");
+
         return $token;
     }
 
     public function validateToken(string $token): ?array
     {
+        $tokenPreview = substr($token, 0, 12) . '...';
         $stmt = $this->db()->prepare(
-            "SELECT * FROM password_resets
+            "SELECT *, NOW() as db_now FROM password_resets
              WHERE token = :token
                AND usado = 0
                AND expira_en > NOW()
@@ -63,6 +67,17 @@ class PasswordReset extends Database
         );
         $stmt->execute([':token' => $token]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$row) {
+            $debug = $this->db()->prepare("SELECT id, expira_en, usado, NOW() as db_now FROM password_resets WHERE token = :token LIMIT 1");
+            $debug->execute([':token' => $token]);
+            $existing = $debug->fetch(PDO::FETCH_ASSOC);
+            if ($existing) {
+                error_log("PasswordReset: token {$tokenPreview} encontrado pero NO pasó validación | expira_en={$existing['expira_en']} | usado={$existing['usado']} | db_now={$existing['db_now']} | php_now=" . date('Y-m-d H:i:s'));
+            } else {
+                error_log("PasswordReset: token {$tokenPreview} NO encontrado en DB | php_now=" . date('Y-m-d H:i:s'));
+            }
+        }
 
         return $row ?: null;
     }

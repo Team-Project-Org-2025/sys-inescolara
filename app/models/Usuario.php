@@ -311,13 +311,14 @@ class Usuario extends Database
     public function getAll()
     {
         try {
+            $mainDb = getenv('DB_NAME') ?: 'sysinescolara';
             $stmt = $this->db()->query("
                 SELECT u.id_usuario, u.nombre_usuario, u.avatar, u.id_rol, u.id_trabajador_ref,
                        r.nombre_rol, u.correo_electronico, u.estatus,
                        t.nombre_trabajador, t.apellido_trabajador
                 FROM usuarios u
                 LEFT JOIN roles r ON r.id_rol = u.id_rol
-                LEFT JOIN `sysinescolara`.`trabajadores` t ON u.id_trabajador_ref = t.id_trabajador
+                LEFT JOIN `{$mainDb}`.`trabajadores` t ON u.id_trabajador_ref = t.id_trabajador
                 ORDER BY u.id_usuario ASC
             ");
             if (!$stmt) {
@@ -355,12 +356,13 @@ class Usuario extends Database
     public function getById(int $id)
     {
         try {
+            $mainDb = getenv('DB_NAME') ?: 'sysinescolara';
             $stmt = $this->db()->prepare("
                 SELECT u.id_usuario, u.nombre_usuario, u.avatar, u.id_rol, u.id_trabajador_ref,
                        u.correo_electronico, u.estatus,
                        t.nombre_trabajador, t.apellido_trabajador
                 FROM usuarios u
-                LEFT JOIN `sysinescolara`.`trabajadores` t ON u.id_trabajador_ref = t.id_trabajador
+                LEFT JOIN `{$mainDb}`.`trabajadores` t ON u.id_trabajador_ref = t.id_trabajador
                 WHERE u.id_usuario = :id
             ");
             $stmt->execute([':id' => $id]);
