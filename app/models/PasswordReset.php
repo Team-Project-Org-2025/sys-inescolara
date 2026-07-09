@@ -96,4 +96,20 @@ class PasswordReset extends Database
         $stmt = $this->db()->prepare("DELETE FROM password_resets WHERE expira_en <= :now OR usado = 1");
         $stmt->execute([':now' => $now]);
     }
+
+    public function debugToken(string $token): string
+    {
+        try {
+            $now = date('Y-m-d H:i:s');
+            $stmt = $this->db()->prepare("SELECT id, expira_en, usado, created_at, :now AS php_now FROM password_resets WHERE token = :t LIMIT 1");
+            $stmt->execute([':t' => $token, ':now' => $now]);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($row) {
+                return "expira_en={$row['expira_en']}, usado={$row['usado']}, creado={$row['created_at']}, php_now={$row['php_now']}";
+            }
+            return "TOKEN_NO_EXISTE";
+        } catch (\Throwable $e) {
+            return "ERROR: " . $e->getMessage();
+        }
+    }
 }
