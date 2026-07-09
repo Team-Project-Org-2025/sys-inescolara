@@ -58,24 +58,26 @@ class PasswordReset extends Database
     public function validateToken(string $token): ?array
     {
         $tokenPreview = substr($token, 0, 12) . '...';
+        $now = date('Y-m-d H:i:s');
+
         $stmt = $this->db()->prepare(
-            "SELECT *, NOW() as db_now FROM password_resets
+            "SELECT * FROM password_resets
              WHERE token = :token
                AND usado = 0
-               AND expira_en > NOW()
+               AND expira_en > :now
              LIMIT 1"
         );
-        $stmt->execute([':token' => $token]);
+        $stmt->execute([':token' => $token, ':now' => $now]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$row) {
-            $debug = $this->db()->prepare("SELECT id, expira_en, usado, NOW() as db_now FROM password_resets WHERE token = :token LIMIT 1");
-            $debug->execute([':token' => $token]);
+            $debug = $this->db()->prepare("SELECT id, expira_en, usado, :now AS db_now FROM password_resets WHERE token = :token2 LIMIT 1");
+            $debug->execute([':token2' => $token, ':now' => $now]);
             $existing = $debug->fetch(PDO::FETCH_ASSOC);
             if ($existing) {
-                error_log("PasswordReset: token {$tokenPreview} encontrado pero NO pasó validación | expira_en={$existing['expira_en']} | usado={$existing['usado']} | db_now={$existing['db_now']} | php_now=" . date('Y-m-d H:i:s'));
+                error_log("PasswordReset: token {$tokenPreview} encontrado pero NO pasó validación | expira_en={$existing['expira_en']} | usado={$existing['usado']} | php_now={$now}");
             } else {
-                error_log("PasswordReset: token {$tokenPreview} NO encontrado en DB | php_now=" . date('Y-m-d H:i:s'));
+                error_log("PasswordReset: token {$tokenPreview} NO encontrado en DB | php_now={$now}");
             }
         }
 
@@ -90,6 +92,8 @@ class PasswordReset extends Database
 
     public function deleteExpiredTokens(): void
     {
-        $this->db()->exec("DELETE FROM password_resets WHERE expira_en <= NOW() OR usado = 1");
+        $now = date('Y-m-d H:i:s');
+        $stmt = $this->db()->prepare("DELETE FROM password_resets WHERE expira_en <= :now OR usado = 1");
+        $stmt->execute([':now' => $now]);
     }
 }
