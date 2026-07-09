@@ -8,6 +8,36 @@ include_once __DIR__ . '/../common/links.php';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Asistente IA - INECOLARA</title>
     <?= $css_links ?>
+    <link rel="stylesheet" href="<?= BASE_URL ?>public/assets/css/asistente.css">
+    <style>
+        main.main-content {
+            height: 100vh;
+            overflow: hidden;
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 50%, #a5d6a7 100%) fixed !important;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+        main.main-content::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.55);
+            z-index: 0;
+            pointer-events: none;
+        }
+        main.main-content > * {
+            position: relative;
+            z-index: 1;
+        }
+        .dashboard-content#chatbotRoot {
+            padding: 0;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+    </style>
 </head>
 <body>
     
@@ -22,13 +52,11 @@ include_once __DIR__ . '/../common/links.php';
         <?php $title = 'Asistente IA'; ?>
         <?php include_once __DIR__ . '/../partials/dashboard-header.php'; ?>
         
-        <div class="dashboard-content">
-            <h1>Asistente IA</h1>
-            <p style="color: var(--text-secondary);">Asistente inteligente para consultas y recomendaciones.</p>
-        </div>
+        <div class="dashboard-content" id="chatbotRoot"></div>
     </main>
     
     <script src="<?= BASE_URL ?>public/assets/js/dashboard/notifications.js"></script>
     <?= $scripts_links ?>
+    <script src="<?= BASE_URL ?>public/assets/js/asistente.js"></script>
 </body>
 </html>

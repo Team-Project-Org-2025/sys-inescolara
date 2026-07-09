@@ -94,11 +94,6 @@ function ventas_obtenerDetallesAjax(): void
 function ventas_buscarLotesAjax(): void
 {
     $query = trim((string)($_GET['q'] ?? ''));
-    if (strlen($query) < 2) {
-        jsonResponse(['success' => true, 'lotes' => []]);
-        return;
-    }
-
     $modelo = new Venta();
     $lotes = $modelo->obtenerLotesDisponibles($query);
     jsonResponse(['success' => true, 'lotes' => $lotes]);

@@ -601,8 +601,7 @@ $userAvatar = \SysInescolara\helpers\Auth::avatar();
                                             $fecha = $activity['fecha_accion'] ?? '';
                                             if ($fecha) {
                                                 try {
-                                                    $dt = new DateTime($fecha, new DateTimeZone('UTC'));
-                                                    $dt->setTimezone(new DateTimeZone('America/Caracas'));
+                                                    $dt = new DateTime($fecha);
                                                     echo htmlspecialchars($dt->format('d/m/Y h:i A'));
                                                 } catch (\Throwable $e) {
                                                     echo htmlspecialchars($fecha);
@@ -628,7 +627,7 @@ $userAvatar = \SysInescolara\helpers\Auth::avatar();
                                 </span>
                                 Tareas Pendientes
                             </h3>
-                            <a href="<?= BASE_URL ?>dashboard/tasks" class="text-decoration-none" style="font-size:0.75rem;color:#0ea5e9;font-weight:500;">Ver todas</a>
+                            <a href="<?= BASE_URL ?>dashboard/tareas" class="text-decoration-none" style="font-size:0.75rem;color:#0ea5e9;font-weight:500;">Ver todas</a>
                         </div>
                         <div class="dashboard-card-body" style="padding:0;">
                             <?php if (empty($pendingTasks)): ?>

@@ -36,7 +36,7 @@ function index(): void
     $suppliesModel = new Insumo();
     $insumos = $suppliesModel->getAll();
     $toolModel = new Herramienta();
-    $herramientas = $toolModel->getAll();
+    $herramientas = $toolModel->getAllWithAvailability();
 
     $view = ROOT_PATH . 'app/views/dashboard/tareas.php';
     if (!is_file($view)) {
@@ -112,32 +112,52 @@ function tasks_assignAjax(): void
         ];
     }
 
-    $model = new Tarea();
-    $asignacionId = $model->assignTaskWithConsumptions($assignmentData, $consumptions);
-
-    // Save tool usages
     $rawTools = $data['tools'] ?? [];
-    $toolModel = new Herramienta();
+    $tools = [];
     foreach ($rawTools as $t) {
         $idHerramienta = (int)($t['id_herramienta'] ?? 0);
-        if ($idHerramienta <= 0) continue;
-        $herramienta = $toolModel->getById($idHerramienta);
-        if (!$herramienta || ($herramienta['estado'] ?? '') !== 'disponible') {
-            jsonResponse([
-                'success' => false,
-                'message' => "La herramienta '{$herramienta['nombre_herramienta']}' no está disponible.",
-            ], 400);
-        }
-        $toolModel->recordUsageWithStateUpdate([
-            'id_asignacion'               => $asignacionId,
-            'id_herramienta'              => $idHerramienta,
-            'fecha_uso'                   => $t['fecha_uso'] ?? date('Y-m-d'),
-            'observacion'                 => $t['observacion'] ?? '',
-            'estado_herramienta_post_uso' => 'ok',
-        ]);
+        $cantidad = (int)($t['cantidad'] ?? 0);
+        if ($idHerramienta <= 0 || $cantidad <= 0) continue;
+        $tools[] = [
+            'id_herramienta' => $idHerramienta,
+            'cantidad'       => $cantidad,
+            'fecha_uso'      => $t['fecha_uso'] ?? date('Y-m-d'),
+            'observacion'    => $t['observacion'] ?? '',
+        ];
     }
 
-    jsonResponse(['success' => true, 'message' => 'Tarea asignada correctamente', 'id_asignacion' => $asignacionId]);
+    $model = new Tarea();
+    $asignacionId = $model->assignTaskWithConsumptions($assignmentData, $consumptions, $tools);
+
+    // Notificar al trabajador asignado
+    try {
+        $userModel = new \SysInescolara\models\Usuario();
+        $trabajadorUser = $userModel->getByTrabajadorId($assignmentData['id_trabajador']);
+        if ($trabajadorUser) {
+            $notifModel = new \SysInescolara\models\Notification();
+            $notifModel->create(
+                (int)$trabajadorUser['id_usuario'],
+                'Nueva tarea asignada',
+                "Se te ha asignado la tarea: {$assignmentData['nombre_tarea']}",
+                'task_assigned',
+                'dashboard/tareas'
+            );
+        }
+    } catch (\Throwable $e) {
+        error_log('Error al crear notificación: ' . $e->getMessage());
+    }
+
+    $toolModel = new Herramienta();
+    $freshHerramientas = $toolModel->getAllWithAvailability();
+    $freshInsumos = $suppliesModel->getAll();
+
+    jsonResponse([
+        'success' => true,
+        'message' => 'Tarea asignada correctamente',
+        'id_asignacion' => $asignacionId,
+        'herramientas' => $freshHerramientas,
+        'insumos' => $freshInsumos,
+    ]);
 }
 
 function tasks_editAjax(): void
@@ -195,21 +215,58 @@ function tasks_editAjax(): void
     $rawTools = $data['tools'] ?? [];
     $tools = [];
     $toolModel = new Herramienta();
+
+    // Sumar cantidades por herramienta
+    $toolCounts = [];
     foreach ($rawTools as $t) {
         $idHerramienta = (int)($t['id_herramienta'] ?? 0);
-        if ($idHerramienta <= 0) continue;
+        $cantidad = (int)($t['cantidad'] ?? 0);
+        if ($idHerramienta <= 0 || $cantidad <= 0) continue;
+        $toolCounts[$idHerramienta] = ($toolCounts[$idHerramienta] ?? 0) + $cantidad;
+    }
+
+    // Validar disponibilidad por cantidad (excluyendo la asignación actual)
+    $model = new Tarea();
+    foreach ($toolCounts as $idHerramienta => $solicitadas) {
+        $herramienta = $toolModel->getById($idHerramienta);
+        if (!$herramienta) {
+            jsonResponse(['success' => false, 'message' => "Herramienta ID $idHerramienta no encontrada."], 400);
+        }
+        $usosActivos = $model->countActiveToolUsages($idHerramienta, $idAsignacion);
+        $disponibles = (int)($herramienta['cantidad'] ?? 0);
+        if ($usosActivos + $solicitadas > $disponibles) {
+            jsonResponse([
+                'success' => false,
+                'message' => "No hay suficientes {$herramienta['nombre_herramienta']} disponibles. En uso: $usosActivos, solicitadas: $solicitadas, disponibles: $disponibles.",
+            ], 400);
+        }
+    }
+
+    foreach ($rawTools as $t) {
+        $idHerramienta = (int)($t['id_herramienta'] ?? 0);
+        $cantidad = (int)($t['cantidad'] ?? 0);
+        if ($idHerramienta <= 0 || $cantidad <= 0) continue;
         $tools[] = [
             'id_herramienta'  => $idHerramienta,
             'nombre_herramienta' => '',
+            'cantidad'        => $cantidad,
             'fecha_uso'       => $t['fecha_uso'] ?? date('Y-m-d'),
             'observacion'     => $t['observacion'] ?? '',
         ];
     }
 
-    $model = new Tarea();
     $model->updateAssignmentWithConsumptions($idAsignacion, $assignmentData, $consumptions, $tools);
 
-    jsonResponse(['success' => true, 'message' => 'Tarea actualizada correctamente', 'id_asignacion' => $idAsignacion]);
+    $freshHerramientas = $toolModel->getAllWithAvailability();
+    $freshInsumos = $suppliesModel->getAll();
+
+    jsonResponse([
+        'success' => true,
+        'message' => 'Tarea actualizada correctamente',
+        'id_asignacion' => $idAsignacion,
+        'herramientas' => $freshHerramientas,
+        'insumos' => $freshInsumos,
+    ]);
 }
 
 function tasks_completeAssignmentAjax(): void
@@ -219,16 +276,31 @@ function tasks_completeAssignmentAjax(): void
     if ($id <= 0) jsonResponse(['success' => false, 'message' => 'ID inválido'], 400);
 
     $fechaCumplimiento = $data['fecha_cumplimiento'] ?? date('Y-m-d');
+    $horasDedicadas = isset($data['horas_dedicadas']) && $data['horas_dedicadas'] !== ''
+        ? (float)$data['horas_dedicadas']
+        : null;
 
     $model = new Tarea();
     $assignment = $model->getAssignmentById($id);
     if (!$assignment) jsonResponse(['success' => false, 'message' => 'Asignación no encontrada'], 404);
 
-    $model->completeAssignment($id, $fechaCumplimiento);
+    $model->completeAssignment($id, $fechaCumplimiento, $horasDedicadas);
 
     $toolEstados = $data['tool_estados'] ?? [];
     if (!empty($toolEstados)) {
         $model->updateToolEstados($id, $toolEstados);
+    }
+
+    // Marcar notificación como leída
+    try {
+        $userModel = new \SysInescolara\models\Usuario();
+        $trabajadorUser = $userModel->getByTrabajadorId((int)$assignment['id_trabajador']);
+        if ($trabajadorUser) {
+            $notifModel = new \SysInescolara\models\Notification();
+            $notifModel->markTaskAssignedAsRead((int)$trabajadorUser['id_usuario'], $assignment['nombre_tarea']);
+        }
+    } catch (\Throwable $e) {
+        error_log('Error al marcar notificación como leída: ' . $e->getMessage());
     }
 
     jsonResponse(['success' => true, 'message' => 'Tarea completada correctamente']);
@@ -244,6 +316,19 @@ function tasks_cancelAssignmentAjax(): void
     if (!$assignment) jsonResponse(['success' => false, 'message' => 'Asignación no encontrada'], 404);
 
     $model->cancelAssignment($id);
+
+    // Marcar notificación como leída
+    try {
+        $userModel = new \SysInescolara\models\Usuario();
+        $trabajadorUser = $userModel->getByTrabajadorId((int)$assignment['id_trabajador']);
+        if ($trabajadorUser) {
+            $notifModel = new \SysInescolara\models\Notification();
+            $notifModel->markTaskAssignedAsRead((int)$trabajadorUser['id_usuario'], $assignment['nombre_tarea']);
+        }
+    } catch (\Throwable $e) {
+        error_log('Error al marcar notificación como leída: ' . $e->getMessage());
+    }
+
     jsonResponse(['success' => true, 'message' => 'Tarea cancelada correctamente']);
 }
 

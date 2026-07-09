@@ -20,13 +20,40 @@ class Backup
         $this->mysqlPath = $this->findMysql();
     }
 
+    private function getConnectionOptions(string $dbHost, string $dbPort, bool $useSocketFallback = true): string
+    {
+        if ($useSocketFallback) {
+            $socket = $this->detectSocket();
+            if ($socket !== null) {
+                return sprintf('--socket=%s', escapeshellarg($socket));
+            }
+        }
+        return sprintf('--host=%s --port=%s', escapeshellarg($dbHost), escapeshellarg($dbPort));
+    }
+
+    private function detectSocket(): ?string
+    {
+        $possibleSockets = [
+            '/run/mysqld/mysqld.sock',
+            '/var/run/mysqld/mysqld.sock',
+            '/var/lib/mysql/mysql.sock',
+            '/tmp/mysql.sock',
+        ];
+        foreach ($possibleSockets as $socket) {
+            if (file_exists($socket)) {
+                return $socket;
+            }
+        }
+        return null;
+    }
+
     private function findMysqldump(): string
     {
         $xamppPath = 'C:\xampp\mysql\bin\mysqldump.exe';
         if (is_file($xamppPath)) {
             return $xamppPath;
         }
-        $which = trim(shell_exec('where mysqldump 2>nul') ?? '');
+        $which = trim(shell_exec('which mysqldump 2>/dev/null') ?? '');
         if ($which !== '') {
             return $which;
         }
@@ -39,7 +66,7 @@ class Backup
         if (is_file($xamppPath)) {
             return $xamppPath;
         }
-        $which = trim(shell_exec('where mysql 2>nul') ?? '');
+        $which = trim(shell_exec('which mysql 2>/dev/null') ?? '');
         if ($which !== '') {
             return $which;
         }
@@ -53,11 +80,12 @@ class Backup
         $filename = $label . $dbName . '_' . $timestamp . '.sql';
         $filepath = $this->backupDir . $filename;
 
+        $connectionOpts = $this->getConnectionOptions($dbHost, $dbPort);
+
         $cmd = sprintf(
-            '"%s" --host=%s --port=%s --user=%s --password=%s --routines --triggers --single-transaction --databases --default-character-set=utf8mb4 %s > "%s" 2>&1',
+            '"%s" %s --user=%s --password=%s --routines --triggers --single-transaction --databases --default-character-set=utf8mb4 %s 1> "%s" 2>&1',
             $this->mysqldumpPath,
-            escapeshellarg($dbHost),
-            escapeshellarg($dbPort),
+            $connectionOpts,
             escapeshellarg($dbUser),
             escapeshellarg($dbPass),
             $dbName,
@@ -75,6 +103,8 @@ class Backup
             }
             return ['success' => false, 'message' => $errorMsg];
         }
+
+        $this->sanitizeDump($filepath);
 
         return [
             'success' => true,
@@ -102,11 +132,16 @@ class Backup
             return ['success' => false, 'message' => "No se encontró configuración para la base de datos '$dbName'."];
         }
 
+        $connectionOpts = $this->getConnectionOptions($dbConfig['host'], $dbConfig['port']);
+
+        $filepath = str_replace('/', DIRECTORY_SEPARATOR, $filepath);
+
+        $this->sanitizeDump($filepath);
+
         $cmd = sprintf(
-            '"%s" --host=%s --port=%s --user=%s --password=%s "%s" < "%s" 2>&1',
+            '"%s" %s --user=%s --password=%s "%s" < "%s"',
             $this->mysqlPath,
-            escapeshellarg($dbConfig['host']),
-            escapeshellarg($dbConfig['port']),
+            $connectionOpts,
             escapeshellarg($dbConfig['user']),
             escapeshellarg($dbConfig['pass']),
             $dbConfig['name'],
@@ -115,7 +150,7 @@ class Backup
 
         $output = [];
         $exitCode = 0;
-        exec($cmd, $output, $exitCode);
+        exec("$cmd 2>&1", $output, $exitCode);
 
         if ($exitCode !== 0) {
             $errorMsg = !empty($output) ? implode("\n", $output) : 'Error desconocido al restaurar';
@@ -123,6 +158,26 @@ class Backup
         }
 
         return ['success' => true, 'message' => "Base de datos '$dbName' restaurada correctamente."];
+    }
+
+    private function sanitizeDump(string $filepath): void
+    {
+        $content = file_get_contents($filepath);
+        if ($content === false || $content === '') {
+            return;
+        }
+
+        if (str_starts_with($content, "\xEF\xBB\xBF")) {
+            $content = substr($content, 3);
+        }
+
+        $content = preg_replace('%/\*M!\d*[^*]*\*/%', '', $content);
+        $content = preg_replace('%/\*!(\d+)?\s*(.*?)\*/%s', '$2', $content);
+        $content = preg_replace('/^\s*\\\\.[^\n]*\n?/m', '', $content);
+        $content = preg_replace('/\sDEFINER\s*=\s*`[^`]+`@`[^`]+`\s*/i', ' ', $content);
+        $content = preg_replace('/\n{3,}/', "\n\n", $content);
+
+        file_put_contents($filepath, $content);
     }
 
     private function detectDatabaseFromFile(string $filepath): ?string
@@ -168,23 +223,23 @@ class Backup
         $dbMain = getenv('DB_NAME') ?: 'sysinescolara';
         $dbSecName = getenv('DB_SEC_NAME') !== false ? getenv('DB_SEC_NAME') : 'SysInescolara-Seguridad';
 
-        if ($dbName === $dbMain) {
+        if (strcasecmp($dbName, $dbMain) === 0) {
             return [
                 'host' => $dbHost,
                 'port' => $dbPort,
                 'user' => $dbUser,
                 'pass' => $dbPass,
-                'name' => $dbName,
+                'name' => $dbMain,
             ];
         }
 
-        if ($dbName === $dbSecName) {
+        if (strcasecmp($dbName, $dbSecName) === 0) {
             return [
                 'host' => getenv('DB_SEC_HOST') !== false ? getenv('DB_SEC_HOST') : $dbHost,
                 'port' => getenv('DB_SEC_PORT') !== false ? getenv('DB_SEC_PORT') : $dbPort,
                 'user' => getenv('DB_SEC_USER') !== false ? getenv('DB_SEC_USER') : $dbUser,
                 'pass' => getenv('DB_SEC_PASSWORD') !== false ? getenv('DB_SEC_PASSWORD') : $dbPass,
-                'name' => $dbName,
+                'name' => $dbSecName,
             ];
         }
 

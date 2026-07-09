@@ -116,42 +116,39 @@ include_once __DIR__ . '/../common/modal.php';
         <div class="row">
             <div class="col-6 mb-3">
                 <label class="form-label">Cantidad Inicial</label>
-                <input type="number" class="form-control" name="cantidad_inicial" min="1" required>
+                <input type="number" class="form-control" name="cantidad_inicial" id="addBatchQtyInit" min="1" required>
             </div>
             <div class="col-6 mb-3">
                 <label class="form-label">Cantidad Actual</label>
-                <input type="number" class="form-control" name="cantidad_actual" min="0" required>
+                <input type="number" class="form-control" name="cantidad_actual" id="addBatchQtyCurr" min="0" required readonly>
             </div>
         </div>
         <div class="row">
             <div class="col-4 mb-3">
                 <label class="form-label">Estado</label>
-                <select class="form-select" name="estado" required>
+                <select class="form-select" name="id_estado" id="addBatchEstado" required>
                     <option value="">Seleccione...</option>
-                    <option value="Vivo">Vivo</option>
-                    <option value="Crecimiento">Crecimiento</option>
-                    <option value="Floración">Floración</option>
-                    <option value="Cosechado">Cosechado</option>
+                    <?php foreach ($estados as $e): ?>
+                    <option value="<?= $e['id'] ?>"<?= $e['id'] === $estadoVivoId ? ' selected' : '' ?>><?= htmlspecialchars($e['nombre']) ?></option>
+                    <?php endforeach; ?>
                 </select>
             </div>
             <div class="col-4 mb-3">
                 <label class="form-label">Categoría</label>
-                <select class="form-select" name="categoria">
+                <select class="form-select" name="id_categoria">
                     <option value="">Sin categoría</option>
-                    <option value="germinado">Germinado</option>
-                    <option value="en_crecimiento">En Crecimiento</option>
-                    <option value="para_cosechar">Para Cosechar</option>
-                    <option value="maduro">Maduro</option>
+                    <?php foreach ($categorias as $c): ?>
+                    <option value="<?= $c['id'] ?>"><?= htmlspecialchars($c['nombre']) ?></option>
+                    <?php endforeach; ?>
                 </select>
             </div>
             <div class="col-4 mb-3">
                 <label class="form-label">Origen</label>
-                <select class="form-select" name="origen" required>
+                <select class="form-select" name="id_origen" required>
                     <option value="">Seleccione...</option>
-                    <option value="Siembra">Siembra</option>
-                    <option value="Ampliación">Ampliación</option>
-                    <option value="Donación">Donación</option>
-                    <option value="Compra">Compra</option>
+                    <?php foreach ($origenes as $o): ?>
+                    <option value="<?= $o['id'] ?>"><?= htmlspecialchars($o['nombre']) ?></option>
+                    <?php endforeach; ?>
                 </select>
             </div>
         </div>
@@ -206,32 +203,29 @@ include_once __DIR__ . '/../common/modal.php';
         <div class="row">
             <div class="col-4 mb-3">
                 <label class="form-label">Estado</label>
-                <select class="form-select" name="estado" id="editBatchStatus" required>
+                <select class="form-select" name="id_estado" id="editBatchEstado" required>
                     <option value="">Seleccione...</option>
-                    <option value="Vivo">Vivo</option>
-                    <option value="Crecimiento">Crecimiento</option>
-                    <option value="Floración">Floración</option>
-                    <option value="Cosechado">Cosechado</option>
+                    <?php foreach ($estados as $e): ?>
+                    <option value="<?= $e['id'] ?>"><?= htmlspecialchars($e['nombre']) ?></option>
+                    <?php endforeach; ?>
                 </select>
             </div>
             <div class="col-4 mb-3">
                 <label class="form-label">Categoría</label>
-                <select class="form-select" name="categoria" id="editBatchCategoria">
+                <select class="form-select" name="id_categoria" id="editBatchCategoria">
                     <option value="">Sin categoría</option>
-                    <option value="germinado">Germinado</option>
-                    <option value="en_crecimiento">En Crecimiento</option>
-                    <option value="para_cosechar">Para Cosechar</option>
-                    <option value="maduro">Maduro</option>
+                    <?php foreach ($categorias as $c): ?>
+                    <option value="<?= $c['id'] ?>"><?= htmlspecialchars($c['nombre']) ?></option>
+                    <?php endforeach; ?>
                 </select>
             </div>
             <div class="col-4 mb-3">
                 <label class="form-label">Origen</label>
-                <select class="form-select" name="origen" id="editBatchOrigen" required>
+                <select class="form-select" name="id_origen" id="editBatchOrigen" required>
                     <option value="">Seleccione...</option>
-                    <option value="Siembra">Siembra</option>
-                    <option value="Ampliación">Ampliación</option>
-                    <option value="Donación">Donación</option>
-                    <option value="Compra">Compra</option>
+                    <?php foreach ($origenes as $o): ?>
+                    <option value="<?= $o['id'] ?>"><?= htmlspecialchars($o['nombre']) ?></option>
+                    <?php endforeach; ?>
                 </select>
             </div>
         </div>
@@ -293,10 +287,6 @@ include_once __DIR__ . '/../common/modal.php';
             <div class="col-md-4">
                 <label class="form-label fw-semibold text-muted small text-uppercase">Cantidad Actual</label>
                 <p class="fs-5 fw-medium" id="viewBatchCantActual">—</p>
-            </div>
-            <div class="col-md-4">
-                <label class="form-label fw-semibold text-muted small text-uppercase">Precio Unitario</label>
-                <p class="fs-5 fw-medium" id="viewBatchPrecio">—</p>
             </div>
             <div class="col-md-4">
                 <label class="form-label fw-semibold text-muted small text-uppercase">Estado</label>

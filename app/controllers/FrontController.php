@@ -81,7 +81,9 @@ class FrontController
                 $this->action = $this->routes[$routeKey]['action'];
                 $this->params = array_slice($segments, 1);
             } else {
-                $this->controllerName = $this->sanitize($segments[0]);
+                $parts = explode('-', $segments[0]);
+                $parts = array_map(function ($p) { return ucfirst($this->sanitize($p)); }, $parts);
+                $this->controllerName = implode('', $parts);
                 $this->action = $this->sanitize($segments[1] ?? 'index');
                 $this->params = array_slice($segments, 2);
             }
@@ -170,7 +172,7 @@ class FrontController
 
     <title>Error 404 | Sys Inescolara</title>
 
-    <link rel=\"shortcut icon\" href=\"" . BASE_URL . "public/assets/icons/Logo - Sys Inescolara.webp\" type=\"image/x-icon\">
+    <link rel=\"shortcut icon\" href=\"" . BASE_URL . "public/assets/images/favicon.ico\" type=\"image/x-icon\">
 
     <style>
 

@@ -46,7 +46,25 @@ services:
         value: false
       - key: APP_URL
         value: https://sys-inescolara.onrender.com
-      # --- reCAPTCHA (DEBES reemplazar con tus llaves reales) ---
+      # --- SMTP (para envío de correos: recuperación de contraseña, notificaciones) ---
+      # Opción 1 — SMTP real (Gmail, Outlook, etc.)
+      # - key: SMTP_HOST
+      #   value: smtp.gmail.com
+      # - key: SMTP_PORT
+      #   value: "587"
+      # - key: SMTP_USER
+      #   value: tu-correo@gmail.com
+      # - key: SMTP_PASS
+      #   value: tu-contrasena-de-aplicacion
+      # - key: SMTP_FROM
+      #   value: noreply@inecolara.gob.ve
+      # - key: SMTP_FROM_NAME
+      #   value: SYSINECOLARA
+      # - key: SMTP_ENCRYPTION
+      #   value: tls
+      # Opción 2 — Resend API (https://resend.com)
+      #   SMTP_USER=resend  y  SMTP_PASS=tu_resend_api_key
+      # --- reCAPTCHA (DEBES reemplazar con tus llaves reales de https://www.google.com/recaptcha) ---
       - key: RECAPTCHA_SITE_KEY
         value: ""
       - key: RECAPTCHA_SECRET_KEY

@@ -29,36 +29,9 @@ include_once __DIR__ . '/../common/modal.php';
                     <h1>Mermas y Bajas Definitivas</h1>
                     <p style="color: var(--text-secondary);">Registro formal de pérdidas de ejemplares desde cuarentena por plaga, daño mecánico, factores climáticos u otros.</p>
                 </div>
-                <button class="btn btn-danger" id="btnAddMerma">
+                <button class="btn btn-warning" id="btnAddMerma">
                     <i class="fas fa-plus"></i> Registrar Merma
                 </button>
-            </div>
-
-            <div class="row g-3 mb-4">
-                <div class="col-md-3">
-                    <div class="card shadow-sm text-center p-3">
-                        <h6 class="text-muted mb-1">Total Mermas</h6>
-                        <h3 class="mb-0" id="totalCount">0</h3>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card shadow-sm text-center p-3">
-                        <h6 class="text-muted mb-1">Ejemplares Perdidos</h6>
-                        <h3 class="mb-0" id="totalQuantity">0</h3>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card shadow-sm text-center p-3">
-                        <h6 class="text-muted mb-1">Impacto Económico</h6>
-                        <h3 class="mb-0 text-danger" id="totalImpact">$0.00</h3>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card shadow-sm text-center p-3">
-                        <h6 class="text-muted mb-1">Última Merma</h6>
-                        <h3 class="mb-0" id="lastDate" style="font-size: 1.1rem;">—</h3>
-                    </div>
-                </div>
             </div>
 
             <div class="card shadow-sm">
@@ -87,7 +60,7 @@ include_once __DIR__ . '/../common/modal.php';
     </main>
 
     <!-- Add Merma Modal -->
-    <?php modal_form(['id' => 'addMermaModal', 'title' => 'Registrar Merma desde Cuarentena', 'formId' => 'addMermaForm', 'saveText' => 'Registrar Merma', 'saveClass' => 'danger']); ?>
+    <?php modal_form(['id' => 'addMermaModal', 'title' => 'Registrar Merma desde Cuarentena', 'formId' => 'addMermaForm', 'saveText' => 'Registrar Merma', 'saveClass' => 'warning']); ?>
         <div class="mb-3">
             <label class="form-label">Registro de Cuarentena</label>
             <select class="form-select" name="id_trazabilidad" id="mermaQuarantine" required>

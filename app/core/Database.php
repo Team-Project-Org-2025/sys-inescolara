@@ -53,12 +53,14 @@ abstract class Database
 
             $this->pdo = new PDO($dsn, $username, $password, $options);
         } catch (PDOException $e) {
+            error_log("Database connection error: " . $e->getMessage());
+            http_response_code(500);
             if (getenv('APP_DEBUG') === 'true') {
-                error_log("Database connection error: " . $e->getMessage());
-                die("Error de conexión: " . $e->getMessage());
+                echo "Error de conexión a la base de datos. Revise los logs para más detalles.";
             } else {
-                die("Error de conexión a la base de datos. Por favor, contacte al administrador.");
+                echo "Error de conexión a la base de datos. Por favor, contacte al administrador.";
             }
+            exit();
         }
     }
 

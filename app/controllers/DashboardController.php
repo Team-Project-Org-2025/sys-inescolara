@@ -193,6 +193,11 @@ function lotes(): void
     $plants = $plantModel->getAll();
     $locationModel = new \SysInescolara\models\Ubicacion();
     $locations = $locationModel->getAll();
+    $loteModel = new \SysInescolara\models\Lote();
+    $estados = $loteModel->getEstados();
+    $categorias = $loteModel->getCategorias();
+    $origenes = $loteModel->getOrigenes();
+    $estadoVivoId = $loteModel->getIdEstadoVivo();
 
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'lotes.php';
@@ -299,26 +304,6 @@ function compras(): void
     require $view;
 }
 
-function tasks(): void
-{
-    dashboardCheckPermiso('tareas:ver');
-    $employeeModel = new \SysInescolara\models\Empleado();
-    $trabajadores = $employeeModel->getAll();
-    $batchModel = new \SysInescolara\models\Lote();
-    $lotes = $batchModel->getAll();
-    $suppliesModel = new \SysInescolara\models\Insumo();
-    $insumos = $suppliesModel->getAll();
-    $toolModel = new \SysInescolara\models\Herramienta();
-    $herramientas = $toolModel->getAll();
-    $view = ROOT_PATH . 'app/views/dashboard/task.php';
-    if (!is_file($view)) {
-        http_response_code(500);
-        echo 'Vista de tareas no encontrada.';
-        return;
-    }
-    require $view;
-}
-
 function empleados(): void
 {
     dashboardCheckPermiso('empleados:ver');
@@ -348,27 +333,8 @@ function empleados(): void
 function tareas(): void
 {
     dashboardCheckPermiso('tareas:ver');
-
-    require_once ROOT_PATH . 'vendor/autoload.php';
-    $employeeModel = new \SysInescolara\models\Empleado();
-    $trabajadores = $employeeModel->getAll();
-    $batchModel = new \SysInescolara\models\Lote();
-    $lotes = $batchModel->getAll();
-    $suppliesModel = new \SysInescolara\models\Insumo();
-    $insumos = $suppliesModel->getAll();
-    $toolModel = new \SysInescolara\models\Herramienta();
-    $herramientas = $toolModel->getAll();
-
-    $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
-        . 'dashboard' . DIRECTORY_SEPARATOR . 'tareas.php';
-
-    if (!is_file($view)) {
-        http_response_code(500);
-        echo 'Vista de tareas no encontrada.';
-        return;
-    }
-
-    require $view;
+    header('Location: ' . BASE_URL . 'tareas');
+    exit();
 }
 
 function clientes(): void
@@ -562,7 +528,7 @@ function locations(): void
     dashboardCheckPermiso('ubicaciones:ver');
 
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
-        . 'dashboard' . DIRECTORY_SEPARATOR . 'locations.php';
+        . 'dashboard' . DIRECTORY_SEPARATOR . 'ubicaciones.php';
 
     if (!is_file($view)) {
         http_response_code(500);
@@ -578,7 +544,7 @@ function tools(): void
     dashboardCheckPermiso('herramientas:ver');
 
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
-        . 'dashboard' . DIRECTORY_SEPARATOR . 'tools.php';
+        . 'dashboard' . DIRECTORY_SEPARATOR . 'herramientas.php';
 
     if (!is_file($view)) {
         http_response_code(500);
@@ -632,7 +598,7 @@ function seedcollection(): void
 
     require_once ROOT_PATH . 'vendor/autoload.php';
     $locationModel = new \SysInescolara\models\Ubicacion();
-    $ubicaciones = $locationModel->getAll();
+    $ubicaciones = $locationModel->getByTipo('externo');
     $employeeModel = new \SysInescolara\models\Empleado();
     $trabajadores = $employeeModel->getAll();
     $plantModel = new \SysInescolara\models\Planta();
@@ -677,6 +643,10 @@ function trazabilidad(): void
     dashboardCheckPermiso('trazabilidad:ver');
 
     require_once ROOT_PATH . 'vendor/autoload.php';
+
+    $loteModel = new \SysInescolara\models\Lote();
+    $estados = $loteModel->getEstados();
+    $estadoVivoId = $loteModel->getIdEstadoVivo();
 
     $view = ROOT_PATH . 'app/views/dashboard/trazabilidad.php';
 

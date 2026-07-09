@@ -17,6 +17,7 @@ function index(): void
         try {
             match ($_SERVER['REQUEST_METHOD'] . '_' . $action) {
                 'GET_get_recolecciones'   => get_recolecciones(),
+                'GET_get_details'         => get_details(),
                 'POST_add_ajax'           => add_ajax(),
                 'POST_edit_ajax'          => edit_ajax(),
                 'POST_delete_ajax'        => delete_ajax(),
@@ -35,6 +36,7 @@ function index(): void
 }
 
 function get_recolecciones(): void { checkModuleAuth(); recoleccion_getRecoleccionesAjax(); }
+function get_details(): void { checkModuleAuth(); recoleccion_getDetailsAjax(); }
 function add_ajax(): void { checkModuleAuth(); checkPermisoOrFail('seed_collection:crear'); recoleccion_handleAddEdit('add'); }
 function edit_ajax(): void { checkModuleAuth(); checkPermisoOrFail('seed_collection:editar'); recoleccion_handleAddEdit('edit'); }
 function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('seed_collection:eliminar'); recoleccion_handleDelete(); }
@@ -132,6 +134,19 @@ function recoleccion_handleRegistrarInsumo(): void
     if ($createdCount === 0) throw new \Exception('No se pudo registrar ningún insumo. Verifique los datos.');
 
     jsonResponse(['success' => true, 'message' => "$createdCount tipo(s) de semilla registrado(s) correctamente"]);
+}
+
+function recoleccion_getDetailsAjax(): void
+{
+    $id = (int)($_GET['id'] ?? 0);
+    if ($id <= 0) jsonResponse(['success' => false, 'message' => 'ID inválido'], 400);
+
+    $model = new SeedCollection();
+    $recoleccion = $model->getById($id);
+    if (!$recoleccion) jsonResponse(['success' => false, 'message' => 'No existe la recolección'], 404);
+
+    $detalles = $model->getDetails($id);
+    jsonResponse(['success' => true, 'recoleccion' => $recoleccion, 'detalles' => $detalles]);
 }
 
 function recoleccion_getRecoleccionesAjax(): void

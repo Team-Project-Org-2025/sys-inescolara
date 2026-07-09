@@ -39,7 +39,7 @@ $(document).ready(function () {
           },
         },
         {
-          data: 'zona',
+          data: 'tipo',
           render: (data) => data || '<span class="text-muted">—</span>',
         },
         {
@@ -127,7 +127,7 @@ $(document).ready(function () {
     $('#editLocationId').val(row.id);
     $('#editLocationName').val(row.nombre_ubicacion);
     $('#editLocationDesc').val(row.descripcion);
-    $('#editLocationZona').val(row.zona);
+    $('#editLocationTipo').val(row.tipo);
 
     $('#editLocationModal').modal({ focus: false }).modal('show');
   });

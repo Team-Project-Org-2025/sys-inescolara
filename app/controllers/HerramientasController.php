@@ -44,31 +44,13 @@ function get_usages(): void { checkModuleAuth(); tools_getUsagesAjax(); }
 
 function tools_handleAddEdit(string $mode): void
 {
-    $model = new Herramienta();
     $nombre = trim((string)($_POST['nombre_herramienta'] ?? ''));
     if ($nombre === '') {
         throw new \Exception('El nombre de la herramienta es requerido.');
     }
 
-    $tipo = trim((string)($_POST['tipo'] ?? ''));
-    if ($tipo === '') $tipo = null;
-
     $estado = trim((string)($_POST['estado'] ?? ''));
     if ($estado === '') $estado = 'disponible';
-
-    $fechaAdquisicion = trim((string)($_POST['fecha_adquisicion'] ?? ''));
-    if ($fechaAdquisicion === '') {
-        $fechaAdquisicion = null;
-    } else {
-        $d = \DateTime::createFromFormat('Y-m-d', $fechaAdquisicion);
-        if (!$d || $d->format('Y-m-d') !== $fechaAdquisicion) {
-            throw new \InvalidArgumentException('Formato de fecha de adquisición inválido.');
-        }
-        $todayStr = (new \DateTime('today'))->format('Y-m-d');
-        if ($fechaAdquisicion > $todayStr) {
-            throw new \InvalidArgumentException('La fecha de adquisición no puede ser posterior al día de hoy.');
-        }
-    }
 
     $fechaUltimoMantenimiento = trim((string)($_POST['fecha_ultimo_mantenimiento'] ?? ''));
     if ($fechaUltimoMantenimiento === '') {
@@ -90,18 +72,42 @@ function tools_handleAddEdit(string $mode): void
     $cantidad = max(1, (int)($_POST['cantidad'] ?? 1));
 
     if ($mode === 'add') {
-        $model->add($nombre, $cantidad, $tipo, $estado, $fechaAdquisicion, $fechaUltimoMantenimiento, $observacion);
-        $newId = $model->getLastInsertId() ?? 0;
+        $herramienta = new Herramienta([
+            'nombre_herramienta'         => $nombre,
+            'cantidad'                   => $cantidad,
+            'estado'                     => $estado,
+            'fecha_ultimo_mantenimiento' => $fechaUltimoMantenimiento,
+            'observacion'                => $observacion,
+        ]);
+        if (!$herramienta->save()) {
+            throw new \Exception('Error al guardar la herramienta.');
+        }
         jsonResponse([
             'success' => true, 'message' => 'Herramienta agregada correctamente',
-            'herramienta' => ['id' => $newId, 'nombre_herramienta' => $nombre, 'cantidad' => $cantidad, 'tipo' => $tipo, 'estado' => $estado],
+            'herramienta' => [
+                'id' => $herramienta->getId(), 'nombre_herramienta' => $nombre,
+                'cantidad' => $cantidad, 'estado' => $estado,
+            ],
         ]);
+        return;
     }
 
     $id = (int)($_POST['id'] ?? 0);
     if ($id <= 0) throw new \Exception('ID inválido');
 
-    $model->update($id, $nombre, $cantidad, $tipo, $estado, $fechaAdquisicion, $fechaUltimoMantenimiento, $observacion);
+    $herramienta = Herramienta::find($id);
+    if (!$herramienta) throw new \Exception('No existe la herramienta solicitada.');
+
+    $herramienta->setNombreHerramienta($nombre)
+                ->setCantidad($cantidad)
+                ->setEstado($estado)
+                ->setFechaUltimoMantenimiento($fechaUltimoMantenimiento)
+                ->setObservacion($observacion);
+
+    if (!$herramienta->save()) {
+        throw new \Exception('Error al actualizar la herramienta.');
+    }
+
     jsonResponse([
         'success' => true, 'message' => 'Herramienta actualizada correctamente',
         'herramienta' => ['id' => $id],
@@ -110,12 +116,16 @@ function tools_handleAddEdit(string $mode): void
 
 function tools_handleDelete(): void
 {
-    $model = new Herramienta();
     $id = (int)($_POST['id'] ?? 0);
     if ($id <= 0) throw new \Exception('ID inválido');
-    if (!$model->exists($id)) throw new \Exception('No existe la herramienta');
 
-    $model->delete($id);
+    $herramienta = Herramienta::find($id);
+    if (!$herramienta) throw new \Exception('No existe la herramienta');
+
+    if (!$herramienta->delete($id)) {
+        throw new \Exception('Error al desactivar la herramienta.');
+    }
+
     jsonResponse(['success' => true, 'message' => 'Herramienta desactivada correctamente', 'herramientaId' => $id]);
 }
 
@@ -137,7 +147,7 @@ function tools_recordUsageAjax(): void
         'id_herramienta'           => (int)($data['id_herramienta'] ?? 0),
         'fecha_uso'                => $data['fecha_uso'] ?? date('Y-m-d'),
         'observacion'              => trim((string)($data['observacion'] ?? '')),
-        'estado_herramienta_post_uso' => $data['estado_herramienta_post_uso'] ?? 'ok',
+        'estado_herramienta_post_uso' => $data['estado_herramienta_post_uso'] ?? 'disponible',
     ];
 
     if (!$usageData['id_asignacion'] || !$usageData['id_herramienta']) {

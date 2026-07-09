@@ -10,9 +10,7 @@ $(document).ready(function () {
   const toolValidationRules = {
     nombre_herramienta: 'nombrePlanta',
     cantidad: 'cantidad',
-    tipo: 'text',
     estado: 'select',
-    fecha_adquisicion: 'fechaFuturaCheck',
     fecha_ultimo_mantenimiento: 'fechaFuturaCheck',
   };
 
@@ -36,10 +34,8 @@ $(document).ready(function () {
           render: (data) => {
             const badges = {
               disponible: '<span class="badge bg-success">Disponible</span>',
-              en_uso: '<span class="badge bg-primary">En Uso</span>',
-              mantenimiento: '<span class="badge bg-warning text-dark">Mantenimiento</span>',
-              danada: '<span class="badge bg-danger">Da&ntilde;ada</span>',
-              baja: '<span class="badge bg-secondary">De Baja</span>',
+              'en uso': '<span class="badge bg-primary">En Uso</span>',
+              dañado: '<span class="badge bg-danger">Da&ntilde;ado</span>',
             };
             return badges[data] || `<span class="badge bg-secondary">${Helpers.escapeHtml(data)}</span>`;
           },
@@ -81,17 +77,13 @@ $(document).ready(function () {
 
     $('#viewToolNombre').text(row.nombre_herramienta || '—');
     $('#viewToolCantidad').text(row.cantidad ?? '0');
-    $('#viewToolTipo').text(row.tipo || '—');
 
     const badges = {
       disponible: 'Disponible',
-      en_uso: 'En Uso',
-      mantenimiento: 'Mantenimiento',
-      danada: 'Dañada',
-      baja: 'De Baja',
+      'en uso': 'En Uso',
+      dañado: 'Dañado',
     };
     $('#viewToolEstado').text(badges[row.estado] || row.estado || '—');
-    $('#viewToolFechaAdq').text(row.fecha_adquisicion || '—');
     $('#viewToolFechaMant').text(row.fecha_ultimo_mantenimiento || '—');
     $('#viewToolObs').text(row.observacion || '—');
 
@@ -150,9 +142,7 @@ $(document).ready(function () {
     $('#editToolId').val(row.id);
     $('#editToolName').val(row.nombre_herramienta);
     $('#editToolCantidad').val(row.cantidad);
-    $('#editToolType').val(row.tipo);
     $('#editToolStatus').val(row.estado);
-    $('#editToolAcqDate').val(row.fecha_adquisicion);
     $('#editToolMaintDate').val(row.fecha_ultimo_mantenimiento);
     $('#editToolObs').val(row.observacion);
 
