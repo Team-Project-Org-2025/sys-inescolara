@@ -1,0 +1,977 @@
+@startuml
+!theme plain
+skinparam defaultFontName Consolas
+skinparam backgroundColor #FFFFF0
+skinparam classBackgroundColor #F5F5FF
+skinparam classBorderColor #333366
+skinparam arrowColor #333366
+skinparam packageStyle rectangle
+
+' ============================================================================
+' CLASE BASE COMPARTIDA
+' ============================================================================
+package "Base del Sistema" {
+  abstract class "BaseDeDatos" as DB {
+    - {field} pdo: PDO
+    + __construct(string conexion = 'default')
+    # db(): PDO
+    + beginTransaction(): void
+    + commit(): void
+    + rollback(): void
+    - loadEnv(): void
+  }
+}
+
+' ============================================================================
+' DIAGRAMA 1: SEGURIDAD
+' ============================================================================
+package "Base de Datos de Seguridad" as Seguridad {
+  class "Usuario" as Usuario {
+    # validationRules: array
+    + __construct()
+    - bootstrapDefaults(): void
+    - normalizarFilaUsuario(array user): array
+    + obtenerUltimoId(): ?int
+    + authenticate(identificador, password)
+    + verifyPassword(int id, string password): bool
+    + obtenerPorTrabajadorId(int idTrabajador): ?array
+    + obtenerUsuarioPorEmail(string email): ?array
+    + actualizarPassword(int userId, string newPassword): bool
+    - actualizarHashPassword(int userId, string plainPassword): void
+    + getAll()
+    + usuarioExiste(?int id, ?string nombreUsuario): bool
+    + getById(int id)
+    + add(string nombreUsuario, string password, int rolId, ?string correo, ?string avatar, ?int idTrabajadorRef)
+    + update(int id, string nombreUsuario, int rolId, ?string correo, ?string password, ?string avatar, ?int idTrabajadorRef)
+    + delete(int id)
+    + actualizarPerfil(int id, string nombreUsuario, ?string correo, ?string password, ?string avatar): bool
+    + obtenerRoles(): array
+    + obtenerTodosPermisos(): array
+    + obtenerPermisosUsuario(int userId): array
+    + establecerPermisosUsuario(int userId, array permisos): void
+    + obtenerPermisosRol(int rolId, ?int userId): array
+    + esPasswordFuerte(string password): bool
+  }
+
+  class "Rol" as Rol {
+    # validationRules: array
+    + __construct()
+    + obtenerTodos(): array
+    + obtenerPorId(int id): ?array
+    + existe(int id): bool
+    + existePorNombre(string name, ?int excludeId): bool
+    + eliminar(int id): bool
+    + obtenerUltimoId(): ?int
+    + agregar(string nombreRol, ?string descripcion): bool
+    + actualizar(int id, string nombreRol, ?string descripcion): bool
+  }
+
+  class "RegistroAuditoria" as AuditLog {
+    + __construct()
+    + registrar(int userId, string action, string table, ?int recordId, oldValue, newValue): bool
+    + obtenerTodos(): array
+    + {static} grabar(string action, string table, ?int recordId, oldValue, newValue): void
+    + obtenerPorId(int id): ?array
+  }
+
+  class "RestablecerPassword" as PassReset {
+    + __construct()
+    - bootstrapTable(): void
+    + createToken(int usuarioId, string correo): string
+    + validateToken(string token): ?array
+    + markAsUsed(string token): void
+    + deleteExpiredTokens(): void
+  }
+
+  class "Notificacion" as Notif {
+    + __construct()
+    + getUnreadCount(int userId): int
+    + getRecent(int userId, int limit): array
+    + getAll(int userId, int page, int perPage): array
+    + markAsRead(int notificationId, int userId): bool
+    + markAllAsRead(int userId): bool
+    + markAllWarningsAsRead(int userId): bool
+    + markTaskAssignedAsRead(int userId, string nombreTarea): bool
+    + create(int userId, string titulo, ?string mensaje, string tipo, ?string link): bool
+    + existsByTitle(int userId, string titulo): bool
+    + delete(int notificationId, int userId): bool
+  }
+}
+
+' ============================================================================
+' DIAGRAMA 2: NEGOCIO
+' ============================================================================
+package "Base de Datos del Negocio" as Negocio {
+  class "Planta" as Planta {
+    - id: ?int
+    - nombreComun: string
+    - nombreTecnico: ?string
+    - idEspecie: ?int
+    - imagen: ?string
+    - cantidadTotal: int
+    - activo: int
+    # validationRules: array
+    # fillable: array
+    # guarded: array
+    + __construct(array atributos = [])
+    + llenar(array atributos): self
+    - mapearColumnaAPropiedad(string column): string
+    + obtener* (obtenerId, obtenerNombreComun, obtenerNombreTecnico, obtenerIdEspecie, obtenerImagen, obtenerCantidadTotal, esActivo)
+    + establecer* (establecerNombreComun, establecerNombreTecnico, establecerIdEspecie, establecerImagen, establecerCantidadTotal, establecerActivo)
+    - validar(): void
+    + guardar(): bool
+    + {static} encontrar(int id): ?self
+    + {static} todos(): array
+    + {static} donde(string columna, mixed valor, string operador): array
+    + obtenerPorId(int id): ?array
+    + obtenerTodos(): array
+    + existe(int id): bool
+    + eliminar(int id): bool
+    + restaurar(int id): bool
+    + obtenerUltimoId(): ?int
+    + cargarPorId(int id): bool
+  }
+
+  class "Especie" as Especie {
+    - id: ?int
+    - nombreEspecie: string
+    - descripcion: ?string
+    - activo: int
+    # validationRules: array
+    # fillable: array
+    # guarded: array
+    + __construct(array atributos = [])
+    + llenar(array atributos): self
+    - mapearColumnaAPropiedad(string column): string
+    + obtener* (obtenerId, obtenerNombreEspecie, obtenerDescripcion, esActivo)
+    + establecer* (establecerNombreEspecie, establecerDescripcion, establecerActivo)
+    - validar(): void
+    + guardar(): bool
+    + {static} encontrar(int id): ?self
+    + {static} todos(): array
+    + {static} donde(string columna, mixed valor, string operador): array
+    + obtenerPorId(int id): ?array
+    + obtenerTodos(): array
+    + existe(int id): bool
+    + eliminar(int id): bool
+    + restaurar(int id): bool
+    + obtenerUltimoId(): ?int
+  }
+
+  class "Lote" as Lote {
+    - id: ?int
+    - idPlanta: ?int
+    - idUbicacion: ?int
+    - fechaSiembra: ?string
+    - cantidadInicial: int
+    - cantidadActual: int
+    - idEstado: ?int
+    - idCategoria: ?int
+    - idOrigen: ?int
+    - observacion: ?string
+    - imagen: ?string
+    - activo: int
+    # validationRules: array
+    # fillable: array
+    # guarded: array
+    + __construct(array atributos = [])
+    + llenar(array atributos): self
+    - mapearColumnaAPropiedad(string column): string
+    + obtener* (obtenerId, obtenerIdPlanta, obtenerIdUbicacion, obtenerFechaSiembra, obtenerCantidadInicial, obtenerCantidadActual, obtenerIdEstado, obtenerIdCategoria, obtenerIdOrigen, obtenerObservacion, obtenerImagen, esActivo)
+    + establecer* (establecerId, establecerIdPlanta, establecerIdUbicacion, establecerFechaSiembra, establecerCantidadInicial, establecerCantidadActual, establecerIdEstado, establecerIdCategoria, establecerIdOrigen, establecerObservacion, establecerImagen, establecerActivo)
+    - validar(): void
+    + guardar(): bool
+    + {static} encontrar(int id): ?self
+    + {static} todos(): array
+    + obtenerPorId(int id): ?array
+    + obtenerTodos(): array
+    + existe(int id): bool
+    + eliminar(int id): bool
+    + restaurar(int id): bool
+    + obtenerUltimoId(): ?int
+    + obtenerEstados(): array
+    + obtenerCategorias(): array
+    + obtenerOrigenes(): array
+    + obtenerIdEstadoVivo(): int
+    + obtenerIdOrigenPorNombre(string nombre): int
+    + cargarPorId(int id): bool
+    # descontarStock(int id, int cantidad): bool
+    # restaurarStock(int id, int cantidad): bool
+    + agregar(id_planta, id_ubicacion, fecha_siembra, cantidad_inicial, cantidad_actual, ...): bool
+    + actualizar(id, id_planta, id_ubicacion, fecha_siembra, cantidad_inicial, cantidad_actual, ...): bool
+  }
+
+  class "Ubicacion" as Ubicacion {
+    - id: ?int
+    - nombreUbicacion: string
+    - descripcion: ?string
+    - tipo: ?string
+    - activo: int
+    # validationRules: array
+    # fillable: array
+    # guarded: array
+    + __construct(array atributos = [])
+    + llenar(array atributos): self
+    - mapearColumnaAPropiedad(string column): string
+    + obtener* (obtenerId, obtenerNombreUbicacion, obtenerDescripcion, obtenerTipo, esActivo)
+    + establecer* (establecerNombreUbicacion, establecerDescripcion, establecerTipo, establecerActivo)
+    - validar(): void
+    + guardar(): bool
+    + {static} encontrar(int id): ?self
+    + {static} todos(): array
+    + {static} donde(string columna, mixed valor, string operador): array
+    + obtenerPorId(int id): ?array
+    + obtenerTodos(): array
+    + obtenerPorTipo(string tipo): array
+    + existe(int id): bool
+    - tieneLotesAsociados(int id): bool
+    + eliminar(int id): bool
+    + restaurar(int id): bool
+    + obtenerUltimoId(): ?int
+    + cargarPorId(int id): bool
+  }
+
+  class "Empleado" as Empleado {
+    - id: ?int
+    - nombreTrabajador: string
+    - apellidoTrabajador: ?string
+    - cedulaTrabajador: ?string
+    - telefonoTrabajador: ?string
+    - cargo: ?string
+    - activo: int
+    # validationRules: array
+    # fillable: array
+    # guarded: array
+    + __construct(array atributos = [])
+    + llenar(array atributos): self
+    - mapearColumnaAPropiedad(string column): string
+    + obtener* (obtenerId, obtenerNombreTrabajador, obtenerApellidoTrabajador, obtenerCedulaTrabajador, obtenerTelefonoTrabajador, obtenerCargo, esActivo)
+    + establecer* (establecerNombreTrabajador, establecerApellidoTrabajador, establecerCedulaTrabajador, establecerTelefonoTrabajador, establecerCargo, establecerActivo)
+    - validar(): void
+    + guardar(): bool
+    + {static} encontrar(int id): ?self
+    + {static} todos(): array
+    + {static} donde(string columna, mixed valor, string operador): array
+    + cargarPorId(int id): bool
+    + obtenerTodos(): array
+    + obtenerPorId(int id): ?array
+    + existe(int id): bool
+    + eliminar(int id): bool
+    + restaurar(int id): bool
+    + obtenerCargosDistintos(): array
+    + obtenerUltimoId(): ?int
+    + agregar(string nombre, ?string apellido, ?string cedula, ?string telefono, ?string cargo, bool activo)
+    + actualizar(int id, string nombre, ?string apellido, ?string cedula, ?string telefono, ?string cargo, bool activo)
+  }
+
+  class "Cliente" as Cliente {
+    - id: ?int
+    - nombreCliente: string
+    - apellidoCliente: ?string
+    - tipoCedulaCliente: ?string
+    - cedulaCliente: ?string
+    - contactoCliente: ?string
+    - activo: int
+    # validationRules: array
+    # fillable: array
+    # guarded: array
+    + __construct(array atributos = [])
+    - bootstrapDefaults(): void
+    + llenar(array atributos): self
+    - mapearColumnaAPropiedad(string column): string
+    + obtener* (obtenerId, obtenerNombreCliente, obtenerApellidoCliente, obtenerTipoCedulaCliente, obtenerCedulaCliente, obtenerContactoCliente, esActivo)
+    + establecer* (establecerNombreCliente, establecerApellidoCliente, establecerTipoCedulaCliente, establecerCedulaCliente, establecerContactoCliente, establecerActivo)
+    - validar(): void
+    + guardar(): bool
+    + {static} encontrar(int id): ?self
+    + {static} todos(): array
+    + {static} donde(string columna, mixed valor, string operador): array
+    + obtenerPorId(int id): ?array
+    + obtenerTodos(): array
+    + existe(int id): bool
+    + eliminar(int id): bool
+    + restaurar(int id): bool
+    + obtenerUltimoId(): ?int
+    + cargarPorId(int id): bool
+  }
+
+  class "Proveedor" as Proveedor {
+    - id: ?int
+    - nombreProveedor: string
+    - rifProveedor: ?string
+    - contactoVendedor: ?string
+    - telefonoProveedor: ?string
+    - activo: int
+    # validationRules: array
+    # fillable: array
+    # guarded: array
+    + __construct(array atributos = [])
+    - bootstrapDefaults(): void
+    + llenar(array atributos): self
+    - mapearColumnaAPropiedad(string column): string
+    + obtener* (obtenerId, obtenerNombreProveedor, obtenerRifProveedor, obtenerContactoVendedor, obtenerTelefonoProveedor, esActivo)
+    + establecer* (establecerNombreProveedor, establecerRifProveedor, establecerContactoVendedor, establecerTelefonoProveedor, establecerActivo)
+    - validar(): void
+    + guardar(): bool
+    + {static} encontrar(int id): ?self
+    + {static} todos(): array
+    + {static} donde(string columna, mixed valor, string operador): array
+    + cargarPorId(int id): bool
+    + obtenerTodos(): array
+    + obtenerPorRif(string rif): ?array
+    + obtenerPorId(int id): ?array
+    + existe(int id): bool
+    + eliminar(int id): bool
+    + restaurar(int id): bool
+    + obtenerUltimoId(): ?int
+    + agregar(string nombre, ?string rif, ?string contacto, ?string telefono)
+    + actualizar(int id, string nombre, ?string rif, ?string contacto, ?string telefono)
+  }
+
+  class "Venta" as Venta {
+    - id: ?int
+    - referencia: ?string
+    - idCliente: ?int
+    - idTrabajador: ?int
+    - tipoVenta: string
+    - estado: string
+    - ivaPorcentaje: float
+    - fechaVenta: ?string
+    - fechaVencimiento: ?string
+    - observaciones: ?string
+    - activo: int
+    - {static} IVA_PORCENTAJE: float
+    - {static} IVA_MULTIPLICADOR: float
+    # validationRules: array
+    # fillable: array
+    # guarded: array
+    + __construct(array atributos = [])
+    + llenar(array atributos): self
+    - mapearColumnaAPropiedad(string column): string
+    + obtener* (obtenerId, obtenerReferencia, obtenerIdCliente, obtenerIdTrabajador, obtenerTipoVenta, obtenerEstado, obtenerIvaPorcentaje, obtenerFechaVenta, obtenerFechaVencimiento, obtenerObservaciones, esActivo)
+    + establecer* (establecerReferencia, establecerIdCliente, establecerIdTrabajador, establecerTipoVenta, establecerEstado, establecerIvaPorcentaje, establecerFechaVenta, establecerFechaVencimiento, establecerObservaciones, establecerActivo)
+    - validar(): void
+    + obtenerTodos(): array
+    + obtenerPorId(int id): ?array
+    + obtenerVentaConDetalles(int id): ?array
+    + existe(int id): bool
+    + eliminar(int id): bool
+    + cancelar(int id): bool
+    + restaurar(int id): bool
+    + obtenerUltimoId(): ?int
+    - generarReferencia(): string
+    + agregar(array datos): int
+    - agregarDetalles(int idVenta, array productos): void
+    - agregarPagos(int idVenta, array pagos): void
+    + obtenerDetalles(int idVenta): array
+    + obtenerPagos(int idVenta): array
+    + obtenerLotesDisponibles(string query): array
+    + buscarClientes(string query): array
+    + obtenerTrabajadoresActivos(): array
+    + obtenerUltimoId(): ?int
+    + {static} encontrar(int id): ?self
+    + {static} todos(): array
+    + cargarPorId(int id): bool
+  }
+
+  class "Compra" as Purchase {
+    # validationRules: array
+    + __construct()
+    + obtenerTodos(): array
+    + obtenerPorId(int id): ?array
+    + eliminar(int id): bool
+    + existe(int id): bool
+    + iniciarTransaccion(): bool
+    + confirmarTransaccion(): bool
+    + revertirTransaccion(): bool
+    + obtenerTodas(): array
+    + obtenerPorId(int id): ?array
+    + obtenerDetalles(int idCompra): array
+    + existe(int id): bool
+    + agregar(int idProveedor, string fechaCompra, string tipoComprobante, ?string numeroComprobante, float subtotal, float iva, float total, ?string observacion): bool
+    + actualizar(int id, int idProveedor, string fechaCompra, string tipoComprobante, ?string numeroComprobante, float subtotal, float iva, float total, ?string observacion): bool
+    + eliminar(int id): bool
+    + restaurar(int id): bool
+    + agregarDetalle(int idCompra, string tipoItem, int idItem, float cantidad, float costoUnitario, float subtotal, ?string categoriaLote, ?int idUbicacion): bool
+    + eliminarDetalles(int idCompra): bool
+    + crearCuentaPagar(int idCompra, float total): bool
+    + actualizarCuentaPagar(int idCompra, float total): bool
+    + eliminarCuentaPagarPorCompra(int idCompra): bool
+    + tienePagosCuentaPagar(int idCompra): bool
+    + actualizarEstado(int id, string estado): bool
+    + marcarRecibida(int id): bool
+    + aplicarStock(int idCompra): array
+    + obtenerUltimoId(): ?int
+  }
+
+  class "Insumo" as Insumo {
+    - id: ?int
+    - nombreInsumo: string
+    - idUnidadMedida: ?int
+    - categoria: ?string
+    - stockActual: float
+    - costoUnitarioActual: float
+    - activo: int
+    # validationRules: array
+    # fillable: array
+    # guarded: array
+    + __construct(array atributos = [])
+    + llenar(array atributos): self
+    - mapearColumnaAPropiedad(string column): string
+    + obtener* (obtenerId, obtenerNombreInsumo, obtenerIdUnidadMedida, obtenerCategoria, obtenerStockActual, obtenerCostoUnitarioActual, esActivo)
+    + establecer* (establecerNombreInsumo, establecerIdUnidadMedida, establecerCategoria, establecerStockActual, establecerCostoUnitarioActual, establecerActivo)
+    - validar(): void
+    + guardar(): bool
+    + {static} encontrar(int id): ?self
+    + {static} todos(): array
+    + {static} donde(string columna, mixed valor, string operador): array
+    + obtenerPorId(int id): ?array
+    + obtenerTodos(): array
+    + existe(int id): bool
+    + eliminar(int id): bool
+    + restaurar(int id): bool
+    + obtenerUltimoId(): ?int
+    + cargarPorId(int id): bool
+    + encontrarPorNombreYCategoria(string name, string category): ?array
+    + incrementarStock(int id, float quantity): bool
+  }
+
+  class "UnidadMedida" as UM {
+    - id: ?int
+    - nombreUnidadMedida: string
+    - activo: int
+    # validationRules: array
+    # fillable: array
+    # guarded: array
+    + __construct(array atributos = [])
+    + llenar(array atributos): self
+    - mapearColumnaAPropiedad(string column): string
+    + obtener* (obtenerId, obtenerNombreUnidadMedida, esActivo)
+    + establecer* (establecerNombreUnidadMedida, establecerActivo)
+    - validar(): void
+    + guardar(): bool
+    + {static} encontrar(int id): ?self
+    + {static} todos(): array
+    + {static} donde(string columna, mixed valor, string operador): array
+    + obtenerPorId(int id): ?array
+    + obtenerTodos(): array
+    + existe(int id): bool
+    + eliminar(int id): bool
+    + restaurar(int id): bool
+    + obtenerUltimoId(): ?int
+    + cargarPorId(int id): bool
+  }
+
+  class "Herramienta" as Herramienta {
+    - id: ?int
+    - nombreHerramienta: string
+    - cantidad: int
+    - estado: string
+    - fechaUltimoMantenimiento: ?string
+    - observacion: ?string
+    - activo: int
+    # validationRules: array
+    # fillable: array
+    # guarded: array
+    + __construct(array atributos = [])
+    + llenar(array atributos): self
+    - mapearColumnaAPropiedad(string column): string
+    + obtener* (obtenerId, obtenerNombreHerramienta, obtenerCantidad, obtenerEstado, obtenerFechaUltimoMantenimiento, obtenerObservacion, esActivo)
+    + establecer* (establecerNombreHerramienta, establecerCantidad, establecerEstado, establecerFechaUltimoMantenimiento, establecerObservacion, establecerActivo)
+    - validar(): void
+    + guardar(): bool
+    + {static} encontrar(int id): ?self
+    + {static} todos(): array
+    + {static} donde(string columna, mixed valor, string operador): array
+    + obtenerPorId(int id): ?array
+    + obtenerTodos(): array
+    + existe(int id): bool
+    + eliminar(int id): bool
+    + restaurar(int id): bool
+    + obtenerUltimoId(): ?int
+    + cargarPorId(int id): bool
+    + registrarUsoConActualizacionEstado(array usageData): int
+    + obtenerTodosConDisponibilidad(): array
+    + obtenerUsos(int herramientaId): array
+  }
+
+  class "Tarea" as Tarea {
+    - id: ?int
+    - nombre: string
+    - descripcion: ?string
+    - activo: int
+    # validationRules: array
+    # fillable: array
+    # guarded: array
+    + __construct(array atributos = [])
+    + llenar(array atributos): self
+    - mapearColumnaAPropiedad(string column): string
+    + obtener* (obtenerId, obtenerNombre, obtenerDescripcion, esActivo)
+    + establecer* (establecerNombre, establecerDescripcion, establecerActivo)
+    - validar(): void
+    + guardar(): bool
+    + {static} encontrar(int id): ?self
+    + {static} todos(): array
+    + {static} donde(string columna, mixed valor, string operador): array
+    + existe(int id): bool
+    + eliminar(int id): bool
+    + restaurar(int id): bool
+    + obtenerUltimoId(): ?int
+    + obtenerTodos(): array
+    + obtenerPorId(int id): ?array
+    + asignarTareaConConsumos(array assignmentData, array consumptions, array tools): int
+    + actualizarAsignacionConConsumos(int asignacionId, array assignmentData, array consumptions, array tools): void
+    + obtenerAsignaciones(): array
+    + obtenerAsignacionPorId(int id): ?array
+    + obtenerConsumos(int asignacionId): array
+    + actualizarEstadosHerramientas(int asignacionId, array toolEstados): void
+    + obtenerUsosHerramientas(int asignacionId): array
+    + contarUsosHerramientasActivos(int idHerramienta, ?int excludeAsignacionId): int
+    + completarAsignacion(int id, string fechaCumplimiento, ?float horasDedicadas): void
+    + cancelarAsignacion(int id): void
+  }
+
+  class "RecoleccionSemillas" as SeedCol {
+    - id: ?int
+    - idTrabajador: ?int
+    - idUbicacion: ?int
+    - fechaAsignacion: ?string
+    - fechaRecoleccion: ?string
+    - estatus: string
+    - observacion: ?string
+    - activo: int
+    # validationRules: array
+    # fillable: array
+    # guarded: array
+    + __construct(array atributos = [])
+    + llenar(array atributos): self
+    - mapearColumnaAPropiedad(string column): string
+    + obtener* (obtenerId, obtenerIdTrabajador, obtenerIdUbicacion, obtenerFechaAsignacion, obtenerFechaRecoleccion, obtenerEstatus, obtenerObservacion, esActivo)
+    + establecer* (establecerIdTrabajador, establecerIdUbicacion, establecerFechaAsignacion, establecerFechaRecoleccion, establecerEstatus, establecerObservacion, establecerActivo)
+    - validar(): void
+    + guardar(): bool
+    + {static} encontrar(int id): ?self
+    + {static} todos(): array
+    + {static} donde(string columna, mixed valor, string operador): array
+    + cargarPorId(int id): bool
+    + obtenerTodos(): array
+    + obtenerPorId(int id): ?array
+    + existe(int id): bool
+    + eliminar(int id): bool
+    + restaurar(int id): bool
+    + obtenerUltimoId(): ?int
+    + agregar(int idTrabajador, int idUbicacion, string fechaAsignacion, ?string observacion): bool
+    + actualizar(int id, int idTrabajador, int idUbicacion, string fechaAsignacion, ?string observacion): bool
+    + completar(int id, string fechaRecoleccion): bool
+    + agregarDetalle(int idRecoleccion, ?string plantaOrigen, string nombreSemilla, int idUnidadMedida, float cantidad, ?int idInsumo): bool
+    + obtenerDetalles(int idRecoleccion): array
+    + obtenerCantidadDetalles(int idRecoleccion): int
+    + registrarSemillasConTransaccion(int idRecoleccion, array items): int
+  }
+
+  class "Trazabilidad" as Traza {
+    - id: ?int
+    - idLote: ?int
+    - cantidad: int
+    - idEstado: ?int
+    - fechaRegistro: ?string
+    - observacion: ?string
+    - activo: int
+    # validationRules: array
+    # fillable: array
+    # guarded: array
+    + __construct(array atributos = [])
+    + llenar(array atributos): self
+    - mapearColumnaAPropiedad(string column): string
+    + obtener* (obtenerId, obtenerIdLote, obtenerCantidad, obtenerIdEstado, obtenerFechaRegistro, obtenerObservacion, esActivo)
+    + establecer* (establecerIdLote, establecerCantidad, establecerIdEstado, establecerFechaRegistro, establecerObservacion, establecerActivo)
+    - validar(): void
+    + guardar(): bool
+    + {static} encontrar(int id): ?self
+    + {static} todos(): array
+    + {static} donde(string columna, mixed valor, string operador): array
+    + obtenerPorId(int id): ?array
+    + obtenerTodos(): array
+    + existe(int id): bool
+    + eliminar(int id): bool
+    + restaurar(int id): bool
+    + obtenerUltimoId(): ?int
+    + cargarPorId(int id): bool
+    + obtenerLotesDisponibles(?int includeId): array
+    + descontarStockLote(int idLote, int cantidad): bool
+    + restaurarStockLote(int idLote, int cantidad): bool
+  }
+
+  class "Merma" as Merma {
+    - id: ?int
+    - idTrazabilidad: ?int
+    - idLote: ?int
+    - cantidad: int
+    - motivo: ?string
+    - descripcion: ?string
+    - fechaMerma: ?string
+    - impactoEconomico: float
+    - idUsuarioRegistra: ?int
+    - activo: int
+    # validationRules: array
+    # fillable: array
+    # guarded: array
+    + __construct(array atributos = [])
+    + llenar(array atributos): self
+    - mapearColumnaAPropiedad(string column): string
+    + obtener* (obtenerId, obtenerIdTrazabilidad, obtenerIdLote, obtenerCantidad, obtenerMotivo, obtenerDescripcion, obtenerFechaMerma, obtenerImpactoEconomico, obtenerIdUsuarioRegistra, esActivo)
+    + establecer* (establecerId, establecerIdTrazabilidad, establecerIdLote, establecerCantidad, establecerMotivo, establecerDescripcion, establecerFechaMerma, establecerImpactoEconomico, establecerIdUsuarioRegistra, establecerActivo)
+    - validar(): void
+    + guardar(): bool
+    + {static} encontrar(int id): ?self
+    + {static} todos(): array
+    + obtenerTodos(): array
+    + obtenerPorId(int id): ?array
+    + existe(int id): bool
+    + eliminar(int id): bool
+    + restaurar(int id): bool
+    + cargarPorId(int id): bool
+    + obtenerUltimoId(): ?int
+    + obtenerCuarentenasDisponibles(): array
+    + registrarPerdida(int idTrazabilidad, int cantidad, string motivo, ?string descripcion, string fecha, int idUsuario): int
+    - obtenerInfoCuarentena(int idTrazabilidad): ?array
+    - descontarStockCuarentena(int idTrazabilidad, int cantidad): void
+  }
+
+  class "Ornato" as Ornato {
+    - id: ?int
+    - idCliente: ?int
+    - tipoOrnato: string
+    - descripcion: ?string
+    - ubicacion: ?string
+    - montoTotal: float
+    - fecha: ?string
+    - activo: int
+    # validationRules: array
+    # fillable: array
+    # guarded: array
+    + __construct(array atributos = [])
+    + llenar(array atributos): self
+    - mapearColumnaAPropiedad(string column): string
+    + obtener* (obtenerId, obtenerIdCliente, obtenerTipoOrnato, obtenerDescripcion, obtenerUbicacion, obtenerMontoTotal, obtenerFecha, esActivo)
+    + establecer* (establecerIdCliente, establecerTipoOrnato, establecerDescripcion, establecerUbicacion, establecerMontoTotal, establecerFecha, establecerActivo)
+    - validar(): void
+    + guardar(): bool
+    + {static} encontrar(int id): ?self
+    + {static} todos(): array
+    + {static} donde(string columna, mixed valor, string operador): array
+    + cargarPorId(int id): bool
+    + obtenerTodos(): array
+    + obtenerPorId(int id): ?array
+    + existe(int id): bool
+    + eliminar(int id): bool
+    + restaurar(int id): bool
+    + obtenerUltimoId(): ?int
+    + agregar(array datos): bool
+    + agregarDetalles(int idOrnato, array items): bool
+    + actualizar(int id, array datos): bool
+    + actualizarDetalles(int idOrnato, array items): bool
+    + obtenerDetalles(int idOrnato): array
+    + buscarClientes(string query): array
+  }
+
+  class "CalculoPrecio" as CalcPrecio {
+    - id: ?int
+    - idLote: ?int
+    - precioPlantaBase: float
+    - costoTotalInsumo: float
+    - porcentajeGanancia: float
+    - precioFinalSugerido: float
+    - fechaCalculo: ?string
+    - vigente: int
+    # validationRules: array
+    # fillable: array
+    # guarded: array
+    + __construct(array atributos = [])
+    + llenar(array atributos): self
+    - mapearColumnaAPropiedad(string column): string
+    + obtener* (obtenerId, obtenerIdLote, obtenerPrecioPlantaBase, obtenerCostoTotalInsumo, obtenerPorcentajeGanancia, obtenerPrecioFinalSugerido, obtenerFechaCalculo, esVigente)
+    + establecer* (establecerIdLote, establecerPrecioPlantaBase, establecerCostoTotalInsumo, establecerPorcentajeGanancia, establecerPrecioFinalSugerido, establecerFechaCalculo, establecerVigente)
+    - validar(): void
+    + guardar(): bool
+    + {static} encontrar(int id): ?self
+    + {static} todos(): array
+    + {static} donde(string columna, mixed valor, string operador): array
+    + obtenerPorId(int id): ?array
+    + obtenerTodos(): array
+    + existe(int id): bool
+    + eliminar(int id): bool
+    + obtenerUltimoId(): ?int
+    + cargarPorId(int id): bool
+    + agregarDetalle(int idCalculo, int idInsumo, float monto): bool
+    + obtenerDetalles(int idCalculo): array
+    + eliminarDetalle(int idDetalle): bool
+    + actualizarMontoDetalle(int idDetalle, float monto): bool
+    + recalcularTotalInsumo(int idCalculo): float
+    - desmarcarVigentes(?int idLote): void
+    + obtenerVigentePorLote(int idLote): ?array
+    + guardarDetalles(int idCalculo, array detalles): void
+  }
+
+  class "ConsumoInsumo" as Consumo {
+    # validationRules: array
+    + __construct()
+    + obtenerTodos(): array
+    + obtenerPorId(int id): ?array
+    + existe(int id): bool
+    + obtenerPorAsignacion(int asignacionId): array
+    + agregar(array data): bool
+    + eliminar(int id): bool
+  }
+
+  class "UsoHerramienta" as UsoHerr {
+    # validationRules: array
+    + __construct()
+    + obtenerTodos(): array
+    + obtenerPorId(int id): ?array
+    + existe(int id): bool
+    + obtenerPorAsignacion(int asignacionId): array
+    + agregar(array data): bool
+    + eliminar(int id): bool
+  }
+
+  class "CuentaPagar" as CtaPagar {
+    - id: ?int
+    - idCompra: ?int
+    - montoTotal: float
+    - saldoPendiente: float
+    - fechaVencimiento: ?string
+    - estado: string
+    - observacion: ?string
+    - activo: int
+    - createdAt: ?string
+    - updatedAt: ?string
+    # validationRules: array
+    # fillable: array
+    # guarded: array
+    + __construct(array atributos = [])
+    + llenar(array atributos): self
+    - mapearColumnaAPropiedad(string column): string
+    + obtener* (obtenerId, obtenerIdCompra, obtenerMontoTotal, obtenerSaldoPendiente, obtenerFechaVencimiento, obtenerEstado, obtenerObservacion, esActivo, obtenerCreatedAt, obtenerUpdatedAt)
+    + establecer* (establecerIdCompra, establecerMontoTotal, establecerFechaVencimiento, establecerObservacion, establecerActivo)
+    - validar(): void
+    + guardar(): bool
+    + {static} encontrar(int id): ?self
+    + {static} todos(): array
+    + {static} donde(string columna, mixed valor, string operador): array
+    + cargarPorId(int id): bool
+    + obtenerTodos(): array
+    + obtenerPorId(int id): ?array
+    + eliminar(int id): bool
+    + existe(int id): bool
+    # iniciarTransaccion(): bool
+    # confirmarTransaccion(): bool
+    # revertirTransaccion(): bool
+    + obtenerTodas(): array
+    + obtenerPorId(int id): ?array
+    + obtenerPorCompra(int idCompra): ?array
+    + existe(int id): bool
+    + obtenerPagos(int idCuentaPagar): array
+    + eliminar(int id): bool
+    + restaurar(int id): bool
+    + obtenerUltimoId(): ?int
+    + crear(int idCompra, float montoTotal, ?string fechaVencimiento, ?string observacion): bool
+    - actualizarEstadoCompra(int idCompra): void
+    + registrarPago(int idCuentaPagar, float monto, string fechaPago, ?string tipoPago, ?string referencia, ?string observacion): bool
+    + anularPago(int idPagoCompra): bool
+  }
+
+  class "CuentaCobrar" as CtaCobrar {
+    # validationRules: array
+    # fillable: array
+    # guarded: array
+    + __construct(array atributos = [])
+    + llenar(array atributos): self
+    - mapColumnToProperty(string column): string
+    + obtenerTodos(int start, int length, string search, string estadoFilter): array
+    + obtenerPorId(int id): ?array
+    + obtenerPagos(int idVenta): array
+    + registrarPago(int idVenta, float monto, string metodo, ?string referencia, string fechaPago, ?string banco, int idTrabajador, ?string observaciones): int
+    - validarPago(int idVenta, float monto, string metodo, ?string referencia, string fechaPago, ?string banco, int idTrabajador): void
+    + actualizarEstadoVenta(int idVenta): void
+    + obtenerEstadisticas(): array
+    + obtenerClientes(): array
+    + iniciarTransaccion(): void
+    + confirmarTransaccion(): void
+    + revertirTransaccion(): void
+  }
+
+  class "Ampliacion" as Ampliacion {
+    - id: ?int
+    - tipoMovimiento: string
+    - idCliente: ?int
+    - idTrabajadorGestor: ?int
+    - fechaMovimiento: ?string
+    - observacion: ?string
+    - activo: int
+    # validationRules: array
+    # fillable: array
+    # guarded: array
+    + __construct(array atributos = [])
+    + llenar(array atributos): self
+    - mapearColumnaAPropiedad(string column): string
+    + obtener* (obtenerId, obtenerTipoMovimiento, obtenerIdCliente, obtenerIdTrabajadorGestor, obtenerFechaMovimiento, obtenerObservacion, esActivo)
+    + establecer* (establecerTipoMovimiento, establecerIdCliente, establecerIdTrabajadorGestor, establecerFechaMovimiento, establecerObservacion, establecerActivo)
+    - validar(): void
+    + guardar(): bool
+    + {static} encontrar(int id): ?self
+    + {static} todos(): array
+    + {static} donde(string columna, mixed valor, string operador): array
+    + cargarPorId(int id): bool
+    + obtenerTodos(): array
+    + obtenerPorId(int id): ?array
+    + existe(int id): bool
+    + eliminar(int id): bool
+    + restaurar(int id): bool
+    + obtenerDetalles(int id): array
+    + obtenerLotesDisponibles(): array
+    + obtenerPlantas(): array
+    + obtenerUbicaciones(): array
+    + obtenerEspecies(): array
+    - crearPlanta(string nombreComun, ?string nombreTecnico, int idEspecie): int
+    + obtenerUltimoId(): ?int
+    + registrarIntercambio(array data): int
+    + actualizar(int id, array data): bool
+    + buscarClientes(string query): array
+  }
+
+  class "Respaldo" as Backup {
+    - backupDir: string
+    - mysqldumpPath: string
+    - mysqlPath: string
+    + __construct()
+    - obtenerOpcionesConexion(string dbHost, string dbPort, bool useSocketFallback): string
+    - detectarSocket(): ?string
+    - encontrarMysqldump(): string
+    - encontrarMysql(): string
+    + crear(string dbHost, string dbPort, string dbName, string dbUser, string dbPass, string prefix): array
+    + restaurar(string filename): array
+    - sanitizarDump(string filepath): void
+    - detectarBaseDatosDesdeArchivo(string filepath): ?string
+    - obtenerConfigDb(string dbName): ?array
+    + listar(): array
+    + eliminar(string filename): bool
+    + obtenerRutaArchivo(string filename): ?string
+    + obtenerDirectorioBackup(): string
+    - formatearTimestamp(string ts): string
+    - formatearTamanio(int bytes): string
+    + obtenerNombresBasesDatos(): array
+    + obtenerConfigsBasesDatos(): array
+  }
+
+  class "DatosTablero" as Dashboard {
+    - secDb: PDO
+    + __construct()
+    - crearConexionSeguridad(): PDO
+    + obtenerEstadisticas(): array
+    + getPlantsBySpecies(): array
+    + getInventorySummary(): array
+    + getPendingTasks(): array
+    + getRecentActivity(int limit): array
+    + getLowStockLots(int threshold): array
+    + getLowStockSupplies(int threshold): array
+    + getReportData(string reportType, array params): array
+  }
+
+  class "Inventario" as Inventory {
+    + __construct()
+    + getConsolidated(): array
+  }
+
+  class "Reportes" as Reports {
+    - modules: array
+    + __construct()
+    - buildModules(): array
+    + getModules(): array
+    - fVal(mixed val): bool
+    + getModuleFilters(string module): array
+    - filterActivo(): array
+    - filterDateRange(string field, string label): array
+    - filterSelectFromQuery(string field, string label, string sql, string valueCol, string textCol, string prependLabel): array
+    + getReportData(string module, array filters): array
+    - buildWhere(array conditions, array &params): string
+    - aCond(array &conds, array &params, array filters, string field, string column, ?string alias): void
+    - aActivo(array &conds, array &params, array filters, string alias): void
+    - aDateRange(array &conds, array &params, array filters, string field, string column): void
+    + report methods (Plantas, Lotes, Insumos, Proveedores, Clientes, Trabajadores, Tareas, Ventas, Compras, Herramientas, Especies, Inventario, Recoleccion, Ubicaciones, UnidadesMedida, CuentasPagar, Precios, CuentasCobrar): array
+  }
+}
+
+' ============================================================================
+' RELACIONES - SEGURIDAD
+' ============================================================================
+DB <|-- Usuario
+DB <|-- Rol
+DB <|-- AuditLog
+DB <|-- PassReset
+DB <|-- Notif
+
+Usuario "1" --> "0..*" AuditLog : registra
+Usuario "1" --> "0..*" Notif : recibe
+Usuario "1" --> "0..*" PassReset : solicita
+Usuario "*" --> "1" Rol : pertenece
+
+' ============================================================================
+' RELACIONES - NEGOCIO
+' ============================================================================
+DB <|-- Planta
+DB <|-- Especie
+DB <|-- Lote
+DB <|-- Ubicacion
+DB <|-- Empleado
+DB <|-- Cliente
+DB <|-- Proveedor
+DB <|-- Venta
+DB <|-- Purchase
+DB <|-- Insumo
+DB <|-- UM
+DB <|-- Herramienta
+DB <|-- Tarea
+DB <|-- SeedCol
+DB <|-- Traza
+DB <|-- Merma
+DB <|-- Ornato
+DB <|-- CalcPrecio
+DB <|-- Consumo
+DB <|-- UsoHerr
+DB <|-- CtaPagar
+DB <|-- CtaCobrar
+DB <|-- Ampliacion
+DB <|-- Dashboard
+DB <|-- Inventory
+DB <|-- Reports
+
+' Backup no hereda de Database
+' --- Asociaciones entre entidades del Negocio ---
+
+Especie "1" --> "*" Planta : clasifica
+Planta "1" --> "*" Lote : produce
+Ubicacion "1" --> "*" Lote : almacena
+Lote "1" --> "*" Venta : se vende en
+Lote "1" --> "*" CalcPrecio : tiene precio
+Lote "1" --> "*" Tarea : recibe tareas
+Lote "1" --> "*" Traza : tiene historial
+Lote "1" --> "*" Merma : sufre perdidas
+Empleado "1" --> "*" Venta : gestiona
+Empleado "1" --> "*" Tarea : ejecuta
+Cliente "1" --> "*" Venta : compra
+Cliente "1" --> "*" Ornato : solicita
+Proveedor "1" --> "*" Purchase : abastece
+Purchase "1" --> "*" CtaPagar : genera
+Insumo "1" --> "*" Consumo : se consume
+Insumo "1" --> "*" Tarea : se usa en
+Herramienta "1" --> "*" UsoHerr : se usa en
+Ubicacion "1" --> "*" SeedCol : origen de
+Empleado "1" --> "*" SeedCol : recolecta
+UM "1" --> "*" Insumo : mide
+Venta "1" --> "*" CtaCobrar : genera
+Tarea "1" --> "*" Consumo : justifica
+Tarea "1" --> "*" UsoHerr : utiliza
+SeedCol "1" --> "*" Insumo : genera
+
+@enduml
