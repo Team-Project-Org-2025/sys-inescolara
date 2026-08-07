@@ -21,6 +21,8 @@ class Ampliacion extends Database implements ReadableInterface
     private ?string $observacion = null;
     private int $activo = 1;
 
+    private array $schemaCache = [];
+
     protected array $validationRules = [
         'tipo_movimiento'      => ['type' => null,      'required' => true],
         'id_cliente'           => ['type' => 'cantidad','required' => false],
@@ -122,6 +124,44 @@ class Ampliacion extends Database implements ReadableInterface
             'fecha_movimiento'     => $this->fechaMovimiento,
             'observacion'          => $this->observacion,
         ]);
+    }
+
+    private function hasColumn(string $table, string $column): bool
+    {
+        $key = "$table.$column";
+        if (array_key_exists($key, $this->schemaCache)) {
+            return $this->schemaCache[$key];
+        }
+        try {
+            $stmt = $this->db()->prepare(
+                'SELECT COUNT(*) FROM information_schema.COLUMNS
+                 WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?'
+            );
+            $stmt->execute([$table, $column]);
+            return $this->schemaCache[$key] = (int) $stmt->fetchColumn() > 0;
+        } catch (Throwable $e) {
+            return $this->schemaCache[$key] = false;
+        }
+    }
+
+    private function fkEstado(): bool { return $this->hasColumn('lote', 'id_estado'); }
+
+    private function estadoVivo(): array
+    {
+        if ($this->fkEstado()) {
+            $id = (int)$this->db()->query("SELECT id_estado FROM estado WHERE nombre = 'vivo' LIMIT 1")->fetchColumn();
+            return ['id' => $id, 'nombre' => 'Vivo'];
+        }
+        return ['id' => 0, 'nombre' => 'Vivo'];
+    }
+
+    private function origenAmpliacion(): array
+    {
+        if ($this->fkEstado()) {
+            $id = (int)$this->db()->query("SELECT id_origen FROM origen WHERE nombre = 'Ampliación' LIMIT 1")->fetchColumn();
+            return ['id' => $id, 'nombre' => 'Ampliación'];
+        }
+        return ['id' => 0, 'nombre' => 'Ampliación'];
     }
 
     public function save(): bool
@@ -356,18 +396,33 @@ class Ampliacion extends Database implements ReadableInterface
     public function getAvailableLots(): array
     {
         try {
-            $sql = "SELECT
-                        l.id_lote AS id,
-                        l.id_lote,
-                        l.cantidad_actual,
-                        l.id_estado,
-                        COALESCE(NULLIF(p.nombre_comun, ''), p.nombre_tecnico, 'Sin nombre') AS planta_nombre,
-                        u.nombre_ubicacion AS ubicacion_nombre
-                    FROM lote l
-                    LEFT JOIN plantas p ON l.id_planta = p.id_planta AND p.activo = 1
-                    LEFT JOIN ubicacion u ON l.id_ubicacion = u.id_ubicacion AND u.activo = 1
-                    WHERE l.activo = 1 AND l.cantidad_actual > 0
-                    ORDER BY p.nombre_comun ASC, l.id_lote ASC";
+            if ($this->fkEstado()) {
+                $sql = "SELECT
+                            l.id_lote AS id,
+                            l.id_lote,
+                            l.cantidad_actual,
+                            l.id_estado,
+                            COALESCE(NULLIF(p.nombre_comun, ''), p.nombre_tecnico, 'Sin nombre') AS planta_nombre,
+                            u.nombre_ubicacion AS ubicacion_nombre
+                        FROM lote l
+                        LEFT JOIN plantas p ON l.id_planta = p.id_planta AND p.activo = 1
+                        LEFT JOIN ubicacion u ON l.id_ubicacion = u.id_ubicacion AND u.activo = 1
+                        WHERE l.activo = 1 AND l.cantidad_actual > 0
+                        ORDER BY p.nombre_comun ASC, l.id_lote ASC";
+            } else {
+                $sql = "SELECT
+                            l.id_lote AS id,
+                            l.id_lote,
+                            l.cantidad_actual,
+                            l.estado,
+                            COALESCE(NULLIF(p.nombre_comun, ''), p.nombre_tecnico, 'Sin nombre') AS planta_nombre,
+                            u.nombre_ubicacion AS ubicacion_nombre
+                        FROM lote l
+                        LEFT JOIN plantas p ON l.id_planta = p.id_planta AND p.activo = 1
+                        LEFT JOIN ubicacion u ON l.id_ubicacion = u.id_ubicacion AND u.activo = 1
+                        WHERE l.activo = 1 AND l.cantidad_actual > 0
+                        ORDER BY p.nombre_comun ASC, l.id_lote ASC";
+            }
             $stmt = $this->db()->query($sql);
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
         } catch (\Throwable $e) {
@@ -457,14 +512,17 @@ class Ampliacion extends Database implements ReadableInterface
 
             $stmtUpdateLot = $this->db()->prepare("UPDATE lote SET cantidad_actual = GREATEST(0, cantidad_actual - :cantidad) WHERE id_lote = :id AND cantidad_actual >= :cantidad2");
 
-            $idEstadoVivoAmpliacion = (int)$this->db()->query("SELECT id_estado FROM estado WHERE nombre = 'vivo' LIMIT 1")->fetchColumn();
-            $idOrigenIntercambio = (int)$this->db()->query("SELECT id_origen FROM origen WHERE nombre = 'Ampliación' LIMIT 1")->fetchColumn();
+            $estadoVivo = $this->estadoVivo();
+            $origenAmp = $this->origenAmpliacion();
+            $fk = $this->fkEstado();
             $stmtFindLot = $this->db()->prepare("SELECT id_lote FROM lote WHERE id_planta = :id_planta AND id_ubicacion = :id_ubicacion AND activo = 1 LIMIT 1");
 
-            $stmtCreateLot = $this->db()->prepare("
-                INSERT INTO lote (id_planta, id_ubicacion, fecha_siembra, cantidad_inicial, cantidad_actual, id_estado, id_origen, observacion)
-                VALUES (:id_planta, :id_ubicacion, :fecha, :cantidad_ini, :cantidad_act, :id_estado, :id_origen, :observacion)
-            ");
+            $stmtCreateLot = $this->db()->prepare($fk
+                ? "INSERT INTO lote (id_planta, id_ubicacion, fecha_siembra, cantidad_inicial, cantidad_actual, id_estado, id_origen, observacion)
+                   VALUES (:id_planta, :id_ubicacion, :fecha, :cantidad_ini, :cantidad_act, :id_estado, :id_origen, :observacion)"
+                : "INSERT INTO lote (id_planta, id_ubicacion, fecha_siembra, cantidad_inicial, cantidad_actual, estado, origen, observacion)
+                   VALUES (:id_planta, :id_ubicacion, :fecha, :cantidad_ini, :cantidad_act, :estado, :origen, :observacion)"
+            );
 
             $stmtIncreaseLot = $this->db()->prepare("UPDATE lote SET cantidad_actual = cantidad_actual + :cantidad WHERE id_lote = :id");
 
@@ -521,16 +579,28 @@ class Ampliacion extends Database implements ReadableInterface
                     $idLote = (int)$existingLot['id_lote'];
                     $stmtIncreaseLot->execute([':cantidad' => $cantidad, ':id' => $idLote]);
                 } else {
-                    $stmtCreateLot->execute([
-                        ':id_planta' => $idPlanta,
-                        ':id_ubicacion' => $idUbicacion,
-                        ':fecha' => $fecha,
-                        ':cantidad_ini' => $cantidad,
-                        ':cantidad_act' => $cantidad,
-                        ':id_estado' => $idEstadoVivoAmpliacion,
-                        ':id_origen' => $idOrigenIntercambio,
-                        ':observacion' => $observacion,
-                    ]);
+                    $stmtCreateLot->execute($fk
+                        ? [
+                            ':id_planta' => $idPlanta,
+                            ':id_ubicacion' => $idUbicacion,
+                            ':fecha' => $fecha,
+                            ':cantidad_ini' => $cantidad,
+                            ':cantidad_act' => $cantidad,
+                            ':id_estado' => $estadoVivo['id'],
+                            ':id_origen' => $origenAmp['id'],
+                            ':observacion' => $observacion,
+                        ]
+                        : [
+                            ':id_planta' => $idPlanta,
+                            ':id_ubicacion' => $idUbicacion,
+                            ':fecha' => $fecha,
+                            ':cantidad_ini' => $cantidad,
+                            ':cantidad_act' => $cantidad,
+                            ':estado' => $estadoVivo['nombre'],
+                            ':origen' => $origenAmp['nombre'],
+                            ':observacion' => $observacion,
+                        ]
+                    );
                     $idLote = (int)$this->db()->lastInsertId();
                 }
 
@@ -620,13 +690,16 @@ class Ampliacion extends Database implements ReadableInterface
                 VALUES (:id_mov, :id_lote, :tipo, :cantidad, NULL, NULL)
             ");
             $stmtUpdateLot = $this->db()->prepare("UPDATE lote SET cantidad_actual = GREATEST(0, cantidad_actual - :cantidad) WHERE id_lote = :id AND cantidad_actual >= :cantidad2");
-            $idEstadoVivo = (int)$this->db()->query("SELECT id_estado FROM estado WHERE nombre = 'vivo' LIMIT 1")->fetchColumn();
-            $idOrigenIntercambio = (int)$this->db()->query("SELECT id_origen FROM origen WHERE nombre = 'Ampliación' LIMIT 1")->fetchColumn();
+            $estadoVivo = $this->estadoVivo();
+            $origenAmp = $this->origenAmpliacion();
+            $fk = $this->fkEstado();
             $stmtFindLot = $this->db()->prepare("SELECT id_lote FROM lote WHERE id_planta = :id_planta AND id_ubicacion = :id_ubicacion AND activo = 1 LIMIT 1");
-            $stmtCreateLot = $this->db()->prepare("
-                INSERT INTO lote (id_planta, id_ubicacion, fecha_siembra, cantidad_inicial, cantidad_actual, id_estado, id_origen, observacion)
-                VALUES (:id_planta, :id_ubicacion, :fecha, :cantidad_ini, :cantidad_act, :id_estado, :id_origen, :observacion)
-            ");
+            $stmtCreateLot = $this->db()->prepare($fk
+                ? "INSERT INTO lote (id_planta, id_ubicacion, fecha_siembra, cantidad_inicial, cantidad_actual, id_estado, id_origen, observacion)
+                   VALUES (:id_planta, :id_ubicacion, :fecha, :cantidad_ini, :cantidad_act, :id_estado, :id_origen, :observacion)"
+                : "INSERT INTO lote (id_planta, id_ubicacion, fecha_siembra, cantidad_inicial, cantidad_actual, estado, origen, observacion)
+                   VALUES (:id_planta, :id_ubicacion, :fecha, :cantidad_ini, :cantidad_act, :estado, :origen, :observacion)"
+            );
             $stmtIncreaseLot = $this->db()->prepare("UPDATE lote SET cantidad_actual = cantidad_actual + :cantidad WHERE id_lote = :id");
 
             $itemCount = 0;
@@ -668,16 +741,28 @@ class Ampliacion extends Database implements ReadableInterface
                     $idLote = (int)$existingLot['id_lote'];
                     $stmtIncreaseLot->execute([':cantidad' => $cantidad, ':id' => $idLote]);
                 } else {
-                    $stmtCreateLot->execute([
-                        ':id_planta' => $idPlanta,
-                        ':id_ubicacion' => $idUbicacion,
-                        ':fecha' => $fecha,
-                        ':cantidad_ini' => $cantidad,
-                        ':cantidad_act' => $cantidad,
-                        ':id_estado' => $idEstadoVivo,
-                        ':id_origen' => $idOrigenIntercambio,
-                        ':observacion' => $observacion,
-                    ]);
+                    $stmtCreateLot->execute($fk
+                        ? [
+                            ':id_planta' => $idPlanta,
+                            ':id_ubicacion' => $idUbicacion,
+                            ':fecha' => $fecha,
+                            ':cantidad_ini' => $cantidad,
+                            ':cantidad_act' => $cantidad,
+                            ':id_estado' => $estadoVivo['id'],
+                            ':id_origen' => $origenAmp['id'],
+                            ':observacion' => $observacion,
+                        ]
+                        : [
+                            ':id_planta' => $idPlanta,
+                            ':id_ubicacion' => $idUbicacion,
+                            ':fecha' => $fecha,
+                            ':cantidad_ini' => $cantidad,
+                            ':cantidad_act' => $cantidad,
+                            ':estado' => $estadoVivo['nombre'],
+                            ':origen' => $origenAmp['nombre'],
+                            ':observacion' => $observacion,
+                        ]
+                    );
                     $idLote = (int)$this->db()->lastInsertId();
                 }
 

@@ -331,6 +331,7 @@ $userName = \SysInescolara\helpers\Auth::name();
                     <h1><i class="fas fa-chart-bar" style="margin-right:0.4rem;"></i> Reportes del Sistema</h1>
                     <p>Selecciona un módulo y un período para consultar.</p>
 
+                    <!--
                     <div class="time-filter-bar" id="timeFilterBar">
                         <span class="time-preset active" data-period="all">Todo</span>
                         <span class="time-preset" data-period="today">Hoy</span>
@@ -345,6 +346,7 @@ $userName = \SysInescolara\helpers\Auth::name();
                             <button id="timeCustomApply" class="time-custom-apply">Aplicar</button>
                         </span>
                     </div>
+                    -->
 
                     <div class="module-select">
                         <select id="reportModuleSelect">

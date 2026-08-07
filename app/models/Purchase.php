@@ -8,10 +8,33 @@ use SysInescolara\interfaces\DeletableInterface;
 use SysInescolara\traits\ValidationTrait;
 use PDO;
 use SysInescolara\models\AuditLog;
+use Throwable;
 
 class Purchase extends Database implements ReadableInterface, DeletableInterface
 {
     use ValidationTrait;
+
+    private array $schemaCache = [];
+
+    private function hasColumn(string $table, string $column): bool
+    {
+        $key = "$table.$column";
+        if (array_key_exists($key, $this->schemaCache)) {
+            return $this->schemaCache[$key];
+        }
+        try {
+            $stmt = $this->db()->prepare(
+                'SELECT COUNT(*) FROM information_schema.COLUMNS
+                 WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?'
+            );
+            $stmt->execute([$table, $column]);
+            return $this->schemaCache[$key] = (int) $stmt->fetchColumn() > 0;
+        } catch (Throwable $e) {
+            return $this->schemaCache[$key] = false;
+        }
+    }
+
+    private function fkEstado(): bool { return $this->hasColumn('lote', 'id_estado'); }
 
     protected array $validationRules = [
         'id_proveedor'       => ['type' => null,   'required' => true],
@@ -457,26 +480,52 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
                 $totalPlantas = (int)$g['cantidad'];
                 $costoUnitario = $totalPlantas > 0 ? round($g['costo_total'] / $totalPlantas, 2) : 0;
 
-                $idEstadoVivo = (int)$this->db()->query("SELECT id_estado FROM estado WHERE nombre = 'vivo' LIMIT 1")->fetchColumn();
-                $idOrigenCompra = (int)$this->db()->query("SELECT id_origen FROM origen WHERE nombre = 'Compra' LIMIT 1")->fetchColumn();
-                $stmt = $this->db()->prepare("
-                    INSERT INTO lote
+                $estadoVivo = 'Vivo';
+                $origenCompra = 'Compra';
+                $fk = $this->fkEstado();
+                if ($fk) {
+                    $idEstadoVivo = (int)$this->db()->query("SELECT id_estado FROM estado WHERE nombre = 'vivo' LIMIT 1")->fetchColumn();
+                    $idOrigenCompra = (int)$this->db()->query("SELECT id_origen FROM origen WHERE nombre = 'Compra' LIMIT 1")->fetchColumn();
+                } else {
+                    $idEstadoVivo = 0;
+                    $idOrigenCompra = 0;
+                }
+                $stmt = $this->db()->prepare($fk
+                    ? "INSERT INTO lote
                         (id_planta, id_ubicacion, fecha_siembra, cantidad_inicial, cantidad_actual,
                          id_estado, id_origen, costo_unitario, observacion)
-                    VALUES
+                       VALUES
                         (:id_planta, :id_ubicacion, CURDATE(), :cantidad_ini, :cantidad_act,
-                         :id_estado, :id_origen, :costo_unitario, :observacion)
-                ");
-                $stmt->execute([
-                    ':id_planta'       => $g['id_item'],
-                    ':id_ubicacion'    => $g['ubicacion'],
-                    ':cantidad_ini'    => $totalPlantas,
-                    ':cantidad_act'    => $totalPlantas,
-                    ':id_estado'       => $idEstadoVivo,
-                    ':id_origen'       => $idOrigenCompra,
-                    ':costo_unitario'  => $costoUnitario,
-                    ':observacion'     => 'Ingresado por compra #' . $idCompra,
-                ]);
+                         :id_estado, :id_origen, :costo_unitario, :observacion)"
+                    : "INSERT INTO lote
+                        (id_planta, id_ubicacion, fecha_siembra, cantidad_inicial, cantidad_actual,
+                         estado, origen, costo_unitario, observacion)
+                       VALUES
+                        (:id_planta, :id_ubicacion, CURDATE(), :cantidad_ini, :cantidad_act,
+                         :estado, :origen, :costo_unitario, :observacion)"
+                );
+                $stmt->execute($fk
+                    ? [
+                        ':id_planta'       => $g['id_item'],
+                        ':id_ubicacion'    => $g['ubicacion'],
+                        ':cantidad_ini'    => $totalPlantas,
+                        ':cantidad_act'    => $totalPlantas,
+                        ':id_estado'       => $idEstadoVivo,
+                        ':id_origen'       => $idOrigenCompra,
+                        ':costo_unitario'  => $costoUnitario,
+                        ':observacion'     => 'Ingresado por compra #' . $idCompra,
+                    ]
+                    : [
+                        ':id_planta'       => $g['id_item'],
+                        ':id_ubicacion'    => $g['ubicacion'],
+                        ':cantidad_ini'    => $totalPlantas,
+                        ':cantidad_act'    => $totalPlantas,
+                        ':estado'          => $estadoVivo,
+                        ':origen'          => $origenCompra,
+                        ':costo_unitario'  => $costoUnitario,
+                        ':observacion'     => 'Ingresado por compra #' . $idCompra,
+                    ]
+                );
                 $loteId = $this->db()->lastInsertId();
 
                 $stmt2 = $this->db()->prepare("UPDATE plantas SET cantidad_total = cantidad_total + :cantidad WHERE id_planta = :id_planta");
