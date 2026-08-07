@@ -23,6 +23,8 @@ class CalculoPrecio extends Database implements ReadableInterface, DeletableInte
     private ?string $fechaCalculo = null;
     private int $vigente = 0;
 
+    private array $schemaCache = [];
+
     protected array $validationRules = [
         'id_lote'              => ['type' => null,    'required' => true],
         'precio_planta_base'   => ['type' => 'precio','required' => true],
@@ -133,6 +135,47 @@ class CalculoPrecio extends Database implements ReadableInterface, DeletableInte
         ]);
     }
 
+    private function hasColumn(string $table, string $column): bool
+    {
+        $key = "$table.$column";
+        if (array_key_exists($key, $this->schemaCache)) {
+            return $this->schemaCache[$key];
+        }
+        try {
+            $stmt = $this->db()->prepare(
+                'SELECT COUNT(*) FROM information_schema.COLUMNS
+                 WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?'
+            );
+            $stmt->execute([$table, $column]);
+            return $this->schemaCache[$key] = (int) $stmt->fetchColumn() > 0;
+        } catch (Throwable $e) {
+            return $this->schemaCache[$key] = false;
+        }
+    }
+
+    private function fkBase(): bool { return $this->hasColumn('calculo_precio', 'precio_planta_base'); }
+
+    private function precioBaseColumn(): string
+    {
+        if ($this->fkBase()) return 'c.precio_planta_base';
+        return "ROUND((c.costo_mano_obra + c.costo_agua_lote) / NULLIF(c.cantidad_planta_base, 0), 2)";
+    }
+
+    private function oldColumns(): array
+    {
+        return [
+            'id_lote'               => $this->idLote,
+            'costo_mano_obra'       => 0.0,
+            'costo_total_insumo'    => $this->costoTotalInsumo,
+            'costo_agua_lote'       => $this->precioPlantaBase,
+            'porcentaje_ganancia'   => $this->porcentajeGanancia,
+            'cantidad_planta_base'  => 1,
+            'precio_final_sugerido' => $this->precioFinalSugerido,
+            'fecha_calculo'         => $this->fechaCalculo,
+            'vigente'               => $this->vigente,
+        ];
+    }
+
     public function save(): bool
     {
         $this->validate();
@@ -143,24 +186,48 @@ class CalculoPrecio extends Database implements ReadableInterface, DeletableInte
 
                 $this->desmarcarVigentes($this->idLote);
 
-                $sql = "INSERT INTO calculo_precio
-                        (id_lote, precio_planta_base, costo_total_insumo,
-                         porcentaje_ganancia, precio_final_sugerido,
-                         fecha_calculo, vigente)
-                        VALUES
-                        (:id_lote, :precio_planta_base, :costo_total_insumo,
-                         :porcentaje_ganancia, :precio_final_sugerido,
-                         :fecha_calculo, :vigente)";
+                if ($this->fkBase()) {
+                    $sql = "INSERT INTO calculo_precio
+                            (id_lote, precio_planta_base, costo_total_insumo,
+                             porcentaje_ganancia, precio_final_sugerido,
+                             fecha_calculo, vigente)
+                            VALUES
+                            (:id_lote, :precio_planta_base, :costo_total_insumo,
+                             :porcentaje_ganancia, :precio_final_sugerido,
+                             :fecha_calculo, :vigente)";
+                    $params = [
+                        ':id_lote'              => $this->idLote,
+                        ':precio_planta_base'   => $this->precioPlantaBase,
+                        ':costo_total_insumo'   => $this->costoTotalInsumo,
+                        ':porcentaje_ganancia'  => $this->porcentajeGanancia,
+                        ':precio_final_sugerido'=> $this->precioFinalSugerido,
+                        ':fecha_calculo'        => $this->fechaCalculo,
+                        ':vigente'              => $this->vigente,
+                    ];
+                } else {
+                    $old = $this->oldColumns();
+                    $sql = "INSERT INTO calculo_precio
+                            (id_lote, costo_mano_obra, costo_total_insumo, costo_agua_lote,
+                             porcentaje_ganancia, cantidad_planta_base, precio_final_sugerido,
+                             fecha_calculo, vigente)
+                            VALUES
+                            (:id_lote, :costo_mano_obra, :costo_total_insumo, :costo_agua_lote,
+                             :porcentaje_ganancia, :cantidad_planta_base, :precio_final_sugerido,
+                             :fecha_calculo, :vigente)";
+                    $params = [
+                        ':id_lote'               => $old['id_lote'],
+                        ':costo_mano_obra'       => $old['costo_mano_obra'],
+                        ':costo_total_insumo'    => $old['costo_total_insumo'],
+                        ':costo_agua_lote'       => $old['costo_agua_lote'],
+                        ':porcentaje_ganancia'   => $old['porcentaje_ganancia'],
+                        ':cantidad_planta_base'  => $old['cantidad_planta_base'],
+                        ':precio_final_sugerido' => $old['precio_final_sugerido'],
+                        ':fecha_calculo'         => $old['fecha_calculo'],
+                        ':vigente'               => $old['vigente'],
+                    ];
+                }
                 $stmt = $this->db()->prepare($sql);
-                $success = $stmt->execute([
-                    ':id_lote'              => $this->idLote,
-                    ':precio_planta_base'   => $this->precioPlantaBase,
-                    ':costo_total_insumo'   => $this->costoTotalInsumo,
-                    ':porcentaje_ganancia'  => $this->porcentajeGanancia,
-                    ':precio_final_sugerido'=> $this->precioFinalSugerido,
-                    ':fecha_calculo'        => $this->fechaCalculo,
-                    ':vigente'              => $this->vigente,
-                ]);
+                $success = $stmt->execute($params);
 
                 if ($success) {
                     $this->id = (int) $this->db()->lastInsertId();
@@ -184,24 +251,50 @@ class CalculoPrecio extends Database implements ReadableInterface, DeletableInte
                 }
 
                 $oldData = $this->getById($this->id);
-                $sql = "UPDATE calculo_precio SET id_lote = :id_lote,
-                        precio_planta_base = :precio_planta_base,
-                        costo_total_insumo = :costo_total_insumo,
-                        porcentaje_ganancia = :porcentaje_ganancia,
-                        precio_final_sugerido = :precio_final_sugerido,
-                        fecha_calculo = :fecha_calculo, vigente = :vigente
-                        WHERE id_calculo = :id";
+                if ($this->fkBase()) {
+                    $sql = "UPDATE calculo_precio SET id_lote = :id_lote,
+                            precio_planta_base = :precio_planta_base,
+                            costo_total_insumo = :costo_total_insumo,
+                            porcentaje_ganancia = :porcentaje_ganancia,
+                            precio_final_sugerido = :precio_final_sugerido,
+                            fecha_calculo = :fecha_calculo, vigente = :vigente
+                            WHERE id_calculo = :id";
+                    $params = [
+                        ':id'                   => $this->id,
+                        ':id_lote'              => $this->idLote,
+                        ':precio_planta_base'   => $this->precioPlantaBase,
+                        ':costo_total_insumo'   => $this->costoTotalInsumo,
+                        ':porcentaje_ganancia'  => $this->porcentajeGanancia,
+                        ':precio_final_sugerido'=> $this->precioFinalSugerido,
+                        ':fecha_calculo'        => $this->fechaCalculo,
+                        ':vigente'              => $this->vigente,
+                    ];
+                } else {
+                    $old = $this->oldColumns();
+                    $sql = "UPDATE calculo_precio SET id_lote = :id_lote,
+                            costo_mano_obra = :costo_mano_obra,
+                            costo_total_insumo = :costo_total_insumo,
+                            costo_agua_lote = :costo_agua_lote,
+                            porcentaje_ganancia = :porcentaje_ganancia,
+                            cantidad_planta_base = :cantidad_planta_base,
+                            precio_final_sugerido = :precio_final_sugerido,
+                            fecha_calculo = :fecha_calculo, vigente = :vigente
+                            WHERE id_calculo = :id";
+                    $params = [
+                        ':id'                   => $this->id,
+                        ':id_lote'              => $old['id_lote'],
+                        ':costo_mano_obra'      => $old['costo_mano_obra'],
+                        ':costo_total_insumo'   => $old['costo_total_insumo'],
+                        ':costo_agua_lote'      => $old['costo_agua_lote'],
+                        ':porcentaje_ganancia'  => $old['porcentaje_ganancia'],
+                        ':cantidad_planta_base' => $old['cantidad_planta_base'],
+                        ':precio_final_sugerido'=> $old['precio_final_sugerido'],
+                        ':fecha_calculo'        => $old['fecha_calculo'],
+                        ':vigente'              => $old['vigente'],
+                    ];
+                }
                 $stmt = $this->db()->prepare($sql);
-                $success = $stmt->execute([
-                    ':id'                   => $this->id,
-                    ':id_lote'              => $this->idLote,
-                    ':precio_planta_base'   => $this->precioPlantaBase,
-                    ':costo_total_insumo'   => $this->costoTotalInsumo,
-                    ':porcentaje_ganancia'  => $this->porcentajeGanancia,
-                    ':precio_final_sugerido'=> $this->precioFinalSugerido,
-                    ':fecha_calculo'        => $this->fechaCalculo,
-                    ':vigente'              => $this->vigente,
-                ]);
+                $success = $stmt->execute($params);
                 if ($success) {
                     AuditLog::record('UPDATE', 'calculo_precio', $this->id, $oldData, [
                         'id_lote'              => $this->idLote,
@@ -237,7 +330,7 @@ class CalculoPrecio extends Database implements ReadableInterface, DeletableInte
     {
         $instance = new static();
         $sql = "SELECT
-                    c.id_calculo AS id, c.id_lote, c.precio_planta_base,
+                    c.id_calculo AS id, c.id_lote, " . $instance->precioBaseColumn() . " AS precio_planta_base,
                     c.costo_total_insumo, c.porcentaje_ganancia,
                     c.precio_final_sugerido, c.fecha_calculo, c.vigente,
                     l.cantidad_actual,
@@ -265,7 +358,8 @@ class CalculoPrecio extends Database implements ReadableInterface, DeletableInte
     {
         try {
             $stmt = $this->db()->prepare("
-                SELECT c.*, l.cantidad_actual, p.nombre_comun AS planta_nombre, p.id_planta
+                SELECT c.*, " . $this->precioBaseColumn() . " AS precio_planta_base,
+                       l.cantidad_actual, p.nombre_comun AS planta_nombre, p.id_planta
                 FROM calculo_precio c
                 LEFT JOIN lote l ON c.id_lote = l.id_lote
                 LEFT JOIN plantas p ON l.id_planta = p.id_planta
@@ -429,7 +523,7 @@ class CalculoPrecio extends Database implements ReadableInterface, DeletableInte
     {
         try {
             $stmt = $this->db()->prepare("
-                SELECT c.*, p.nombre_comun AS planta_nombre
+                SELECT c.*, " . $this->precioBaseColumn() . " AS precio_planta_base, p.nombre_comun AS planta_nombre
                 FROM calculo_precio c
                 LEFT JOIN lote l ON c.id_lote = l.id_lote
                 LEFT JOIN plantas p ON l.id_planta = p.id_planta

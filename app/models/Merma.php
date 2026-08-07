@@ -25,6 +25,8 @@ class Merma extends Database implements ReadableInterface, DeletableInterface
     private ?int $idUsuarioRegistra = null;
     private int $activo = 1;
 
+    private array $schemaCache = [];
+
     protected array $validationRules = [
         'id_trazabilidad' => ['type' => null,       'required' => true],
         'cantidad'        => ['type' => 'cantidad', 'required' => true],
@@ -107,6 +109,26 @@ class Merma extends Database implements ReadableInterface, DeletableInterface
         ]);
     }
 
+    private function hasColumn(string $table, string $column): bool
+    {
+        $key = "$table.$column";
+        if (array_key_exists($key, $this->schemaCache)) {
+            return $this->schemaCache[$key];
+        }
+        try {
+            $stmt = $this->db()->prepare(
+                'SELECT COUNT(*) FROM information_schema.COLUMNS
+                 WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?'
+            );
+            $stmt->execute([$table, $column]);
+            return $this->schemaCache[$key] = (int) $stmt->fetchColumn() > 0;
+        } catch (Throwable $e) {
+            return $this->schemaCache[$key] = false;
+        }
+    }
+
+    private function fkEstado(): bool { return $this->hasColumn('trazabilidad', 'id_estado'); }
+
     public function save(): bool
     {
         $this->validate();
@@ -164,30 +186,56 @@ class Merma extends Database implements ReadableInterface, DeletableInterface
     {
         $instance = new static();
         try {
-            $sql = "SELECT
-                        m.id_merma AS id,
-                        m.id_merma,
-                        m.id_trazabilidad,
-                        m.id_lote,
-                        m.cantidad,
-                        m.motivo,
-                        m.descripcion,
-                        m.fecha_merma,
-                        m.impacto_economico,
-                        m.id_usuario_registra,
-                        m.activo,
-                        m.created_at,
-                        COALESCE(p.nombre_comun, CONCAT('Planta #', CAST(l.id_planta AS CHAR))) AS planta_nombre,
-                        e.nombre AS estado_salud,
-                        t.fecha_registro AS fecha_cuarentena,
-                        NULL AS usuario_registra
-                    FROM mermas_historico m
-                    LEFT JOIN trazabilidad t ON m.id_trazabilidad = t.id_trazabilidad
-                    LEFT JOIN lote l ON m.id_lote = l.id_lote
-                    LEFT JOIN plantas p ON l.id_planta = p.id_planta
-                    LEFT JOIN estado e ON t.id_estado = e.id_estado
-                    WHERE m.activo = 1
-                    ORDER BY m.fecha_merma DESC, m.id_merma DESC";
+            if ($instance->fkEstado()) {
+                $sql = "SELECT
+                            m.id_merma AS id,
+                            m.id_merma,
+                            m.id_trazabilidad,
+                            m.id_lote,
+                            m.cantidad,
+                            m.motivo,
+                            m.descripcion,
+                            m.fecha_merma,
+                            m.impacto_economico,
+                            m.id_usuario_registra,
+                            m.activo,
+                            m.created_at,
+                            COALESCE(p.nombre_comun, CONCAT('Planta #', CAST(l.id_planta AS CHAR))) AS planta_nombre,
+                            e.nombre AS estado_salud,
+                            t.fecha_registro AS fecha_cuarentena,
+                            NULL AS usuario_registra
+                        FROM mermas_historico m
+                        LEFT JOIN trazabilidad t ON m.id_trazabilidad = t.id_trazabilidad
+                        LEFT JOIN lote l ON m.id_lote = l.id_lote
+                        LEFT JOIN plantas p ON l.id_planta = p.id_planta
+                        LEFT JOIN estado e ON t.id_estado = e.id_estado
+                        WHERE m.activo = 1
+                        ORDER BY m.fecha_merma DESC, m.id_merma DESC";
+            } else {
+                $sql = "SELECT
+                            m.id_merma AS id,
+                            m.id_merma,
+                            m.id_trazabilidad,
+                            m.id_lote,
+                            m.cantidad,
+                            m.motivo,
+                            m.descripcion,
+                            m.fecha_merma,
+                            m.impacto_economico,
+                            m.id_usuario_registra,
+                            m.activo,
+                            m.created_at,
+                            COALESCE(p.nombre_comun, CONCAT('Planta #', CAST(l.id_planta AS CHAR))) AS planta_nombre,
+                            t.estado_salud,
+                            t.fecha_registro AS fecha_cuarentena,
+                            NULL AS usuario_registra
+                        FROM mermas_historico m
+                        LEFT JOIN trazabilidad t ON m.id_trazabilidad = t.id_trazabilidad
+                        LEFT JOIN lote l ON m.id_lote = l.id_lote
+                        LEFT JOIN plantas p ON l.id_planta = p.id_planta
+                        WHERE m.activo = 1
+                        ORDER BY m.fecha_merma DESC, m.id_merma DESC";
+            }
             $stmt = $instance->db()->query($sql);
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
         } catch (Throwable $e) {
@@ -204,18 +252,32 @@ class Merma extends Database implements ReadableInterface, DeletableInterface
     public function getById(int $id): ?array
     {
         try {
-            $stmt = $this->db()->prepare("
-                SELECT m.*,
-                       COALESCE(p.nombre_comun, CONCAT('Planta #', CAST(l.id_planta AS CHAR))) AS planta_nombre,
-                       e.nombre AS estado_salud,
-                       NULL AS usuario_registra
-                FROM mermas_historico m
-                LEFT JOIN trazabilidad t ON m.id_trazabilidad = t.id_trazabilidad
-                LEFT JOIN lote l ON m.id_lote = l.id_lote
-                LEFT JOIN plantas p ON l.id_planta = p.id_planta
-                LEFT JOIN estado e ON t.id_estado = e.id_estado
-                WHERE m.id_merma = :id
-            ");
+            if ($this->fkEstado()) {
+                $stmt = $this->db()->prepare("
+                    SELECT m.*,
+                           COALESCE(p.nombre_comun, CONCAT('Planta #', CAST(l.id_planta AS CHAR))) AS planta_nombre,
+                           e.nombre AS estado_salud,
+                           NULL AS usuario_registra
+                    FROM mermas_historico m
+                    LEFT JOIN trazabilidad t ON m.id_trazabilidad = t.id_trazabilidad
+                    LEFT JOIN lote l ON m.id_lote = l.id_lote
+                    LEFT JOIN plantas p ON l.id_planta = p.id_planta
+                    LEFT JOIN estado e ON t.id_estado = e.id_estado
+                    WHERE m.id_merma = :id
+                ");
+            } else {
+                $stmt = $this->db()->prepare("
+                    SELECT m.*,
+                           COALESCE(p.nombre_comun, CONCAT('Planta #', CAST(l.id_planta AS CHAR))) AS planta_nombre,
+                           t.estado_salud,
+                           NULL AS usuario_registra
+                    FROM mermas_historico m
+                    LEFT JOIN trazabilidad t ON m.id_trazabilidad = t.id_trazabilidad
+                    LEFT JOIN lote l ON m.id_lote = l.id_lote
+                    LEFT JOIN plantas p ON l.id_planta = p.id_planta
+                    WHERE m.id_merma = :id
+                ");
+            }
             $stmt->execute([':id' => $id]);
             return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
         } catch (Throwable $e) {
@@ -279,25 +341,47 @@ class Merma extends Database implements ReadableInterface, DeletableInterface
     public function getAvailableQuarantine(): array
     {
         try {
-            $sql = "SELECT
-                        t.id_trazabilidad AS id,
-                        t.id_lote,
-                        t.cantidad,
-                        e.nombre AS estado_salud,
-                        t.fecha_registro,
-                        COALESCE(p.nombre_comun, CONCAT('Planta #', CAST(l.id_planta AS CHAR))) AS planta_nombre,
-                        l.cantidad_actual AS lote_stock,
-                        u.nombre_ubicacion,
-                        c.precio_final_sugerido AS precio_unitario
-                    FROM trazabilidad t
-                    LEFT JOIN lote l ON t.id_lote = l.id_lote AND l.activo = 1
-                    LEFT JOIN plantas p ON l.id_planta = p.id_planta AND p.activo = 1
-                    LEFT JOIN ubicacion u ON l.id_ubicacion = u.id_ubicacion AND u.activo = 1
-                    LEFT JOIN calculo_precio c ON l.id_lote = c.id_lote
-                    LEFT JOIN estado e ON t.id_estado = e.id_estado
-                    WHERE t.activo = 1 AND t.cantidad > 0
-                      AND t.id_estado IN (6, 7)
-                    ORDER BY t.fecha_registro DESC, p.nombre_comun ASC";
+            if ($this->fkEstado()) {
+                $sql = "SELECT
+                            t.id_trazabilidad AS id,
+                            t.id_lote,
+                            t.cantidad,
+                            e.nombre AS estado_salud,
+                            t.fecha_registro,
+                            COALESCE(p.nombre_comun, CONCAT('Planta #', CAST(l.id_planta AS CHAR))) AS planta_nombre,
+                            l.cantidad_actual AS lote_stock,
+                            u.nombre_ubicacion,
+                            c.precio_final_sugerido AS precio_unitario
+                        FROM trazabilidad t
+                        LEFT JOIN lote l ON t.id_lote = l.id_lote AND l.activo = 1
+                        LEFT JOIN plantas p ON l.id_planta = p.id_planta AND p.activo = 1
+                        LEFT JOIN ubicacion u ON l.id_ubicacion = u.id_ubicacion AND u.activo = 1
+                        LEFT JOIN calculo_precio c ON l.id_lote = c.id_lote
+                        LEFT JOIN estado e ON t.id_estado = e.id_estado
+                        WHERE t.activo = 1 AND t.cantidad > 0
+                          AND t.id_estado IN (6, 7)
+                        ORDER BY t.fecha_registro DESC, p.nombre_comun ASC";
+            } else {
+                $sql = "SELECT
+                            t.id_trazabilidad AS id,
+                            t.id_lote,
+                            t.cantidad,
+                            t.estado_salud,
+                            t.fecha_registro,
+                            COALESCE(p.nombre_comun, CONCAT('Planta #', CAST(l.id_planta AS CHAR))) AS planta_nombre,
+                            l.cantidad_actual AS lote_stock,
+                            u.nombre_ubicacion,
+                            c.precio_final_sugerido AS precio_unitario
+                        FROM trazabilidad t
+                        LEFT JOIN lote l ON t.id_lote = l.id_lote AND l.activo = 1
+                        LEFT JOIN plantas p ON l.id_planta = p.id_planta AND p.activo = 1
+                        LEFT JOIN ubicacion u ON l.id_ubicacion = u.id_ubicacion AND u.activo = 1
+                        LEFT JOIN calculo_precio c ON l.id_lote = c.id_lote
+                        WHERE t.activo = 1 AND t.cantidad > 0
+                          AND t.estado_salud IS NOT NULL AND t.estado_salud != ''
+                          AND t.estado_salud NOT IN ('Vivo', 'Activo', 'Sano')
+                        ORDER BY t.fecha_registro DESC, p.nombre_comun ASC";
+            }
             $stmt = $this->db()->query($sql);
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
         } catch (Throwable $e) {
@@ -363,7 +447,9 @@ class Merma extends Database implements ReadableInterface, DeletableInterface
         $stmt = $this->db()->prepare("UPDATE trazabilidad SET cantidad = GREATEST(0, cantidad - :cantidad) WHERE id_trazabilidad = :id AND cantidad >= :check");
         $stmt->execute([':cantidad' => $cantidad, ':id' => $idTrazabilidad, ':check' => $cantidad]);
 
-        $stmt = $this->db()->prepare("UPDATE trazabilidad SET id_estado = 7 WHERE id_trazabilidad = :id AND cantidad = 0");
-        $stmt->execute([':id' => $idTrazabilidad]);
+        if ($this->fkEstado()) {
+            $stmt = $this->db()->prepare("UPDATE trazabilidad SET id_estado = 7 WHERE id_trazabilidad = :id AND cantidad = 0");
+            $stmt->execute([':id' => $idTrazabilidad]);
+        }
     }
 }
