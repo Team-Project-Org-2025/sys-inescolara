@@ -125,6 +125,7 @@ class Usuario extends Database
                 ['seed_collection', 'Gestión de recolección de semillas'],
                 ['asistente', 'Asistente IA'],
                 ['reports', 'Reportes y estadísticas'],
+                ['ayuda', 'Centro de ayuda'],
                 ['usuarios', 'Administración de usuarios'],
                 ['roles', 'Administración de roles'],
                 ['auditlog', 'Bitácora de auditoría'],
