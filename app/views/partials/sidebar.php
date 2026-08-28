@@ -393,6 +393,14 @@ $showSistema = Auth::hasModuleAccess('usuarios', 'ver')
     </nav>
 
     <div class="sidebar-footer">
+        <a href="<?= BASE_URL ?>dashboard/ayuda" class="help-link <?= $current === 'ayuda' ? 'active' : '' ?>">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+            <span>Ayuda</span>
+        </a>
         <a href="<?= BASE_URL ?>login/logout" class="logout-link">
             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>

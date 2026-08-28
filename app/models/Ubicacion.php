@@ -20,6 +20,8 @@ class Ubicacion extends Database implements ReadableInterface, DeletableInterfac
     private ?string $tipo = null;
     private int $activo = 1;
 
+    private array $schemaCache = [];
+
     protected array $validationRules = [
         'nombre_ubicacion' => ['type' => 'nombre',   'required' => true],
         'descripcion'      => ['type' => null,        'required' => false],
@@ -102,13 +104,37 @@ class Ubicacion extends Database implements ReadableInterface, DeletableInterfac
         ]);
     }
 
+    private function hasColumn(string $table, string $column): bool
+    {
+        $key = "$table.$column";
+        if (array_key_exists($key, $this->schemaCache)) {
+            return $this->schemaCache[$key];
+        }
+        try {
+            $stmt = $this->db()->prepare(
+                'SELECT COUNT(*) FROM information_schema.COLUMNS
+                 WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?'
+            );
+            $stmt->execute([$table, $column]);
+            return $this->schemaCache[$key] = (int) $stmt->fetchColumn() > 0;
+        } catch (Throwable $e) {
+            return $this->schemaCache[$key] = false;
+        }
+    }
+
+    private function tipoColumn(): string
+    {
+        return $this->hasColumn('ubicacion', 'tipo') ? 'tipo' : 'zona';
+    }
+
     public function save(): bool
     {
         $this->validate();
 
         try {
+            $tipoCol = $this->tipoColumn();
             if ($this->id === null) {
-                $sql = "INSERT INTO ubicacion (nombre_ubicacion, descripcion, tipo, activo) 
+                $sql = "INSERT INTO ubicacion (nombre_ubicacion, descripcion, $tipoCol, activo) 
                         VALUES (:nombre_ubicacion, :descripcion, :tipo, :activo)";
                 $stmt = $this->db()->prepare($sql);
                 $success = $stmt->execute([
@@ -130,7 +156,7 @@ class Ubicacion extends Database implements ReadableInterface, DeletableInterfac
             } else {
                 $oldData = $this->getById($this->id);
                 $sql = "UPDATE ubicacion SET nombre_ubicacion = :nombre_ubicacion, 
-                        descripcion = :descripcion, tipo = :tipo, activo = :activo
+                        descripcion = :descripcion, $tipoCol = :tipo, activo = :activo
                         WHERE id_ubicacion = :id";
                 $stmt = $this->db()->prepare($sql);
                 $success = $stmt->execute([
@@ -170,7 +196,8 @@ class Ubicacion extends Database implements ReadableInterface, DeletableInterfac
     public static function all(): array
     {
         $instance = new static();
-        $sql = "SELECT id_ubicacion AS id, nombre_ubicacion, descripcion, tipo, activo 
+        $tipoCol = $instance->tipoColumn();
+        $sql = "SELECT id_ubicacion AS id, nombre_ubicacion, descripcion, $tipoCol AS tipo, activo 
                 FROM ubicacion WHERE activo = 1 ORDER BY nombre_ubicacion ASC";
         $stmt = $instance->db()->query($sql);
         return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
@@ -189,7 +216,8 @@ class Ubicacion extends Database implements ReadableInterface, DeletableInterfac
     public function getById(int $id): ?array
     {
         try {
-            $stmt = $this->db()->prepare("SELECT id_ubicacion AS id, nombre_ubicacion, descripcion, tipo 
+            $tipoCol = $this->tipoColumn();
+            $stmt = $this->db()->prepare("SELECT id_ubicacion AS id, nombre_ubicacion, descripcion, $tipoCol AS tipo 
                                           FROM ubicacion WHERE id_ubicacion = :id");
             $stmt->execute([':id' => $id]);
             return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
@@ -207,10 +235,11 @@ class Ubicacion extends Database implements ReadableInterface, DeletableInterfac
     public function getByTipo(string $tipo): array
     {
         try {
+            $tipoCol = $this->tipoColumn();
             $stmt = $this->db()->prepare("
-                SELECT id_ubicacion AS id, nombre_ubicacion, descripcion, tipo
+                SELECT id_ubicacion AS id, nombre_ubicacion, descripcion, $tipoCol AS tipo
                 FROM ubicacion
-                WHERE activo = 1 AND tipo = :tipo
+                WHERE activo = 1 AND $tipoCol = :tipo
                 ORDER BY nombre_ubicacion ASC
             ");
             $stmt->execute([':tipo' => $tipo]);

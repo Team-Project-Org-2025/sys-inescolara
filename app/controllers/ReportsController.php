@@ -135,9 +135,10 @@ function reports_handleGeneratePdf(): void
 
     $filterLabels = [];
     foreach ($filters as $k => $v) {
-        if ($v !== '' && $v !== null && !str_starts_with($k, '_')) {
-            $filterLabels[] = htmlspecialchars($k) . ': ' . htmlspecialchars((string)$v);
+        if ($v === '' || $v === null || str_starts_with($k, '_') || str_ends_with($k, '_op')) {
+            continue;
         }
+        $filterLabels[] = htmlspecialchars($k) . ': ' . htmlspecialchars((string)$v);
     }
 
     $fechaGeneracion = date('d/m/Y h:i A');
@@ -189,14 +190,16 @@ function extractReportFilters(array $params): array
 
     // Module-specific date field mapping for generic time filter
     $dateFieldMap = [
-        'lotes'         => 'fecha_siembra',
-        'tareas'        => 'fecha_asignacion',
-        'recoleccion'   => 'fecha_asignacion',
-        'ventas'        => 'fecha_venta',
-        'cuentas_cobrar'=> 'fecha_venta',
-        'compras'       => 'fecha_compra',
-        'ornatos'       => 'fecha_venta',
-        'mermas'        => 'fecha_registro',
+        'lotes'          => 'fecha_siembra',
+        'tareas'         => 'fecha_asignacion',
+        'recoleccion'    => 'fecha_asignacion',
+        'ventas'         => 'fecha_venta',
+        'cuentas_cobrar' => 'fecha_venta',
+        'compras'        => 'fecha_compra',
+        'cuentas_pagar'  => 'fecha_compra',
+        'precios'        => 'fecha_calculo',
+        'herramientas'   => 'fecha_adquisicion',
+        'trabajadores'   => 'fecha_asignacion',
     ];
 
     $field = $dateFieldMap[$module] ?? 'fecha_venta';

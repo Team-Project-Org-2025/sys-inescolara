@@ -201,6 +201,109 @@ $userName = \SysInescolara\helpers\Auth::name();
   border-collapse: separate;
   border-spacing: 0;
 }
+
+.report-filters-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+}
+.report-filters-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.filter-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: var(--bg-primary);
+  border: 1px solid var(--color-gray-200);
+  border-radius: 0.5rem;
+  padding: 0.4rem 0.5rem 0.4rem 0.6rem;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+.filter-chip.has-value {
+  border-color: rgba(46, 125, 50, 0.45);
+  background: rgba(46, 125, 50, 0.04);
+}
+.filter-chip-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+.filter-chip-control {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.filter-chip-control select,
+.filter-chip-control input {
+  font-size: 0.75rem;
+  padding: 0.2rem 0.4rem;
+  border-radius: 0.4rem;
+  border: 1px solid var(--color-gray-200);
+  color: var(--text-secondary);
+  background: #fff;
+}
+.filter-chip-control input[type="date"],
+.filter-chip-control input[type="text"] { width: 120px; }
+.filter-chip-control input[type="number"] { width: 90px; }
+.filter-chip-control .op-select { width: auto; min-width: 52px; }
+.filter-chip-remove {
+  border: none;
+  background: rgba(220, 38, 38, 0.08);
+  color: #dc2626;
+  width: 20px;
+  height: 20px;
+  line-height: 1;
+  border-radius: 50%;
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+.filter-chip-remove:hover {
+  background: rgba(220, 38, 38, 0.2);
+}
+.report-add-filter {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.report-add-filter select {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.4rem;
+  border: 1px dashed var(--color-gray-300);
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  min-width: 190px;
+}
+.report-filter-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.report-filter-actions .btn {
+  font-size: 0.72rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 0.4rem;
+}
+.report-filters-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
 @media (max-width: 768px) {
   .welcome-banner { padding: var(--space-3); }
   #summaryBar { flex-wrap: wrap; }
@@ -228,6 +331,7 @@ $userName = \SysInescolara\helpers\Auth::name();
                     <h1><i class="fas fa-chart-bar" style="margin-right:0.4rem;"></i> Reportes del Sistema</h1>
                     <p>Selecciona un módulo y un período para consultar.</p>
 
+                    <!--
                     <div class="time-filter-bar" id="timeFilterBar">
                         <span class="time-preset active" data-period="all">Todo</span>
                         <span class="time-preset" data-period="today">Hoy</span>
@@ -242,6 +346,7 @@ $userName = \SysInescolara\helpers\Auth::name();
                             <button id="timeCustomApply" class="time-custom-apply">Aplicar</button>
                         </span>
                     </div>
+                    -->
 
                     <div class="module-select">
                         <select id="reportModuleSelect">
@@ -267,7 +372,21 @@ $userName = \SysInescolara\helpers\Auth::name();
                     </div>
                 </div>
                 <div class="dashboard-card-body" style="padding:var(--space-3) var(--space-4);">
-                    <div class="d-none" id="filtersBar"></div>
+                    <div class="report-filters-wrap d-none" id="filtersWrap">
+                        <div class="report-filters-bar" id="filtersBar"></div>
+                        <div class="report-filters-footer">
+                            <div class="report-add-filter">
+                                <select id="addFilterSelect" title="Agregar filtro">
+                                    <option value="">+ Agregar filtro</option>
+                                </select>
+                            </div>
+                            <div class="report-filter-actions">
+                                <button id="btnClearFilters" class="btn btn-sm" title="Limpiar filtros">
+                                    <i class="fas fa-broom" style="margin-right:0.25rem;"></i>Limpiar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                     <div id="summaryBar" class="d-none">
                         <span class="summary-count" id="summaryCount">0 registros</span>
                         <span class="summary-ts" id="summaryTimestamp"></span>
@@ -306,6 +425,6 @@ $userName = \SysInescolara\helpers\Auth::name();
 
     <script src="<?= BASE_URL ?>public/assets/js/dashboard/notifications.js"></script>
     <?= $scripts_links ?>
-    <script type="module" src="<?= BASE_URL ?>public/assets/js/dashboard/reports.js"></script>
+    <script type="module" src="<?= BASE_URL ?>public/assets/js/dashboard/reports.js?v=20260803"></script>
 </body>
 </html>

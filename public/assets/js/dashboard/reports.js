@@ -14,8 +14,16 @@ let currentModule = '';
 let currentChartData = null;
 let currentXhr = null;
 let currentFilterModule = '';
+let filterDefs = [];
+let activeFields = [];
+let filterDebounce = null;
 
-const currencyFields = ['total', 'subtotal', 'iva', 'costo_unitario_actual', 'costo_unitario', 'monto_total', 'precio_unitario', 'costo_mano_obra', 'costo_total_insumo', 'precio_final_sugerido', 'saldo_pendiente', 'compra_total', 'total_pagado'];
+const currencyFields = [
+  'total', 'subtotal', 'iva', 'costo_unitario_actual', 'costo_unitario', 'costo_agua_lote',
+  'precio_planta_base', 'monto_total', 'precio_unitario', 'costo_mano_obra', 'costo_total_insumo',
+  'precio_final_sugerido', 'saldo_pendiente', 'compra_total', 'total_pagado', 'total_compras',
+  'total_ventas', 'impacto_economico', 'monto', 'ganancia',
+];
 
 function pad(n) { return String(n).padStart(2, '0'); }
 
@@ -37,7 +45,11 @@ function getTimeRange(period) {
 }
 
 function isCurrency(key) {
-  return currencyFields.some(f => key === f || key.startsWith(f) || key.endsWith(f));
+  return currencyFields.includes(key);
+}
+
+function isCount(key) {
+  return /^(total_plantas|total_lotes|total_inicial|total_detalles|total_insumos|numero_|items|stock_|cantidad|tareas_|ganancia_)/.test(key);
 }
 
 function fmtCurrency(val) {
@@ -57,7 +69,7 @@ function fmtDate(val) {
 function getRenderer(key) {
   if (isCurrency(key)) return v => fmtCurrency(v);
   if (/^fecha_|fecha/.test(key)) return v => fmtDate(v);
-  if (/stock|cantidad/.test(key)) return v => {
+  if (isCount(key)) return v => {
     const n = parseFloat(v);
     if (isNaN(n)) return v ?? '-';
     return `<span class="badge ${n <= 0 ? 'bg-danger' : n < 10 ? 'bg-warning text-dark' : 'bg-success'}">${n}</span>`;
@@ -200,8 +212,11 @@ function showError(msg) {
 
 function resetUI() {
   destroyTable(); destroyChart(); abortRequest();
+  clearTimeout(filterDebounce);
+  filterDefs = []; activeFields = [];
   $('#chartCard, #reportActions, #summaryBar').addClass('d-none');
-  $('#filtersBar').addClass('d-none').empty();
+  $('#filtersWrap').addClass('d-none');
+  $('#filtersBar').empty();
   $('#reportsTable').addClass('d-none');
   $('#reportPlaceholder').removeClass('d-none').html(`
     <i class="fas fa-chart-bar mb-2 d-block" style="font-size:2.5rem;color:var(--text-muted);opacity:0.3;"></i>
@@ -227,6 +242,13 @@ function collectFilters() {
       const d = $(`#filter_${field}_desde`).val(), h = $(`#filter_${field}_hasta`).val();
       if (d) f[`${field}_desde`] = d;
       if (h) f[`${field}_hasta`] = h;
+    } else if (type === 'number') {
+      const v = $el.val();
+      if (v !== '' && v != null) {
+        f[field] = v;
+        const op = $el.closest('.filter-chip').find('.report-filter-op').val();
+        if (op && op !== '>=') f[`${field}_op`] = op;
+      }
     } else {
       const v = $el.val();
       if (v !== '' && v != null) f[field] = v;
@@ -267,6 +289,67 @@ function loadModules() {
   });
 }
 
+const OP_LABELS = { '>=': '≥', '<=': '≤', '>': '>', '<': '<', '=': '=', '!=': '≠' };
+
+function escapeAttr(v) {
+  return Helpers.escapeHtml(String(v ?? ''));
+}
+
+function chipHtml(f) {
+  let control = '';
+  if (f.type === 'select') {
+    control = `<select class="report-filter" data-field="${escapeAttr(f.field)}" data-type="select">`;
+    control += '<option value="">Todos</option>';
+    (f.options || []).forEach(o => { control += `<option value="${escapeAttr(o.value)}">${escapeAttr(o.label)}</option>`; });
+    control += '</select>';
+  } else if (f.type === 'date-range') {
+    control = `<input type="date" class="report-filter" id="filter_${escapeAttr(f.field)}_desde" data-field="${escapeAttr(f.field)}" data-type="date-range" title="Desde">
+      <span class="text-muted" style="font-size:0.7rem;">→</span>
+      <input type="date" class="report-filter" id="filter_${escapeAttr(f.field)}_hasta" data-field="${escapeAttr(f.field)}" data-type="date-range" title="Hasta">`;
+  } else if (f.type === 'number') {
+    control = '<select class="report-filter-op">';
+    Object.entries(OP_LABELS).forEach(([op, l]) => { control += `<option value="${op}" ${op === '>=' ? 'selected' : ''}>${l}</option>`; });
+    control += '</select>';
+    control += `<input type="number" class="report-filter" data-field="${escapeAttr(f.field)}" data-type="number" step="any" placeholder="—">`;
+  } else {
+    control = `<input type="text" class="report-filter" data-field="${escapeAttr(f.field)}" data-type="text" placeholder="Buscar...">`;
+  }
+  return `<div class="filter-chip" data-field="${escapeAttr(f.field)}">
+    <span class="filter-chip-label">${escapeAttr(f.label)}</span>
+    <div class="filter-chip-control">${control}</div>
+    <button type="button" class="filter-chip-remove" title="Quitar filtro">&times;</button>
+  </div>`;
+}
+
+function updateAddFilterOptions() {
+  const $sel = $('#addFilterSelect');
+  const current = $sel.val();
+  let html = '<option value="">+ Agregar filtro</option>';
+  filterDefs.forEach(f => {
+    if (!activeFields.includes(f.field)) html += `<option value="${escapeAttr(f.field)}">${escapeAttr(f.label)}</option>`;
+  });
+  $sel.html(html).val(current && !html.includes(`value="${escapeAttr(current)}"`) ? '' : current);
+}
+
+function toggleChipValue(el) {
+  const chip = $(el).closest('.filter-chip');
+  if (!chip.length) return;
+  const has = chip.find('.report-filter').toArray().some(input => {
+    const v = $(input).val();
+    return v !== '' && v != null;
+  });
+  chip.toggleClass('has-value', has);
+}
+
+function renderFilters() {
+  const $bar = $('#filtersBar').empty();
+  activeFields.forEach(field => {
+    const def = filterDefs.find(d => d.field === field);
+    if (def) $bar.append(chipHtml(def));
+  });
+  updateAddFilterOptions();
+}
+
 function loadFilters(module) {
   if (!module) return;
   currentFilterModule = module;
@@ -276,39 +359,48 @@ function loadFilters(module) {
     headers: { 'X-Requested-With': 'XMLHttpRequest' },
     success(res) {
       if (currentFilterModule !== module || !res?.success) return;
-      const $bar = $('#filtersBar').empty();
-      if (!res.filters?.length) { $bar.addClass('d-none'); loadReport(module, {}, getCurrentTimeRange()); return; }
-      $bar.removeClass('d-none');
-      const $row = $('<div class="row g-1"></div>');
-      res.filters.forEach(f => {
-        const $col = $('<div class="col-auto"></div>');
-        let html = `<label class="form-label small mb-0 fw-medium" style="font-size:0.7rem;">${f.label}</label>`;
-        if (f.type === 'select') {
-          html += `<select class="form-select form-select-sm report-filter" data-field="${f.field}" style="min-width:120px;font-size:0.75rem;padding:0.2rem 0.5rem;">`;
-          (f.options || []).forEach(o => { html += `<option value="${o.value}">${o.label}</option>`; });
-          html += '</select>';
-        } else if (f.type === 'date-range') {
-          html += `<div class="d-flex gap-1 align-items-center">`;
-          html += `<input type="date" class="form-control form-control-sm report-filter" id="filter_${f.field}_desde" data-field="${f.field}" data-type="date-range" style="width:120px;font-size:0.75rem;padding:0.2rem 0.5rem;">`;
-          html += `<span class="text-muted" style="font-size:0.7rem;">a</span>`;
-          html += `<input type="date" class="form-control form-control-sm report-filter" id="filter_${f.field}_hasta" data-field="${f.field}" data-type="date-range" style="width:120px;font-size:0.75rem;padding:0.2rem 0.5rem;">`;
-          html += '</div>';
-        } else if (f.type === 'number') {
-          html += `<input type="number" class="form-control form-control-sm report-filter" data-field="${f.field}" style="width:100px;font-size:0.75rem;padding:0.2rem 0.5rem;" placeholder="${f.label}">`;
-        } else {
-          html += `<input type="text" class="form-control form-control-sm report-filter" data-field="${f.field}" style="width:130px;font-size:0.75rem;padding:0.2rem 0.5rem;" placeholder="${f.label}">`;
-        }
-        $col.html(html); $row.append($col);
-      });
-      $row.append(`<div class="col-auto d-flex align-items-end pb-1 gap-1">
-        <button id="btnApplyFilters" class="btn btn-primary btn-sm" style="font-size:0.75rem;padding:0.2rem 0.6rem;"><i class="fas fa-filter"></i> Filtrar</button>
-        <button id="btnClearFilters" class="btn btn-outline-secondary btn-sm" style="font-size:0.75rem;padding:0.2rem 0.5rem;"><i class="fas fa-eraser"></i></button>
-      </div>`);
-      $bar.append($row);
+      filterDefs = res.filters || [];
+      activeFields = filterDefs.map(d => d.field);
+      const hasFilters = filterDefs.length > 0;
+      $('#filtersWrap').toggleClass('d-none', !hasFilters);
+      if (hasFilters) renderFilters();
       loadReport(module, {}, getCurrentTimeRange());
     },
     error() { Helpers.toast('error', 'Error al cargar filtros'); },
   });
+}
+
+function addFilter(field) {
+  const def = filterDefs.find(d => d.field === field);
+  if (!def || activeFields.includes(field)) return;
+  activeFields.push(field);
+  $('#filtersBar').append(chipHtml(def));
+  updateAddFilterOptions();
+  scheduleReload();
+}
+
+function removeFilter(field) {
+  activeFields = activeFields.filter(f => f !== field);
+  $(`#filtersBar .filter-chip[data-field="${CSS.escape(field)}"]`).remove();
+  updateAddFilterOptions();
+  scheduleReload();
+}
+
+function clearFilters() {
+  $('#filtersBar .report-filter').each(function () {
+    const $el = $(this), type = $el.data('type');
+    if (type === 'date-range') {
+      $(`#filter_${$el.data('field')}_desde`).val('');
+      $(`#filter_${$el.data('field')}_hasta`).val('');
+    } else { $el.val(''); }
+  });
+  $('#filtersBar .report-filter-op').val('>=');
+  scheduleReload();
+}
+
+function scheduleReload() {
+  clearTimeout(filterDebounce);
+  filterDebounce = setTimeout(reloadWithTime, 350);
 }
 
 function exportCsv() {
@@ -341,19 +433,8 @@ function exportPdf() {
   window.open(`${baseUrl}?${params}`, '_blank');
 }
 
-function clearFilters() {
-  $('#filtersBar .report-filter').each(function () {
-    const $el = $(this), type = $el.data('type');
-    if (type === 'date-range') {
-      $(`#filter_${$el.data('field')}_desde`).val('');
-      $(`#filter_${$el.data('field')}_hasta`).val('');
-    } else { $el.val(''); }
-  });
-  reloadWithTime();
-}
-
 $(document).ready(function () {
-  $('#reportsTable, #chartCard, #reportActions, #summaryBar').addClass('d-none');
+  $('#reportsTable, #chartCard, #reportActions, #summaryBar, #filtersWrap').addClass('d-none');
   loadModules();
 
   $('#reportModuleSelect').on('change', function () {
@@ -376,8 +457,21 @@ $(document).ready(function () {
     reloadWithTime();
   });
 
-  $('#filtersBar').on('click', '#btnApplyFilters', reloadWithTime);
-  $('#filtersBar').on('click', '#btnClearFilters', clearFilters);
+  $('#filtersBar')
+    .on('change', '.report-filter, .report-filter-op', function () { toggleChipValue(this); scheduleReload(); })
+    .on('input', '.report-filter', function () { toggleChipValue(this); scheduleReload(); })
+    .on('click', '.filter-chip-remove', function () {
+      const chip = $(this).closest('.filter-chip');
+      removeFilter(chip.data('field'));
+    });
+
+  $('#addFilterSelect').on('change', function () {
+    const field = $(this).val();
+    $(this).val('');
+    if (field) addFilter(field);
+  });
+
+  $('#btnClearFilters').on('click', clearFilters);
   $('#chartTypeSelector').on('change', function () { if (currentChartData) renderChart(currentChartData, $(this).val()); });
   $('#btnRefresh').on('click', reloadWithTime);
   $('#btnCsv').on('click', exportCsv);

@@ -81,6 +81,21 @@ function asistente(): void
     require $view;
 }
 
+function ayuda(): void
+{
+    dashboardCheckAuth();
+    $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
+        . 'dashboard' . DIRECTORY_SEPARATOR . 'ayuda.php';
+
+    if (!is_file($view)) {
+        http_response_code(500);
+        echo 'Vista de ayuda no encontrada.';
+        return;
+    }
+
+    require $view;
+}
+
 function inventario(): void
 {
     dashboardCheckPermiso('inventario:ver');

@@ -22,6 +22,8 @@ class Trazabilidad extends Database implements ReadableInterface, DeletableInter
     private ?string $observacion = null;
     private int $activo = 1;
 
+    private array $schemaCache = [];
+
     protected array $validationRules = [
         'id_lote'       => ['type' => null,       'required' => true],
         'cantidad'      => ['type' => 'cantidad', 'required' => true],
@@ -124,19 +126,56 @@ class Trazabilidad extends Database implements ReadableInterface, DeletableInter
         ]);
     }
 
+    private function hasColumn(string $table, string $column): bool
+    {
+        $key = "$table.$column";
+        if (array_key_exists($key, $this->schemaCache)) {
+            return $this->schemaCache[$key];
+        }
+        try {
+            $stmt = $this->db()->prepare(
+                'SELECT COUNT(*) FROM information_schema.COLUMNS
+                 WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?'
+            );
+            $stmt->execute([$table, $column]);
+            return $this->schemaCache[$key] = (int) $stmt->fetchColumn() > 0;
+        } catch (Throwable $e) {
+            return $this->schemaCache[$key] = false;
+        }
+    }
+
+    private function fkEstado(): bool { return $this->hasColumn('trazabilidad', 'id_estado'); }
+
+    private function estadoNameById(int $id): string
+    {
+        $lote = new Lote();
+        foreach ($lote->getEstados() as $e) {
+            if ((int)$e['id'] === $id) return (string)$e['nombre'];
+        }
+        return 'Sospechoso';
+    }
+
     public function save(): bool
     {
         $this->validate();
 
         try {
+            if ($this->fkEstado()) {
+                $estado = $this->idEstado;
+                $estadoCol = 'id_estado';
+            } else {
+                $estado = $this->idEstado !== null ? $this->estadoNameById($this->idEstado) : 'Sospechoso';
+                $estadoCol = 'estado_salud';
+            }
+
             if ($this->id === null) {
-                $sql = "INSERT INTO trazabilidad (id_lote, cantidad, id_estado, fecha_registro, observacion, activo) 
+                $sql = "INSERT INTO trazabilidad (id_lote, cantidad, $estadoCol, fecha_registro, observacion, activo) 
                         VALUES (:id_lote, :cantidad, :id_estado, :fecha_registro, :observacion, :activo)";
                 $stmt = $this->db()->prepare($sql);
                 $success = $stmt->execute([
                     ':id_lote'       => $this->idLote,
                     ':cantidad'      => $this->cantidad,
-                    ':id_estado'     => $this->idEstado,
+                    ':id_estado'     => $estado,
                     ':fecha_registro'=> $this->fechaRegistro,
                     ':observacion'   => $this->observacion,
                     ':activo'        => $this->activo,
@@ -156,7 +195,7 @@ class Trazabilidad extends Database implements ReadableInterface, DeletableInter
             } else {
                 $oldData = $this->getById($this->id);
                 $sql = "UPDATE trazabilidad SET id_lote = :id_lote, cantidad = :cantidad, 
-                        id_estado = :id_estado, fecha_registro = :fecha_registro, 
+                        $estadoCol = :id_estado, fecha_registro = :fecha_registro, 
                         observacion = :observacion, activo = :activo
                         WHERE id_trazabilidad = :id";
                 $stmt = $this->db()->prepare($sql);
@@ -164,7 +203,7 @@ class Trazabilidad extends Database implements ReadableInterface, DeletableInter
                     ':id'            => $this->id,
                     ':id_lote'       => $this->idLote,
                     ':cantidad'      => $this->cantidad,
-                    ':id_estado'     => $this->idEstado,
+                    ':id_estado'     => $estado,
                     ':fecha_registro'=> $this->fechaRegistro,
                     ':observacion'   => $this->observacion,
                     ':activo'        => $this->activo,
@@ -201,23 +240,41 @@ class Trazabilidad extends Database implements ReadableInterface, DeletableInter
     public static function all(): array
     {
         $instance = new static();
-        $sql = "SELECT
-                    t.id_trazabilidad AS id,
-                    t.id_lote,
-                    t.cantidad,
-                    t.id_estado,
-                    e.nombre AS estado_salud,
-                    t.observacion,
-                    t.fecha_registro,
-                    t.activo,
-                    l.cantidad_actual AS lote_cantidad_actual,
-                    COALESCE(p.nombre_comun, CONCAT('Planta #', CAST(l.id_planta AS CHAR))) AS planta_nombre
-                FROM trazabilidad t
-                LEFT JOIN lote l ON t.id_lote = l.id_lote
-                LEFT JOIN plantas p ON l.id_planta = p.id_planta
-                LEFT JOIN estado e ON t.id_estado = e.id_estado
-                WHERE t.activo = 1
-                ORDER BY t.fecha_registro DESC, t.id_trazabilidad DESC";
+        if ($instance->fkEstado()) {
+            $sql = "SELECT
+                        t.id_trazabilidad AS id,
+                        t.id_lote,
+                        t.cantidad,
+                        t.id_estado,
+                        e.nombre AS estado_salud,
+                        t.observacion,
+                        t.fecha_registro,
+                        t.activo,
+                        l.cantidad_actual AS lote_cantidad_actual,
+                        COALESCE(p.nombre_comun, CONCAT('Planta #', CAST(l.id_planta AS CHAR))) AS planta_nombre
+                    FROM trazabilidad t
+                    LEFT JOIN lote l ON t.id_lote = l.id_lote
+                    LEFT JOIN plantas p ON l.id_planta = p.id_planta
+                    LEFT JOIN estado e ON t.id_estado = e.id_estado
+                    WHERE t.activo = 1
+                    ORDER BY t.fecha_registro DESC, t.id_trazabilidad DESC";
+        } else {
+            $sql = "SELECT
+                        t.id_trazabilidad AS id,
+                        t.id_lote,
+                        t.cantidad,
+                        t.estado_salud,
+                        t.observacion,
+                        t.fecha_registro,
+                        t.activo,
+                        l.cantidad_actual AS lote_cantidad_actual,
+                        COALESCE(p.nombre_comun, CONCAT('Planta #', CAST(l.id_planta AS CHAR))) AS planta_nombre
+                    FROM trazabilidad t
+                    LEFT JOIN lote l ON t.id_lote = l.id_lote
+                    LEFT JOIN plantas p ON l.id_planta = p.id_planta
+                    WHERE t.activo = 1
+                    ORDER BY t.fecha_registro DESC, t.id_trazabilidad DESC";
+        }
         $stmt = $instance->db()->query($sql);
         return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
     }
@@ -235,17 +292,30 @@ class Trazabilidad extends Database implements ReadableInterface, DeletableInter
     public function getById(int $id): ?array
     {
         try {
-            $stmt = $this->db()->prepare("
-                SELECT t.*,
-                       e.nombre AS estado_salud,
-                       COALESCE(p.nombre_comun, CONCAT('Planta #', CAST(l.id_planta AS CHAR))) AS planta_nombre,
-                       l.cantidad_actual AS lote_cantidad_actual
-                FROM trazabilidad t
-                LEFT JOIN lote l ON t.id_lote = l.id_lote
-                LEFT JOIN plantas p ON l.id_planta = p.id_planta
-                LEFT JOIN estado e ON t.id_estado = e.id_estado
-                WHERE t.id_trazabilidad = :id
-            ");
+            if ($this->fkEstado()) {
+                $stmt = $this->db()->prepare("
+                    SELECT t.*,
+                           e.nombre AS estado_salud,
+                           COALESCE(p.nombre_comun, CONCAT('Planta #', CAST(l.id_planta AS CHAR))) AS planta_nombre,
+                           l.cantidad_actual AS lote_cantidad_actual
+                    FROM trazabilidad t
+                    LEFT JOIN lote l ON t.id_lote = l.id_lote
+                    LEFT JOIN plantas p ON l.id_planta = p.id_planta
+                    LEFT JOIN estado e ON t.id_estado = e.id_estado
+                    WHERE t.id_trazabilidad = :id
+                ");
+            } else {
+                $stmt = $this->db()->prepare("
+                    SELECT t.*,
+                           t.estado_salud,
+                           COALESCE(p.nombre_comun, CONCAT('Planta #', CAST(l.id_planta AS CHAR))) AS planta_nombre,
+                           l.cantidad_actual AS lote_cantidad_actual
+                    FROM trazabilidad t
+                    LEFT JOIN lote l ON t.id_lote = l.id_lote
+                    LEFT JOIN plantas p ON l.id_planta = p.id_planta
+                    WHERE t.id_trazabilidad = :id
+                ");
+            }
             $stmt->execute([':id' => $id]);
             return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
         } catch (Throwable $e) {
