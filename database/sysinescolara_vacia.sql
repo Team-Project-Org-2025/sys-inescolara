@@ -1,18 +1,23 @@
 -- ============================================================================
 -- SYSINECOLARA — Base de Datos Vacía (solo estructura, sin datos)
 -- Generado: 2026-09-01
--- Versión: 3.1 — Optimización de cálculo de precios
+-- Versión: 3.2 — Refactor de tablas y relaciones
 -- ============================================================================
 -- CAMBIOS vs esquema v3.0:
 --  1. ELIMINADOS de `lote`: costo_mano_obra, costo_total_insumo,
 --     costo_agua_lote, precio_final_sugerido (calculados en código)
 --  2. MANTENIDO en `lote`: costo_unitario (precio base por planta),
 --     porcentaje_ganancia (configurable por lote)
---  3. NUEVA tabla `lote_insumo` → registro directo de insumos por lote
---  4. ELIMINADA tabla `calculo_precio` → ya no existe
---  5. ELIMINADA tabla `calculo_precio_detalle` → ya no existe
---  6. Precio final calculado en código: costo_unitario + insumos + ganancia
---  7. Agua registra como insumo normal en tabla `insumo`
+--  3. ELIMINADA tabla `calculo_precio` → ya no existe
+--  4. ELIMINADA tabla `calculo_precio_detalle` → ya no existe
+--  5. ELIMINADA tabla `consumo_insumos` → unificada en `registro_insumo`
+--  6. ELIMINADA tabla `lote_insumo` → unificada en `registro_insumo`
+--  7. ELIMINADA tabla `ajuste_inventario` → usa bitácora de auditoría
+--  8. NUEVA tabla `registro_insumo` → unifica insumos directos y vía tareas
+--  9. Precio final calculado en código: costo_unitario + insumos + ganancia
+-- 10. Agua registra como insumo normal en tabla `insumo`
+-- 11. Renombrados id_trabajador → id_usuario en todas las tablas
+-- 12. Renombrado id_trabajador_gestor → id_usuario_gestor en movimiento_planta
 -- ============================================================================
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
@@ -135,25 +140,6 @@ CREATE TABLE IF NOT EXISTS `herramienta` (
   COMMENT='Herramientas con ciclo de vida propio.';
 
 -- --------------------------------------------------------------------------
--- 3.1 Insumos directos por Lote
--- --------------------------------------------------------------------------
-
-CREATE TABLE IF NOT EXISTS `lote_insumo` (
-  `id_lote_insumo`  INT(11)       NOT NULL AUTO_INCREMENT,
-  `id_lote`         INT(11)       NOT NULL,
-  `id_insumo`       INT(11)       NOT NULL,
-  `cantidad`        DECIMAL(10,2) NOT NULL,
-  `costo_unitario`  DECIMAL(10,2) NOT NULL,
-  `fecha_registro`  DATE          NOT NULL,
-  PRIMARY KEY (`id_lote_insumo`),
-  KEY `fk_loteinsumo_lote`   (`id_lote`),
-  KEY `fk_loteinsumo_insumo` (`id_insumo`),
-  CONSTRAINT `fk_loteinsumo_lote`  FOREIGN KEY (`id_lote`)  REFERENCES `lote`   (`id_lote`),
-  CONSTRAINT `fk_loteinsumo_insumo` FOREIGN KEY (`id_insumo`) REFERENCES `insumo` (`id_insumo`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-  COMMENT='Insumos registrados directamente en el lote (sin pasar por tareas).';
-
--- --------------------------------------------------------------------------
 -- 4. Clientes y Proveedores
 -- --------------------------------------------------------------------------
 
@@ -183,7 +169,7 @@ CREATE TABLE IF NOT EXISTS `proveedores` (
 
 -- --------------------------------------------------------------------------
 -- 5. Tareas
--- Nota: id_trabajador ahora referencia usuarios.id_usuario (en Seguridad)
+-- Nota: id_usuario referencia SysInescolara-Seguridad.usuarios.id_usuario
 -- --------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS `tareas` (
@@ -198,7 +184,7 @@ CREATE TABLE IF NOT EXISTS `tareas` (
 
 CREATE TABLE IF NOT EXISTS `asignar_tarea` (
   `id_asignacion`     INT(11)     NOT NULL AUTO_INCREMENT,
-  `id_trabajador`     INT(11)     NOT NULL COMMENT 'FK → usuarios.id_usuario',
+  `id_usuario`        INT(11)     NOT NULL COMMENT 'FK → Seguridad.usuarios.id_usuario',
   `id_tarea`          INT(11)     NOT NULL,
   `id_lote`           INT(11)     NOT NULL,
   `fecha_asignacion`  DATE        NOT NULL,
@@ -206,29 +192,31 @@ CREATE TABLE IF NOT EXISTS `asignar_tarea` (
   `estatus_tarea`     VARCHAR(20) NOT NULL DEFAULT 'pendiente',
   `horas_dedicadas`   DECIMAL(5,2) DEFAULT NULL,
   PRIMARY KEY (`id_asignacion`),
-  KEY `id_tarea`      (`id_tarea`),
-  KEY `id_lote`       (`id_lote`),
-  KEY `id_trabajador` (`id_trabajador`),
+  KEY `id_tarea`    (`id_tarea`),
+  KEY `id_lote`     (`id_lote`),
+  KEY `id_usuario`  (`id_usuario`),
   CONSTRAINT `fk_asignacion_tarea` FOREIGN KEY (`id_tarea`) REFERENCES `tareas` (`id_tarea`),
   CONSTRAINT `fk_asignacion_lote`  FOREIGN KEY (`id_lote`)  REFERENCES `lote`   (`id_lote`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
   COMMENT='Nodo central entre talento humano y producción.';
 
-CREATE TABLE IF NOT EXISTS `consumo_insumos` (
-  `id_consumo`      INT(11)       NOT NULL AUTO_INCREMENT,
-  `id_asignacion`   INT(11)       NOT NULL,
-  `id_insumo`       INT(11)       NOT NULL,
-  `cantidad_usada`  DECIMAL(10,2) NOT NULL,
-  `costo_unitario`  DECIMAL(10,2) NOT NULL,
-  `stock_actual`    DECIMAL(10,2) DEFAULT NULL,
-  `fecha_consumo`   DATE          NOT NULL,
-  PRIMARY KEY (`id_consumo`),
-  KEY `id_asignacion` (`id_asignacion`),
-  KEY `id_insumo`     (`id_insumo`),
-  CONSTRAINT `fk_consumo_asignacion` FOREIGN KEY (`id_asignacion`) REFERENCES `asignar_tarea` (`id_asignacion`),
-  CONSTRAINT `fk_consumo_insumo`     FOREIGN KEY (`id_insumo`)     REFERENCES `insumo`       (`id_insumo`)
+CREATE TABLE IF NOT EXISTS `registro_insumo` (
+  `id_registro_insumo` INT(11)       NOT NULL AUTO_INCREMENT,
+  `id_lote`            INT(11)       NOT NULL,
+  `id_insumo`          INT(11)       NOT NULL,
+  `id_asignacion`      INT(11)       DEFAULT NULL COMMENT 'NULL = directo, NO NULL = vía tarea',
+  `cantidad`           DECIMAL(10,2) NOT NULL,
+  `costo_unitario`     DECIMAL(10,2) NOT NULL,
+  `fecha_registro`     DATE          NOT NULL,
+  PRIMARY KEY (`id_registro_insumo`),
+  KEY `idx_registro_lote`       (`id_lote`),
+  KEY `idx_registro_insumo`     (`id_insumo`),
+  KEY `idx_registro_asignacion` (`id_asignacion`),
+  CONSTRAINT `fk_registro_lote`       FOREIGN KEY (`id_lote`)       REFERENCES `lote`          (`id_lote`),
+  CONSTRAINT `fk_registro_insumo`     FOREIGN KEY (`id_insumo`)     REFERENCES `insumo`        (`id_insumo`),
+  CONSTRAINT `fk_registro_asignacion` FOREIGN KEY (`id_asignacion`) REFERENCES `asignar_tarea` (`id_asignacion`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-  COMMENT='Todo consumo debe estar justificado por una tarea.';
+  COMMENT='Registro unificado de insumos: directo en lote o vía tarea.';
 
 CREATE TABLE IF NOT EXISTS `uso_herramienta` (
   `id_uso`                      INT(11)     NOT NULL AUTO_INCREMENT,
@@ -327,12 +315,12 @@ CREATE TABLE IF NOT EXISTS `detalle_ornatos` (
 
 -- --------------------------------------------------------------------------
 -- 8. Recolección de Semillas
--- Nota: id_trabajador ahora referencia usuarios.id_usuario (en Seguridad)
+-- Nota: id_usuario referencia SysInescolara-Seguridad.usuarios.id_usuario
 -- --------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS `recoleccion_semillas` (
   `id_recoleccion`   INT(11)     NOT NULL AUTO_INCREMENT,
-  `id_trabajador`    INT(11)     NOT NULL COMMENT 'FK → usuarios.id_usuario',
+  `id_usuario`       INT(11)     NOT NULL COMMENT 'FK → Seguridad.usuarios.id_usuario',
   `id_ubicacion`     INT(11)     NOT NULL,
   `fecha_asignacion` DATE        NOT NULL,
   `fecha_recoleccion` DATE       DEFAULT NULL,
@@ -340,9 +328,9 @@ CREATE TABLE IF NOT EXISTS `recoleccion_semillas` (
   `observacion`      TEXT        DEFAULT NULL,
   `activo`           TINYINT(1)  NOT NULL DEFAULT 1,
   PRIMARY KEY (`id_recoleccion`),
-  KEY `idx_recoleccion_trabajador` (`id_trabajador`),
-  KEY `idx_recoleccion_ubicacion`  (`id_ubicacion`),
-  KEY `idx_recoleccion_estatus`    (`estatus`),
+  KEY `idx_recoleccion_usuario`  (`id_usuario`),
+  KEY `idx_recoleccion_ubicacion` (`id_ubicacion`),
+  KEY `idx_recoleccion_estatus`  (`estatus`),
   CONSTRAINT `fk_recoleccion_ubicacion` FOREIGN KEY (`id_ubicacion`) REFERENCES `ubicacion` (`id_ubicacion`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -363,14 +351,14 @@ CREATE TABLE IF NOT EXISTS `recoleccion_semillas_detalle` (
 
 -- --------------------------------------------------------------------------
 -- 9. Ventas
--- Nota: id_trabajador ahora referencia usuarios.id_usuario (en Seguridad)
+-- Nota: id_usuario referencia SysInescolara-Seguridad.usuarios.id_usuario
 -- --------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS `venta` (
   `id_venta`         INT(11)       NOT NULL AUTO_INCREMENT,
   `referencia`       VARCHAR(30)   NOT NULL,
   `id_cliente`       INT(11)       NOT NULL,
-  `id_trabajador`    INT(11)       NOT NULL COMMENT 'FK → usuarios.id_usuario',
+  `id_usuario`       INT(11)       NOT NULL COMMENT 'FK → Seguridad.usuarios.id_usuario',
   `tipo_venta`       ENUM('contado','credito') NOT NULL DEFAULT 'contado',
   `estado`           ENUM('pendiente','completada','cancelada') NOT NULL DEFAULT 'completada',
   `iva_porcentaje`   DECIMAL(5,2)  NOT NULL DEFAULT 16.00,
@@ -382,8 +370,8 @@ CREATE TABLE IF NOT EXISTS `venta` (
   `updated_at`       DATETIME      DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id_venta`),
   UNIQUE KEY `uq_venta_referencia` (`referencia`),
-  KEY `id_cliente`    (`id_cliente`),
-  KEY `id_trabajador` (`id_trabajador`),
+  KEY `id_cliente`  (`id_cliente`),
+  KEY `id_usuario`  (`id_usuario`),
   CONSTRAINT `fk_venta_cliente` FOREIGN KEY (`id_cliente`) REFERENCES `cliente` (`id_cliente`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -409,11 +397,12 @@ CREATE TABLE IF NOT EXISTS `pago_venta` (
   `fecha_pago`     DATETIME      DEFAULT CURRENT_TIMESTAMP,
   `estado_pago`    ENUM('registrado','confirmado','rechazado') NOT NULL DEFAULT 'registrado',
   `banco`          VARCHAR(100)  DEFAULT NULL,
-  `id_trabajador`  INT(11)       DEFAULT NULL COMMENT 'FK → usuarios.id_usuario',
+  `id_usuario`     INT(11)       DEFAULT NULL COMMENT 'FK → Seguridad.usuarios.id_usuario',
   `observaciones`  TEXT          DEFAULT NULL,
   `created_at`     DATETIME      DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id_pago`),
-  KEY `id_venta` (`id_venta`),
+  KEY `id_venta`  (`id_venta`),
+  KEY `id_usuario` (`id_usuario`),
   CONSTRAINT `fk_pagoventa_venta` FOREIGN KEY (`id_venta`) REFERENCES `venta` (`id_venta`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -457,22 +446,22 @@ CREATE TABLE IF NOT EXISTS `mermas_historico` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------------------------
--- 11. Movimiento de Plantas y Ajustes
--- Nota: id_trabajador_gestor / id_trabajador ahora referencia usuarios.id_usuario
+-- 11. Movimiento de Plantas
+-- Nota: id_usuario_gestor referencia Seguridad.usuarios.id_usuario
 -- --------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS `movimiento_planta` (
   `id_movimiento_planta` INT(11)     NOT NULL AUTO_INCREMENT,
   `tipo_movimiento`      VARCHAR(30) NOT NULL COMMENT 'venta, ornato, donacion, intercambio',
   `id_cliente`           INT(11)     DEFAULT NULL,
-  `id_trabajador_gestor` INT(11)     NOT NULL COMMENT 'FK → usuarios.id_usuario',
+  `id_usuario_gestor`    INT(11)     NOT NULL COMMENT 'FK → Seguridad.usuarios.id_usuario',
   `fecha_movimiento`     DATE        NOT NULL,
   `observacion`          TEXT        DEFAULT NULL,
   `activo`               TINYINT(1)  NOT NULL DEFAULT 1,
   PRIMARY KEY (`id_movimiento_planta`),
-  KEY `id_cliente`           (`id_cliente`),
-  KEY `id_trabajador_gestor` (`id_trabajador_gestor`),
-  KEY `idx_mp_activo`        (`activo`),
+  KEY `id_cliente`          (`id_cliente`),
+  KEY `id_usuario_gestor`   (`id_usuario_gestor`),
+  KEY `idx_mp_activo`       (`activo`),
   CONSTRAINT `fk_movplanta_cliente` FOREIGN KEY (`id_cliente`) REFERENCES `cliente` (`id_cliente`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
   COMMENT='Unifica venta, ornato, donación e intercambio de plantas.';
@@ -494,21 +483,6 @@ CREATE TABLE IF NOT EXISTS `movimiento_planta_detalle` (
   CONSTRAINT `fk_detmovplanta_lote` FOREIGN KEY (`id_lote`)              REFERENCES `lote`              (`id_lote`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
   COMMENT='Detalle por lote del movimiento de plantas.';
-
-CREATE TABLE IF NOT EXISTS `ajuste_inventario` (
-  `id_ajuste`      INT(11)       NOT NULL AUTO_INCREMENT,
-  `id_insumo`      INT(11)       NOT NULL,
-  `id_trabajador`  INT(11)       NOT NULL COMMENT 'FK → usuarios.id_usuario',
-  `tipo_ajuste`    VARCHAR(30)   NOT NULL,
-  `cantidad`       INT(11)       NOT NULL,
-  `motivo`         TEXT          NOT NULL,
-  `fecha_ajuste`   DATE          NOT NULL,
-  PRIMARY KEY (`id_ajuste`),
-  KEY `id_insumo`     (`id_insumo`),
-  KEY `id_trabajador` (`id_trabajador`),
-  CONSTRAINT `fk_ajuste_insumo` FOREIGN KEY (`id_insumo`) REFERENCES `insumo` (`id_insumo`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-  COMMENT='Correcciones manuales del stock.';
 
 -- --------------------------------------------------------------------------
 -- 12. Cuentas por Pagar
