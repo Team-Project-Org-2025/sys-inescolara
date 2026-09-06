@@ -281,21 +281,4 @@ Control de inventario, ventas, producción, lotes, insumos, trabajadores, tareas
 
 `main` se despliega en Render. `develop` debe estar siempre alineada con `main`.
 
-### Ramas Actuales
-| Rama | Propósito |
-|------|-----------|
-| `main` | Producción en Render |
-| `develop` | Integración de cambios |
-| `fix/revert-dbname-trycatch` | Reversión de DB_NAME dinámico, try/catch en Planta/Especie y timezone sync en Database.php. Pendiente de merge. |
-| `fix/mailer-smtp-error` | Fixes de Mailer (timeout, reset, Timelimit) — ya mergeado a main/develop |
 
-## Datos Críticos
-- Admin: `admin@inecolara.gob.ve` / `Admin123!`
-- Timezone: `America/Caracas` (set en `index.php` vía `date_default_timezone_set`)
-- reCAPTCHA v2 (site + secret key en `.env`)
-- SMTP: configurar en `.env` para recovery de pass. En Render usar Resend API (`SMTP_USER=resend` + `SMTP_PASS=re_...`)
-- PHP bin: `C:\xampp\php\php.exe`
-- URL base: configurable via `BASE_URL` en `.env`
-- Resend API key: `re_dg8G7ZZF_KTK4ep1EpfErSnKxmgdXdwR4`
-- SMTP_FROM para Render: `sysinescolara@nokx1z.dev`
-- Dominio verificado en Resend: `nokx1z.dev`
