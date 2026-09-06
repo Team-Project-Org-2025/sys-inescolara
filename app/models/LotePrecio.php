@@ -103,7 +103,7 @@ class LotePrecio extends Database implements ReadableInterface
                         l.costo_unitario,
                         l.porcentaje_ganancia,
                         l.cantidad_actual,
-                        l.estado,
+                        e.nombre AS estado_nombre,
                         p.nombre_comun AS planta_nombre,
                         sp.nombre_especie AS especie_nombre,
                         COALESCE(SUM(ri.costo_unitario * ri.cantidad), 0) AS total_insumos,
@@ -120,10 +120,11 @@ class LotePrecio extends Database implements ReadableInterface
                     FROM lote l
                     LEFT JOIN plantas p ON l.id_planta = p.id_planta
                     LEFT JOIN especie sp ON p.id_especie = sp.id_especie
+                    LEFT JOIN estado e ON l.id_estado = e.id_estado
                     LEFT JOIN registro_insumo ri ON l.id_lote = ri.id_lote
                     WHERE l.activo = 1
                     GROUP BY l.id_lote, l.costo_unitario, l.porcentaje_ganancia, l.cantidad_actual,
-                             l.estado, p.nombre_comun, sp.nombre_especie
+                             e.nombre, p.nombre_comun, sp.nombre_especie
                     ORDER BY p.nombre_comun ASC, l.fecha_siembra DESC";
             $stmt = $instance->db()->query($sql);
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];

@@ -39,6 +39,20 @@ class Usuario extends Database
                 error_log('Error al migrar columna avatar: ' . $e->getMessage());
             }
 
+            // Migración: columnas de trabajador si no existen
+            foreach (['nombre_trabajador', 'apellido_trabajador', 'cedula_trabajador', 'telefono_trabajador', 'cargo'] as $col) {
+                try {
+                    $stmt = $this->db()->query("SHOW COLUMNS FROM usuarios LIKE '$col'");
+                    if (!$stmt->fetch()) {
+                        $type = $col === 'cargo' ? "VARCHAR(50)" : ($col === 'cedula_trabajador' ? "VARCHAR(20)" : "VARCHAR(100)");
+                        $after = $col === 'nombre_trabajador' ? 'AFTER nombre_usuario' : ($col === 'apellido_trabajador' ? 'AFTER nombre_trabajador' : ($col === 'cedula_trabajador' ? 'AFTER apellido_trabajador' : ($col === 'telefono_trabajador' ? 'AFTER cedula_trabajador' : 'AFTER telefono_trabajador')));
+                        $this->db()->exec("ALTER TABLE usuarios ADD COLUMN $col $type DEFAULT NULL $after");
+                    }
+                } catch (\Throwable $e) {
+                    error_log("Error al migrar columna $col: " . $e->getMessage());
+                }
+            }
+
             // Nuevo sistema de permisos basado en módulos + acciones
             // Tabla: modulos
             $this->db()->exec("CREATE TABLE IF NOT EXISTS modulos (
@@ -50,6 +64,24 @@ class Usuario extends Database
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 
             // Tabla: permisos (básicos: ver, crear, editar, eliminar)
+            // Si la tabla ya existe (Schema de seguridad antiguo con codigo_permiso), agregar columna nombre_permiso
+            try {
+                $stmt = $this->db()->query("SHOW COLUMNS FROM permisos LIKE 'nombre_permiso'");
+                if (!$stmt->fetch()) {
+                    $this->db()->exec("ALTER TABLE permisos ADD COLUMN nombre_permiso VARCHAR(20) NOT NULL DEFAULT ''");
+                }
+            } catch (\Throwable $e) {
+                error_log('Error al migrar columna nombre_permiso: ' . $e->getMessage());
+            }
+            // Agregar UNIQUE KEY en nombre_permiso si no existe
+            try {
+                $stmt = $this->db()->query("SHOW INDEX FROM permisos WHERE Key_name = 'uq_nombre_permiso'");
+                if (!$stmt->fetch()) {
+                    $this->db()->exec("ALTER TABLE permisos ADD UNIQUE KEY uq_nombre_permiso (nombre_permiso)");
+                }
+            } catch (\Throwable $e) {
+                error_log('Error al migrar UNIQUE KEY nombre_permiso: ' . $e->getMessage());
+            }
             $this->db()->exec("CREATE TABLE IF NOT EXISTS permisos (
                 id_permiso INT(11) NOT NULL AUTO_INCREMENT,
                 nombre_permiso VARCHAR(20) NOT NULL,

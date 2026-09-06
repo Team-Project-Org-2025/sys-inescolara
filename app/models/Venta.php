@@ -645,7 +645,7 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
     public function obtenerTrabajadoresActivos(): array
     {
         try {
-            $stmt = $this->db()->query("SELECT id_usuario, nombre_trabajador, apellido_trabajador, cedula_trabajador, telefono_trabajador, cargo FROM `SysInescolara-Seguridad`.usuarios WHERE activo = 1 ORDER BY nombre_trabajador ASC");
+            $stmt = $this->db()->query("SELECT id_usuario, nombre_trabajador, apellido_trabajador, cedula_trabajador, telefono_trabajador, cargo FROM `SysInescolara-Seguridad`.usuarios WHERE estatus = 'Activo' AND nombre_trabajador IS NOT NULL AND nombre_trabajador != '' ORDER BY nombre_trabajador ASC");
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
         } catch (Throwable $e) {
             error_log('Error al obtener trabajadores: ' . $e->getMessage());
