@@ -126,7 +126,7 @@ const Ventas = {
                     const o = document.createElement('option');
                     o.value = `planta|${l.id_lote}`;
                     o.dataset.item = JSON.stringify(l);
-                    o.textContent = `${l.planta_nombre} — Bs. ${fmt(l.precio_unitario)} (Stock: ${l.cantidad_actual})`;
+                    o.textContent = `${l.planta_nombre} — $${fmt(l.precio_unitario)} (Stock: ${l.cantidad_actual})`;
                     og.appendChild(o);
                 });
                 select.appendChild(og);
@@ -138,7 +138,7 @@ const Ventas = {
                     const o = document.createElement('option');
                     o.value = `insumo|${l.id_insumo}`;
                     o.dataset.item = JSON.stringify(l);
-                    o.textContent = `${l.nombre} — Bs. ${fmt(l.precio_unitario)} (Stock: ${l.cantidad_actual} ${l.unidad_simbolo || ''})`;
+                    o.textContent = `${l.nombre} — $${fmt(l.precio_unitario)} (Stock: ${l.cantidad_actual} ${l.unidad_simbolo || ''})`;
                     og.appendChild(o);
                 });
                 select.appendChild(og);
@@ -274,7 +274,7 @@ const Ventas = {
                     </div>
                     <div class="col-4 text-end">
                         <small class="text-muted d-block" style="font-size:.7rem;line-height:1;letter-spacing:.5px;">SUBTOTAL</small>
-                        <div class="subtotal-producto fw-bold mt-1" style="font-size:1rem;">Bs. ${parseFloat(item.precio_unitario || 0).toLocaleString('es-ES', { minimumFractionDigits: 2 })}</div>
+                        <div class="subtotal-producto fw-bold mt-1" style="font-size:1rem;">$${parseFloat(item.precio_unitario || 0).toLocaleString('es-ES', { minimumFractionDigits: 2 })}</div>
                     </div>
                 </div>
             </div>
@@ -287,7 +287,7 @@ const Ventas = {
         const recalcular = () => {
             const c = parseFloat(cant.value) || 0;
             const p = parseFloat(precio.value) || 0;
-            sub.textContent = `Bs. ${(c * p).toLocaleString('es-ES', { minimumFractionDigits: 2 })}`;
+            sub.textContent = `$${(c * p).toLocaleString('es-ES', { minimumFractionDigits: 2 })}`;
             this.calcularTotales();
         };
 
@@ -319,9 +319,9 @@ const Ventas = {
         const sinIva = total / 1.16;
         const iva = sinIva * 0.16;
 
-        document.getElementById('resumenSubtotal').textContent = `Bs. ${sinIva.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`;
-        document.getElementById('resumenIva').textContent = `Bs. ${iva.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`;
-        document.getElementById('resumenTotal').textContent = `Bs. ${total.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`;
+        document.getElementById('resumenSubtotal').textContent = `$${sinIva.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`;
+        document.getElementById('resumenIva').textContent = `$${iva.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`;
+        document.getElementById('resumenTotal').textContent = `$${total.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`;
 
         this.actualizarBalancePagos(total);
     },
@@ -450,11 +450,11 @@ const Ventas = {
             pagado += parseFloat(inp.value) || 0;
         });
 
-        document.getElementById('totalPagado').textContent = `Bs. ${pagado.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`;
+        document.getElementById('totalPagado').textContent = `$${pagado.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`;
 
         const pendiente = total - pagado;
         const el = document.getElementById('saldoPendiente');
-        el.textContent = `Bs. ${Math.max(0, pendiente).toLocaleString('es-ES', { minimumFractionDigits: 2 })}`;
+        el.textContent = `$${Math.max(0, pendiente).toLocaleString('es-ES', { minimumFractionDigits: 2 })}`;
         el.style.color = Math.abs(pendiente) < 0.01 ? '#198754' : '#dc3545';
     },
 
@@ -709,18 +709,18 @@ const Ventas = {
                     <td>${tipoLabel}</td>
                     <td>${nombre}${detalle}</td>
                     <td class="text-center">${d.cantidad}</td>
-                    <td class="text-end">Bs. ${parseFloat(d.precio_unitario).toLocaleString('es-ES', { minimumFractionDigits: 2 })}</td>
-                    <td class="text-end">Bs. ${sub.toLocaleString('es-ES', { minimumFractionDigits: 2 })}</td>
+                    <td class="text-end">$${parseFloat(d.precio_unitario).toLocaleString('es-ES', { minimumFractionDigits: 2 })}</td>
+                    <td class="text-end">$${sub.toLocaleString('es-ES', { minimumFractionDigits: 2 })}</td>
                 </tr>`;
             });
 
             html += `</tbody></table>
                 <div class="row">
                     <div class="col-12 col-lg-6 offset-lg-6">
-                        <div class="d-flex justify-content-between"><span>Subtotal (sin IVA):</span><strong>Bs. ${(v.monto_sin_iva || 0).toLocaleString('es-ES', { minimumFractionDigits: 2 })}</strong></div>
-                        <div class="d-flex justify-content-between"><span>IVA (${v.iva_porcentaje || 16}%):</span><strong>Bs. ${(v.monto_iva || 0).toLocaleString('es-ES', { minimumFractionDigits: 2 })}</strong></div>
+                        <div class="d-flex justify-content-between"><span>Subtotal (sin IVA):</span><strong>$${(v.monto_sin_iva || 0).toLocaleString('es-ES', { minimumFractionDigits: 2 })}</strong></div>
+                        <div class="d-flex justify-content-between"><span>IVA (${v.iva_porcentaje || 16}%):</span><strong>$${(v.monto_iva || 0).toLocaleString('es-ES', { minimumFractionDigits: 2 })}</strong></div>
                         <hr>
-                        <div class="d-flex justify-content-between fs-5 fw-bold"><span>TOTAL:</span><span class="text-primary">Bs. ${((v.monto_sin_iva || 0) + (v.monto_iva || 0)).toLocaleString('es-ES', { minimumFractionDigits: 2 })}</span></div>
+                        <div class="d-flex justify-content-between fs-5 fw-bold"><span>TOTAL:</span><span class="text-primary">$${((v.monto_sin_iva || 0) + (v.monto_iva || 0)).toLocaleString('es-ES', { minimumFractionDigits: 2 })}</span></div>
                     </div>
                 </div>`;
 
@@ -732,7 +732,7 @@ const Ventas = {
                         </thead>
                         <tbody>`;
                 pagos.forEach(p => {
-                    html += `<tr><td>${p.metodo || ''}</td><td class="text-end">Bs. ${parseFloat(p.monto).toLocaleString('es-ES', { minimumFractionDigits: 2 })}</td><td>${p.referencia || '—'}</td></tr>`;
+                    html += `<tr><td>${p.metodo || ''}</td><td class="text-end">$${parseFloat(p.monto).toLocaleString('es-ES', { minimumFractionDigits: 2 })}</td><td>${p.referencia || '—'}</td></tr>`;
                 });
                 html += `</tbody></table>`;
             }

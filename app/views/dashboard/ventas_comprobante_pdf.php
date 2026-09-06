@@ -90,8 +90,8 @@
                 <td class="text-center"><?= $esInsumo ? 'Insumo' : 'Planta' ?></td>
                 <td><?= htmlspecialchars($det['planta_nombre'] ?? '') ?> <?= !$esInsumo && !empty($det['especie_nombre']) ? '(' . htmlspecialchars($det['especie_nombre']) . ')' : '' ?></td>
                 <td class="text-center"><?= $esInsumo ? number_format((float)$det['cantidad'], 2, ',', '.') : (int)$det['cantidad'] ?></td>
-                <td class="text-right">Bs. <?= number_format((float)$det['precio_unitario'], 2, ',', '.') ?></td>
-                <td class="text-right">Bs. <?= number_format($subtotal, 2, ',', '.') ?></td>
+                <td class="text-right">$<?= number_format((float)$det['precio_unitario'], 2, ',', '.') ?></td>
+                <td class="text-right">$<?= number_format($subtotal, 2, ',', '.') ?></td>
             </tr>
             <?php endforeach; ?>
         </tbody>
@@ -101,15 +101,15 @@
         <table>
             <tr>
                 <td class="label-cell">Subtotal (sin IVA):</td>
-                <td class="value-cell">Bs. <?= number_format($montoSinIva, 2, ',', '.') ?></td>
+                <td class="value-cell">$<?= number_format($montoSinIva, 2, ',', '.') ?></td>
             </tr>
             <tr>
                 <td class="label-cell">IVA (<?= number_format($venta['iva_porcentaje'], 0) ?>%):</td>
-                <td class="value-cell">Bs. <?= number_format($montoIva, 2, ',', '.') ?></td>
+                <td class="value-cell">$<?= number_format($montoIva, 2, ',', '.') ?></td>
             </tr>
             <tr class="total-row">
                 <td>TOTAL A PAGAR:</td>
-                <td>Bs. <?= number_format($montoTotal, 2, ',', '.') ?></td>
+                <td>$<?= number_format($montoTotal, 2, ',', '.') ?></td>
             </tr>
         </table>
     </div>
@@ -129,7 +129,7 @@
                 <?php foreach ($venta['pagos'] as $pago): ?>
                 <tr>
                     <td><?= ucfirst(htmlspecialchars($pago['metodo'] ?? '')) ?></td>
-                    <td style="text-align:right;">Bs. <?= number_format((float)$pago['monto'], 2, ',', '.') ?></td>
+                    <td style="text-align:right;">$<?= number_format((float)$pago['monto'], 2, ',', '.') ?></td>
                     <td><?= htmlspecialchars($pago['referencia'] ?? '-') ?></td>
                 </tr>
                 <?php endforeach; ?>

@@ -25,7 +25,7 @@ function loadFeaturedPlants() {
         <h4>${plant.name}</h4>
         <p class="scientific-name">${plant.scientificName}</p>
         <div class="plant-card-footer">
-          <span class="plant-price">Bs. ${plant.price.toLocaleString()}</span>
+          <span class="plant-price">$${plant.price.toLocaleString()}</span>
           <span class="badge badge-${plant.stock > 20 ? 'success' : plant.stock > 5 ? 'warning' : 'error'}">
             ${plant.stock} disponibles
           </span>
@@ -138,7 +138,7 @@ function renderCatalog() {
         <h4>${plant.name}</h4>
         <p class="scientific-name">${plant.scientificName}</p>
         <div class="plant-card-footer">
-          <span class="plant-price">Bs. ${plant.price.toLocaleString()}</span>
+          <span class="plant-price">$${plant.price.toLocaleString()}</span>
           <span class="badge badge-${plant.stock > 20 ? 'success' : plant.stock > 5 ? 'warning' : 'error'}">
             ${plant.stock} disp.
           </span>
@@ -218,7 +218,7 @@ function openPlantModal(plantId) {
         <div>
           <p class="text-muted mb-1" style="font-size: 0.875rem;">Precio por unidad</p>
           <p style="font-size: 1.5rem; font-weight: 700; color: var(--color-secondary); margin: 0;">
-            Bs. ${plant.price.toLocaleString()}
+            $${plant.price.toLocaleString()}
           </p>
         </div>
         <div class="flex gap-2">
@@ -404,7 +404,7 @@ function renderPOSProducts() {
       </div>
       <div class="pos-product-name">${plant.name}</div>
       <div class="pos-product-stock">${plant.stock} disponibles</div>
-      <div class="pos-product-price">Bs. ${plant.price.toLocaleString()}</div>
+      <div class="pos-product-price">$${plant.price.toLocaleString()}</div>
     </div>
   `
     )
@@ -493,14 +493,14 @@ function renderCart() {
       </div>
       <div class="pos-cart-item-info">
         <div class="pos-cart-item-name">${item.name}</div>
-        <div class="pos-cart-item-price">Bs. ${item.price.toLocaleString()} c/u</div>
+        <div class="pos-cart-item-price">$${item.price.toLocaleString()} c/u</div>
       </div>
       <div class="pos-cart-item-qty">
         <button class="qty-btn" onclick="updateCartQuantity(${item.id}, -1)">-</button>
         <span class="qty-value">${item.quantity}</span>
         <button class="qty-btn" onclick="updateCartQuantity(${item.id}, 1)">+</button>
       </div>
-      <div class="pos-cart-item-subtotal">Bs. ${(item.price * item.quantity).toLocaleString()}</div>
+      <div class="pos-cart-item-subtotal">$${(item.price * item.quantity).toLocaleString()}</div>
       <button class="pos-cart-item-remove" onclick="removeFromCart(${item.id})">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -521,15 +521,15 @@ function renderCart() {
     summaryContainer.innerHTML = `
       <div class="pos-cart-row">
         <span>Subtotal</span>
-        <span>Bs. ${subtotal.toLocaleString()}</span>
+        <span>$${subtotal.toLocaleString()}</span>
       </div>
       <div class="pos-cart-row">
         <span>IVA (16%)</span>
-        <span>Bs. ${iva.toLocaleString()}</span>
+        <span>$${iva.toLocaleString()}</span>
       </div>
       <div class="pos-cart-row total">
         <span>Total</span>
-        <span>Bs. ${total.toLocaleString()}</span>
+        <span>$${total.toLocaleString()}</span>
       </div>
     `;
   }
@@ -555,7 +555,7 @@ function processSale() {
 
   const confirmation = confirm(
     `Confirmar venta:\n\n` +
-      `Total: Bs. ${total.toLocaleString()}\n` +
+      `Total: $${total.toLocaleString()}\n` +
       `Metodo de pago: ${selectedPaymentMethod}\n` +
       `Articulos: ${cart.reduce((sum, item) => sum + item.quantity, 0)}\n\n` +
       `¿Procesar venta?`
@@ -587,7 +587,7 @@ const aiResponses = {
   stock:
     'Actualmente tenemos 15,234 plantas en stock, distribuidas en 48 lotes activos. Las especies con mayor disponibilidad son: Heliconia Caribaea (450 unidades), Palma Areca (380 unidades), y Croton Variegado (320 unidades).',
   ventas:
-    'Las ventas de esta semana suman Bs. 2,450,000, un incremento del 12% respecto a la semana anterior. Los productos mas vendidos son plantas ornamentales para jardines residenciales.',
+    'Las ventas de esta semana suman $2,450,000, un incremento del 12% respecto a la semana anterior. Los productos mas vendidos son plantas ornamentales para jardines residenciales.',
   'bajo stock':
     'Hay 5 especies con stock critico: Orquidea Cattleya (8 unidades), Helecho Boston (12 unidades), Palma Kentia (15 unidades), Rosa del Desierto (18 unidades), y Planta de Jade (20 unidades).',
   proyectos:

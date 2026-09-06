@@ -119,8 +119,8 @@ function ventas(): void
     require_once ROOT_PATH . 'vendor/autoload.php';
     $modeloCliente = new \SysInescolara\models\Cliente();
     $clientes = $modeloCliente->getAll();
-    $modeloTrabajador = new \SysInescolara\models\Empleado();
-    $trabajadores = $modeloTrabajador->getAll();
+    $modeloUsuario = new \SysInescolara\models\Usuario();
+    $trabajadores = $modeloUsuario->getAll();
 
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'ventas.php';

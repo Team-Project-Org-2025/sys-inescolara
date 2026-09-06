@@ -43,12 +43,12 @@ export const formatCurrency = (n) => {
   }).format(num);
 };
 
-//Formatea un número como moneda Bs
+//Formatea un número como moneda $
 export const formatCurrencyBs = (n) => {
   const num = Number(n) || 0;
   return new Intl.NumberFormat('es-VE', {
     style: 'currency',
-    currency: 'VES',
+    currency: 'USD',
     minimumFractionDigits: 2,
   }).format(num);
 };

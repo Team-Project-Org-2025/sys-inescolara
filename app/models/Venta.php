@@ -43,8 +43,29 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
     public function __construct(array $attributes = [])
     {
         parent::__construct();
+        $this->ensureDetalleVentaSchema();
         if (!empty($attributes)) {
             $this->fill($attributes);
+        }
+    }
+
+    private function ensureDetalleVentaSchema(): void
+    {
+        try {
+            $stmt = $this->db()->query("SHOW COLUMNS FROM detalle_venta LIKE 'tipo_item'");
+            if (!$stmt->fetch()) {
+                $this->db()->exec("ALTER TABLE detalle_venta ADD COLUMN tipo_item ENUM('planta','insumo') NOT NULL DEFAULT 'planta' AFTER id_venta");
+            }
+        } catch (\Throwable $e) {
+            error_log('Error al migrar detalle_venta.tipo_item: ' . $e->getMessage());
+        }
+        try {
+            $stmt = $this->db()->query("SHOW COLUMNS FROM detalle_venta LIKE 'id_insumo'");
+            if (!$stmt->fetch()) {
+                $this->db()->exec("ALTER TABLE detalle_venta ADD COLUMN id_insumo INT(11) DEFAULT NULL AFTER id_lote");
+            }
+        } catch (\Throwable $e) {
+            error_log('Error al migrar detalle_venta.id_insumo: ' . $e->getMessage());
         }
     }
 

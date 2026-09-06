@@ -431,7 +431,7 @@ $userAvatar = \SysInescolara\helpers\Auth::avatar();
                         <div class="kpi-card-icon success"><i class="fas fa-shopping-cart"></i></div>
                     </div>
                     <div class="kpi-card-value"><?= number_format($stats['total_ventas'] ?? 0) ?></div>
-                    <div class="kpi-sub">Bs. <?= number_format($stats['total_ventas_bs'] ?? 0, 2) ?> vendido</div>
+                    <div class="kpi-sub">$<?= number_format($stats['total_ventas_bs'] ?? 0, 2) ?> vendido</div>
                     <div class="kpi-card-change positive">
                         <i class="fas fa-arrow-right"></i> Ir a ventas
                     </div>
@@ -445,7 +445,7 @@ $userAvatar = \SysInescolara\helpers\Auth::avatar();
                         <div class="kpi-card-icon primary"><i class="fas fa-file-invoice"></i></div>
                     </div>
                     <div class="kpi-card-value"><?= number_format($stats['total_compras'] ?? 0) ?></div>
-                    <div class="kpi-sub">Bs. <?= number_format($stats['total_compras_bs'] ?? 0, 2) ?> invertido</div>
+                    <div class="kpi-sub">$<?= number_format($stats['total_compras_bs'] ?? 0, 2) ?> invertido</div>
                     <div class="kpi-card-change positive">
                         <i class="fas fa-arrow-right"></i> Ver todas
                     </div>
@@ -459,7 +459,7 @@ $userAvatar = \SysInescolara\helpers\Auth::avatar();
                         <div class="kpi-card-icon warning"><i class="fas fa-hand-holding-usd"></i></div>
                     </div>
                     <div class="kpi-card-value"><?= number_format($stats['total_cuentas_cobrar'] ?? 0) ?></div>
-                    <div class="kpi-sub">Bs. <?= number_format(($stats['total_ventas_bs'] ?? 0) - ($stats['total_cobrado'] ?? 0), 2) ?> pendiente</div>
+                    <div class="kpi-sub">$<?= number_format(($stats['total_ventas_bs'] ?? 0) - ($stats['total_cobrado'] ?? 0), 2) ?> pendiente</div>
                     <div class="kpi-card-change <?= ($stats['total_cuentas_cobrar'] ?? 0) > 0 ? 'negative' : 'positive' ?>">
                         <i class="fas fa-arrow-right"></i> Ver cuentas
                     </div>

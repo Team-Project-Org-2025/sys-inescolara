@@ -40,7 +40,7 @@ $(document).ready(function () {
         },
         {
           data: 'monto_total',
-          render: (data) => `Bs ${Number(data).toFixed(2)}`
+          render: (data) => `$${Number(data).toFixed(2)}`
         },
         {
           data: 'estado_cuenta',
@@ -133,9 +133,9 @@ $(document).ready(function () {
             <tr><td class="text-muted">Fecha Venta:</td><td>${data.fecha_venta}</td></tr>
             <tr><td class="text-muted">Vencimiento:</td><td>${data.fecha_vencimiento || '—'}</td></tr>
             <tr><td class="text-muted">Vendedor:</td><td>${data.trabajador}</td></tr>
-            <tr><td class="text-muted">Monto Total:</td><td><strong>Bs ${Number(data.monto_total).toFixed(2)}</strong></td></tr>
-            <tr><td class="text-muted">Total Pagado:</td><td><strong class="text-success">Bs ${Number(data.total_pagado).toFixed(2)}</strong></td></tr>
-            <tr><td class="text-muted">Saldo Pendiente:</td><td><strong>Bs ${Number(data.saldo_pendiente).toFixed(2)}</strong></td></tr>
+            <tr><td class="text-muted">Monto Total:</td><td><strong>$${Number(data.monto_total).toFixed(2)}</strong></td></tr>
+            <tr><td class="text-muted">Total Pagado:</td><td><strong class="text-success">$${Number(data.total_pagado).toFixed(2)}</strong></td></tr>
+            <tr><td class="text-muted">Saldo Pendiente:</td><td><strong>$${Number(data.saldo_pendiente).toFixed(2)}</strong></td></tr>
             <tr><td class="text-muted">Estado:</td><td><span class="badge badge-estado ${claseEstado}">${etiquetaEstado}</span></td></tr>
           </table>
         </div>
@@ -147,7 +147,7 @@ $(document).ready(function () {
     if (data.detalles && data.detalles.length > 0) {
       data.detalles.forEach(d => {
         const sub = Number(d.cantidad) * Number(d.precio_unitario);
-        html += `<tr><td>${d.producto}</td><td>${d.cantidad}</td><td>Bs ${Number(d.precio_unitario).toFixed(2)}</td><td>Bs ${sub.toFixed(2)}</td></tr>`;
+        html += `<tr><td>${d.producto}</td><td>${d.cantidad}</td><td>$${Number(d.precio_unitario).toFixed(2)}</td><td>$${sub.toFixed(2)}</td></tr>`;
       });
     }
     html += '</tbody></table>';
@@ -160,7 +160,7 @@ $(document).ready(function () {
         html += `<tr>
           <td>${p.fecha_pago}</td>
           <td>${p.metodo}</td>
-          <td>Bs ${Number(p.monto).toFixed(2)}</td>
+          <td>$${Number(p.monto).toFixed(2)}</td>
           <td>${p.referencia || '—'}</td>
           <td>${p.banco || '—'}</td>
           <td><span class="badge ${badges[p.estado_pago] || 'bg-secondary'}">${p.estado_pago}</span></td>
@@ -181,7 +181,7 @@ $(document).ready(function () {
 
   const abrirModalPago = (id, cliente, saldo, referencia, fechaVenta) => {
     $('#payIdVenta').val(id);
-    $('#payInfo').html(`<strong>${referencia}</strong> — ${cliente} — Saldo pendiente: <strong>Bs ${Number(saldo).toFixed(2)}</strong>`);
+    $('#payInfo').html(`<strong>${referencia}</strong> — ${cliente} — Saldo pendiente: <strong>$${Number(saldo).toFixed(2)}</strong>`);
     const $fechaInput = $('#paymentForm').find('[name="fecha_pago"]');
     if (fechaVenta) {
       $fechaInput.data('fecha-venta', fechaVenta.split(' ')[0]);
