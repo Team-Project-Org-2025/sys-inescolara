@@ -153,7 +153,6 @@ class Usuario extends Database
                 ['ampliacion', 'Ampliación de especies'],
                 ['proveedores', 'Gestión de proveedores'],
                 ['tareas', 'Asignación y seguimiento de tareas'],
-                ['empleados', 'Gestión de empleados'],
                 ['seed_collection', 'Gestión de recolección de semillas'],
                 ['asistente', 'Asistente IA'],
                 ['reports', 'Reportes y estadísticas'],

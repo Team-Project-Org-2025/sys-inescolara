@@ -3,7 +3,7 @@
 require_once __DIR__ . '/controller_helpers.php';
 
 use SysInescolara\models\Tarea;
-use SysInescolara\models\Empleado;
+use SysInescolara\models\Usuario;
 use SysInescolara\models\Insumo;
 use SysInescolara\models\Herramienta;
 
@@ -28,8 +28,8 @@ function index(): void
         return;
     }
 
-    $employeeModel = new Empleado();
-    $trabajadores = $employeeModel->getAll();
+    $userModel = new Usuario();
+    $trabajadores = $userModel->getAll();
     $suppliesModel = new Insumo();
     $insumos = $suppliesModel->getAll();
     $toolModel = new Herramienta();
