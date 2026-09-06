@@ -77,6 +77,8 @@ include_once __DIR__ . '/../common/modal.php';
                                     <th>Especie</th>
                                     <th>Ubicación</th>
                                     <th>Cant. Actual</th>
+                                    <th>Precio</th>
+                                    <th>% Ganancia</th>
                                     <th>Estado</th>
                                     <th>Acciones</th>
                                 </tr>
@@ -311,6 +313,18 @@ include_once __DIR__ . '/../common/modal.php';
             <div class="col-md-4">
                 <label class="form-label fw-semibold text-muted small text-uppercase">Estado</label>
                 <p class="fs-5 fw-medium" id="viewBatchEstado">—</p>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-semibold text-muted small text-uppercase">Costo Unitario</label>
+                <p class="fs-5 fw-medium" id="viewBatchCostoUnitario">—</p>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-semibold text-muted small text-uppercase">% Ganancia</label>
+                <p class="fs-5 fw-medium" id="viewBatchPorcentajeGanancia">—</p>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-semibold text-muted small text-uppercase">Precio Final</label>
+                <p class="fs-5 fw-medium text-success fw-bold" id="viewBatchPrecioFinal">—</p>
             </div>
             <div class="col-md-4">
                 <label class="form-label fw-semibold text-muted small text-uppercase">Categoría</label>
