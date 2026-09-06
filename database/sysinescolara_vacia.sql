@@ -21,6 +21,7 @@
 -- 13. NUEVAS tablas `estado`, `categoria`, `origen` como catálogos reutilizables
 -- 14. `lote` ahora usa FKs id_estado, id_categoria, id_origen (no más VARCHAR)
 -- 15. ELIMINADA tabla `tareas` → nombre_tarea y descripcion directo en asignar_tarea
+-- 16. ELIMINADO `id_lote` de `asignar_tarea` → las tareas ya no dependen de un lote específico
 -- ============================================================================
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
@@ -230,15 +231,12 @@ CREATE TABLE IF NOT EXISTS `asignar_tarea` (
   `id_usuario`        INT(11)       NOT NULL COMMENT 'FK → Seguridad.usuarios.id_usuario',
   `nombre_tarea`      VARCHAR(100)  NOT NULL COMMENT 'Nombre de la tarea',
   `descripcion`       TEXT          DEFAULT NULL COMMENT 'Descripcion opcional de la tarea',
-  `id_lote`           INT(11)       NOT NULL,
   `fecha_asignacion`  DATE          NOT NULL,
   `fecha_cumplimiento` DATE         DEFAULT NULL,
   `estatus_tarea`     VARCHAR(20)   NOT NULL DEFAULT 'pendiente',
   `horas_dedicadas`   DECIMAL(5,2)  DEFAULT NULL,
   PRIMARY KEY (`id_asignacion`),
-  KEY `id_lote`    (`id_lote`),
-  KEY `id_usuario` (`id_usuario`),
-  CONSTRAINT `fk_asignacion_lote` FOREIGN KEY (`id_lote`) REFERENCES `lote` (`id_lote`)
+  KEY `id_usuario` (`id_usuario`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
   COMMENT='Asignacion de tareas a usuarios.';
 
@@ -420,7 +418,7 @@ CREATE TABLE IF NOT EXISTS `venta` (
 CREATE TABLE IF NOT EXISTS `detalle_venta` (
   `id_detalle_venta` INT(11)       NOT NULL AUTO_INCREMENT,
   `id_venta`         INT(11)       NOT NULL,
-  `id_lote`          INT(11)       NOT NULL,
+  `id_lote`           INT(11)       DEFAULT NULL COMMENT 'FK → lote.id_lote (opcional)',
   `cantidad`         INT(11)       NOT NULL,
   `precio_unitario`  DECIMAL(10,2) NOT NULL,
   PRIMARY KEY (`id_detalle_venta`),
