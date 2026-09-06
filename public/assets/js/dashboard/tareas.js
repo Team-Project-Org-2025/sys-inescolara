@@ -11,7 +11,6 @@ let assignmentsTable = null;
 const assignRules = {
   nombre_tarea: 'nombre',
   id_usuario: 'select',
-  id_lote: 'select',
   descripcion: null,
   fecha_asignacion: 'fechaFuturaCheck',
 };
@@ -288,7 +287,6 @@ $('#assignTaskForm').on('submit', function (e) {
         nombre_tarea: $form.find('[name="nombre_tarea"]').val().trim(),
         descripcion: $form.find('[name="descripcion"]').val().trim(),
         id_usuario: parseInt($form.find('[name="id_usuario"]').val()) || 0,
-        id_lote: parseInt($form.find('[name="id_lote"]').val()) || 0,
         fecha_asignacion: $form.find('[name="fecha_asignacion"]').val() || DATA.hoy,
         consumptions: [],
         tools: [],
@@ -298,8 +296,8 @@ $('#assignTaskForm').on('submit', function (e) {
         Helpers.toast('error', 'Debe ingresar el nombre de la tarea.');
         return;
     }
-    if (!data.id_usuario || !data.id_lote) {
-        Helpers.toast('error', 'Debe seleccionar trabajador y lote.');
+    if (!data.id_usuario) {
+        Helpers.toast('error', 'Debe seleccionar un trabajador.');
         return;
     }
 
@@ -370,9 +368,12 @@ $('#assignTaskForm').on('submit', function (e) {
             if (r.success) {
                 if (r.herramientas) DATA.herramientas = r.herramientas;
                 if (r.insumos) DATA.insumos = r.insumos;
-                Helpers.toast('success', isEdit ? 'Tarea actualizada correctamente' : 'Tarea asignada correctamente');
-                $('#assignTaskModal').modal('hide');
+                const msg = isEdit ? 'Tarea actualizada correctamente' : 'Tarea asignada correctamente';
+                const el = document.getElementById('assignTaskModal');
+                const inst = bootstrap.Modal.getInstance(el) || new bootstrap.Modal(el);
+                inst.hide();
                 assignmentsTable.ajax.reload(null, false);
+                setTimeout(() => Helpers.toast('success', msg), 200);
             } else {
                 Helpers.toast('error', r.message);
             }
@@ -433,15 +434,19 @@ $(document).on('click', '.btn-complete-assign', function () {
 
 $('#completeAssignForm').on('submit', function (e) {
     e.preventDefault();
+    console.log('[TAREAS] submit disparado');
     const $form = $(this);
-    if (!validateForm($form, completeRules)) return;
+    if (!validateForm($form, completeRules)) {
+        console.log('[TAREAS] validación falló');
+        return;
+    }
     const data = {
         id: parseInt($form.find('[name="id"]').val()) || 0,
         fecha_cumplimiento: $form.find('[name="fecha_cumplimiento"]').val() || DATA.hoy,
         horas_dedicadas: $form.find('[name="horas_dedicadas"]').val() || '',
         tool_estados: [],
     };
-    if (!data.id) { Helpers.toast('error', 'ID inválido'); return; }
+    if (!data.id) { console.log('[TAREAS] id inválido'); Helpers.toast('error', 'ID inválido'); return; }
 
     $('#completeToolsContainer .tool-estado').each(function () {
         data.tool_estados.push({
@@ -449,18 +454,40 @@ $('#completeAssignForm').on('submit', function (e) {
             estado: $(this).val() || 'ok',
         });
     });
+    console.log('[TAREAS] datos a enviar:', JSON.stringify(data));
 
     Ajax.post(`${baseUrl}?action=complete_ajax`, data)
         .then((r) => {
+            console.log('[TAREAS] respuesta del servidor:', JSON.stringify(r));
             if (r.success) {
-                Helpers.toast('success', 'Tarea completada correctamente');
-                $('#completeAssignModal').modal('hide');
+                console.log('[TAREAS] success=true, buscando modal...');
+                const el = document.getElementById('completeAssignModal');
+                console.log('[TAREAS] element:', el);
+                if (!el) {
+                    console.error('[TAREAS] NO se encontró #completeAssignModal en el DOM');
+                    return;
+                }
+                const inst = bootstrap.Modal.getInstance(el);
+                console.log('[TAREAS] bootstrap.Modal.getInstance:', inst);
+                if (inst) {
+                    console.log('[TAREAS] instancia encontrada, llamando hide()');
+                    inst.hide();
+                } else {
+                    console.log('[TAREAS] NO hay instancia Bootstrap, creando nueva...');
+                    const nuevo = new bootstrap.Modal(el);
+                    nuevo.hide();
+                }
                 assignmentsTable.ajax.reload(null, false);
+                setTimeout(() => Helpers.toast('success', 'Tarea completada correctamente'), 200);
             } else {
+                console.log('[TAREAS] success=false:', r.message);
                 Helpers.toast('error', r.message);
             }
         })
-        .catch((err) => Helpers.toast('error', err));
+        .catch((err) => {
+            console.error('[TAREAS] error en AJAX:', err);
+            Helpers.toast('error', err);
+        });
 });
 
 $('#completeAssignModal').on('hidden.bs.modal', function () {
@@ -532,10 +559,6 @@ $(document).on('click', '.btn-view-assign', function () {
                             <div class="col-md-4 mb-2">
                                 <small class="text-muted d-block">Tarea</small>
                                 <span class="fw-semibold">${Helpers.escapeHtml(a.nombre_tarea || '')}</span>
-                            </div>
-                            <div class="col-md-4 mb-2">
-                                <small class="text-muted d-block">Lote</small>
-                                <span class="fw-semibold">${Helpers.escapeHtml(a.codigo_lote || '—')}</span>
                             </div>
                         </div>
                         <div class="row">
@@ -659,7 +682,6 @@ $(document).on('click', '.btn-edit-assign', function () {
             $('#assignTaskForm input[name="nombre_tarea"]').val(a.nombre_tarea || '');
             $('#assignTaskForm textarea[name="descripcion"]').val(a.descripcion || '');
             $('#assignTaskForm select[name="id_usuario"]').val(a.id_usuario || '');
-            $('#assignTaskForm select[name="id_lote"]').val(a.id_lote || '');
             $('#assignTaskForm input[name="fecha_asignacion"]').val(a.fecha_asignacion || DATA.hoy);
 
             consumos.forEach(function (c) {

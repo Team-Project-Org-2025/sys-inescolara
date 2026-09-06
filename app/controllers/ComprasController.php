@@ -111,10 +111,10 @@ function compras_manejarAgregarEditar(string $modo): void
                 $idPlanta = !empty($item['id_planta']) ? (int)$item['id_planta'] : null;
                 $cantidad = (float)($item['cantidad'] ?? 0);
                 $costoUnitario = (float)($item['costo_unitario'] ?? 0);
-                $subtotalItem = $cantidad * $costoUnitario;
                 $categoriaLote = $item['categoria_lote'] ?? null;
                 $idUbicacionItem = !empty($item['id_ubicacion']) ? (int)$item['id_ubicacion'] : null;
-                $modelo->agregarDetalle($nuevoId, $idInsumo, $idHerramienta, $idPlanta, $cantidad, $costoUnitario, $subtotalItem, $categoriaLote, $idUbicacionItem);
+                $tipoItem = $idInsumo ? 'insumo' : ($idHerramienta ? 'herramienta' : 'planta');
+                $modelo->agregarDetalle($nuevoId, $tipoItem, $idInsumo, $idHerramienta, $idPlanta, $cantidad, $costoUnitario, $categoriaLote, $idUbicacionItem);
             }
 
             if (!$modelo->crearCuentaPagar($nuevoId, $total)) {
@@ -140,10 +140,10 @@ function compras_manejarAgregarEditar(string $modo): void
             $idPlanta = !empty($item['id_planta']) ? (int)$item['id_planta'] : null;
             $cantidad = (float)($item['cantidad'] ?? 0);
             $costoUnitario = (float)($item['costo_unitario'] ?? 0);
-            $subtotalItem = $cantidad * $costoUnitario;
             $categoriaLote = $item['categoria_lote'] ?? null;
             $idUbicacionItem = !empty($item['id_ubicacion']) ? (int)$item['id_ubicacion'] : null;
-            $modelo->agregarDetalle($id, $idInsumo, $idHerramienta, $idPlanta, $cantidad, $costoUnitario, $subtotalItem, $categoriaLote, $idUbicacionItem);
+            $tipoItem = $idInsumo ? 'insumo' : ($idHerramienta ? 'herramienta' : 'planta');
+            $modelo->agregarDetalle($id, $tipoItem, $idInsumo, $idHerramienta, $idPlanta, $cantidad, $costoUnitario, $categoriaLote, $idUbicacionItem);
         }
 
         if (!$modelo->actualizarCuentaPagar($id, $total)) {

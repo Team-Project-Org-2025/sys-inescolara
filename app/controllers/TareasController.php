@@ -4,7 +4,6 @@ require_once __DIR__ . '/controller_helpers.php';
 
 use SysInescolara\models\Tarea;
 use SysInescolara\models\Empleado;
-use SysInescolara\models\Lote;
 use SysInescolara\models\Insumo;
 use SysInescolara\models\Herramienta;
 
@@ -23,7 +22,7 @@ function index(): void
                 'POST_cancel_ajax'    => cancel_ajax(),
                 default               => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
             };
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             handleError($e, true);
         }
         return;
@@ -31,8 +30,6 @@ function index(): void
 
     $employeeModel = new Empleado();
     $trabajadores = $employeeModel->getAll();
-    $batchModel = new Lote();
-    $lotes = $batchModel->getAll();
     $suppliesModel = new Insumo();
     $insumos = $suppliesModel->getAll();
     $toolModel = new Herramienta();
@@ -74,13 +71,12 @@ function tasks_assignAjax(): void
         'nombre_tarea'     => $nombreTarea,
         'descripcion'      => $descripcion,
         'id_usuario'       => (int)($data['id_usuario'] ?? 0),
-        'id_lote'          => (int)($data['id_lote'] ?? 0),
         'fecha_asignacion' => $data['fecha_asignacion'] ?? date('Y-m-d'),
         'estatus_tarea'    => 'pendiente',
     ];
 
-    if (!$assignmentData['id_usuario'] || !$assignmentData['id_lote']) {
-        jsonResponse(['success' => false, 'message' => 'Se requieren trabajador y lote.'], 400);
+    if (!$assignmentData['id_usuario']) {
+        jsonResponse(['success' => false, 'message' => 'Se requiere un trabajador.'], 400);
     }
 
     $rawConsumos = $data['consumptions'] ?? [];
@@ -179,12 +175,11 @@ function tasks_editAjax(): void
         'nombre_tarea'     => $nombreTarea,
         'descripcion'      => $descripcion,
         'id_usuario'       => (int)($data['id_usuario'] ?? 0),
-        'id_lote'          => (int)($data['id_lote'] ?? 0),
         'fecha_asignacion' => $data['fecha_asignacion'] ?? date('Y-m-d'),
     ];
 
-    if (!$assignmentData['id_usuario'] || !$assignmentData['id_lote']) {
-        jsonResponse(['success' => false, 'message' => 'Se requieren trabajador y lote.'], 400);
+    if (!$assignmentData['id_usuario']) {
+        jsonResponse(['success' => false, 'message' => 'Se requiere un trabajador.'], 400);
     }
 
     $rawConsumos = $data['consumptions'] ?? [];
@@ -287,7 +282,6 @@ function tasks_completeAssignmentAjax(): void
         $model->updateToolEstados($id, $toolEstados);
     }
 
-    // Marcar notificación como leída
     try {
         $notifModel = new \SysInescolara\models\Notification();
         $notifModel->markTaskAssignedAsRead((int)$assignment['id_usuario'], $assignment['nombre_tarea']);

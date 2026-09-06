@@ -69,7 +69,7 @@ include_once __DIR__ . '/../common/modal.php';
         <div class="row">
             <div class="col-md-4 mb-3">
                 <label class="form-label">Nombre de la tarea *</label>
-                <input type="text" class="form-control" name="nombre_tarea" required placeholder="Ej: Regar plantas, Podar rosales" maxlength="50">
+                <input type="text" class="form-control" name="nombre_tarea" required placeholder="Ej: Regar plantas, Podar rosales" maxlength="100">
             </div>
             <div class="col-md-4 mb-3">
                 <label class="form-label">Trabajador *</label>
@@ -87,24 +87,13 @@ include_once __DIR__ . '/../common/modal.php';
                 </select>
             </div>
             <div class="col-md-4 mb-3">
-                <label class="form-label">Lote *</label>
-                <select class="form-select" name="id_lote" required>
-                    <option value="">Seleccione...</option>
-                    <?php foreach ($lotes as $l): ?>
-                    <option value="<?= $l['id'] ?>" data-planta="<?= htmlspecialchars($l['planta_nombre'] ?? '') ?>">
-                        #<?= $l['id'] ?> - <?= htmlspecialchars($l['planta_nombre'] ?? '') ?>
-                    </option>
-                    <?php endforeach; ?>
-                </select>
+                <label class="form-label">Fecha de Asignación</label>
+                <input type="date" class="form-control" name="fecha_asignacion">
             </div>
         </div>
         <div class="mb-3">
             <label class="form-label">Descripción</label>
             <textarea class="form-control" name="descripcion" rows="2" placeholder="Detalles adicionales de la tarea (opcional)" maxlength="500"></textarea>
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Fecha de Asignación</label>
-            <input type="date" class="form-control" name="fecha_asignacion">
         </div>
 
         <div class="card border-success mb-3">
@@ -197,6 +186,6 @@ include_once __DIR__ . '/../common/modal.php';
             hoy: '<?= date('Y-m-d') ?>'
         };
     </script>
-    <script type="module" src="<?= BASE_URL ?>public/assets/js/dashboard/tareas.js?v=2"></script>
+    <script type="module" src="<?= BASE_URL ?>public/assets/js/dashboard/tareas.js?v=99"></script>
 </body>
 </html>

@@ -325,11 +325,8 @@ class Reports extends Database
                     ['value' => 'cancelada', 'label' => 'Cancelada'],
                 ]),
             $this->selectFromQuery('id_usuario', 'Trabajador',
-                "SELECT id_usuario AS value, CONCAT(nombre_trabajador, ' ', apellido_trabajador) AS label FROM `SysInescolara-Seguridad`.`usuarios` WHERE nombre_trabajador IS NOT NULL AND nombre_trabajador != '' ORDER BY nombre_trabajador ASC", 'value', 'label', 'a.id_usuario'),
-            $this->selectFromQuery('id_tarea', 'Tarea',
-                "SELECT id_tarea AS value, nombre_tarea AS label FROM tareas WHERE activo = 1 ORDER BY nombre_tarea ASC", 'value', 'label', 'a.id_tarea'),
-            $this->selectFromQuery('id_lote', 'Lote',
-                "SELECT l.id_lote AS value, CONCAT('Lote #', l.id_lote, ' - ', p.nombre_comun) AS label FROM lote l LEFT JOIN plantas p ON l.id_planta = p.id_planta WHERE l.activo = 1 ORDER BY l.id_lote DESC", 'value', 'label', 'a.id_lote'),
+                "SELECT id_usuario AS value, COALESCE(NULLIF(nombre_trabajador, ''), nombre_usuario) AS label FROM `SysInescolara-Seguridad`.`usuarios` WHERE activo = 1 ORDER BY nombre_usuario ASC", 'value', 'label', 'a.id_usuario'),
+            $this->defText('nombre_tarea', 'Nombre de tarea', 'a.nombre_tarea'),
             $this->defDateRange('fecha_asignacion', 'Fecha Asignación', 'a.fecha_asignacion'),
             $this->defDateRange('fecha_cumplimiento', 'Fecha Cumplimiento', 'a.fecha_cumplimiento'),
             $this->defNumber('horas_dedicadas', 'Horas dedicadas', 'a.horas_dedicadas'),
@@ -998,15 +995,12 @@ class Reports extends Database
         $where = $this->buildWhere($conds);
 
         try {
-            $sql = "SELECT a.id_asignacion, t.nombre_tarea AS tarea,
-                           CONCAT(tr.nombre_trabajador, ' ', tr.apellido_trabajador) AS trabajador,
-                           CONCAT('#', l.id_lote, ' ', COALESCE(p.nombre_comun, '')) AS lote,
+            $sql = "SELECT a.id_asignacion, a.nombre_tarea AS tarea,
+                           COALESCE(NULLIF(tr.nombre_trabajador, ''), tr.nombre_usuario) AS trabajador,
+                           a.descripcion,
                            a.fecha_asignacion, a.fecha_cumplimiento, a.estatus_tarea, a.horas_dedicadas
                     FROM asignar_tarea a
-                    LEFT JOIN tareas t ON a.id_tarea = t.id_tarea AND t.activo = 1
                     LEFT JOIN `SysInescolara-Seguridad`.`usuarios` tr ON a.id_usuario = tr.id_usuario
-                    LEFT JOIN lote l ON a.id_lote = l.id_lote AND l.activo = 1
-                    LEFT JOIN plantas p ON l.id_planta = p.id_planta
                     $where
                     ORDER BY a.fecha_asignacion DESC";
             $stmt = $this->db()->prepare($sql);
@@ -1020,7 +1014,7 @@ class Reports extends Database
             }
 
             return [
-                'columns' => ['ID', 'Tarea', 'Trabajador', 'Lote', 'Fecha Asignación', 'Fecha Cumplimiento', 'Estatus', 'Horas'],
+                'columns' => ['ID', 'Tarea', 'Trabajador', 'Descripción', 'Fecha Asignación', 'Fecha Cumplimiento', 'Estatus', 'Horas'],
                 'rows' => $rows,
                 'chart' => [
                     'type' => 'bar',

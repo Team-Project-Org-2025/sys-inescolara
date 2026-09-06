@@ -395,10 +395,9 @@ class Herramienta extends Database implements ReadableInterface, DeletableInterf
     public function getUsages(int $herramientaId): array
     {
         try {
-            $sql = "SELECT u.*, a.id_tarea, t.nombre_tarea
+            $sql = "SELECT u.*, a.id_asignacion, a.nombre_tarea
                     FROM uso_herramienta u
                     LEFT JOIN asignar_tarea a ON u.id_asignacion = a.id_asignacion
-                    LEFT JOIN tareas t ON a.id_tarea = t.id_tarea
                     WHERE u.id_herramienta = :id_herramienta
                     ORDER BY u.fecha_uso DESC";
             $stmt = $this->db()->prepare($sql);

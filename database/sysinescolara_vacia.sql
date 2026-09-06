@@ -242,7 +242,7 @@ CREATE TABLE IF NOT EXISTS `asignar_tarea` (
 
 CREATE TABLE IF NOT EXISTS `registro_insumo` (
   `id_registro_insumo` INT(11)       NOT NULL AUTO_INCREMENT,
-  `id_lote`            INT(11)       NOT NULL,
+  `id_lote`            INT(11)       DEFAULT NULL COMMENT 'NULL si la tarea no tiene lote asociado',
   `id_insumo`          INT(11)       NOT NULL,
   `id_asignacion`      INT(11)       DEFAULT NULL COMMENT 'NULL = directo, NO NULL = vía tarea',
   `cantidad`           DECIMAL(10,2) NOT NULL,
@@ -301,6 +301,7 @@ CREATE TABLE IF NOT EXISTS `compra` (
 CREATE TABLE IF NOT EXISTS `compra_detalle` (
   `id_detalle`       INT(11)       NOT NULL AUTO_INCREMENT,
   `id_compra`        INT(11)       NOT NULL,
+  `tipo_item`        ENUM('insumo','herramienta','planta') DEFAULT NULL COMMENT 'Tipo exacto del ítem',
   `id_insumo`        INT(11)       DEFAULT NULL COMMENT 'FK real a insumo',
   `id_herramienta`   INT(11)       DEFAULT NULL COMMENT 'FK real a herramienta',
   `id_planta`        INT(11)       DEFAULT NULL COMMENT 'FK real a plantas',
@@ -308,7 +309,6 @@ CREATE TABLE IF NOT EXISTS `compra_detalle` (
   `id_ubicacion`     INT(11)       DEFAULT NULL,
   `cantidad`         DECIMAL(10,2) NOT NULL,
   `costo_unitario`   DECIMAL(10,2) NOT NULL,
-  `subtotal`         DECIMAL(10,2) NOT NULL DEFAULT 0.00,
   `activo`           TINYINT(1)    NOT NULL DEFAULT 1,
   PRIMARY KEY (`id_detalle`),
   KEY `idx_detalle_compra`  (`id_compra`),
@@ -318,7 +318,10 @@ CREATE TABLE IF NOT EXISTS `compra_detalle` (
   CONSTRAINT `fk_detalle_compra`      FOREIGN KEY (`id_compra`)      REFERENCES `compra`      (`id_compra`) ON DELETE CASCADE,
   CONSTRAINT `fk_detalle_insumo`      FOREIGN KEY (`id_insumo`)      REFERENCES `insumo`      (`id_insumo`),
   CONSTRAINT `fk_detalle_herramienta` FOREIGN KEY (`id_herramienta`) REFERENCES `herramienta` (`id_herramienta`),
-  CONSTRAINT `fk_detalle_planta`      FOREIGN KEY (`id_planta`)      REFERENCES `plantas`     (`id_planta`)
+  CONSTRAINT `fk_detalle_planta`      FOREIGN KEY (`id_planta`)      REFERENCES `plantas`     (`id_planta`),
+  CONSTRAINT `chk_detalle_tipo_item`  CHECK (
+    (id_insumo IS NOT NULL) + (id_herramienta IS NOT NULL) + (id_planta IS NOT NULL) = 1
+  )
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------------------------
@@ -342,7 +345,7 @@ CREATE TABLE IF NOT EXISTS `ornatos` (
 CREATE TABLE IF NOT EXISTS `detalle_ornatos` (
   `id_detalle_ornato` INT(11)       NOT NULL AUTO_INCREMENT,
   `id_ornato`         INT(11)       NOT NULL,
-  `id_lote`           INT(11)       NOT NULL,
+  `id_lote`            INT(11)       DEFAULT NULL COMMENT 'FK → lote.id_lote (opcional, NULL si es vía tarea sin lote)',
   `cantidad`          INT(11)       NOT NULL,
   `precio_unitario`   DECIMAL(10,2) DEFAULT NULL,
   `sub_total`         DECIMAL(10,2) DEFAULT NULL,

@@ -118,15 +118,11 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
         try {
             $stmt = $this->db()->prepare("
                 SELECT
-                    d.id_detalle, d.id_compra,
-                    CASE
-                        WHEN d.id_insumo IS NOT NULL THEN 'insumo'
-                        WHEN d.id_herramienta IS NOT NULL THEN 'herramienta'
-                        WHEN d.id_planta IS NOT NULL THEN 'planta'
-                    END AS tipo_item,
+                    d.id_detalle, d.id_compra, d.tipo_item,
                     COALESCE(d.id_insumo, d.id_herramienta, d.id_planta) AS id_item,
                     d.id_insumo, d.id_herramienta, d.id_planta,
-                    d.cantidad, d.costo_unitario, d.subtotal,
+                    d.cantidad, d.costo_unitario,
+                    (d.cantidad * d.costo_unitario) AS subtotal,
                     d.categoria_lote, d.id_ubicacion,
                     CASE
                         WHEN d.id_insumo IS NOT NULL THEN i.nombre_insumo
@@ -274,27 +270,27 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
 
     public function agregarDetalle(
         int $idCompra,
+        string $tipoItem,
         ?int $idInsumo,
         ?int $idHerramienta,
         ?int $idPlanta,
         float $cantidad,
         float $costoUnitario,
-        float $subtotal,
         ?string $categoriaLote = null,
         ?int $idUbicacion = null
     ): bool {
         $stmt = $this->db()->prepare("
-            INSERT INTO compra_detalle (id_compra, id_insumo, id_herramienta, id_planta, cantidad, costo_unitario, subtotal, categoria_lote, id_ubicacion)
-            VALUES (:id_compra, :id_insumo, :id_herramienta, :id_planta, :cantidad, :costo_unitario, :subtotal, :categoria_lote, :id_ubicacion)
+            INSERT INTO compra_detalle (id_compra, tipo_item, id_insumo, id_herramienta, id_planta, cantidad, costo_unitario, categoria_lote, id_ubicacion)
+            VALUES (:id_compra, :tipo_item, :id_insumo, :id_herramienta, :id_planta, :cantidad, :costo_unitario, :categoria_lote, :id_ubicacion)
         ");
         return $stmt->execute([
             ':id_compra'      => $idCompra,
+            ':tipo_item'      => $tipoItem,
             ':id_insumo'      => $idInsumo,
             ':id_herramienta' => $idHerramienta,
             ':id_planta'      => $idPlanta,
             ':cantidad'       => $cantidad,
             ':costo_unitario' => $costoUnitario,
-            ':subtotal'       => $subtotal,
             ':categoria_lote' => $categoriaLote,
             ':id_ubicacion'   => $idUbicacion,
         ]);
@@ -419,13 +415,16 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
 
                 if ($d['id_planta'] !== null) {
                     $costoUnitario = $d['costo_unitario'];
+                    $categoriaLote = $d['categoria_lote'] ?? 'germinado';
+                    $catIdMap = ['germinado' => 1, 'plántula' => 2, 'adulto' => 3];
+                    $idCategoria = $catIdMap[$categoriaLote] ?? 1;
                     $stmt = $this->db()->prepare("
                         INSERT INTO lote
                             (id_planta, id_ubicacion, fecha_siembra, cantidad_inicial, cantidad_actual,
-                             costo_unitario, estado, origen, observacion)
+                             costo_unitario, id_estado, id_categoria, id_origen, observacion)
                         VALUES
                             (:id_planta, :id_ubicacion, CURDATE(), :cantidad_ini, :cantidad_act,
-                             :costo_unitario, 'Activo', 'Compra', :observacion)
+                             :costo_unitario, 5, :id_categoria, 4, :observacion)
                     ");
                     $stmt->execute([
                         ':id_planta'      => $d['id_planta'],
@@ -433,6 +432,7 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
                         ':cantidad_ini'   => $d['cantidad'],
                         ':cantidad_act'   => $d['cantidad'],
                         ':costo_unitario' => $costoUnitario,
+                        ':id_categoria'   => $idCategoria,
                         ':observacion'    => 'Ingresado por compra #' . $idCompra,
                     ]);
                     $loteId = $this->db()->lastInsertId();

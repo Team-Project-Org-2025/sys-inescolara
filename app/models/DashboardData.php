@@ -131,13 +131,11 @@ class DashboardData extends Database
     {
         try {
             $stmt = $this->db()->prepare("
-                SELECT at.id_asignacion, t.nombre_tarea, tr.nombre_usuario AS nombre_trabajador,
-                       at.fecha_asignacion, at.fecha_cumplimiento, at.estatus_tarea,
-                       l.id_lote
+                SELECT at.id_asignacion, at.nombre_tarea, at.descripcion,
+                       tr.nombre_usuario AS nombre_trabajador,
+                       at.fecha_asignacion, at.fecha_cumplimiento, at.estatus_tarea
                 FROM asignar_tarea at
-                JOIN tareas t ON at.id_tarea = t.id_tarea AND t.activo = 1
                 LEFT JOIN `sysinescolara-seguridad`.usuarios tr ON at.id_usuario = tr.id_usuario
-                LEFT JOIN lote l ON at.id_lote = l.id_lote AND l.activo = 1
                 WHERE at.estatus_tarea NOT IN ('completada','cancelada')
                 ORDER BY at.fecha_cumplimiento ASC
                 LIMIT 6

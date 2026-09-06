@@ -22,8 +22,10 @@ export const request = (config) => {
             errorMsg = json.message;
           }
         } catch (e) {
-          errorMsg = xhr.statusText || error || errorMsg;
+          errorMsg = xhr.status + ' ' + (xhr.statusText || error || errorMsg);
         }
+
+        console.error('[AJAX DEBUG] status:', xhr.status, 'statusText:', xhr.statusText, 'raw:', xhr.responseText?.substring(0, 500));
 
         reject(errorMsg);
       },
