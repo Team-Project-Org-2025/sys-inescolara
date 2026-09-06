@@ -63,25 +63,36 @@ function employees_handleAddEdit(string $mode): void
     if ($telefono === '') $telefono = null;
     $cargo = trim((string)($_POST['cargo'] ?? ''));
     if ($cargo === '') $cargo = null;
-    $activo = isset($_POST['activo']) ? 1 : 0;
+    $activo = isset($_POST['activo']) ? true : false;
+
+    $attrs = [
+        'nombre_trabajador'   => $nombre,
+        'apellido_trabajador' => $apellido,
+        'cedula_trabajador'   => $cedula,
+        'telefono_trabajador' => $telefono,
+        'cargo'               => $cargo,
+    ];
 
     if ($mode === 'add') {
-        $model->add($nombre, $apellido, $cedula, $telefono, $cargo, $activo);
+        $model->fill($attrs)->setActivo($activo)->save();
         $newId = $model->getLastInsertId() ?? 0;
         jsonResponse(['success' => true, 'message' => 'Trabajador agregado correctamente', 'employee' => ['id' => $newId, 'nombre_trabajador' => $nombre, 'apellido_trabajador' => $apellido, 'cedula_trabajador' => $cedula, 'telefono_trabajador' => $telefono, 'cargo' => $cargo, 'activo' => $activo]]);
     }
 
-    $id = (int)($_POST['id'] ?? 0);
+    $id = (int)($_POST['id_usuario'] ?? 0);
     if ($id <= 0) throw new \Exception('ID inválido');
 
-    $model->update($id, $nombre, $apellido, $cedula, $telefono, $cargo, $activo);
+    $existing = Empleado::find($id);
+    if (!$existing) throw new \Exception('No existe el trabajador');
+
+    $existing->fill($attrs)->setActivo($activo)->save();
     jsonResponse(['success' => true, 'message' => 'Trabajador actualizado correctamente', 'employee' => ['id' => $id, 'nombre_trabajador' => $nombre, 'apellido_trabajador' => $apellido, 'cedula_trabajador' => $cedula, 'telefono_trabajador' => $telefono, 'cargo' => $cargo, 'activo' => $activo]]);
 }
 
 function employees_handleDelete(): void
 {
     $model = new Empleado();
-    $id = (int)($_POST['id'] ?? 0);
+    $id = (int)($_POST['id_usuario'] ?? 0);
     if ($id <= 0) throw new \Exception('ID inválido');
     if (!$model->exists($id)) throw new \Exception('No existe el trabajador');
 

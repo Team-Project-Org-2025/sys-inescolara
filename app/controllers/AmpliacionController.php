@@ -49,7 +49,7 @@ function ampliacion_handleAdd(): void
     $data = getRequestData();
 
     $idCliente = (int)($data['id_cliente'] ?? 0);
-    $idTrabajador = (int)($data['id_trabajador_gestor'] ?? 0);
+    $idTrabajador = (int)($data['id_usuario_gestor'] ?? 0);
     if ($idTrabajador <= 0) throw new \Exception('El trabajador gestor es requerido.');
 
     $salidaItems = isset($data['salida_items']) ? json_decode($data['salida_items'], true) : [];
@@ -84,7 +84,7 @@ function ampliacion_handleAdd(): void
     $model = new Ampliacion();
     $payload = [
         'id_cliente' => $idCliente,
-        'id_trabajador_gestor' => $idTrabajador,
+        'id_usuario_gestor' => $idTrabajador,
         'fecha_movimiento' => trim((string)($data['fecha_movimiento'] ?? '')),
         'observacion' => trim((string)($data['observacion'] ?? '')),
         'salida_items' => $salidaItems,
@@ -103,7 +103,7 @@ function ampliacion_handleEdit(): void
     if ($id <= 0) throw new \Exception('ID inválido');
 
     $idCliente = (int)($data['id_cliente'] ?? 0);
-    $idTrabajador = (int)($data['id_trabajador_gestor'] ?? 0);
+    $idTrabajador = (int)($data['id_usuario_gestor'] ?? 0);
     if ($idTrabajador <= 0) throw new \Exception('El trabajador gestor es requerido.');
 
     $salidaItems = isset($data['salida_items']) ? json_decode($data['salida_items'], true) : [];
@@ -137,7 +137,7 @@ function ampliacion_handleEdit(): void
     $model = new Ampliacion();
     $payload = [
         'id_cliente' => $idCliente,
-        'id_trabajador_gestor' => $idTrabajador,
+        'id_usuario_gestor' => $idTrabajador,
         'fecha_movimiento' => trim((string)($data['fecha_movimiento'] ?? '')),
         'observacion' => trim((string)($data['observacion'] ?? '')),
         'salida_items' => $salidaItems,

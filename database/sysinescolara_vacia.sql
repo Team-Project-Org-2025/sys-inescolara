@@ -1,9 +1,9 @@
 -- ============================================================================
 -- SYSINECOLARA — Base de Datos Vacía (solo estructura, sin datos)
 -- Generado: 2026-09-01
--- Versión: 3.2 — Refactor de tablas y relaciones
+-- Versión: 3.3 — Tablas de catálogo `estado`, `categoria`, `origen`
 -- ============================================================================
--- CAMBIOS vs esquema v3.0:
+-- CAMBIOS vs esquema v3.2:
 --  1. ELIMINADOS de `lote`: costo_mano_obra, costo_total_insumo,
 --     costo_agua_lote, precio_final_sugerido (calculados en código)
 --  2. MANTENIDO en `lote`: costo_unitario (precio base por planta),
@@ -18,6 +18,8 @@
 -- 10. Agua registra como insumo normal en tabla `insumo`
 -- 11. Renombrados id_trabajador → id_usuario en todas las tablas
 -- 12. Renombrado id_trabajador_gestor → id_usuario_gestor en movimiento_planta
+-- 13. NUEVAS tablas `estado`, `categoria`, `origen` como catálogos reutilizables
+-- 14. `lote` ahora usa FKs id_estado, id_categoria, id_origen (no más VARCHAR)
 -- ============================================================================
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
@@ -66,6 +68,49 @@ CREATE TABLE IF NOT EXISTS `unidad_medida` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
   COMMENT='Unidades de medida para insumos.';
 
+CREATE TABLE IF NOT EXISTS `estado` (
+  `id_estado` INT(11)     NOT NULL AUTO_INCREMENT,
+  `nombre`    VARCHAR(30) NOT NULL,
+  `activo`    TINYINT(1)  NOT NULL DEFAULT 1,
+  PRIMARY KEY (`id_estado`),
+  UNIQUE KEY `nombre` (`nombre`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  COMMENT='Catálogo de estados (reutilizable).';
+
+INSERT INTO `estado` (`id_estado`, `nombre`, `activo`) VALUES
+  (5, 'vivo', 1),
+  (6, 'cuarentena', 1),
+  (7, 'muerto', 1);
+
+CREATE TABLE IF NOT EXISTS `categoria` (
+  `id_categoria` INT(11)     NOT NULL AUTO_INCREMENT,
+  `nombre`       VARCHAR(30) NOT NULL,
+  `activo`       TINYINT(1)  NOT NULL DEFAULT 1,
+  PRIMARY KEY (`id_categoria`),
+  UNIQUE KEY `nombre` (`nombre`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  COMMENT='Catálogo de categorías de lote.';
+
+INSERT INTO `categoria` (`id_categoria`, `nombre`, `activo`) VALUES
+  (1, 'germinado', 1),
+  (2, 'plántula', 1),
+  (3, 'adulto', 1);
+
+CREATE TABLE IF NOT EXISTS `origen` (
+  `id_origen` INT(11)     NOT NULL AUTO_INCREMENT,
+  `nombre`    VARCHAR(30) NOT NULL,
+  `activo`    TINYINT(1)  NOT NULL DEFAULT 1,
+  PRIMARY KEY (`id_origen`),
+  UNIQUE KEY `nombre` (`nombre`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  COMMENT='Catálogo de orígenes (reutilizable).';
+
+INSERT INTO `origen` (`id_origen`, `nombre`, `activo`) VALUES
+  (1, 'Siembra', 1),
+  (2, 'Ampliación', 1),
+  (3, 'Donación', 1),
+  (4, 'Compra', 1);
+
 -- --------------------------------------------------------------------------
 -- 2. Plantas y Lotes
 -- --------------------------------------------------------------------------
@@ -92,9 +137,9 @@ CREATE TABLE IF NOT EXISTS `lote` (
   `cantidad_inicial`     INT(11)       NOT NULL,
   `cantidad_actual`      INT(11)       NOT NULL,
   `costo_unitario`       DECIMAL(10,2) DEFAULT 0.00 COMMENT 'Precio base por planta',
-  `estado`               VARCHAR(50)   DEFAULT 'Activo',
-  `categoria`            VARCHAR(30)   DEFAULT NULL,
-  `origen`               VARCHAR(30)   NOT NULL,
+  `id_estado`            INT(11)       DEFAULT NULL,
+  `id_categoria`         INT(11)       DEFAULT NULL,
+  `id_origen`            INT(11)       DEFAULT NULL,
   `observacion`          VARCHAR(255)  DEFAULT NULL,
   `imagen`               VARCHAR(255)  DEFAULT NULL,
   `activo`               TINYINT(1)    NOT NULL DEFAULT 1,
@@ -102,8 +147,14 @@ CREATE TABLE IF NOT EXISTS `lote` (
   PRIMARY KEY (`id_lote`),
   KEY `id_planta`    (`id_planta`),
   KEY `id_ubicacion` (`id_ubicacion`),
+  KEY `id_estado`    (`id_estado`),
+  KEY `id_categoria` (`id_categoria`),
+  KEY `id_origen`    (`id_origen`),
   CONSTRAINT `fk_lote_planta`    FOREIGN KEY (`id_planta`)    REFERENCES `plantas`    (`id_planta`),
-  CONSTRAINT `fk_lote_ubicacion` FOREIGN KEY (`id_ubicacion`) REFERENCES `ubicacion` (`id_ubicacion`)
+  CONSTRAINT `fk_lote_ubicacion` FOREIGN KEY (`id_ubicacion`) REFERENCES `ubicacion` (`id_ubicacion`),
+  CONSTRAINT `fk_lote_estado`    FOREIGN KEY (`id_estado`)    REFERENCES `estado`     (`id_estado`),
+  CONSTRAINT `fk_lote_categoria` FOREIGN KEY (`id_categoria`) REFERENCES `categoria` (`id_categoria`),
+  CONSTRAINT `fk_lote_origen`    FOREIGN KEY (`id_origen`)    REFERENCES `origen`     (`id_origen`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
   COMMENT='Unidad de producción. Precio calculado en código.';
 

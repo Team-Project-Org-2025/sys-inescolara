@@ -10,7 +10,7 @@ let assignmentsTable = null;
 
 const assignRules = {
   nombre_tarea: 'nombre',
-  id_trabajador: 'select',
+  id_usuario: 'select',
   id_lote: 'select',
   descripcion: null,
   fecha_asignacion: 'fechaFuturaCheck',
@@ -284,7 +284,7 @@ $('#assignTaskForm').on('submit', function (e) {
     const data = {
         nombre_tarea: $form.find('[name="nombre_tarea"]').val().trim(),
         descripcion: $form.find('[name="descripcion"]').val().trim(),
-        id_trabajador: parseInt($form.find('[name="id_trabajador"]').val()) || 0,
+        id_usuario: parseInt($form.find('[name="id_usuario"]').val()) || 0,
         id_lote: parseInt($form.find('[name="id_lote"]').val()) || 0,
         fecha_asignacion: $form.find('[name="fecha_asignacion"]').val() || DATA.hoy,
         consumptions: [],
@@ -295,7 +295,7 @@ $('#assignTaskForm').on('submit', function (e) {
         Helpers.toast('error', 'Debe ingresar el nombre de la tarea.');
         return;
     }
-    if (!data.id_trabajador || !data.id_lote) {
+    if (!data.id_usuario || !data.id_lote) {
         Helpers.toast('error', 'Debe seleccionar trabajador y lote.');
         return;
     }
@@ -655,7 +655,7 @@ $(document).on('click', '.btn-edit-assign', function () {
             $('#assignTaskForm input[name="id_asignacion"]').val(a.id_asignacion);
             $('#assignTaskForm input[name="nombre_tarea"]').val(a.nombre_tarea || '');
             $('#assignTaskForm textarea[name="descripcion"]').val(a.descripcion || '');
-            $('#assignTaskForm select[name="id_trabajador"]').val(a.id_trabajador || '');
+            $('#assignTaskForm select[name="id_usuario"]').val(a.id_usuario || '');
             $('#assignTaskForm select[name="id_lote"]').val(a.id_lote || '');
             $('#assignTaskForm input[name="fecha_asignacion"]').val(a.fecha_asignacion || DATA.hoy);
 

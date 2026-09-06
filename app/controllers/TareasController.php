@@ -73,13 +73,13 @@ function tasks_assignAjax(): void
     $assignmentData = [
         'nombre_tarea'     => $nombreTarea,
         'descripcion'      => $descripcion,
-        'id_trabajador'    => (int)($data['id_trabajador'] ?? 0),
+        'id_usuario'       => (int)($data['id_usuario'] ?? 0),
         'id_lote'          => (int)($data['id_lote'] ?? 0),
         'fecha_asignacion' => $data['fecha_asignacion'] ?? date('Y-m-d'),
         'estatus_tarea'    => 'pendiente',
     ];
 
-    if (!$assignmentData['id_trabajador'] || !$assignmentData['id_lote']) {
+    if (!$assignmentData['id_usuario'] || !$assignmentData['id_lote']) {
         jsonResponse(['success' => false, 'message' => 'Se requieren trabajador y lote.'], 400);
     }
 
@@ -182,12 +182,12 @@ function tasks_editAjax(): void
     $assignmentData = [
         'nombre_tarea'     => $nombreTarea,
         'descripcion'      => $descripcion,
-        'id_trabajador'    => (int)($data['id_trabajador'] ?? 0),
+        'id_usuario'       => (int)($data['id_usuario'] ?? 0),
         'id_lote'          => (int)($data['id_lote'] ?? 0),
         'fecha_asignacion' => $data['fecha_asignacion'] ?? date('Y-m-d'),
     ];
 
-    if (!$assignmentData['id_trabajador'] || !$assignmentData['id_lote']) {
+    if (!$assignmentData['id_usuario'] || !$assignmentData['id_lote']) {
         jsonResponse(['success' => false, 'message' => 'Se requieren trabajador y lote.'], 400);
     }
 

@@ -144,8 +144,8 @@ function ventas_manejarGuardar(): void
     $idCliente = (int)($_POST['id_cliente'] ?? 0);
     if ($idCliente <= 0) throw new \Exception('El cliente es requerido.');
 
-    $idTrabajador = (int)($_POST['id_trabajador'] ?? 0);
-    if ($idTrabajador <= 0) throw new \Exception('El vendedor es requerido.');
+    $idUsuario = (int)($_POST['id_usuario'] ?? 0);
+    if ($idUsuario <= 0) throw new \Exception('El vendedor es requerido.');
 
     $tipoVenta = trim((string)($_POST['tipo_venta'] ?? ''));
     if (!in_array($tipoVenta, ['contado', 'credito'], true)) {
@@ -222,7 +222,7 @@ function ventas_manejarGuardar(): void
 
     $datos = [
         'id_cliente'    => $idCliente,
-        'id_trabajador' => $idTrabajador,
+        'id_usuario'    => $idUsuario,
         'tipo_venta'    => $tipoVenta,
         'fecha_venta'   => $fechaVenta,
         'observaciones' => $observaciones,

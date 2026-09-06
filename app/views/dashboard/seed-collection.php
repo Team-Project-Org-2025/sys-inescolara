@@ -62,8 +62,8 @@ include_once __DIR__ . '/../common/modal.php';
     <?php modal_form(['id' => 'recoleccionModal', 'title' => 'Registrar Recolección', 'formId' => 'recoleccionForm', 'size' => 'modal-lg', 'hasHiddenId' => true, 'titleId' => 'recoleccionModalTitle', 'hiddenId' => 'recoleccionId', 'submitId' => 'recoleccionSubmitBtn']); ?>
         <div class="row g-3">
             <div class="col-md-6">
-                <label class="form-label" for="id_trabajador">Trabajador <span class="text-danger">*</span></label>
-                <select class="form-select" name="id_trabajador" id="id_trabajador" required>
+                <label class="form-label" for="id_usuario">Trabajador <span class="text-danger">*</span></label>
+                <select class="form-select" name="id_usuario" id="id_usuario" required>
                     <option value="">Seleccione un trabajador</option>
                     <?php foreach ($trabajadores as $t): ?>
                         <option value="<?= (int)$t['id'] ?>">

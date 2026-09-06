@@ -68,6 +68,8 @@ function batches_handleAddEdit(string $mode): void
     $id_origen = (int)($_POST['id_origen'] ?? 0);
     $observacion = trim((string)($_POST['observacion'] ?? ''));
     if ($observacion === '') $observacion = null;
+    $costo_unitario = (float)($_POST['costo_unitario'] ?? 0);
+    $porcentaje_ganancia = (float)($_POST['porcentaje_ganancia'] ?? 30.0);
 
     if ($id_planta <= 0) throw new \Exception('Selecciona una planta.');
     if ($id_ubicacion <= 0) throw new \Exception('Selecciona una ubicación.');
@@ -87,7 +89,7 @@ function batches_handleAddEdit(string $mode): void
     }
 
     if ($mode === 'add') {
-        $model->add($id_planta, $id_ubicacion, $fecha_siembra, $cantidad_inicial, $cantidad_actual, $id_estado, $id_categoria, $id_origen, $observacion, $imagen);
+        $model->add($id_planta, $id_ubicacion, $fecha_siembra, $cantidad_inicial, $cantidad_actual, $costo_unitario, $id_estado, $id_categoria, $id_origen, $observacion, $imagen, $porcentaje_ganancia);
         $newId = $model->getLastInsertId() ?? 0;
         jsonResponse([
             'success' => true, 'message' => 'Lote agregado correctamente',
@@ -108,7 +110,7 @@ function batches_handleAddEdit(string $mode): void
         }
     }
 
-    $model->update($id, $id_planta, $id_ubicacion, $fecha_siembra, $cantidad_inicial, $cantidad_actual, $id_estado, $id_categoria, $id_origen, $observacion, $imagen);
+    $model->update($id, $id_planta, $id_ubicacion, $fecha_siembra, $cantidad_inicial, $cantidad_actual, $costo_unitario, $id_estado, $id_categoria, $id_origen, $observacion, $imagen, $porcentaje_ganancia);
     jsonResponse([
         'success' => true, 'message' => 'Lote actualizado correctamente',
         'lote' => ['id' => $id, 'imagen' => $imagen],

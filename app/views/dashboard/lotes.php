@@ -124,6 +124,16 @@ include_once __DIR__ . '/../common/modal.php';
             </div>
         </div>
         <div class="row">
+            <div class="col-6 mb-3">
+                <label class="form-label">Costo Unitario</label>
+                <input type="number" class="form-control" name="costo_unitario" step="0.01" min="0" placeholder="0.00">
+            </div>
+            <div class="col-6 mb-3">
+                <label class="form-label">Porcentaje de Ganancia (%)</label>
+                <input type="number" class="form-control" name="porcentaje_ganancia" step="0.01" min="0" max="100" value="30" placeholder="30">
+            </div>
+        </div>
+        <div class="row">
             <div class="col-4 mb-3">
                 <label class="form-label">Estado</label>
                 <select class="form-select" name="id_estado" id="addBatchEstado" required>
@@ -198,6 +208,16 @@ include_once __DIR__ . '/../common/modal.php';
             <div class="col-6 mb-3">
                 <label class="form-label">Cantidad Actual</label>
                 <input type="number" class="form-control" name="cantidad_actual" id="editBatchQtyCurr" min="0" required>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-6 mb-3">
+                <label class="form-label">Costo Unitario</label>
+                <input type="number" class="form-control" name="costo_unitario" id="editBatchCostoUnitario" step="0.01" min="0" placeholder="0.00">
+            </div>
+            <div class="col-6 mb-3">
+                <label class="form-label">Porcentaje de Ganancia (%)</label>
+                <input type="number" class="form-control" name="porcentaje_ganancia" id="editBatchPorcentajeGanancia" step="0.01" min="0" max="100" value="30" placeholder="30">
             </div>
         </div>
         <div class="row">

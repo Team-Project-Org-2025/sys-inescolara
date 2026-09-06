@@ -4,7 +4,7 @@ require_once __DIR__ . '/controller_helpers.php';
 
 use SysInescolara\models\SeedCollection;//no lo borre
 use SysInescolara\models\Ubicacion;
-use SysInescolara\models\Empleado;//no lo borre
+use SysInescolara\models\Usuario;
 use SysInescolara\models\Planta;
 use SysInescolara\models\Insumo;
 use SysInescolara\models\UnidadMedida;
@@ -48,8 +48,8 @@ function recoleccion_handleAddEdit(string $mode): void
     $model = new SeedCollection();
     $data = getRequestData();
 
-    $idTrabajador = (int)($data['id_trabajador'] ?? 0);
-    if ($idTrabajador <= 0) throw new \Exception('El trabajador es requerido.');
+    $idUsuario = (int)($data['id_usuario'] ?? 0);
+    if ($idUsuario <= 0) throw new \Exception('El usuario es requerido.');
     $idUbicacion = (int)($data['id_ubicacion'] ?? 0);
     if ($idUbicacion <= 0) throw new \Exception('La ubicación es requerida.');
 
@@ -61,14 +61,14 @@ function recoleccion_handleAddEdit(string $mode): void
     if ($observacion === '') $observacion = null;
 
     if ($mode === 'add') {
-        $model->add($idTrabajador, $idUbicacion, $fechaAsignacion, $observacion);
+        $model->add($idUsuario, $idUbicacion, $fechaAsignacion, $observacion);
         $newId = $model->getLastInsertId() ?? 0;
         jsonResponse(['success' => true, 'message' => 'Recolección registrada correctamente', 'id' => $newId]);
     }
 
     $id = (int)($data['id'] ?? 0);
     if ($id <= 0) throw new \Exception('ID inválido');
-    $model->update($id, $idTrabajador, $idUbicacion, $fechaAsignacion, $observacion);
+    $model->update($id, $idUsuario, $idUbicacion, $fechaAsignacion, $observacion);
     jsonResponse(['success' => true, 'message' => 'Recolección actualizada correctamente']);
 }
 

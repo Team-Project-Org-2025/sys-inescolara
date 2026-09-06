@@ -16,7 +16,7 @@ class Ampliacion extends Database implements ReadableInterface
     private ?int $id = null;
     private string $tipoMovimiento = 'intercambio';
     private ?int $idCliente = null;
-    private ?int $idTrabajadorGestor = null;
+    private ?int $idUsuarioGestor = null;
     private ?string $fechaMovimiento = null;
     private ?string $observacion = null;
     private int $activo = 1;
@@ -26,12 +26,12 @@ class Ampliacion extends Database implements ReadableInterface
     protected array $validationRules = [
         'tipo_movimiento'      => ['type' => null,      'required' => true],
         'id_cliente'           => ['type' => 'cantidad','required' => false],
-        'id_trabajador_gestor' => ['type' => 'cantidad','required' => true],
+        'id_usuario_gestor' => ['type' => 'cantidad','required' => true],
         'fecha_movimiento'     => ['type' => null,      'required' => true],
         'observacion'          => ['type' => null,      'required' => false],
     ];
 
-    protected array $fillable = ['tipo_movimiento', 'id_cliente', 'id_trabajador_gestor', 'fecha_movimiento', 'observacion', 'activo'];
+    protected array $fillable = ['tipo_movimiento', 'id_cliente', 'id_usuario_gestor', 'fecha_movimiento', 'observacion', 'activo'];
     protected array $guarded = ['id_movimiento_planta'];
 
     public function __construct(array $attributes = [])
@@ -61,7 +61,7 @@ class Ampliacion extends Database implements ReadableInterface
             'id_movimiento_planta'  => 'id',
             'tipo_movimiento'       => 'tipoMovimiento',
             'id_cliente'            => 'idCliente',
-            'id_trabajador_gestor'  => 'idTrabajadorGestor',
+            'id_usuario_gestor'  => 'idUsuarioGestor',
             'fecha_movimiento'      => 'fechaMovimiento',
             'observacion'           => 'observacion',
             'activo'                => 'activo',
@@ -73,7 +73,7 @@ class Ampliacion extends Database implements ReadableInterface
     public function getId(): ?int { return $this->id; }
     public function getTipoMovimiento(): string { return $this->tipoMovimiento; }
     public function getIdCliente(): ?int { return $this->idCliente; }
-    public function getIdTrabajadorGestor(): ?int { return $this->idTrabajadorGestor; }
+    public function getIdUsuarioGestor(): ?int { return $this->idUsuarioGestor; }
     public function getFechaMovimiento(): ?string { return $this->fechaMovimiento; }
     public function getObservacion(): ?string { return $this->observacion; }
     public function isActivo(): bool { return $this->activo === 1; }
@@ -91,9 +91,9 @@ class Ampliacion extends Database implements ReadableInterface
         return $this;
     }
 
-    public function setIdTrabajadorGestor(?int $idTrabajadorGestor): self
+    public function setIdUsuarioGestor(?int $idUsuarioGestor): self
     {
-        $this->idTrabajadorGestor = $idTrabajadorGestor;
+        $this->idUsuarioGestor = $idUsuarioGestor;
         return $this;
     }
 
@@ -120,7 +120,7 @@ class Ampliacion extends Database implements ReadableInterface
         $this->validateData([
             'tipo_movimiento'      => $this->tipoMovimiento,
             'id_cliente'           => $this->idCliente,
-            'id_trabajador_gestor' => $this->idTrabajadorGestor,
+            'id_usuario_gestor' => $this->idUsuarioGestor,
             'fecha_movimiento'     => $this->fechaMovimiento,
             'observacion'          => $this->observacion,
         ]);
@@ -170,13 +170,13 @@ class Ampliacion extends Database implements ReadableInterface
 
         try {
             if ($this->id === null) {
-                $sql = "INSERT INTO movimiento_planta (tipo_movimiento, id_cliente, id_trabajador_gestor, fecha_movimiento, observacion, activo)
-                        VALUES (:tipo_movimiento, :id_cliente, :id_trabajador_gestor, :fecha_movimiento, :observacion, :activo)";
+                $sql = "INSERT INTO movimiento_planta (tipo_movimiento, id_cliente, id_usuario_gestor, fecha_movimiento, observacion, activo)
+                        VALUES (:tipo_movimiento, :id_cliente, :id_usuario_gestor, :fecha_movimiento, :observacion, :activo)";
                 $stmt = $this->db()->prepare($sql);
                 $success = $stmt->execute([
                     ':tipo_movimiento'      => $this->tipoMovimiento,
                     ':id_cliente'           => $this->idCliente,
-                    ':id_trabajador_gestor' => $this->idTrabajadorGestor,
+                    ':id_usuario_gestor' => $this->idUsuarioGestor,
                     ':fecha_movimiento'     => $this->fechaMovimiento,
                     ':observacion'          => $this->observacion,
                     ':activo'               => $this->activo,
@@ -187,7 +187,7 @@ class Ampliacion extends Database implements ReadableInterface
                     AuditLog::record('CREATE', 'movimiento_planta', $this->id, null, [
                         'tipo_movimiento'      => $this->tipoMovimiento,
                         'id_cliente'           => $this->idCliente,
-                        'id_trabajador_gestor' => $this->idTrabajadorGestor,
+                        'id_usuario_gestor' => $this->idUsuarioGestor,
                         'fecha_movimiento'     => $this->fechaMovimiento,
                         'observacion'          => $this->observacion,
                     ]);
@@ -196,7 +196,7 @@ class Ampliacion extends Database implements ReadableInterface
             } else {
                 $oldData = $this->getById($this->id);
                 $sql = "UPDATE movimiento_planta SET tipo_movimiento = :tipo_movimiento,
-                        id_cliente = :id_cliente, id_trabajador_gestor = :id_trabajador_gestor,
+                        id_cliente = :id_cliente, id_usuario_gestor = :id_usuario_gestor,
                         fecha_movimiento = :fecha_movimiento, observacion = :observacion,
                         activo = :activo
                         WHERE id_movimiento_planta = :id";
@@ -205,7 +205,7 @@ class Ampliacion extends Database implements ReadableInterface
                     ':id'                   => $this->id,
                     ':tipo_movimiento'      => $this->tipoMovimiento,
                     ':id_cliente'           => $this->idCliente,
-                    ':id_trabajador_gestor' => $this->idTrabajadorGestor,
+                    ':id_usuario_gestor' => $this->idUsuarioGestor,
                     ':fecha_movimiento'     => $this->fechaMovimiento,
                     ':observacion'          => $this->observacion,
                     ':activo'               => $this->activo,
@@ -214,7 +214,7 @@ class Ampliacion extends Database implements ReadableInterface
                     AuditLog::record('UPDATE', 'movimiento_planta', $this->id, $oldData, [
                         'tipo_movimiento'      => $this->tipoMovimiento,
                         'id_cliente'           => $this->idCliente,
-                        'id_trabajador_gestor' => $this->idTrabajadorGestor,
+                        'id_usuario_gestor' => $this->idUsuarioGestor,
                         'fecha_movimiento'     => $this->fechaMovimiento,
                         'observacion'          => $this->observacion,
                     ]);
@@ -263,7 +263,7 @@ class Ampliacion extends Database implements ReadableInterface
             $this->id = $found->getId();
             $this->tipoMovimiento = $found->getTipoMovimiento();
             $this->idCliente = $found->getIdCliente();
-            $this->idTrabajadorGestor = $found->getIdTrabajadorGestor();
+            $this->idUsuarioGestor = $found->getIdUsuarioGestor();
             $this->fechaMovimiento = $found->getFechaMovimiento();
             $this->observacion = $found->getObservacion();
             $this->activo = $found->isActivo() ? 1 : 0;
@@ -280,7 +280,7 @@ class Ampliacion extends Database implements ReadableInterface
                         mp.tipo_movimiento,
                         mp.fecha_movimiento,
                         mp.observacion,
-                        CONCAT(t.nombre_trabajador, ' ', t.apellido_trabajador) AS gestor_nombre,
+                        CONCAT(u.nombre_trabajador, ' ', u.apellido_trabajador) AS gestor_nombre,
                         COALESCE(CONCAT(c.nombre_cliente, ' ', c.apellido_cliente), '—') AS cliente_nombre,
                         c.tipo_cedula_cliente,
                         c.cedula_cliente,
@@ -288,7 +288,7 @@ class Ampliacion extends Database implements ReadableInterface
                         (SELECT COUNT(*) FROM movimiento_planta_detalle d WHERE d.id_movimiento_planta = mp.id_movimiento_planta AND d.tipo = 'entrada' AND d.activo = 1) AS total_entrada
                     FROM movimiento_planta mp
                     LEFT JOIN cliente c ON mp.id_cliente = c.id_cliente
-                    LEFT JOIN trabajadores t ON mp.id_trabajador_gestor = t.id_trabajador
+                    LEFT JOIN seguridad.usuarios u ON mp.id_usuario_gestor = u.id_usuario
                     WHERE mp.activo = 1
                     ORDER BY mp.fecha_movimiento DESC, mp.id_movimiento_planta DESC";
             $stmt = $this->db()->query($sql);
@@ -304,13 +304,13 @@ class Ampliacion extends Database implements ReadableInterface
         try {
             $stmt = $this->db()->prepare("
                 SELECT mp.*,
-                       CONCAT(t.nombre_trabajador, ' ', t.apellido_trabajador) AS gestor_nombre,
+                       CONCAT(u.nombre_trabajador, ' ', u.apellido_trabajador) AS gestor_nombre,
                        COALESCE(CONCAT(c.nombre_cliente, ' ', c.apellido_cliente), '—') AS cliente_nombre,
                        c.tipo_cedula_cliente,
                        c.cedula_cliente
                 FROM movimiento_planta mp
                 LEFT JOIN cliente c ON mp.id_cliente = c.id_cliente
-                LEFT JOIN trabajadores t ON mp.id_trabajador_gestor = t.id_trabajador
+                LEFT JOIN seguridad.usuarios u ON mp.id_usuario_gestor = u.id_usuario
                 WHERE mp.id_movimiento_planta = :id
             ");
             $stmt->execute([':id' => $id]);
@@ -478,7 +478,7 @@ class Ampliacion extends Database implements ReadableInterface
     public function registerExchange(array $data): int
     {
         $idCliente = (int)($data['id_cliente'] ?? 0);
-        $idTrabajador = (int)($data['id_trabajador_gestor'] ?? 0);
+        $idUsuarioGestor = (int)($data['id_usuario_gestor'] ?? 0);
         $fecha = trim((string)($data['fecha_movimiento'] ?? date('Y-m-d')));
         $observacion = trim((string)($data['observacion'] ?? ''));
         if ($observacion === '') $observacion = null;
@@ -494,12 +494,12 @@ class Ampliacion extends Database implements ReadableInterface
             $this->db()->beginTransaction();
 
             $stmt = $this->db()->prepare("
-                INSERT INTO movimiento_planta (tipo_movimiento, id_cliente, id_trabajador_gestor, fecha_movimiento, observacion)
-                VALUES ('intercambio', :id_cliente, :id_trabajador, :fecha, :observacion)
+                INSERT INTO movimiento_planta (tipo_movimiento, id_cliente, id_usuario_gestor, fecha_movimiento, observacion)
+                VALUES ('intercambio', :id_cliente, :id_usuario_gestor, :fecha, :observacion)
             ");
             $stmt->execute([
                 ':id_cliente' => $idCliente > 0 ? $idCliente : null,
-                ':id_trabajador' => $idTrabajador,
+                ':id_usuario_gestor' => $idUsuarioGestor,
                 ':fecha' => $fecha,
                 ':observacion' => $observacion,
             ]);
@@ -623,7 +623,7 @@ class Ampliacion extends Database implements ReadableInterface
             AuditLog::record('CREATE', 'movimiento_planta', $movimientoId, null, [
                 'tipo' => 'intercambio',
                 'id_cliente' => $idCliente,
-                'id_trabajador' => $idTrabajador,
+                'id_usuario_gestor' => $idUsuarioGestor,
                 'salida_count' => count($salidaItems),
                 'entrada_count' => count($entradaItems),
             ]);
@@ -645,7 +645,7 @@ class Ampliacion extends Database implements ReadableInterface
         $oldDetails = $oldMain['detalles'] ?? [];
 
         $idCliente = (int)($data['id_cliente'] ?? 0);
-        $idTrabajador = (int)($data['id_trabajador_gestor'] ?? 0);
+        $idUsuarioGestor = (int)($data['id_usuario_gestor'] ?? 0);
         $fecha = trim((string)($data['fecha_movimiento'] ?? date('Y-m-d')));
         $observacion = trim((string)($data['observacion'] ?? ''));
         if ($observacion === '') $observacion = null;
@@ -675,10 +675,10 @@ class Ampliacion extends Database implements ReadableInterface
                 ->execute([':id' => $id]);
 
             // 3) Update main record
-            $this->db()->prepare("UPDATE movimiento_planta SET id_cliente = :cli, id_trabajador_gestor = :tra, fecha_movimiento = :fec, observacion = :obs WHERE id_movimiento_planta = :id")
+            $this->db()->prepare("UPDATE movimiento_planta SET id_cliente = :cli, id_usuario_gestor = :id_usuario_gestor, fecha_movimiento = :fec, observacion = :obs WHERE id_movimiento_planta = :id")
                 ->execute([
                     ':cli' => $idCliente > 0 ? $idCliente : null,
-                    ':tra' => $idTrabajador,
+                    ':id_usuario_gestor' => $idUsuarioGestor,
                     ':fec' => $fecha,
                     ':obs' => $observacion,
                     ':id'  => $id,

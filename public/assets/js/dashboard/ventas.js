@@ -4,7 +4,7 @@ import { setupRealTimeValidation, validateForm } from '../utils/validation.js';
 import * as C from '../utils/components.js';
 
 const ventasRules = {
-  id_trabajador: 'select',
+  id_usuario: 'select',
   tipo_venta: 'select',
   observaciones: null,
 };

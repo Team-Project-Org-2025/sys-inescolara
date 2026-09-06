@@ -37,7 +37,7 @@ Control de inventario, ventas, producción, lotes, insumos, trabajadores, tareas
 | 3 | `AuthController` | login, index |
 | 4 | `BackupsController` | index, get_backups, create_backup, restore_backup, delete_backup, download_backup |
 | 5 | `ClientesController` | index, add/edit/delete_ajax, get_clients |
-| 6 | `ComprasController` | index, add/edit_ajax, eliminar_ajax, obtener_compras/detalles, recibir_ajax, cancelar_ajax, agregar_planta/insumo/herramienta_rapido |
+| 6 | `ComprasController` | index, add/edit_ajax, eliminar_ajax, obtener_compras/detalles, recibir_ajax, cancelar_ajax, agregar_planta/insumo/herramienta_rapido, actualizar_costo_lote |
 | 7 | `Cuentas_cobrarController` | index, obtener_lista/estadisticas/detalle/pagos/clientes, registrar_pago |
 | 8 | `CuentasPagarController` | index, obtener_cuentas/detalle/pagos, registrar_pago, anular_pago |
 | 9 | `DashboardController` | index + 32 sub-vistas (asistente, inventario, ventas, cuentas_cobrar, usuarios, plantas, lotes, etc.) |
@@ -54,7 +54,7 @@ Control de inventario, ventas, producción, lotes, insumos, trabajadores, tareas
 | 20 | `NotificationsController` | get_unread, mark_read, mark_all_read, delete_notification, create_notification |
 | 21 | `OrnatosController` | listar, guardar, actualizar, eliminar, detalles, buscar_clientes |
 | 22 | `PlantasController` | index, add/edit/delete_ajax, get_plants |
-| 23 | `PreciosController` | index, add/edit/delete_ajax, get_prices, get_detalle, get_lotes, get_insumos |
+| 23 | `PreciosController` | index, add/delete_ajax, get_prices, get_lotes, get_insumos, calcular_precio |
 | 24 | `ProveedoresController` | index, add/edit/delete_ajax, get_suppliers |
 | 25 | `PublicController` | catalogo, home, servicios, nosotros, contacto |
 | 26 | `RecoleccionController` | index, add/edit/delete_ajax, get_recolecciones, get_details, completar_ajax, registrar_insumo_ajax |
@@ -80,18 +80,17 @@ Control de inventario, ventas, producción, lotes, insumos, trabajadores, tareas
 | `Ampliacion` | `movimiento_planta` | default | Readable |
 | `AuditLog` | `auditoria_logs` | security | Readable |
 | `Backup` | N/A (file-based) | N/A | — |
-| `CalculoPrecio` | `calculo_precio` | default | Readable, Deletable |
 | `Cliente` | `cliente` | default | Readable, Deletable |
-| `ConsumoInsumo` | `consumo_insumos` | default | Readable |
 | `CuentaCobrar` | `venta` + `pago_venta` | default | — |
 | `CuentaPagar` | `cuentas_pagar` | default | Readable, Deletable |
 | `DashboardData` | N/A (read-only stats) | default | — |
-| `Empleado` | `trabajadores` | default | Readable, Deletable |
+| `Empleado` | `usuarios` | security | Readable, Deletable |
 | `Especie` | `especie` | default | Readable, Deletable |
 | `Herramienta` | `herramienta` | default | Readable, Deletable |
 | `Insumo` | `insumo` | default | Readable, Deletable |
 | `Inventory` | N/A (consolidado) | default | — |
 | `Lote` | `lote` | default | Readable, Deletable |
+| `LotePrecio` | N/A (reads lote + registro_insumo) | default | Readable |
 | `Merma` | `mermas_historico` | default | Readable, Deletable |
 | `Notification` | `notificaciones` | security | — |
 | `Ornato` | `ornatos` | default | Readable, Deletable |
@@ -100,6 +99,7 @@ Control de inventario, ventas, producción, lotes, insumos, trabajadores, tareas
 | `Proveedor` | `proveedores` | default | Readable, Deletable |
 | `Purchase` | `compra` | default | Readable, Deletable |
 | `Reports` | N/A (read-only) | default | — |
+| `RegistroInsumo` | `registro_insumo` | default | Readable, Deletable |
 | `Role` | `roles` | security | Readable, Deletable |
 | `SeedCollection` | `recoleccion_semillas` | default | Readable, Deletable |
 | `Tarea` | `tareas` | default | Readable, Deletable |
@@ -108,7 +108,7 @@ Control de inventario, ventas, producción, lotes, insumos, trabajadores, tareas
 | `UnidadMedida` | `unidad_medida` | default | Readable, Deletable |
 | `UsoHerramienta` | `uso_herramienta` | default | Readable |
 | `Usuario` | `usuarios` | security | — |
-| `Venta` | `venta` | default | Readable, Deletable |
+| `Venta` | `venta` | default | Readable, Deletable | (usa `id_usuario` en vez de `id_trabajador`) |
 
 ### Traits
 - `app/traits/ValidationTrait.php` — Validación centralizada con 22 patrones regex (nombre, email, precio, cantidad, cédula, teléfono, RIF, etc.)
@@ -153,7 +153,7 @@ Control de inventario, ventas, producción, lotes, insumos, trabajadores, tareas
 ## Bases de Datos
 
 ### `sysinescolara` (datos de negocio)
-**Tablas principales:** especie, ubicacion, unidad_medida, plantas, lote, calculo_precio, trazabilidad, proveedores, insumo, herramienta, trabajadores, tareas, asignar_tarea, consumo_insumos, uso_herramienta, cliente, movimiento_planta, movimiento_planta_detalle, ajuste_inventario, compra, compra_detalle, cuentas_pagar, pago_compra, venta, detalle_venta, pago_venta, cuentas_cobrar, ornatos, mermas_historico, recoleccion_semillas, recoleccion_semillas_detalle, abonos, actas, actividades, almacenes, almacen_herramientas, almacen_insumos, asistencias, bitacora_intervenciones, consumo_tierra, dosis, egresos, eventos, gastos, invernaderos, lecturas, siembras
+**Tablas principales:** especie, ubicacion, unidad_medida, plantas, lote (con `costo_unitario`, `porcentaje_ganancia`), trazabilidad, proveedores, insumo, herramienta, registro_insumo, tareas, asignar_tarea, uso_herramienta, cliente, movimiento_planta, movimiento_planta_detalle, compra, compra_detalle (FKs reales: `id_insumo`, `id_herramienta`, `id_planta`), cuentas_pagar, pago_compra, venta, detalle_venta, pago_venta, cuentas_cobrar, ornatos, detalle_ornatos, mermas_historico, recoleccion_semillas, recoleccion_semillas_detalle, abonos, actas, actividades, almacenes, almacen_herramientas, almacen_insumos, asistencias, bitacora_intervenciones, consumo_tierra, dosis, egresos, eventos, gastos, invernaderos, lecturas, siembras
 
 ### `SysInescolara-Seguridad` (auth + logs)
 **Tablas:** usuarios, roles, permisos, rol_modulo_permiso, usuario_modulo_permiso, modulos, auditoria_logs, notificaciones, password_resets
@@ -228,6 +228,7 @@ Control de inventario, ventas, producción, lotes, insumos, trabajadores, tareas
 - **Correcciones Linux case-sensitive:** nombres de archivo normalizados
 - **Rama `testing`:** flujo feature/bugfix → testing → develop
 - **Mailer fixes:** timeout 15s (antes 300s), reset de instancia PHPMailer en fallo, eliminación de Timelimit (PHPMailer 7.x)
+- **Migración de esquema DB:** eliminación de tablas `calculo_precio`, `consumo_insumos`, `ajuste_inventario`, `trabajadores`; nuevas tablas `registro_insumo`, `detalle_ornatos`; `compra_detalle` migrado a FKs reales; `lote` con columnas `costo_unitario`/`porcentaje_ganancia`; precios basados en `registro_insumo`; `Venta` usa `id_usuario`
 
 ### Pendiente (Mejoras Futuras)
 - **Exchange Rate / BCV:** Servicio de tasa Bs/USD con caché

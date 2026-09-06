@@ -296,7 +296,7 @@ class Reports extends Database
         return [
             $this->defActivo('tr.activo'),
             $this->defSelect('cargo', 'Cargo', 'tr.cargo',
-                $this->distinctOptions("SELECT DISTINCT cargo FROM trabajadores WHERE cargo IS NOT NULL AND cargo != '' ORDER BY cargo ASC", 'cargo')),
+                $this->distinctOptions("SELECT DISTINCT cargo FROM `SysInescolara-Seguridad`.`usuarios` WHERE cargo IS NOT NULL AND cargo != '' ORDER BY cargo ASC", 'cargo')),
             $this->defText('nombre_trabajador', 'Nombre', 'tr.nombre_trabajador'),
             $this->defText('apellido_trabajador', 'Apellido', 'tr.apellido_trabajador'),
             $this->defText('cedula_trabajador', 'Cédula', 'tr.cedula_trabajador'),
@@ -324,8 +324,8 @@ class Reports extends Database
                     ['value' => 'completada', 'label' => 'Completada'],
                     ['value' => 'cancelada', 'label' => 'Cancelada'],
                 ]),
-            $this->selectFromQuery('id_trabajador', 'Trabajador',
-                "SELECT id_trabajador AS value, CONCAT(nombre_trabajador, ' ', apellido_trabajador) AS label FROM trabajadores WHERE activo = 1 ORDER BY nombre_trabajador ASC", 'value', 'label', 'a.id_trabajador'),
+            $this->selectFromQuery('id_usuario', 'Trabajador',
+                "SELECT id_usuario AS value, CONCAT(nombre_trabajador, ' ', apellido_trabajador) AS label FROM `SysInescolara-Seguridad`.`usuarios` WHERE nombre_trabajador IS NOT NULL AND nombre_trabajador != '' ORDER BY nombre_trabajador ASC", 'value', 'label', 'a.id_usuario'),
             $this->selectFromQuery('id_tarea', 'Tarea',
                 "SELECT id_tarea AS value, nombre_tarea AS label FROM tareas WHERE activo = 1 ORDER BY nombre_tarea ASC", 'value', 'label', 'a.id_tarea'),
             $this->selectFromQuery('id_lote', 'Lote',
@@ -355,8 +355,8 @@ class Reports extends Database
                 ]),
             $this->selectFromQuery('id_cliente', 'Cliente',
                 "SELECT id_cliente AS value, CONCAT(nombre_cliente, ' ', apellido_cliente) AS label FROM cliente WHERE activo = 1 ORDER BY nombre_cliente ASC", 'value', 'label', 'v.id_cliente'),
-            $this->selectFromQuery('id_trabajador', 'Vendedor',
-                "SELECT id_trabajador AS value, CONCAT(nombre_trabajador, ' ', apellido_trabajador) AS label FROM trabajadores WHERE activo = 1 ORDER BY nombre_trabajador ASC", 'value', 'label', 'v.id_trabajador'),
+            $this->selectFromQuery('id_usuario', 'Vendedor',
+                "SELECT id_usuario AS value, CONCAT(nombre_trabajador, ' ', apellido_trabajador) AS label FROM `SysInescolara-Seguridad`.`usuarios` WHERE nombre_trabajador IS NOT NULL AND nombre_trabajador != '' ORDER BY nombre_trabajador ASC", 'value', 'label', 'v.id_usuario'),
             $this->defDateRange('fecha_venta', 'Fecha Venta', 'v.fecha_venta'),
             $this->defDateRange('fecha_vencimiento', 'Fecha Vencimiento', 'v.fecha_vencimiento'),
             ['field' => 'total_min', 'label' => 'Total mayor o menor a', 'type' => 'number', 'column' => 'total', 'manual' => true],
@@ -463,8 +463,8 @@ class Reports extends Database
                     ['value' => 'Pendiente', 'label' => 'Pendiente'],
                     ['value' => 'Realizada', 'label' => 'Realizada'],
                 ]),
-            $this->selectFromQuery('id_trabajador', 'Trabajador',
-                "SELECT id_trabajador AS value, CONCAT(nombre_trabajador, ' ', apellido_trabajador) AS label FROM trabajadores WHERE activo = 1 ORDER BY nombre_trabajador ASC", 'value', 'label', 'r.id_trabajador'),
+            $this->selectFromQuery('id_usuario', 'Trabajador',
+                "SELECT id_usuario AS value, CONCAT(nombre_trabajador, ' ', apellido_trabajador) AS label FROM `SysInescolara-Seguridad`.`usuarios` WHERE nombre_trabajador IS NOT NULL AND nombre_trabajador != '' ORDER BY nombre_trabajador ASC", 'value', 'label', 'r.id_usuario'),
             $this->selectFromQuery('id_ubicacion', 'Ubicación',
                 "SELECT id_ubicacion AS value, nombre_ubicacion AS label FROM ubicacion WHERE activo = 1 ORDER BY nombre_ubicacion ASC", 'value', 'label', 'r.id_ubicacion'),
             $this->defDateRange('fecha_asignacion', 'Fecha Asignación', 'r.fecha_asignacion'),
@@ -907,7 +907,7 @@ class Reports extends Database
         $this->applyDefs($filters, $defs, $conds, $params);
 
         // Subquery base de tareas para filtros EXISTS
-        $taskCond = 'at.id_trabajador = tr.id_trabajador';
+        $taskCond = 'at.id_usuario = tr.id_usuario';
         if ($this->fVal($filters['tareas_estatus'] ?? null)) {
             $taskCond .= " AND at.estatus_tarea = :tareas_estatus";
             $params[':tareas_estatus'] = $filters['tareas_estatus'];
@@ -927,18 +927,18 @@ class Reports extends Database
 
         if ($this->fVal($filters['numero_tareas'] ?? null)) {
             $op = $this->sanitizeOp($filters['numero_tareas_op'] ?? '>=');
-            $conds[] = "(SELECT COUNT(*) FROM asignar_tarea at WHERE at.id_trabajador = tr.id_trabajador) $op :numero_tareas";
+            $conds[] = "(SELECT COUNT(*) FROM asignar_tarea at WHERE at.id_usuario = tr.id_usuario) $op :numero_tareas";
             $params[':numero_tareas'] = (float) $filters['numero_tareas'];
         }
         if ($this->fVal($filters['tareas_pendientes'] ?? null)) {
             $op = $this->sanitizeOp($filters['tareas_pendientes_op'] ?? '>=');
-            $conds[] = "(SELECT COUNT(*) FROM asignar_tarea at WHERE at.id_trabajador = tr.id_trabajador AND at.estatus_tarea = 'pendiente') $op :tareas_pendientes";
+            $conds[] = "(SELECT COUNT(*) FROM asignar_tarea at WHERE at.id_usuario = tr.id_usuario AND at.estatus_tarea = 'pendiente') $op :tareas_pendientes";
             $params[':tareas_pendientes'] = (float) $filters['tareas_pendientes'];
         }
         $where = $this->buildWhere($conds);
 
         // Recalcular subquery para columna "tareas en rango" sin los params de filtro
-        $rangeCond = 'at.id_trabajador = tr.id_trabajador';
+        $rangeCond = 'at.id_usuario = tr.id_usuario';
         if ($this->fVal($filters['fecha_asignacion_desde'] ?? null)) {
             $rangeCond .= " AND at.fecha_asignacion >= '" . $filters['fecha_asignacion_desde'] . "'";
         }
@@ -950,12 +950,12 @@ class Reports extends Database
         }
 
         try {
-            $sql = "SELECT tr.id_trabajador, tr.nombre_trabajador, tr.apellido_trabajador, tr.cedula_trabajador,
+            $sql = "SELECT tr.id_usuario, tr.nombre_trabajador, tr.apellido_trabajador, tr.cedula_trabajador,
                            tr.telefono_trabajador, tr.cargo,
-                           (SELECT COUNT(*) FROM asignar_tarea at WHERE at.id_trabajador = tr.id_trabajador) AS numero_tareas,
-                           (SELECT COUNT(*) FROM asignar_tarea at WHERE at.id_trabajador = tr.id_trabajador AND at.estatus_tarea = 'pendiente') AS tareas_pendientes
+                           (SELECT COUNT(*) FROM asignar_tarea at WHERE at.id_usuario = tr.id_usuario) AS numero_tareas,
+                           (SELECT COUNT(*) FROM asignar_tarea at WHERE at.id_usuario = tr.id_usuario AND at.estatus_tarea = 'pendiente') AS tareas_pendientes
                            " . ($this->fVal($filters['fecha_asignacion_desde'] ?? null) || $this->fVal($filters['fecha_asignacion_hasta'] ?? null) ? ", (SELECT COUNT(*) FROM asignar_tarea at WHERE $rangeCond) AS tareas_en_rango" : '') . "
-                    FROM trabajadores tr
+                    FROM `SysInescolara-Seguridad`.`usuarios` tr
                     $where
                     ORDER BY tr.nombre_trabajador ASC";
             $stmt = $this->db()->prepare($sql);
@@ -1004,7 +1004,7 @@ class Reports extends Database
                            a.fecha_asignacion, a.fecha_cumplimiento, a.estatus_tarea, a.horas_dedicadas
                     FROM asignar_tarea a
                     LEFT JOIN tareas t ON a.id_tarea = t.id_tarea AND t.activo = 1
-                    LEFT JOIN trabajadores tr ON a.id_trabajador = tr.id_trabajador AND tr.activo = 1
+                    LEFT JOIN `SysInescolara-Seguridad`.`usuarios` tr ON a.id_usuario = tr.id_usuario
                     LEFT JOIN lote l ON a.id_lote = l.id_lote AND l.activo = 1
                     LEFT JOIN plantas p ON l.id_planta = p.id_planta
                     $where
@@ -1067,7 +1067,7 @@ class Reports extends Database
                            v.fecha_venta
                     FROM venta v
                     LEFT JOIN cliente c ON v.id_cliente = c.id_cliente AND c.activo = 1
-                    LEFT JOIN trabajadores t ON v.id_trabajador = t.id_trabajador AND t.activo = 1
+                    LEFT JOIN `SysInescolara-Seguridad`.`usuarios` t ON v.id_usuario = t.id_usuario
                     $where
                     ORDER BY v.fecha_venta DESC";
             $stmt = $this->db()->prepare($sql);
@@ -1294,7 +1294,7 @@ class Reports extends Database
                            r.fecha_asignacion, r.fecha_recoleccion, r.estatus,
                            (SELECT COUNT(*) FROM recoleccion_semillas_detalle d WHERE d.id_recoleccion = r.id_recoleccion) AS total_detalles
                     FROM recoleccion_semillas r
-                    LEFT JOIN trabajadores t ON r.id_trabajador = t.id_trabajador
+                    LEFT JOIN `SysInescolara-Seguridad`.`usuarios` t ON r.id_usuario = t.id_usuario
                     LEFT JOIN ubicacion u ON r.id_ubicacion = u.id_ubicacion
                     $where
                     ORDER BY r.fecha_asignacion DESC";
@@ -1434,29 +1434,31 @@ class Reports extends Database
         $where = $this->buildWhere($conds);
 
         try {
-            $sql = "SELECT cp.id_calculo, p.nombre_comun AS planta, l.id_lote, l.cantidad_actual,
-                           cp.costo_mano_obra, cp.costo_total_insumo, cp.porcentaje_ganancia,
-                           cp.precio_final_sugerido, cp.fecha_calculo, cp.vigente
-                    FROM calculo_precio cp
-                    LEFT JOIN lote l ON cp.id_lote = l.id_lote
+            $sql = "SELECT l.id_lote, p.nombre_comun AS planta, l.id_planta, l.cantidad_actual,
+                           l.costo_unitario, l.porcentaje_ganancia,
+                           COALESCE(SUM(ri.costo_unitario * ri.cantidad), 0) AS costo_total_insumos,
+                           ROUND(l.costo_unitario + COALESCE(SUM(ri.costo_unitario * ri.cantidad), 0) +
+                                 (l.costo_unitario * l.porcentaje_ganancia / 100), 2) AS precio_final
+                    FROM lote l
                     LEFT JOIN plantas p ON l.id_planta = p.id_planta
-                    $where
-                    ORDER BY cp.fecha_calculo DESC";
-            $stmt = $this->db()->prepare($sql);
-            $stmt->execute($params);
-            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                    LEFT JOIN registro_insumo ri ON l.id_lote = ri.id_lote
+                    WHERE l.activo = 1
+                    GROUP BY l.id_lote, p.nombre_comun, l.costo_unitario, l.porcentaje_ganancia, l.cantidad_actual
+                    ORDER BY p.nombre_comun ASC";
+            $stmt = $this->db()->query($sql);
+            $rows = $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
 
             $chartLabels = array_map(fn($r) => ($r['planta'] ?? 'Planta') . ' (Lote #' . $r['id_lote'] . ')', $rows);
-            $chartValues = array_map('floatval', array_column($rows, 'precio_final_sugerido'));
+            $chartValues = array_map('floatval', array_column($rows, 'precio_final'));
 
             return [
-                'columns' => ['ID', 'Planta', 'Lote', 'Stock', 'Costo Mano Obra', 'Costo Insumos', '% Ganancia', 'Precio Final', 'Fecha Cálculo', 'Vigente'],
+                'columns' => ['Lote', 'Planta', 'Stock', 'Costo Unitario', 'Costo Insumos', '% Ganancia', 'Precio Final'],
                 'rows' => $rows,
                 'chart' => [
                     'type' => 'bar',
                     'labels' => $chartLabels,
                     'values' => $chartValues,
-                    'label' => 'Precio Final Sugerido (Bs.)',
+                    'label' => 'Precio Final (Bs.)',
                 ],
             ];
         } catch (\Throwable $e) {

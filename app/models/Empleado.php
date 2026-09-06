@@ -6,8 +6,8 @@ use SysInescolara\core\Database;
 use SysInescolara\interfaces\ReadableInterface;
 use SysInescolara\interfaces\DeletableInterface;
 use SysInescolara\traits\ValidationTrait;
-use SysInescolara\models\AuditLog;
 use PDO;
+use Throwable;
 
 class Empleado extends Database implements ReadableInterface, DeletableInterface
 {
@@ -30,7 +30,7 @@ class Empleado extends Database implements ReadableInterface, DeletableInterface
     ];
 
     protected array $fillable = ['nombre_trabajador', 'apellido_trabajador', 'cedula_trabajador', 'telefono_trabajador', 'cargo', 'activo'];
-    protected array $guarded = ['id_trabajador'];
+    protected array $guarded = ['id_usuario'];
 
     public function __construct(array $attributes = [])
     {
@@ -43,7 +43,7 @@ class Empleado extends Database implements ReadableInterface, DeletableInterface
     public function fill(array $attributes): self
     {
         foreach ($attributes as $key => $value) {
-            if (empty($this->fillable) || in_array($key, $this->fillable, true)) {
+            if (in_array($key, $this->fillable, true)) {
                 $property = $this->mapColumnToProperty($key);
                 if (property_exists($this, $property)) {
                     $this->$property = $value;
@@ -56,18 +56,17 @@ class Empleado extends Database implements ReadableInterface, DeletableInterface
     private function mapColumnToProperty(string $column): string
     {
         $map = [
-            'id_trabajador'      => 'id',
-            'nombre_trabajador'  => 'nombreTrabajador',
-            'apellido_trabajador'=> 'apellidoTrabajador',
-            'cedula_trabajador'  => 'cedulaTrabajador',
-            'telefono_trabajador'=> 'telefonoTrabajador',
-            'cargo'              => 'cargo',
-            'activo'             => 'activo',
+            'id_usuario'          => 'id',
+            'nombre_trabajador'   => 'nombreTrabajador',
+            'apellido_trabajador' => 'apellidoTrabajador',
+            'cedula_trabajador'   => 'cedulaTrabajador',
+            'telefono_trabajador' => 'telefonoTrabajador',
+            'cargo'               => 'cargo',
+            'activo'              => 'activo',
         ];
         return $map[$column] ?? $column;
     }
 
-    // --- Getters ---
     public function getId(): ?int { return $this->id; }
     public function getNombreTrabajador(): string { return $this->nombreTrabajador; }
     public function getApellidoTrabajador(): ?string { return $this->apellidoTrabajador; }
@@ -76,7 +75,6 @@ class Empleado extends Database implements ReadableInterface, DeletableInterface
     public function getCargo(): ?string { return $this->cargo; }
     public function isActivo(): bool { return $this->activo === 1; }
 
-    // --- Setters ---
     public function setNombreTrabajador(string $nombreTrabajador): self
     {
         $this->nombreTrabajador = trim($nombreTrabajador);
@@ -124,63 +122,54 @@ class Empleado extends Database implements ReadableInterface, DeletableInterface
         ]);
     }
 
+    private function getSecurityDb(): string
+    {
+        $dbName = getenv('DB_SEC_NAME') ?: 'SysInescolara-Seguridad';
+        return "`$dbName`";
+    }
+
     public function save(): bool
     {
         $this->validate();
-
         try {
+            $db = $this->getSecurityDb();
             if ($this->id === null) {
-                $sql = "INSERT INTO trabajadores (nombre_trabajador, apellido_trabajador, cedula_trabajador, telefono_trabajador, cargo, activo)
-                        VALUES (:nombre_trabajador, :apellido_trabajador, :cedula_trabajador, :telefono_trabajador, :cargo, :activo)";
+                $sql = "INSERT INTO $db.`usuarios` (nombre_usuario, password_hash, nombre_trabajador, apellido_trabajador, cedula_trabajador, telefono_trabajador, cargo, estatus)
+                        VALUES (:nombre_usuario, :password_hash, :nombre_trabajador, :apellido_trabajador, :cedula_trabajador, :telefono_trabajador, :cargo, :estatus)";
                 $stmt = $this->db()->prepare($sql);
                 $success = $stmt->execute([
+                    ':nombre_usuario'      => 'trabajador_' . strtolower(preg_replace('/\s+/', '_', $this->nombreTrabajador)),
+                    ':password_hash'       => password_hash('temp123', PASSWORD_DEFAULT),
                     ':nombre_trabajador'   => $this->nombreTrabajador,
                     ':apellido_trabajador' => $this->apellidoTrabajador,
                     ':cedula_trabajador'   => $this->cedulaTrabajador,
                     ':telefono_trabajador' => $this->telefonoTrabajador,
                     ':cargo'               => $this->cargo,
-                    ':activo'              => $this->activo,
+                    ':estatus'             => $this->activo ? 'Activo' : 'Inactivo',
                 ]);
-
                 if ($success) {
                     $this->id = (int) $this->db()->lastInsertId();
-                    AuditLog::record('CREATE', 'trabajadores', $this->id, null, [
-                        'nombre_trabajador'   => $this->nombreTrabajador,
-                        'apellido_trabajador' => $this->apellidoTrabajador,
-                        'cedula_trabajador'   => $this->cedulaTrabajador,
-                        'telefono_trabajador' => $this->telefonoTrabajador,
-                        'cargo'               => $this->cargo,
-                    ]);
                 }
                 return $success;
             } else {
-                $oldData = $this->getById($this->id);
-                $sql = "UPDATE trabajadores SET nombre_trabajador = :nombre_trabajador, apellido_trabajador = :apellido_trabajador,
-                        cedula_trabajador = :cedula_trabajador, telefono_trabajador = :telefono_trabajador,
-                        cargo = :cargo, activo = :activo WHERE id_trabajador = :id";
+                $sql = "UPDATE $db.`usuarios`
+                        SET nombre_trabajador = :nombre_trabajador, apellido_trabajador = :apellido_trabajador,
+                            cedula_trabajador = :cedula_trabajador, telefono_trabajador = :telefono_trabajador,
+                            cargo = :cargo, estatus = :estatus
+                        WHERE id_usuario = :id";
                 $stmt = $this->db()->prepare($sql);
-                $success = $stmt->execute([
+                return $stmt->execute([
                     ':id'                  => $this->id,
                     ':nombre_trabajador'   => $this->nombreTrabajador,
                     ':apellido_trabajador' => $this->apellidoTrabajador,
                     ':cedula_trabajador'   => $this->cedulaTrabajador,
                     ':telefono_trabajador' => $this->telefonoTrabajador,
                     ':cargo'               => $this->cargo,
-                    ':activo'              => $this->activo,
+                    ':estatus'             => $this->activo ? 'Activo' : 'Inactivo',
                 ]);
-                if ($success) {
-                    AuditLog::record('UPDATE', 'trabajadores', $this->id, $oldData, [
-                        'nombre_trabajador'   => $this->nombreTrabajador,
-                        'apellido_trabajador' => $this->apellidoTrabajador,
-                        'cedula_trabajador'   => $this->cedulaTrabajador,
-                        'telefono_trabajador' => $this->telefonoTrabajador,
-                        'cargo'               => $this->cargo,
-                    ]);
-                }
-                return $success;
             }
         } catch (Throwable $e) {
-            error_log('Error al guardar trabajador: ' . $e->getMessage());
+            error_log('Error al guardar empleado: ' . $e->getMessage());
             return false;
         }
     }
@@ -188,95 +177,72 @@ class Empleado extends Database implements ReadableInterface, DeletableInterface
     public static function find(int $id): ?self
     {
         $instance = new static();
-        $stmt = $instance->db()->prepare("SELECT * FROM trabajadores WHERE id_trabajador = :id");
+        $db = $instance->getSecurityDb();
+        $stmt = $instance->db()->prepare("SELECT * FROM $db.`usuarios` WHERE id_usuario = :id AND (nombre_trabajador IS NOT NULL AND nombre_trabajador != '')");
         $stmt->execute([':id' => $id]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         if (!$row) return null;
         $emp = new static($row);
-        $emp->id = (int)$row['id_trabajador'];
+        $emp->id = (int)$row['id_usuario'];
         return $emp;
     }
 
     public static function all(): array
     {
         $instance = new static();
-        $stmt = $instance->db()->query("SELECT * FROM trabajadores WHERE activo = 1 ORDER BY nombre_trabajador ASC");
+        $db = $instance->getSecurityDb();
+        $stmt = $instance->db()->query("SELECT id_usuario AS id, nombre_trabajador, apellido_trabajador, cedula_trabajador, telefono_trabajador, cargo,
+                CASE WHEN estatus = 'Activo' THEN 1 ELSE 0 END AS activo
+                FROM $db.`usuarios`
+                WHERE nombre_trabajador IS NOT NULL AND nombre_trabajador != '' AND estatus = 'Activo'
+                ORDER BY nombre_trabajador ASC");
         return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
-    }
-
-    public static function where(string $column, $value, string $operator = '='): array
-    {
-        $instance = new static();
-        $sql = "SELECT * FROM trabajadores WHERE $column $operator :value AND activo = 1";
-        $stmt = $instance->db()->prepare($sql);
-        $stmt->execute([':value' => $value]);
-        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        return array_map(fn($row) => new static($row), $rows);
-    }
-
-    public function loadById(int $id): bool
-    {
-        $found = self::find($id);
-        if ($found) {
-            $this->id = $found->getId();
-            $this->nombreTrabajador = $found->getNombreTrabajador();
-            $this->apellidoTrabajador = $found->getApellidoTrabajador();
-            $this->cedulaTrabajador = $found->getCedulaTrabajador();
-            $this->telefonoTrabajador = $found->getTelefonoTrabajador();
-            $this->cargo = $found->getCargo();
-            $this->activo = $found->isActivo() ? 1 : 0;
-            return true;
-        }
-        return false;
     }
 
     public function getAll(): array
     {
-        try {
-            $sql = "SELECT id_trabajador AS id, nombre_trabajador, apellido_trabajador, cedula_trabajador, telefono_trabajador, cargo, activo FROM trabajadores WHERE activo = 1 ORDER BY nombre_trabajador ASC";
-            $stmt = $this->db()->query($sql);
-            return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
-        } catch (\Throwable $e) {
-            error_log('Error al obtener trabajadores: ' . $e->getMessage());
-            return [];
-        }
+        return self::all();
     }
 
     public function getById(int $id): ?array
     {
-        $stmt = $this->db()->prepare("SELECT * FROM trabajadores WHERE id_trabajador = :id");
+        $db = $this->getSecurityDb();
+        $stmt = $this->db()->prepare("SELECT id_usuario AS id, nombre_trabajador, apellido_trabajador, cedula_trabajador, telefono_trabajador, cargo,
+                CASE WHEN estatus = 'Activo' THEN 1 ELSE 0 END AS activo
+                FROM $db.`usuarios` WHERE id_usuario = :id");
         $stmt->execute([':id' => $id]);
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 
     public function exists(int $id): bool
     {
-        $stmt = $this->db()->prepare("SELECT COUNT(*) FROM trabajadores WHERE id_trabajador = :id");
+        $db = $this->getSecurityDb();
+        $stmt = $this->db()->prepare("SELECT COUNT(*) FROM $db.`usuarios` WHERE id_usuario = :id AND (nombre_trabajador IS NOT NULL AND nombre_trabajador != '')");
         $stmt->execute([':id' => $id]);
         return $stmt->fetchColumn() > 0;
     }
 
     public function delete(int $id): bool
     {
-        $oldData = $this->getById($id);
-        $stmt = $this->db()->prepare("UPDATE trabajadores SET activo = 0 WHERE id_trabajador = ?");
-        $stmt->execute([$id]);
-        AuditLog::record('DEACTIVATE', 'trabajadores', $id, $oldData, null);
-        return true;
+        $db = $this->getSecurityDb();
+        $stmt = $this->db()->prepare("UPDATE $db.`usuarios` SET estatus = 'Inactivo' WHERE id_usuario = :id");
+        return $stmt->execute([':id' => $id]);
     }
 
     public function restore(int $id): bool
     {
-        $stmt = $this->db()->prepare("UPDATE trabajadores SET activo = 1 WHERE id_trabajador = :id");
+        $db = $this->getSecurityDb();
+        $stmt = $this->db()->prepare("UPDATE $db.`usuarios` SET estatus = 'Activo' WHERE id_usuario = :id");
         return $stmt->execute([':id' => $id]);
     }
 
     public function getDistinctCargos(): array
     {
         try {
-            $stmt = $this->db()->query("SELECT DISTINCT cargo FROM trabajadores WHERE cargo IS NOT NULL AND cargo != '' ORDER BY cargo");
+            $db = $this->getSecurityDb();
+            $stmt = $this->db()->query("SELECT DISTINCT cargo FROM $db.`usuarios` WHERE cargo IS NOT NULL AND cargo != '' AND (nombre_trabajador IS NOT NULL AND nombre_trabajador != '') ORDER BY cargo");
             return $stmt ? $stmt->fetchAll(PDO::FETCH_COLUMN) : [];
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             error_log('Error al obtener cargos: ' . $e->getMessage());
             return [];
         }
@@ -286,37 +252,8 @@ class Empleado extends Database implements ReadableInterface, DeletableInterface
     {
         try {
             return (int)$this->db()->lastInsertId();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             return null;
         }
-    }
-
-    public function add(string $nombreTrabajador, ?string $apellidoTrabajador = null, ?string $cedulaTrabajador = null, ?string $telefonoTrabajador = null, ?string $cargo = null, bool $activo = true)
-    {
-        $this->fill([
-            'nombre_trabajador'   => $nombreTrabajador,
-            'apellido_trabajador' => $apellidoTrabajador,
-            'cedula_trabajador'   => $cedulaTrabajador,
-            'telefono_trabajador' => $telefonoTrabajador,
-            'cargo'               => $cargo,
-            'activo'              => $activo,
-        ]);
-        return $this->save();
-    }
-
-    public function update(int $id, string $nombreTrabajador, ?string $apellidoTrabajador = null, ?string $cedulaTrabajador = null, ?string $telefonoTrabajador = null, ?string $cargo = null, bool $activo = true)
-    {
-        if (!$this->loadById($id)) {
-            throw new \Exception("No existe el trabajador con ID: $id");
-        }
-        $this->fill([
-            'nombre_trabajador'   => $nombreTrabajador,
-            'apellido_trabajador' => $apellidoTrabajador,
-            'cedula_trabajador'   => $cedulaTrabajador,
-            'telefono_trabajador' => $telefonoTrabajador,
-            'cargo'               => $cargo,
-            'activo'              => $activo,
-        ]);
-        return $this->save();
     }
 }

@@ -13,7 +13,7 @@ $(document).ready(function () {
   let especiesCache = [];
 
   const ampliacionRules = {
-    id_trabajador_gestor: 'select',
+    id_usuario_gestor: 'select',
     fecha_movimiento: 'fechaFuturaCheck',
   };
 
@@ -343,7 +343,7 @@ $(document).ready(function () {
         );
       }
 
-      $('#id_trabajador_gestor').val(item.id_trabajador_gestor);
+      $('#id_usuario_gestor').val(item.id_usuario_gestor);
       $('#fecha_movimiento').val(item.fecha_movimiento);
       $('#observacion').val(item.observacion || '');
 

@@ -8,7 +8,7 @@ $(document).ready(function () {
   let recoleccionTable = null;
 
   const recoleccionRules = {
-    id_trabajador: 'select',
+    id_usuario: 'select',
     id_ubicacion: 'select',
     fecha_asignacion: 'fechaFuturaCheck',
   };
@@ -133,7 +133,7 @@ $(document).ready(function () {
     const row = recoleccionTable.row($(this).closest('tr')).data();
     $('#recoleccionModalTitle').text('Editar Recolección');
     $('#recoleccionId').val(row.id);
-    $('#id_trabajador').val(row.id_trabajador);
+    $('#id_usuario').val(row.id_usuario);
     $('#id_ubicacion').val(row.id_ubicacion);
     $('#fecha_asignacion').val(row.fecha_asignacion);
     $('#observacion').val(row.observacion);

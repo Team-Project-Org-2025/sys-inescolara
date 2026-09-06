@@ -74,8 +74,8 @@ include_once __DIR__ . '/../common/modal.php';
                 </div>
             </div>
             <div class="col-md-4">
-                <label class="form-label" for="id_trabajador_gestor">Gestor <span class="text-danger">*</span></label>
-                <select class="form-select" name="id_trabajador_gestor" id="id_trabajador_gestor" required>
+                <label class="form-label" for="id_usuario_gestor">Gestor <span class="text-danger">*</span></label>
+                <select class="form-select" name="id_usuario_gestor" id="id_usuario_gestor" required>
                     <option value="">Seleccione</option>
                     <?php foreach ($trabajadores as $t): ?>
                         <option value="<?= (int)$t['id'] ?>">

@@ -43,6 +43,7 @@ include_once __DIR__ . '/../common/modal.php';
                                     <th>Nombre</th>
                                     <th>Apellido</th>
                                     <th>Cédula</th>
+                                    <th>Teléfono</th>
                                     <th>Cargo</th>
                                     <th>Acciones</th>
                                 </tr>
@@ -91,7 +92,7 @@ include_once __DIR__ . '/../common/modal.php';
     <?php modal_form_end('addEmployeeForm'); ?>
 
     <!-- Edit Employee Modal -->
-    <?php modal_form(['id' => 'editEmployeeModal', 'title' => 'Editar Empleado', 'formId' => 'editEmployeeForm', 'hasHiddenId' => true, 'hiddenId' => 'editEmployeeId', 'saveText' => 'Actualizar']); ?>
+    <?php modal_form(['id' => 'editEmployeeModal', 'title' => 'Editar Empleado', 'formId' => 'editEmployeeForm', 'hasHiddenId' => true, 'hiddenId' => 'editEmployeeId', 'hiddenIdName' => 'id_usuario', 'saveText' => 'Actualizar']); ?>
         <div class="mb-3">
             <label class="form-label">Nombre</label>
             <input type="text" class="form-control" name="nombre_trabajador" id="editEmployeeName" required maxlength="50">

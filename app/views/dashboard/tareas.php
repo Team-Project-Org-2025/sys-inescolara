@@ -73,7 +73,7 @@ include_once __DIR__ . '/../common/modal.php';
             </div>
             <div class="col-md-4 mb-3">
                 <label class="form-label">Trabajador *</label>
-                <select class="form-select" name="id_trabajador" required>
+                <select class="form-select" name="id_usuario" required>
                     <option value="">Seleccione...</option>
                     <?php foreach ($trabajadores as $t): ?>
                     <option value="<?= $t['id'] ?>"><?= htmlspecialchars($t['nombre_trabajador'] . ' ' . ($t['apellido_trabajador'] ?? '')) ?></option>

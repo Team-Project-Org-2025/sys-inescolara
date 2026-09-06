@@ -17,7 +17,7 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
     private ?int $id = null;
     private ?string $referencia = null;
     private ?int $idCliente = null;
-    private ?int $idTrabajador = null;
+    private ?int $idUsuario = null;
     private string $tipoVenta = 'contado';
     private string $estado = 'completada';
     private float $ivaPorcentaje = 16.00;
@@ -31,13 +31,13 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
 
     protected array $validationRules = [
         'id_cliente'    => ['type' => null, 'required' => false],
-        'id_trabajador' => ['type' => null, 'required' => true],
+        'id_usuario'     => ['type' => null, 'required' => true],
         'tipo_venta'    => ['type' => null, 'required' => false],
         'fecha_venta'   => ['type' => null, 'required' => false],
         'observaciones' => ['type' => null, 'required' => false],
     ];
 
-    protected array $fillable = ['referencia', 'id_cliente', 'id_trabajador', 'tipo_venta', 'estado', 'iva_porcentaje', 'fecha_venta', 'fecha_vencimiento', 'observaciones', 'activo'];
+    protected array $fillable = ['referencia', 'id_cliente', 'id_usuario', 'tipo_venta', 'estado', 'iva_porcentaje', 'fecha_venta', 'fecha_vencimiento', 'observaciones', 'activo'];
     protected array $guarded = ['id'];
 
     public function __construct(array $attributes = [])
@@ -67,7 +67,7 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
             'id_venta'         => 'id',
             'referencia'       => 'referencia',
             'id_cliente'       => 'idCliente',
-            'id_trabajador'    => 'idTrabajador',
+            'id_usuario'       => 'idUsuario',
             'tipo_venta'       => 'tipoVenta',
             'estado'           => 'estado',
             'iva_porcentaje'   => 'ivaPorcentaje',
@@ -83,7 +83,7 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
     public function getId(): ?int { return $this->id; }
     public function getReferencia(): ?string { return $this->referencia; }
     public function getIdCliente(): ?int { return $this->idCliente; }
-    public function getIdTrabajador(): ?int { return $this->idTrabajador; }
+    public function getIdUsuario(): ?int { return $this->idUsuario; }
     public function getTipoVenta(): string { return $this->tipoVenta; }
     public function getEstado(): string { return $this->estado; }
     public function getIvaPorcentaje(): float { return $this->ivaPorcentaje; }
@@ -94,7 +94,7 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
 
     public function setReferencia(?string $referencia): self { $this->referencia = $referencia; return $this; }
     public function setIdCliente(?int $idCliente): self { $this->idCliente = $idCliente; return $this; }
-    public function setIdTrabajador(?int $idTrabajador): self { $this->idTrabajador = $idTrabajador; return $this; }
+    public function setIdUsuario(?int $idUsuario): self { $this->idUsuario = $idUsuario; return $this; }
     public function setTipoVenta(string $tipoVenta): self { $this->tipoVenta = $tipoVenta; return $this; }
     public function setEstado(string $estado): self { $this->estado = $estado; return $this; }
     public function setIvaPorcentaje(float $ivaPorcentaje): self { $this->ivaPorcentaje = max(0, $ivaPorcentaje); return $this; }
@@ -110,8 +110,8 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
     private function validate(): void
     {
         $this->validateData([
-            'id_cliente'    => $this->idCliente,
-            'id_trabajador' => $this->idTrabajador,
+                'id_cliente'    => $this->idCliente,
+                'id_usuario'    => $this->idUsuario,
             'tipo_venta'    => $this->tipoVenta,
             'fecha_venta'   => $this->fechaVenta,
             'observaciones' => $this->observaciones,
@@ -126,7 +126,7 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
                         v.id_venta,
                         v.referencia,
                         v.id_cliente,
-                        v.id_trabajador,
+                        v.id_usuario,
                         v.tipo_venta,
                         v.estado,
                         v.iva_porcentaje,
@@ -137,14 +137,14 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
                         c.tipo_cedula_cliente,
                         c.cedula_cliente,
                         c.apellido_cliente,
-                        t.nombre_trabajador,
-                        t.apellido_trabajador,
+                        u.nombre_trabajador,
+                        u.apellido_trabajador,
                         COALESCE((SELECT SUM(dv.cantidad * dv.precio_unitario) FROM detalle_venta dv WHERE dv.id_venta = v.id_venta), 0) AS monto_subtotal,
                         COALESCE((SELECT SUM(dv.cantidad * dv.precio_unitario) / :iva_mult FROM detalle_venta dv WHERE dv.id_venta = v.id_venta), 0) AS monto_sin_iva,
                         COALESCE((SELECT SUM(pv.monto) FROM pago_venta pv WHERE pv.id_venta = v.id_venta), 0) AS total_pagado
                     FROM venta v
                     LEFT JOIN cliente c ON v.id_cliente = c.id_cliente AND c.activo = 1
-                    LEFT JOIN trabajadores t ON v.id_trabajador = t.id_trabajador AND t.activo = 1
+                    LEFT JOIN `SysInescolara-Seguridad`.`usuarios` u ON v.id_usuario = u.id_usuario
                     WHERE v.activo = 1
                     ORDER BY v.fecha_venta DESC, v.id_venta DESC";
             $stmt = $this->db()->prepare($sql);
@@ -164,13 +164,13 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
                         CONCAT(c.nombre_cliente, ' ', c.apellido_cliente) AS nombre_cliente,
                         c.tipo_cedula_cliente,
                         c.cedula_cliente,
-                        t.nombre_trabajador,
-                        t.apellido_trabajador,
+                        u.nombre_trabajador,
+                        u.apellido_trabajador,
                         COALESCE((SELECT SUM(dv.cantidad * dv.precio_unitario) FROM detalle_venta dv WHERE dv.id_venta = v.id_venta), 0) AS monto_subtotal,
                         COALESCE((SELECT SUM(pv.monto) FROM pago_venta pv WHERE pv.id_venta = v.id_venta), 0) AS total_pagado
                     FROM venta v
                     LEFT JOIN cliente c ON v.id_cliente = c.id_cliente
-                    LEFT JOIN trabajadores t ON v.id_trabajador = t.id_trabajador
+                    LEFT JOIN `SysInescolara-Seguridad`.`usuarios` u ON v.id_usuario = u.id_usuario
                     WHERE v.id_venta = :id";
             $stmt = $this->db()->prepare($sql);
             $stmt->execute([':id' => $id]);
@@ -322,13 +322,13 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
             }
 
             $stmt = $this->db()->prepare("INSERT INTO venta
-                (referencia, id_cliente, id_trabajador, tipo_venta, estado, iva_porcentaje, fecha_venta, fecha_vencimiento, observaciones)
-                VALUES (:referencia, :id_cliente, :id_trabajador, :tipo_venta, :estado, :iva_porcentaje, :fecha_venta, :fecha_vencimiento, :observaciones)");
+                (referencia, id_cliente, id_usuario, tipo_venta, estado, iva_porcentaje, fecha_venta, fecha_vencimiento, observaciones)
+                VALUES (:referencia, :id_cliente, :id_usuario, :tipo_venta, :estado, :iva_porcentaje, :fecha_venta, :fecha_vencimiento, :observaciones)");
 
             $stmt->execute([
                 ':referencia'       => $referencia,
                 ':id_cliente'       => $this->idCliente ?? 0,
-                ':id_trabajador'    => $this->idTrabajador,
+                ':id_usuario'       => $this->idUsuario,
                 ':tipo_venta'       => $this->tipoVenta,
                 ':estado'           => $estado,
                 ':iva_porcentaje'   => self::IVA_PORCENTAJE,
@@ -352,7 +352,7 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
             $this->db()->commit();
             AuditLog::record('CREATE', 'venta', $ventaId, null, [
                 'id_cliente'    => $this->idCliente,
-                'id_trabajador' => $this->idTrabajador,
+            'id_usuario'     => $this->idUsuario,
                 'tipo_venta'    => $this->tipoVenta,
                 'productos'     => count($datos['productos'] ?? []),
                 'pagos'         => count($datos['pagos'] ?? []),
@@ -550,15 +550,13 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
                             p.nombre_comun AS nombre,
                             e.nombre_especie AS especie_nombre,
                             e.nombre_especie AS detalle,
-                            c.precio_final_sugerido AS precio_unitario,
+                            l.costo_unitario AS precio_unitario,
                             NULL AS unidad_simbolo
                         FROM lote l
                         JOIN plantas p ON l.id_planta = p.id_planta AND p.activo = 1
                         LEFT JOIN especie e ON p.id_especie = e.id_especie
-                        LEFT JOIN calculo_precio c ON l.id_lote = c.id_lote AND c.vigente = 1
                         WHERE l.activo = 1
-                        AND l.cantidad_actual > 0
-                        AND c.id_calculo IS NOT NULL";
+                        AND l.cantidad_actual > 0";
             if ($hasFilter) {
                 $plantaSql .= " AND (p.nombre_comun LIKE ? OR e.nombre_especie LIKE ? OR p.nombre_tecnico LIKE ?)";
             }
@@ -647,7 +645,7 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
     public function obtenerTrabajadoresActivos(): array
     {
         try {
-            $stmt = $this->db()->query("SELECT id_trabajador, nombre_trabajador, apellido_trabajador, cedula_trabajador FROM trabajadores WHERE activo = 1 ORDER BY nombre_trabajador ASC");
+            $stmt = $this->db()->query("SELECT id_usuario, nombre_trabajador, apellido_trabajador, cedula_trabajador, telefono_trabajador, cargo FROM `SysInescolara-Seguridad`.usuarios WHERE activo = 1 ORDER BY nombre_trabajador ASC");
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
         } catch (Throwable $e) {
             error_log('Error al obtener trabajadores: ' . $e->getMessage());
@@ -685,7 +683,7 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
             $this->id = $found->getId();
             $this->referencia = $found->getReferencia();
             $this->idCliente = $found->getIdCliente();
-            $this->idTrabajador = $found->getIdTrabajador();
+            $this->idUsuario = $found->getIdUsuario();
             $this->tipoVenta = $found->getTipoVenta();
             $this->estado = $found->getEstado();
             $this->ivaPorcentaje = $found->getIvaPorcentaje();

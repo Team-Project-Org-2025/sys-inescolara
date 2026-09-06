@@ -174,9 +174,9 @@ class Usuario extends Database
                 $hash = password_hash('Admin123!', PASSWORD_DEFAULT);
                 $stmt = $this->db()->prepare("
                     INSERT INTO usuarios
-                    (id_usuario, nombre_usuario, password_hash, correo_electronico, id_rol, id_trabajador_ref, estatus, intentos_fallidos, ultimo_acceso, created_at)
+                    (id_usuario, nombre_usuario, password_hash, correo_electronico, id_rol, estatus, intentos_fallidos, ultimo_acceso, created_at)
                     VALUES
-                    (1, 'admin', :password_hash, 'admin@inecolara.gob.ve', 1, NULL, 'Activo', 0, NULL, CURRENT_TIMESTAMP)
+                    (1, 'admin', :password_hash, 'admin@inecolara.gob.ve', 1, 'Activo', 0, NULL, CURRENT_TIMESTAMP)
                 ");
                 $stmt->execute([':password_hash' => $hash]);
             }
@@ -199,8 +199,12 @@ class Usuario extends Database
             'rol_id' => $user['id_rol'] ?? $user['rol_id'] ?? null,
             'nombre_rol' => $user['nombre_rol'] ?? null,
             'estatus' => $user['estatus'] ?? null,
-            'id_trabajador_ref' => $user['id_trabajador_ref'] ?? null,
             'trabajador_nombre' => $trabajadorNombre,
+            'nombre_trabajador' => $user['nombre_trabajador'] ?? null,
+            'apellido_trabajador' => $user['apellido_trabajador'] ?? null,
+            'cedula_trabajador' => $user['cedula_trabajador'] ?? null,
+            'telefono_trabajador' => $user['telefono_trabajador'] ?? null,
+            'cargo' => $user['cargo'] ?? null,
         ];
     }
 
@@ -257,19 +261,6 @@ class Usuario extends Database
         }
     }
 
-    public function getByTrabajadorId(int $idTrabajador): ?array
-    {
-        try {
-            $stmt = $this->db()->prepare("SELECT id_usuario, nombre_usuario, avatar, id_rol FROM usuarios WHERE id_trabajador_ref = :id LIMIT 1");
-            $stmt->execute([':id' => $idTrabajador]);
-            $user = $stmt->fetch(PDO::FETCH_ASSOC);
-            return $user ?: null;
-        } catch (\Throwable $e) {
-            error_log("Error en getByTrabajadorId: " . $e->getMessage());
-            return null;
-        }
-    }
-
     public function getUserByEmail(string $email): ?array
     {
         try {
@@ -313,12 +304,12 @@ class Usuario extends Database
     {
         try {
             $stmt = $this->db()->query("
-                SELECT u.id_usuario, u.nombre_usuario, u.avatar, u.id_rol, u.id_trabajador_ref,
+                SELECT u.id_usuario, u.nombre_usuario, u.avatar, u.id_rol,
                        r.nombre_rol, u.correo_electronico, u.estatus,
-                       t.nombre_trabajador, t.apellido_trabajador
+                       u.nombre_trabajador, u.apellido_trabajador,
+                       u.cedula_trabajador, u.telefono_trabajador, u.cargo
                 FROM usuarios u
                 LEFT JOIN roles r ON r.id_rol = u.id_rol
-                LEFT JOIN `sysinescolara`.`trabajadores` t ON u.id_trabajador_ref = t.id_trabajador
                 ORDER BY u.id_usuario ASC
             ");
             if (!$stmt) {
@@ -357,11 +348,11 @@ class Usuario extends Database
     {
         try {
             $stmt = $this->db()->prepare("
-                SELECT u.id_usuario, u.nombre_usuario, u.avatar, u.id_rol, u.id_trabajador_ref,
+                SELECT u.id_usuario, u.nombre_usuario, u.avatar, u.id_rol,
                        u.correo_electronico, u.estatus,
-                       t.nombre_trabajador, t.apellido_trabajador
+                       u.nombre_trabajador, u.apellido_trabajador,
+                       u.cedula_trabajador, u.telefono_trabajador, u.cargo
                 FROM usuarios u
-                LEFT JOIN `sysinescolara`.`trabajadores` t ON u.id_trabajador_ref = t.id_trabajador
                 WHERE u.id_usuario = :id
             ");
             $stmt->execute([':id' => $id]);
@@ -373,7 +364,7 @@ class Usuario extends Database
         }
     }
 
-    public function add(string $nombreUsuario, string $password, int $rolId, ?string $correoElectronico = null, ?string $avatar = null, ?int $idTrabajadorRef = null)
+    public function add(string $nombreUsuario, string $password, int $rolId, ?string $correoElectronico = null, ?string $avatar = null)
     {
         $this->validateData([
             'nombre_usuario' => $nombreUsuario,
@@ -392,8 +383,8 @@ class Usuario extends Database
         }
 
         $stmt = $this->db()->prepare("
-            INSERT INTO usuarios (nombre_usuario, password_hash, id_rol, correo_electronico, avatar, id_trabajador_ref)
-            VALUES (:nombre_usuario, :password_hash, :id_rol, :correo_electronico, :avatar, :id_trabajador_ref)
+            INSERT INTO usuarios (nombre_usuario, password_hash, id_rol, correo_electronico, avatar)
+            VALUES (:nombre_usuario, :password_hash, :id_rol, :correo_electronico, :avatar)
         ");
 
         $result = $stmt->execute([
@@ -402,7 +393,6 @@ class Usuario extends Database
             ':id_rol' => $rolId,
             ':correo_electronico' => $correoElectronico,
             ':avatar' => $avatar,
-            ':id_trabajador_ref' => $idTrabajadorRef,
         ]);
         if ($result) {
             AuditLog::record('CREATE', 'usuarios', $this->db()->lastInsertId(), null, [
@@ -414,7 +404,7 @@ class Usuario extends Database
     }
 
 
-    public function update(int $id, string $nombreUsuario, int $rolId, ?string $correoElectronico = null, ?string $password = null, ?string $avatar = null, ?int $idTrabajadorRef = null)
+    public function update(int $id, string $nombreUsuario, int $rolId, ?string $correoElectronico = null, ?string $password = null, ?string $avatar = null)
     {
         $this->validateData([
             'nombre_usuario' => $nombreUsuario,
@@ -426,13 +416,12 @@ class Usuario extends Database
             throw new Exception("No existe el usuario con ID: $id");
         }
 
-        $sql = "UPDATE usuarios SET nombre_usuario = :nombre_usuario, id_rol = :id_rol, correo_electronico = :correo_electronico, id_trabajador_ref = :id_trabajador_ref";
+        $sql = "UPDATE usuarios SET nombre_usuario = :nombre_usuario, id_rol = :id_rol, correo_electronico = :correo_electronico";
         $params = [
             ':id' => $id,
             ':nombre_usuario' => $nombreUsuario,
             ':id_rol' => $rolId,
             ':correo_electronico' => $correoElectronico,
-            ':id_trabajador_ref' => $idTrabajadorRef,
         ];
 
         if ($password !== null && $password !== '') {

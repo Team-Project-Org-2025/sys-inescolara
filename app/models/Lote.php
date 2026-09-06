@@ -20,30 +20,29 @@ class Lote extends Database implements ReadableInterface, DeletableInterface
     private ?string $fechaSiembra = null;
     private int $cantidadInicial = 0;
     private int $cantidadActual = 0;
+    private float $costoUnitario = 0.0;
     private ?int $idEstado = null;
     private ?int $idCategoria = null;
     private ?int $idOrigen = null;
     private ?string $observacion = null;
     private ?string $imagen = null;
     private int $activo = 1;
-
-    private array $schemaCache = [];
+    private float $porcentajeGanancia = 30.0;
 
     protected array $validationRules = [
-        'id_planta'       => ['type' => null,      'required' => true],
-        'id_ubicacion'    => ['type' => null,      'required' => true],
-        'fecha_siembra'   => ['type' => null,      'required' => true],
-        'cantidad_inicial'=> ['type' => 'cantidad','required' => true],
-        'cantidad_actual' => ['type' => 'cantidad','required' => true],
-        'id_estado'       => ['type' => null,      'required' => false],
-        'id_categoria'    => ['type' => null,      'required' => false],
-        'id_origen'       => ['type' => null,      'required' => false],
-        'observacion'     => ['type' => null,      'required' => false],
+        'id_planta'          => ['type' => null,      'required' => true],
+        'id_ubicacion'       => ['type' => null,      'required' => false],
+        'fecha_siembra'      => ['type' => null,      'required' => true],
+        'cantidad_inicial'   => ['type' => 'cantidad','required' => true],
+        'cantidad_actual'    => ['type' => 'cantidad','required' => true],
+        'costo_unitario'     => ['type' => 'precio',  'required' => false],
+        'porcentaje_ganancia'=> ['type' => 'precio',  'required' => false],
     ];
 
     protected array $fillable = [
         'id_planta', 'id_ubicacion', 'fecha_siembra', 'cantidad_inicial', 'cantidad_actual',
-        'id_estado', 'id_categoria', 'id_origen', 'observacion', 'imagen', 'activo',
+        'costo_unitario', 'id_estado', 'id_categoria', 'id_origen', 'observacion', 'imagen', 'activo',
+        'porcentaje_ganancia',
     ];
     protected array $guarded = ['id'];
 
@@ -58,7 +57,7 @@ class Lote extends Database implements ReadableInterface, DeletableInterface
     public function fill(array $attributes): self
     {
         foreach ($attributes as $key => $value) {
-            if (empty($this->fillable) || in_array($key, $this->fillable, true)) {
+            if (in_array($key, $this->fillable, true)) {
                 $property = $this->mapColumnToProperty($key);
                 if (property_exists($this, $property)) {
                     $this->$property = $value;
@@ -71,18 +70,20 @@ class Lote extends Database implements ReadableInterface, DeletableInterface
     private function mapColumnToProperty(string $column): string
     {
         $map = [
-            'id_lote'            => 'id',
-            'id_planta'          => 'idPlanta',
-            'id_ubicacion'       => 'idUbicacion',
-            'fecha_siembra'      => 'fechaSiembra',
-            'cantidad_inicial'   => 'cantidadInicial',
-            'cantidad_actual'    => 'cantidadActual',
-            'id_estado'          => 'idEstado',
-            'id_categoria'       => 'idCategoria',
-            'id_origen'          => 'idOrigen',
-            'observacion'        => 'observacion',
-            'imagen'             => 'imagen',
-            'activo'             => 'activo',
+            'id_lote'              => 'id',
+            'id_planta'            => 'idPlanta',
+            'id_ubicacion'         => 'idUbicacion',
+            'fecha_siembra'        => 'fechaSiembra',
+            'cantidad_inicial'     => 'cantidadInicial',
+            'cantidad_actual'      => 'cantidadActual',
+            'costo_unitario'       => 'costoUnitario',
+            'id_estado'            => 'idEstado',
+            'id_categoria'         => 'idCategoria',
+            'id_origen'            => 'idOrigen',
+            'observacion'          => 'observacion',
+            'imagen'               => 'imagen',
+            'activo'               => 'activo',
+            'porcentaje_ganancia'  => 'porcentajeGanancia',
         ];
         return $map[$column] ?? $column;
     }
@@ -93,65 +94,45 @@ class Lote extends Database implements ReadableInterface, DeletableInterface
     public function getFechaSiembra(): ?string { return $this->fechaSiembra; }
     public function getCantidadInicial(): int { return $this->cantidadInicial; }
     public function getCantidadActual(): int { return $this->cantidadActual; }
+    public function getCostoUnitario(): float { return $this->costoUnitario; }
     public function getIdEstado(): ?int { return $this->idEstado; }
     public function getIdCategoria(): ?int { return $this->idCategoria; }
     public function getIdOrigen(): ?int { return $this->idOrigen; }
     public function getObservacion(): ?string { return $this->observacion; }
     public function getImagen(): ?string { return $this->imagen; }
     public function isActivo(): bool { return $this->activo === 1; }
+    public function getPorcentajeGanancia(): float { return $this->porcentajeGanancia; }
 
     public function setId(int $id): self { $this->id = $id; return $this; }
     public function setIdPlanta(int $idPlanta): self { $this->idPlanta = $idPlanta; return $this; }
-    public function setIdUbicacion(int $idUbicacion): self { $this->idUbicacion = $idUbicacion; return $this; }
+    public function setIdUbicacion(?int $idUbicacion): self { $this->idUbicacion = $idUbicacion; return $this; }
     public function setFechaSiembra(string $fechaSiembra): self { $this->fechaSiembra = $fechaSiembra; return $this; }
     public function setCantidadInicial(int $cantidadInicial): self { $this->cantidadInicial = max(0, $cantidadInicial); return $this; }
     public function setCantidadActual(int $cantidadActual): self { $this->cantidadActual = max(0, $cantidadActual); return $this; }
+    public function setCostoUnitario(float $costoUnitario): self { $this->costoUnitario = max(0, $costoUnitario); return $this; }
     public function setIdEstado(?int $idEstado): self { $this->idEstado = $idEstado; return $this; }
     public function setIdCategoria(?int $idCategoria): self { $this->idCategoria = $idCategoria; return $this; }
     public function setIdOrigen(?int $idOrigen): self { $this->idOrigen = $idOrigen; return $this; }
     public function setObservacion(?string $observacion): self { $this->observacion = $observacion ?: null; return $this; }
     public function setImagen(?string $imagen): self { $this->imagen = $imagen; return $this; }
     public function setActivo(bool $activo): self { $this->activo = $activo ? 1 : 0; return $this; }
+    public function setPorcentajeGanancia(float $porcentaje): self { $this->porcentajeGanancia = max(0, $porcentaje); return $this; }
 
     private function validate(): void
     {
         $this->validateData([
-            'id_planta'       => $this->idPlanta,
-            'id_ubicacion'    => $this->idUbicacion,
-            'fecha_siembra'   => $this->fechaSiembra,
-            'cantidad_inicial'=> $this->cantidadInicial,
-            'cantidad_actual' => $this->cantidadActual,
-            'id_estado'       => $this->idEstado,
-            'id_categoria'    => $this->idCategoria,
-            'id_origen'       => $this->idOrigen,
-            'observacion'     => $this->observacion,
+            'id_planta'          => $this->idPlanta,
+            'fecha_siembra'      => $this->fechaSiembra,
+            'cantidad_inicial'   => $this->cantidadInicial,
+            'cantidad_actual'    => $this->cantidadActual,
+            'costo_unitario'     => $this->costoUnitario,
+            'porcentaje_ganancia'=> $this->porcentajeGanancia,
         ]);
     }
 
-    private function hasColumn(string $table, string $column): bool
+    private function estadoNameById(?int $id): ?string
     {
-        $key = "$table.$column";
-        if (array_key_exists($key, $this->schemaCache)) {
-            return $this->schemaCache[$key];
-        }
-        try {
-            $stmt = $this->db()->prepare(
-                'SELECT COUNT(*) FROM information_schema.COLUMNS
-                 WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?'
-            );
-            $stmt->execute([$table, $column]);
-            return $this->schemaCache[$key] = (int) $stmt->fetchColumn() > 0;
-        } catch (Throwable $e) {
-            return $this->schemaCache[$key] = false;
-        }
-    }
-
-    private function fkEstado(): bool { return $this->hasColumn('lote', 'id_estado'); }
-    private function fkCategoria(): bool { return $this->hasColumn('lote', 'id_categoria'); }
-    private function fkOrigen(): bool { return $this->hasColumn('lote', 'id_origen'); }
-
-    private function estadoNameById(int $id): string
-    {
+        if ($id === null) return null;
         foreach ($this->getEstados() as $e) {
             if ((int)$e['id'] === $id) return (string)$e['nombre'];
         }
@@ -160,7 +141,7 @@ class Lote extends Database implements ReadableInterface, DeletableInterface
 
     private function categoriaNameById(?int $id): ?string
     {
-        if ($id === null || $id <= 0) return null;
+        if ($id === null) return null;
         foreach ($this->getCategorias() as $e) {
             if ((int)$e['id'] === $id) return (string)$e['nombre'];
         }
@@ -169,7 +150,7 @@ class Lote extends Database implements ReadableInterface, DeletableInterface
 
     private function origenNameById(?int $id): ?string
     {
-        if ($id === null || $id <= 0) return null;
+        if ($id === null) return null;
         foreach ($this->getOrigenes() as $e) {
             if ((int)$e['id'] === $id) return (string)$e['nombre'];
         }
@@ -179,67 +160,46 @@ class Lote extends Database implements ReadableInterface, DeletableInterface
     public function save(): bool
     {
         $this->validate();
-
         try {
-            if ($this->fkEstado()) {
-                if ($this->idEstado === null) $this->idEstado = $this->getIdEstadoVivo();
-                if ($this->idOrigen === null) $this->idOrigen = $this->getIdOrigenPorNombre('Siembra');
-            } else {
-                $this->idEstado = $this->idEstado ?? $this->getIdEstadoVivo();
-                $this->idOrigen = $this->idOrigen ?? $this->getIdOrigenPorNombre('Siembra');
-            }
+            if ($this->idEstado === null) $this->idEstado = $this->getIdEstadoVivo();
+            if ($this->idOrigen === null) $this->idOrigen = $this->getIdOrigenPorNombre('Siembra');
 
             if ($this->id === null) {
-                if ($this->fkEstado()) {
-                    $sql = "INSERT INTO lote (id_planta, id_ubicacion, fecha_siembra, cantidad_inicial, cantidad_actual, id_estado, id_categoria, id_origen, observacion, imagen)
-                            VALUES (:id_planta, :id_ubicacion, :fecha_siembra, :cantidad_inicial, :cantidad_actual, :id_estado, :id_categoria, :id_origen, :observacion, :imagen)";
-                } else {
-                    $sql = "INSERT INTO lote (id_planta, id_ubicacion, fecha_siembra, cantidad_inicial, cantidad_actual, estado, categoria, origen, observacion, imagen)
-                            VALUES (:id_planta, :id_ubicacion, :fecha_siembra, :cantidad_inicial, :cantidad_actual, :estado, :categoria, :origen, :observacion, :imagen)";
-                }
+                $sql = "INSERT INTO lote (id_planta, id_ubicacion, fecha_siembra, cantidad_inicial, cantidad_actual,
+                        costo_unitario, id_estado, id_categoria, id_origen, observacion, imagen, porcentaje_ganancia)
+                        VALUES (:id_planta, :id_ubicacion, :fecha_siembra, :cantidad_inicial, :cantidad_actual,
+                        :costo_unitario, :id_estado, :id_categoria, :id_origen, :observacion, :imagen, :porcentaje_ganancia)";
                 $stmt = $this->db()->prepare($sql);
-                $success = $stmt->execute($this->buildInsertParams());
+                $success = $stmt->execute($this->buildParams());
                 if ($success) {
                     $this->id = (int) $this->db()->lastInsertId();
                     AuditLog::record('CREATE', 'lote', $this->id, null, [
-                        'id_planta'        => $this->idPlanta,
-                        'id_ubicacion'     => $this->idUbicacion,
-                        'fecha_siembra'    => $this->fechaSiembra,
-                        'cantidad_inicial' => $this->cantidadInicial,
-                        'cantidad_actual'  => $this->cantidadActual,
-                        'id_estado'        => $this->idEstado,
-                        'id_origen'        => $this->idOrigen,
-                        'observacion'      => $this->observacion,
+                        'id_planta'          => $this->idPlanta,
+                        'id_ubicacion'       => $this->idUbicacion,
+                        'fecha_siembra'      => $this->fechaSiembra,
+                        'cantidad_inicial'   => $this->cantidadInicial,
+                        'costo_unitario'     => $this->costoUnitario,
+                        'porcentaje_ganancia'=> $this->porcentajeGanancia,
                     ]);
                 }
                 return $success;
             } else {
                 $oldData = $this->getById($this->id);
-                if ($this->fkEstado()) {
-                    $sql = "UPDATE lote SET id_planta = :id_planta, id_ubicacion = :id_ubicacion, fecha_siembra = :fecha_siembra,
-                            cantidad_inicial = :cantidad_inicial, cantidad_actual = :cantidad_actual,
-                            id_estado = :id_estado, id_categoria = :id_categoria, id_origen = :id_origen,
-                            observacion = :observacion, imagen = :imagen
-                            WHERE id_lote = :id";
-                } else {
-                    $sql = "UPDATE lote SET id_planta = :id_planta, id_ubicacion = :id_ubicacion, fecha_siembra = :fecha_siembra,
-                            cantidad_inicial = :cantidad_inicial, cantidad_actual = :cantidad_actual,
-                            estado = :estado, categoria = :categoria, origen = :origen,
-                            observacion = :observacion, imagen = :imagen
-                            WHERE id_lote = :id";
-                }
+                $sql = "UPDATE lote SET id_planta = :id_planta, id_ubicacion = :id_ubicacion, fecha_siembra = :fecha_siembra,
+                        cantidad_inicial = :cantidad_inicial, cantidad_actual = :cantidad_actual,
+                        costo_unitario = :costo_unitario, id_estado = :id_estado, id_categoria = :id_categoria,
+                        id_origen = :id_origen, observacion = :observacion, imagen = :imagen,
+                        porcentaje_ganancia = :porcentaje_ganancia
+                        WHERE id_lote = :id";
                 $stmt = $this->db()->prepare($sql);
-                $success = $stmt->execute($this->buildUpdateParams());
+                $params = $this->buildParams();
+                $params[':id'] = $this->id;
+                $success = $stmt->execute($params);
                 if ($success) {
                     AuditLog::record('UPDATE', 'lote', $this->id, $oldData, [
-                        'id_planta'        => $this->idPlanta,
-                        'id_ubicacion'     => $this->idUbicacion,
-                        'fecha_siembra'    => $this->fechaSiembra,
-                        'cantidad_inicial' => $this->cantidadInicial,
-                        'cantidad_actual'  => $this->cantidadActual,
-                        'id_estado'        => $this->idEstado,
-                        'id_origen'        => $this->idOrigen,
-                        'observacion'      => $this->observacion,
+                        'id_planta'          => $this->idPlanta,
+                        'costo_unitario'     => $this->costoUnitario,
+                        'porcentaje_ganancia'=> $this->porcentajeGanancia,
                     ]);
                 }
                 return $success;
@@ -250,34 +210,22 @@ class Lote extends Database implements ReadableInterface, DeletableInterface
         }
     }
 
-    private function buildInsertParams(): array
+    private function buildParams(): array
     {
-        $base = [
-            ':id_planta'        => $this->idPlanta,
-            ':id_ubicacion'     => $this->idUbicacion,
-            ':fecha_siembra'    => $this->fechaSiembra,
-            ':cantidad_inicial' => $this->cantidadInicial,
-            ':cantidad_actual'  => $this->cantidadActual,
-            ':observacion'      => $this->observacion,
-            ':imagen'           => $this->imagen,
+        return [
+            ':id_planta'          => $this->idPlanta,
+            ':id_ubicacion'       => $this->idUbicacion,
+            ':fecha_siembra'      => $this->fechaSiembra,
+            ':cantidad_inicial'   => $this->cantidadInicial,
+            ':cantidad_actual'    => $this->cantidadActual,
+            ':costo_unitario'     => $this->costoUnitario,
+            ':id_estado'          => $this->idEstado,
+            ':id_categoria'       => $this->idCategoria,
+            ':id_origen'          => $this->idOrigen,
+            ':observacion'        => $this->observacion,
+            ':imagen'             => $this->imagen,
+            ':porcentaje_ganancia'=> $this->porcentajeGanancia,
         ];
-        if ($this->fkEstado()) {
-            $base[':id_estado']    = $this->idEstado;
-            $base[':id_categoria'] = $this->idCategoria;
-            $base[':id_origen']    = $this->idOrigen;
-        } else {
-            $base[':estado']   = $this->estadoNameById((int)$this->idEstado);
-            $base[':categoria']= $this->categoriaNameById($this->idCategoria);
-            $base[':origen']   = $this->origenNameById($this->idOrigen);
-        }
-        return $base;
-    }
-
-    private function buildUpdateParams(): array
-    {
-        $params = $this->buildInsertParams();
-        $params[':id'] = $this->id;
-        return $params;
     }
 
     public static function find(int $id): ?self
@@ -296,47 +244,26 @@ class Lote extends Database implements ReadableInterface, DeletableInterface
     {
         $instance = new static();
         try {
-            if ($instance->fkEstado()) {
-                $sql = "SELECT
-                            l.id_lote AS id, l.id_planta, l.id_ubicacion, l.fecha_siembra,
-                            l.cantidad_inicial, l.cantidad_actual, l.observacion, l.imagen, l.activo,
-                            l.id_estado, l.id_categoria, l.id_origen,
-                            e.nombre AS estado_nombre,
-                            c.nombre AS categoria_nombre,
-                            o.nombre AS origen_nombre,
-                            p.nombre_comun AS planta_nombre,
-                            sp.nombre_especie AS especie_nombre,
-                            u.nombre_ubicacion AS ubicacion_nombre,
-                            cp.precio_final_sugerido AS precio_unitario
-                        FROM lote l
-                        LEFT JOIN plantas p ON l.id_planta = p.id_planta AND p.activo = 1
-                        LEFT JOIN especie sp ON p.id_especie = sp.id_especie AND sp.activo = 1
-                        LEFT JOIN ubicacion u ON l.id_ubicacion = u.id_ubicacion AND u.activo = 1
-                        LEFT JOIN estado e ON l.id_estado = e.id_estado
-                        LEFT JOIN categoria c ON l.id_categoria = c.id_categoria
-                        LEFT JOIN origen o ON l.id_origen = o.id_origen
-                        LEFT JOIN calculo_precio cp ON l.id_lote = cp.id_lote
-                        WHERE l.activo = 1
-                        ORDER BY l.fecha_siembra DESC";
-            } else {
-                $sql = "SELECT
-                            l.id_lote AS id, l.id_planta, l.id_ubicacion, l.fecha_siembra,
-                            l.cantidad_inicial, l.cantidad_actual, l.observacion, l.imagen, l.activo,
-                            l.estado AS estado_nombre,
-                            l.categoria AS categoria_nombre,
-                            l.origen AS origen_nombre,
-                            p.nombre_comun AS planta_nombre,
-                            sp.nombre_especie AS especie_nombre,
-                            u.nombre_ubicacion AS ubicacion_nombre,
-                            cp.precio_final_sugerido AS precio_unitario
-                        FROM lote l
-                        LEFT JOIN plantas p ON l.id_planta = p.id_planta AND p.activo = 1
-                        LEFT JOIN especie sp ON p.id_especie = sp.id_especie AND sp.activo = 1
-                        LEFT JOIN ubicacion u ON l.id_ubicacion = u.id_ubicacion AND u.activo = 1
-                        LEFT JOIN calculo_precio cp ON l.id_lote = cp.id_lote
-                        WHERE l.activo = 1
-                        ORDER BY l.fecha_siembra DESC";
-            }
+            $sql = "SELECT
+                        l.id_lote AS id, l.id_planta, l.id_ubicacion, l.fecha_siembra,
+                        l.cantidad_inicial, l.cantidad_actual, l.costo_unitario,
+                        l.id_estado, l.id_categoria, l.id_origen,
+                        l.observacion, l.imagen, l.activo, l.porcentaje_ganancia,
+                        p.nombre_comun AS planta_nombre,
+                        sp.nombre_especie AS especie_nombre,
+                        u.nombre_ubicacion AS ubicacion_nombre,
+                        e.nombre AS estado_nombre,
+                        c.nombre AS categoria_nombre,
+                        o.nombre AS origen_nombre
+                    FROM lote l
+                    LEFT JOIN plantas p ON l.id_planta = p.id_planta AND p.activo = 1
+                    LEFT JOIN especie sp ON p.id_especie = sp.id_especie AND sp.activo = 1
+                    LEFT JOIN ubicacion u ON l.id_ubicacion = u.id_ubicacion AND u.activo = 1
+                    LEFT JOIN estado e ON l.id_estado = e.id_estado
+                    LEFT JOIN categoria c ON l.id_categoria = c.id_categoria
+                    LEFT JOIN origen o ON l.id_origen = o.id_origen
+                    WHERE l.activo = 1
+                    ORDER BY l.fecha_siembra DESC";
             $stmt = $instance->db()->query($sql);
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
         } catch (Throwable $e) {
@@ -352,36 +279,27 @@ class Lote extends Database implements ReadableInterface, DeletableInterface
 
     public function getById(int $id): ?array
     {
-        if ($this->fkEstado()) {
+        try {
             $stmt = $this->db()->prepare("SELECT
-                                            l.*,
-                                            e.nombre AS estado_nombre,
-                                            c.nombre AS categoria_nombre,
-                                            o.nombre AS origen_nombre,
-                                            p.nombre_comun AS planta_nombre,
-                                            sp.nombre_especie AS especie_nombre
-                                        FROM lote l
-                                        LEFT JOIN plantas p ON l.id_planta = p.id_planta
-                                        LEFT JOIN especie sp ON p.id_especie = sp.id_especie
-                                        LEFT JOIN estado e ON l.id_estado = e.id_estado
-                                        LEFT JOIN categoria c ON l.id_categoria = c.id_categoria
-                                        LEFT JOIN origen o ON l.id_origen = o.id_origen
-                                        WHERE l.id_lote = :id");
-        } else {
-            $stmt = $this->db()->prepare("SELECT
-                                            l.*,
-                                            l.estado AS estado_nombre,
-                                            l.categoria AS categoria_nombre,
-                                            l.origen AS origen_nombre,
-                                            p.nombre_comun AS planta_nombre,
-                                            sp.nombre_especie AS especie_nombre
-                                        FROM lote l
-                                        LEFT JOIN plantas p ON l.id_planta = p.id_planta
-                                        LEFT JOIN especie sp ON p.id_especie = sp.id_especie
-                                        WHERE l.id_lote = :id");
+                        l.*,
+                        p.nombre_comun AS planta_nombre,
+                        sp.nombre_especie AS especie_nombre,
+                        e.nombre AS estado_nombre,
+                        c.nombre AS categoria_nombre,
+                        o.nombre AS origen_nombre
+                    FROM lote l
+                    LEFT JOIN plantas p ON l.id_planta = p.id_planta
+                    LEFT JOIN especie sp ON p.id_especie = sp.id_especie
+                    LEFT JOIN estado e ON l.id_estado = e.id_estado
+                    LEFT JOIN categoria c ON l.id_categoria = c.id_categoria
+                    LEFT JOIN origen o ON l.id_origen = o.id_origen
+                    WHERE l.id_lote = :id");
+            $stmt->execute([':id' => $id]);
+            return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+        } catch (Throwable $e) {
+            error_log('Error en Lote::getById: ' . $e->getMessage());
+            return null;
         }
-        $stmt->execute([':id' => $id]);
-        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 
     public function exists(int $id): bool
@@ -417,105 +335,6 @@ class Lote extends Database implements ReadableInterface, DeletableInterface
         }
     }
 
-    public function getEstados(): array
-    {
-        if ($this->fkEstado()) {
-            $stmt = $this->db()->query("SELECT id_estado AS id, nombre FROM estado WHERE activo = 1 ORDER BY nombre ASC");
-            return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
-        }
-        try {
-            $stmt = $this->db()->query(
-                "SELECT DISTINCT estado AS nombre FROM lote WHERE estado IS NOT NULL AND estado != ''
-                 UNION
-                 SELECT DISTINCT estado_salud AS nombre FROM trazabilidad WHERE estado_salud IS NOT NULL AND estado_salud != ''
-                 ORDER BY nombre ASC"
-            );
-            $rows = $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
-            $out = [];
-            $i = 1;
-            foreach ($rows as $r) {
-                $out[] = ['id' => $i++, 'nombre' => (string)$r['nombre']];
-            }
-            return $out;
-        } catch (Throwable $e) {
-            error_log('Error al obtener estados: ' . $e->getMessage());
-            return [];
-        }
-    }
-
-    public function getCategorias(): array
-    {
-        if ($this->fkCategoria()) {
-            $stmt = $this->db()->query("SELECT id_categoria AS id, nombre FROM categoria WHERE activo = 1 ORDER BY nombre ASC");
-            return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
-        }
-        try {
-            $stmt = $this->db()->query(
-                "SELECT DISTINCT categoria AS nombre FROM lote WHERE categoria IS NOT NULL AND categoria != ''
-                 ORDER BY nombre ASC"
-            );
-            $rows = $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
-            $out = [];
-            $i = 1;
-            foreach ($rows as $r) {
-                $out[] = ['id' => $i++, 'nombre' => (string)$r['nombre']];
-            }
-            return $out;
-        } catch (Throwable $e) {
-            error_log('Error al obtener categorías: ' . $e->getMessage());
-            return [];
-        }
-    }
-
-    public function getOrigenes(): array
-    {
-        if ($this->fkOrigen()) {
-            $stmt = $this->db()->query("SELECT id_origen AS id, nombre FROM origen WHERE activo = 1 ORDER BY nombre ASC");
-            return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
-        }
-        try {
-            $stmt = $this->db()->query(
-                "SELECT DISTINCT origen AS nombre FROM lote WHERE origen IS NOT NULL AND origen != ''
-                 ORDER BY nombre ASC"
-            );
-            $rows = $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
-            $out = [];
-            $i = 1;
-            foreach ($rows as $r) {
-                $out[] = ['id' => $i++, 'nombre' => (string)$r['nombre']];
-            }
-            return $out;
-        } catch (Throwable $e) {
-            error_log('Error al obtener orígenes: ' . $e->getMessage());
-            return [];
-        }
-    }
-
-    public function getIdEstadoVivo(): int
-    {
-        if ($this->fkEstado()) {
-            $stmt = $this->db()->query("SELECT id_estado FROM estado WHERE nombre = 'vivo' LIMIT 1");
-            return (int)$stmt->fetchColumn();
-        }
-        foreach ($this->getEstados() as $e) {
-            if (strcasecmp((string)$e['nombre'], 'Vivo') === 0) return (int)$e['id'];
-        }
-        return 1;
-    }
-
-    public function getIdOrigenPorNombre(string $nombre): int
-    {
-        if ($this->fkOrigen()) {
-            $stmt = $this->db()->prepare("SELECT id_origen FROM origen WHERE nombre = ? LIMIT 1");
-            $stmt->execute([$nombre]);
-            return (int)$stmt->fetchColumn();
-        }
-        foreach ($this->getOrigenes() as $o) {
-            if (strcasecmp((string)$o['nombre'], $nombre) === 0) return (int)$o['id'];
-        }
-        return 1;
-    }
-
     public function loadById(int $id): bool
     {
         $found = self::find($id);
@@ -526,12 +345,14 @@ class Lote extends Database implements ReadableInterface, DeletableInterface
             $this->fechaSiembra = $found->getFechaSiembra();
             $this->cantidadInicial = $found->getCantidadInicial();
             $this->cantidadActual = $found->getCantidadActual();
+            $this->costoUnitario = $found->getCostoUnitario();
             $this->idEstado = $found->getIdEstado();
             $this->idCategoria = $found->getIdCategoria();
             $this->idOrigen = $found->getIdOrigen();
             $this->observacion = $found->getObservacion();
             $this->imagen = $found->getImagen();
             $this->activo = $found->isActivo() ? 1 : 0;
+            $this->porcentajeGanancia = $found->getPorcentajeGanancia();
             return true;
         }
         return false;
@@ -549,38 +370,89 @@ class Lote extends Database implements ReadableInterface, DeletableInterface
         return $stmt->execute([':cantidad' => $cantidad, ':id' => $id]);
     }
 
-    public function add($id_planta, $id_ubicacion, $fecha_siembra, $cantidad_inicial, $cantidad_actual, $id_estado = null, $id_categoria = null, $id_origen = null, $observacion = null, $imagen = null)
+    public function getEstados(): array
+    {
+        try {
+            $stmt = $this->db()->query("SELECT id_estado AS id, nombre FROM estado WHERE activo = 1 ORDER BY nombre ASC");
+            return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+        } catch (Throwable $e) {
+            error_log('Error al obtener estados: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    public function getCategorias(): array
+    {
+        try {
+            $stmt = $this->db()->query("SELECT id_categoria AS id, nombre FROM categoria WHERE activo = 1 ORDER BY nombre ASC");
+            return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+        } catch (Throwable $e) {
+            error_log('Error al obtener categorías: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    public function getOrigenes(): array
+    {
+        try {
+            $stmt = $this->db()->query("SELECT id_origen AS id, nombre FROM origen WHERE activo = 1 ORDER BY nombre ASC");
+            return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+        } catch (Throwable $e) {
+            error_log('Error al obtener orígenes: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    public function getIdEstadoVivo(): int
+    {
+        $stmt = $this->db()->query("SELECT id_estado FROM estado WHERE nombre = 'vivo' LIMIT 1");
+        return $stmt ? (int)$stmt->fetchColumn() : 1;
+    }
+
+    public function getIdOrigenPorNombre(string $nombre): int
+    {
+        $stmt = $this->db()->prepare("SELECT id_origen FROM origen WHERE nombre = ? LIMIT 1");
+        $stmt->execute([$nombre]);
+        $id = $stmt->fetchColumn();
+        return $id ? (int)$id : 1;
+    }
+
+    public function add($id_planta, $id_ubicacion, $fecha_siembra, $cantidad_inicial, $cantidad_actual, $costo_unitario = 0.0, $id_estado = null, $id_categoria = null, $id_origen = null, $observacion = null, $imagen = null, $porcentaje_ganancia = 30.0)
     {
         return $this->fill([
-            'id_planta' => $id_planta,
-            'id_ubicacion' => $id_ubicacion,
-            'fecha_siembra' => $fecha_siembra,
-            'cantidad_inicial' => $cantidad_inicial,
-            'cantidad_actual' => $cantidad_actual,
-            'id_estado' => $id_estado,
-            'id_categoria' => $id_categoria,
-            'id_origen' => $id_origen,
-            'observacion' => $observacion,
-            'imagen' => $imagen,
+            'id_planta'          => $id_planta,
+            'id_ubicacion'       => $id_ubicacion,
+            'fecha_siembra'      => $fecha_siembra,
+            'cantidad_inicial'   => $cantidad_inicial,
+            'cantidad_actual'    => $cantidad_actual,
+            'costo_unitario'     => $costo_unitario,
+            'id_estado'          => $id_estado,
+            'id_categoria'       => $id_categoria,
+            'id_origen'          => $id_origen,
+            'observacion'        => $observacion,
+            'imagen'             => $imagen,
+            'porcentaje_ganancia'=> $porcentaje_ganancia,
         ])->save();
     }
 
-    public function update($id, $id_planta, $id_ubicacion, $fecha_siembra, $cantidad_inicial, $cantidad_actual, $id_estado = null, $id_categoria = null, $id_origen = null, $observacion = null, $imagen = null)
+    public function update($id, $id_planta, $id_ubicacion, $fecha_siembra, $cantidad_inicial, $cantidad_actual, $costo_unitario = 0.0, $id_estado = null, $id_categoria = null, $id_origen = null, $observacion = null, $imagen = null, $porcentaje_ganancia = 30.0)
     {
         if (!$this->exists($id)) {
             throw new \Exception("No existe el lote con ID: $id");
         }
         return $this->setId($id)->fill([
-            'id_planta' => $id_planta,
-            'id_ubicacion' => $id_ubicacion,
-            'fecha_siembra' => $fecha_siembra,
-            'cantidad_inicial' => $cantidad_inicial,
-            'cantidad_actual' => $cantidad_actual,
-            'id_estado' => $id_estado,
-            'id_categoria' => $id_categoria,
-            'id_origen' => $id_origen,
-            'observacion' => $observacion,
-            'imagen' => $imagen,
+            'id_planta'          => $id_planta,
+            'id_ubicacion'       => $id_ubicacion,
+            'fecha_siembra'      => $fecha_siembra,
+            'cantidad_inicial'   => $cantidad_inicial,
+            'cantidad_actual'    => $cantidad_actual,
+            'costo_unitario'     => $costo_unitario,
+            'id_estado'          => $id_estado,
+            'id_categoria'       => $id_categoria,
+            'id_origen'          => $id_origen,
+            'observacion'        => $observacion,
+            'imagen'             => $imagen,
+            'porcentaje_ganancia'=> $porcentaje_ganancia,
         ])->save();
     }
 }

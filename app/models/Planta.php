@@ -203,11 +203,10 @@ class Planta extends Database implements ReadableInterface, DeletableInterface
                     p.imagen, p.activo, p.cantidad_total,
                     e.nombre_especie AS especie_nombre,
                     (SELECT COALESCE(SUM(l2.cantidad_actual), 0) FROM lote l2 WHERE l2.id_planta = p.id_planta AND l2.activo = 1) AS stock_lotes,
-                    (SELECT cp.precio_final_sugerido
-                     FROM calculo_precio cp
-                     JOIN lote l ON cp.id_lote = l.id_lote
-                     WHERE l.id_planta = p.id_planta
-                     ORDER BY cp.fecha_calculo DESC
+                    (SELECT l.costo_unitario
+                     FROM lote l
+                     WHERE l.id_planta = p.id_planta AND l.activo = 1
+                     ORDER BY l.fecha_siembra DESC
                      LIMIT 1) AS precio_vigente
                 FROM plantas p
                 LEFT JOIN especie e ON p.id_especie = e.id_especie AND e.activo = 1

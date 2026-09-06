@@ -43,7 +43,11 @@ include_once __DIR__ . '/../common/modal.php';
                                     <th>Nombre de Usuario</th>
                                     <th>Correo Electrónico</th>
                                     <th>Rol</th>
-                                    <th>Trabajador</th>
+                                    <th>Nombre Trabajador</th>
+                                    <th>Apellido Trabajador</th>
+                                    <th>Cédula</th>
+                                    <th>Teléfono</th>
+                                    <th>Cargo</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
@@ -109,14 +113,24 @@ function renderPermisosChecklist(array $allPermisos): void
             </select>
         </div>
         <div class="mb-3">
-            <label class="form-label">Vinculado a trabajador</label>
-            <select class="form-select" name="id_trabajador_ref">
-                <option value="">— Sin vincular —</option>
-                <?php foreach ($trabajadores as $t): ?>
-                <option value="<?= $t['id'] ?>"><?= htmlspecialchars($t['nombre_trabajador'] . ' ' . ($t['apellido_trabajador'] ?? '')) ?></option>
-                <?php endforeach; ?>
-            </select>
-            <small class="text-muted">Opcional. Vincula este usuario a un trabajador para notificaciones de tareas.</small>
+            <label class="form-label">Nombre del Trabajador</label>
+            <input type="text" class="form-control" name="nombre_trabajador" maxlength="100">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Apellido del Trabajador</label>
+            <input type="text" class="form-control" name="apellido_trabajador" maxlength="100">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Cédula del Trabajador</label>
+            <input type="text" class="form-control" name="cedula_trabajador" maxlength="20">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Teléfono del Trabajador</label>
+            <input type="text" class="form-control" name="telefono_trabajador" maxlength="20">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Cargo</label>
+            <input type="text" class="form-control" name="cargo" maxlength="100">
         </div>
         <div class="mb-3 permisos-checklist" id="addPermisosChecklist" style="display:none;">
             <label class="form-label">Módulos y acciones permitidas</label>
@@ -162,14 +176,24 @@ function renderPermisosChecklist(array $allPermisos): void
             <small class="text-muted" id="editUserRoleNote" style="display:none;">El rol del superusuario no se puede modificar.</small>
         </div>
         <div class="mb-3">
-            <label class="form-label">Vinculado a trabajador</label>
-            <select class="form-select" name="id_trabajador_ref" id="editTrabajadorRef">
-                <option value="">— Sin vincular —</option>
-                <?php foreach ($trabajadores as $t): ?>
-                <option value="<?= $t['id'] ?>"><?= htmlspecialchars($t['nombre_trabajador'] . ' ' . ($t['apellido_trabajador'] ?? '')) ?></option>
-                <?php endforeach; ?>
-            </select>
-            <small class="text-muted">Opcional. Vincula este usuario a un trabajador para notificaciones de tareas.</small>
+            <label class="form-label">Nombre del Trabajador</label>
+            <input type="text" class="form-control" name="nombre_trabajador" id="editNombreTrabajador" maxlength="100">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Apellido del Trabajador</label>
+            <input type="text" class="form-control" name="apellido_trabajador" id="editApellidoTrabajador" maxlength="100">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Cédula del Trabajador</label>
+            <input type="text" class="form-control" name="cedula_trabajador" id="editCedulaTrabajador" maxlength="20">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Teléfono del Trabajador</label>
+            <input type="text" class="form-control" name="telefono_trabajador" id="editTelefonoTrabajador" maxlength="20">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Cargo</label>
+            <input type="text" class="form-control" name="cargo" id="editCargo" maxlength="100">
         </div>
         <div class="mb-3 permisos-checklist" id="editPermisosChecklist" style="display:none;">
             <label class="form-label">Módulos y acciones permitidas</label>

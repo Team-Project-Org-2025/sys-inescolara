@@ -11,7 +11,7 @@ function modal_form_start(array $o): void
       <div class="modal-content">
         <form id="<?= $o['formId'] ?>">
           <?php if (!empty($o['hasHiddenId'])): ?>
-          <input type="hidden" name="id" id="<?= $o['hiddenId'] ?? $id . 'Id' ?>">
+          <input type="hidden" name="<?= $o['hiddenIdName'] ?? 'id' ?>" id="<?= $o['hiddenId'] ?? $id . 'Id' ?>">
           <?php endif; ?>
           <div class="modal-header">
             <h5 class="modal-title"<?= $titleId ?>><?= htmlspecialchars($o['title']) ?></h5>

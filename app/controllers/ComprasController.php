@@ -26,6 +26,7 @@ function index(): void
                 'POST_agregar_planta_rapido'      => compras_agregarPlantaRapido(),
                 'POST_agregar_insumo_rapido'       => compras_agregarInsumoRapido(),
                 'POST_agregar_herramienta_rapido'  => compras_agregarHerramientaRapido(),
+                'POST_actualizar_costo_lote'       => compras_actualizarCostoLoteAjax(),
                 default                            => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
             };
         } catch (\Exception $e) {
@@ -105,14 +106,15 @@ function compras_manejarAgregarEditar(string $modo): void
             $nuevoId = $modelo->obtenerUltimoId() ?? 0;
 
             foreach ($items as $item) {
-                $tipoItem = $item['tipo_item'] ?? '';
-                $idItem = (int)($item['id_item'] ?? 0);
+                $idInsumo = !empty($item['id_insumo']) ? (int)$item['id_insumo'] : null;
+                $idHerramienta = !empty($item['id_herramienta']) ? (int)$item['id_herramienta'] : null;
+                $idPlanta = !empty($item['id_planta']) ? (int)$item['id_planta'] : null;
                 $cantidad = (float)($item['cantidad'] ?? 0);
                 $costoUnitario = (float)($item['costo_unitario'] ?? 0);
                 $subtotalItem = $cantidad * $costoUnitario;
-                $categoriaLote = $tipoItem === 'planta' ? ($item['categoria_lote'] ?? null) : null;
-                $idUbicacionItem = $tipoItem === 'planta' ? (!empty($item['id_ubicacion']) ? (int)$item['id_ubicacion'] : null) : null;
-                $modelo->agregarDetalle($nuevoId, $tipoItem, $idItem, $cantidad, $costoUnitario, $subtotalItem, $categoriaLote, $idUbicacionItem);
+                $categoriaLote = $item['categoria_lote'] ?? null;
+                $idUbicacionItem = !empty($item['id_ubicacion']) ? (int)$item['id_ubicacion'] : null;
+                $modelo->agregarDetalle($nuevoId, $idInsumo, $idHerramienta, $idPlanta, $cantidad, $costoUnitario, $subtotalItem, $categoriaLote, $idUbicacionItem);
             }
 
             if (!$modelo->crearCuentaPagar($nuevoId, $total)) {
@@ -133,14 +135,15 @@ function compras_manejarAgregarEditar(string $modo): void
 
         $modelo->eliminarDetalles($id);
         foreach ($items as $item) {
-            $tipoItem = $item['tipo_item'] ?? '';
-            $idItem = (int)($item['id_item'] ?? 0);
+            $idInsumo = !empty($item['id_insumo']) ? (int)$item['id_insumo'] : null;
+            $idHerramienta = !empty($item['id_herramienta']) ? (int)$item['id_herramienta'] : null;
+            $idPlanta = !empty($item['id_planta']) ? (int)$item['id_planta'] : null;
             $cantidad = (float)($item['cantidad'] ?? 0);
             $costoUnitario = (float)($item['costo_unitario'] ?? 0);
             $subtotalItem = $cantidad * $costoUnitario;
-            $categoriaLote = $tipoItem === 'planta' ? ($item['categoria_lote'] ?? null) : null;
-            $idUbicacionItem = $tipoItem === 'planta' ? (!empty($item['id_ubicacion']) ? (int)$item['id_ubicacion'] : null) : null;
-            $modelo->agregarDetalle($id, $tipoItem, $idItem, $cantidad, $costoUnitario, $subtotalItem, $categoriaLote, $idUbicacionItem);
+            $categoriaLote = $item['categoria_lote'] ?? null;
+            $idUbicacionItem = !empty($item['id_ubicacion']) ? (int)$item['id_ubicacion'] : null;
+            $modelo->agregarDetalle($id, $idInsumo, $idHerramienta, $idPlanta, $cantidad, $costoUnitario, $subtotalItem, $categoriaLote, $idUbicacionItem);
         }
 
         if (!$modelo->actualizarCuentaPagar($id, $total)) {
@@ -329,4 +332,17 @@ function compras_agregarHerramientaRapido(): void
         'message' => 'Herramienta creada correctamente.',
         'herramienta' => ['id' => $herramienta['id_herramienta'] ?? $nuevoId, 'nombre_herramienta' => $herramienta['nombre_herramienta'] ?? $nombre],
     ]);
+}
+
+function compras_actualizarCostoLoteAjax(): void {
+    checkModuleAuth();
+    $data = getRequestData();
+    $idLote = (int)($data['id_lote'] ?? 0);
+    $costoUnitario = (float)($data['costo_unitario'] ?? 0);
+    if ($idLote <= 0) throw new \Exception('ID de lote inválido');
+    if ($costoUnitario < 0) throw new \Exception('El costo unitario no puede ser negativo');
+    require_once __DIR__ . '/../models/LotePrecio.php';
+    $success = \SysInescolara\models\LotePrecio::actualizarCostoUnitario($idLote, $costoUnitario);
+    if (!$success) throw new \Exception('Error al actualizar el costo del lote');
+    jsonResponse(['success' => true, 'message' => 'Costo unitario del lote actualizado correctamente']);
 }

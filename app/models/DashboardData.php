@@ -40,11 +40,11 @@ class DashboardData extends Database
         try { $stats['total_plantas'] = (int) $this->db()->query("SELECT COUNT(*) FROM plantas WHERE activo = 1")->fetchColumn(); } catch (\Throwable $e) { $stats['total_plantas'] = 0; }
         try { $stats['total_clientes'] = (int) $this->db()->query("SELECT COUNT(*) FROM cliente WHERE activo = 1")->fetchColumn(); } catch (\Throwable $e) { $stats['total_clientes'] = 0; }
         try { $stats['total_proveedores'] = (int) $this->db()->query("SELECT COUNT(*) FROM proveedores WHERE activo = 1")->fetchColumn(); } catch (\Throwable $e) { $stats['total_proveedores'] = 0; }
-        try { $stats['total_trabajadores'] = (int) $this->db()->query("SELECT COUNT(*) FROM trabajadores WHERE activo = 1")->fetchColumn(); } catch (\Throwable $e) { $stats['total_trabajadores'] = 0; }
+        try { $stats['total_trabajadores'] = (int) $this->db()->query("SELECT COUNT(*) FROM `SysInescolara-Seguridad`.`usuarios` WHERE nombre_trabajador IS NOT NULL AND nombre_trabajador != '' AND estatus = 'Activo'")->fetchColumn(); } catch (\Throwable $e) { $stats['total_trabajadores'] = 0; }
         try { $stats['total_lotes'] = (int) $this->db()->query("SELECT COUNT(*) FROM lote WHERE activo = 1")->fetchColumn(); } catch (\Throwable $e) { $stats['total_lotes'] = 0; }
         try { $stats['total_insumos'] = (int) $this->db()->query("SELECT COUNT(*) FROM insumo WHERE activo = 1")->fetchColumn(); } catch (\Throwable $e) { $stats['total_insumos'] = 0; }
         try { $stats['total_herramientas'] = (int) $this->db()->query("SELECT COUNT(*) FROM herramienta WHERE activo = 1")->fetchColumn(); } catch (\Throwable $e) { $stats['total_herramientas'] = 0; }
-        try { $stats['total_precios_vigentes'] = (int) $this->db()->query("SELECT COUNT(*) FROM calculo_precio")->fetchColumn(); } catch (\Throwable $e) { $stats['total_precios_vigentes'] = 0; }
+        try { $stats['total_precios_vigentes'] = (int) $this->db()->query("SELECT COUNT(*) FROM lote WHERE activo = 1 AND costo_unitario > 0")->fetchColumn(); } catch (\Throwable $e) { $stats['total_precios_vigentes'] = 0; }
         try {
             $stmt = $this->db()->query("SELECT COUNT(*) FROM movimiento_planta WHERE tipo_movimiento = 'Venta'");
             $stats['total_ventas'] = (int) $stmt->fetchColumn();
@@ -136,7 +136,7 @@ class DashboardData extends Database
                        l.id_lote
                 FROM asignar_tarea at
                 JOIN tareas t ON at.id_tarea = t.id_tarea AND t.activo = 1
-                LEFT JOIN trabajadores tr ON at.id_trabajador = tr.id_trabajador AND tr.activo = 1
+                LEFT JOIN `SysInescolara-Seguridad`.`usuarios` tr ON at.id_usuario = tr.id_usuario
                 LEFT JOIN lote l ON at.id_lote = l.id_lote AND l.activo = 1
                 WHERE at.estatus_tarea NOT IN ('completada','cancelada')
                 ORDER BY at.fecha_cumplimiento ASC

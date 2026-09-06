@@ -14,28 +14,6 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
 {
     use ValidationTrait;
 
-    private array $schemaCache = [];
-
-    private function hasColumn(string $table, string $column): bool
-    {
-        $key = "$table.$column";
-        if (array_key_exists($key, $this->schemaCache)) {
-            return $this->schemaCache[$key];
-        }
-        try {
-            $stmt = $this->db()->prepare(
-                'SELECT COUNT(*) FROM information_schema.COLUMNS
-                 WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?'
-            );
-            $stmt->execute([$table, $column]);
-            return $this->schemaCache[$key] = (int) $stmt->fetchColumn() > 0;
-        } catch (Throwable $e) {
-            return $this->schemaCache[$key] = false;
-        }
-    }
-
-    private function fkEstado(): bool { return $this->hasColumn('lote', 'id_estado'); }
-
     protected array $validationRules = [
         'id_proveedor'       => ['type' => null,   'required' => true],
         'fecha_compra'       => ['type' => null,   'required' => true],
@@ -51,10 +29,6 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
     {
         parent::__construct();
     }
-
-    // ============================================================
-    //  Interfaces (wrappers)
-    // ============================================================
 
     public function getAll(): array
     {
@@ -76,10 +50,6 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
         return $this->existe($id);
     }
 
-    // ============================================================
-    //  Transacciones
-    // ============================================================
-
     public function iniciarTransaccion(): bool
     {
         return $this->db()->beginTransaction();
@@ -94,10 +64,6 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
     {
         return $this->db()->rollBack();
     }
-
-    // ============================================================
-    //  Consultas
-    // ============================================================
 
     public function obtenerTodas(): array
     {
@@ -152,17 +118,25 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
         try {
             $stmt = $this->db()->prepare("
                 SELECT
-                    d.id_detalle, d.tipo_item, d.id_item, d.cantidad, d.costo_unitario, d.subtotal,
+                    d.id_detalle, d.id_compra,
+                    CASE
+                        WHEN d.id_insumo IS NOT NULL THEN 'insumo'
+                        WHEN d.id_herramienta IS NOT NULL THEN 'herramienta'
+                        WHEN d.id_planta IS NOT NULL THEN 'planta'
+                    END AS tipo_item,
+                    COALESCE(d.id_insumo, d.id_herramienta, d.id_planta) AS id_item,
+                    d.id_insumo, d.id_herramienta, d.id_planta,
+                    d.cantidad, d.costo_unitario, d.subtotal,
                     d.categoria_lote, d.id_ubicacion,
                     CASE
-                        WHEN d.tipo_item = 'insumo' THEN i.nombre_insumo
-                        WHEN d.tipo_item = 'herramienta' THEN h.nombre_herramienta
-                        WHEN d.tipo_item = 'planta' THEN p.nombre_comun
+                        WHEN d.id_insumo IS NOT NULL THEN i.nombre_insumo
+                        WHEN d.id_herramienta IS NOT NULL THEN h.nombre_herramienta
+                        WHEN d.id_planta IS NOT NULL THEN p.nombre_comun
                     END AS item_nombre
                 FROM compra_detalle d
-                LEFT JOIN insumo i ON d.tipo_item = 'insumo' AND d.id_item = i.id_insumo
-                LEFT JOIN herramienta h ON d.tipo_item = 'herramienta' AND d.id_item = h.id_herramienta
-                LEFT JOIN plantas p ON d.tipo_item = 'planta' AND d.id_item = p.id_planta
+                LEFT JOIN insumo i ON d.id_insumo = i.id_insumo
+                LEFT JOIN herramienta h ON d.id_herramienta = h.id_herramienta
+                LEFT JOIN plantas p ON d.id_planta = p.id_planta
                 WHERE d.id_compra = :id_compra AND d.activo = 1
                 ORDER BY d.id_detalle ASC
             ");
@@ -180,10 +154,6 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
         $stmt->execute([':id' => $id]);
         return $stmt->fetchColumn() > 0;
     }
-
-    // ============================================================
-    //  CRUD
-    // ============================================================
 
     public function agregar(
         int $idProveedor,
@@ -226,7 +196,7 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
         $nuevoId = $this->db()->lastInsertId();
         AuditLog::record('CREATE', 'compra', $nuevoId, null, [
             'id_proveedor' => $idProveedor,
-            'fecha_compra' => $fechaCompra,
+            ':fecha_compra' => $fechaCompra,
             'total' => $total,
         ]);
         return $result;
@@ -282,7 +252,6 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
         ]);
         AuditLog::record('UPDATE', 'compra', $id, $oldData, [
             'id_proveedor' => $idProveedor,
-            'fecha_compra' => $fechaCompra,
             'total' => $total,
         ]);
         return $result;
@@ -303,25 +272,31 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
         return $stmt->execute([':id' => $id]);
     }
 
-    // ============================================================
-    //  Detalles
-    // ============================================================
-
-    public function agregarDetalle(int $idCompra, string $tipoItem, int $idItem, float $cantidad, float $costoUnitario, float $subtotal, ?string $categoriaLote = null, ?int $idUbicacion = null): bool
-    {
+    public function agregarDetalle(
+        int $idCompra,
+        ?int $idInsumo,
+        ?int $idHerramienta,
+        ?int $idPlanta,
+        float $cantidad,
+        float $costoUnitario,
+        float $subtotal,
+        ?string $categoriaLote = null,
+        ?int $idUbicacion = null
+    ): bool {
         $stmt = $this->db()->prepare("
-            INSERT INTO compra_detalle (id_compra, tipo_item, id_item, cantidad, costo_unitario, subtotal, categoria_lote, id_ubicacion)
-            VALUES (:id_compra, :tipo_item, :id_item, :cantidad, :costo_unitario, :subtotal, :categoria_lote, :id_ubicacion)
+            INSERT INTO compra_detalle (id_compra, id_insumo, id_herramienta, id_planta, cantidad, costo_unitario, subtotal, categoria_lote, id_ubicacion)
+            VALUES (:id_compra, :id_insumo, :id_herramienta, :id_planta, :cantidad, :costo_unitario, :subtotal, :categoria_lote, :id_ubicacion)
         ");
         return $stmt->execute([
-            ':id_compra' => $idCompra,
-            ':tipo_item' => $tipoItem,
-            ':id_item' => $idItem,
-            ':cantidad' => $cantidad,
+            ':id_compra'      => $idCompra,
+            ':id_insumo'      => $idInsumo,
+            ':id_herramienta' => $idHerramienta,
+            ':id_planta'      => $idPlanta,
+            ':cantidad'       => $cantidad,
             ':costo_unitario' => $costoUnitario,
-            ':subtotal' => $subtotal,
+            ':subtotal'       => $subtotal,
             ':categoria_lote' => $categoriaLote,
-            ':id_ubicacion' => $idUbicacion,
+            ':id_ubicacion'   => $idUbicacion,
         ]);
     }
 
@@ -330,10 +305,6 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
         $stmt = $this->db()->prepare("UPDATE compra_detalle SET activo = 0 WHERE id_compra = :id_compra");
         return $stmt->execute([':id_compra' => $idCompra]);
     }
-
-    // ============================================================
-    //  Cuenta por pagar (misma conexión, misma TX)
-    // ============================================================
 
     public function crearCuentaPagar(int $idCompra, float $total): bool
     {
@@ -380,13 +351,9 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
         return $stmt->fetchColumn() > 0;
     }
 
-    // ============================================================
-    //  Estado
-    // ============================================================
-
     public function actualizarEstado(int $id, string $estado): bool
     {
-        if (!in_array($estado, ['pendiente', 'recibida', 'cancelada'], true)) {
+        if (!in_array($estado, ['pendiente', 'recibida', 'pagada', 'cancelada'], true)) {
             throw new \Exception('Estado inválido.');
         }
         $compra = $this->obtenerPorId($id);
@@ -409,15 +376,11 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
         if ($compra['estado'] !== 'pendiente') {
             throw new \Exception('Solo se pueden recibir compras pendientes.');
         }
-        $stmt = $this->db()->prepare("UPDATE compra SET estado = 'recibida' WHERE id_compra = :id AND activo = 1");
+        $stmt = $this->db()->prepare("UPDATE compra SET estado = 'recibida', fecha_recepcion = CURDATE() WHERE id_compra = :id AND activo = 1");
         $result = $stmt->execute([':id' => $id]);
-        AuditLog::record('UPDATE', 'compra', $id, ['estado' => 'pendiente', 'fecha_recepcion' => null], ['estado' => 'recibida', 'stock_aplicado' => true]);
+        AuditLog::record('UPDATE', 'compra', $id, ['estado' => 'pendiente'], ['estado' => 'recibida']);
         return $result;
     }
-
-    // ============================================================
-    //  Stock y lotes
-    // ============================================================
 
     public function aplicarStock(int $idCompra): array
     {
@@ -427,28 +390,8 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
         $this->iniciarTransaccion();
 
         try {
-            // Agrupar plantas por (id_item, categoria_lote)
-            $gruposPlantas = [];
             foreach ($detalles as $d) {
-                if ($d['tipo_item'] !== 'planta') continue;
-                $clave = $d['id_item'] . '_' . ($d['categoria_lote'] ?? 'germinado');
-                if (!isset($gruposPlantas[$clave])) {
-                    $gruposPlantas[$clave] = [
-                        'id_item'    => $d['id_item'],
-                        'nombre'     => $d['item_nombre'],
-                        'categoria'  => $d['categoria_lote'] ?? 'germinado',
-                        'ubicacion'  => $d['id_ubicacion'],
-                        'cantidad'   => 0,
-                        'costo_total' => 0,
-                    ];
-                }
-                $gruposPlantas[$clave]['cantidad'] += $d['cantidad'];
-                $gruposPlantas[$clave]['costo_total'] += $d['cantidad'] * $d['costo_unitario'];
-            }
-
-            // Procesar cada detalle según su tipo
-            foreach ($detalles as $d) {
-                if ($d['tipo_item'] === 'insumo') {
+                if ($d['id_insumo'] !== null) {
                     $stmt = $this->db()->prepare("
                         UPDATE insumo
                         SET stock_actual = stock_actual + :cantidad,
@@ -458,80 +401,47 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
                     $stmt->execute([
                         ':cantidad' => $d['cantidad'],
                         ':costo_unitario' => $d['costo_unitario'],
-                        ':id_insumo' => $d['id_item'],
+                        ':id_insumo' => $d['id_insumo'],
                     ]);
-                    $resultados[] = ['tipo' => 'insumo', 'id' => $d['id_item'], 'nombre' => $d['item_nombre'], 'cantidad' => $d['cantidad']];
+                    $resultados[] = ['tipo' => 'insumo', 'id' => $d['id_insumo'], 'nombre' => $d['item_nombre'], 'cantidad' => $d['cantidad']];
                 }
 
-                if ($d['tipo_item'] === 'herramienta') {
+                if ($d['id_herramienta'] !== null) {
                     $stmt = $this->db()->prepare("
                         UPDATE herramienta
                         SET estado = 'disponible',
                             fecha_adquisicion = COALESCE(fecha_adquisicion, CURDATE())
                         WHERE id_herramienta = :id_herramienta AND activo = 1
                     ");
-                    $stmt->execute([':id_herramienta' => $d['id_item']]);
-                    $resultados[] = ['tipo' => 'herramienta', 'id' => $d['id_item'], 'nombre' => $d['item_nombre'], 'cantidad' => $d['cantidad']];
+                    $stmt->execute([':id_herramienta' => $d['id_herramienta']]);
+                    $resultados[] = ['tipo' => 'herramienta', 'id' => $d['id_herramienta'], 'nombre' => $d['item_nombre'], 'cantidad' => $d['cantidad']];
                 }
-            }
 
-            // Crear lotes para plantas agrupadas
-            foreach ($gruposPlantas as $g) {
-                $totalPlantas = (int)$g['cantidad'];
-                $costoUnitario = $totalPlantas > 0 ? round($g['costo_total'] / $totalPlantas, 2) : 0;
+                if ($d['id_planta'] !== null) {
+                    $costoUnitario = $d['costo_unitario'];
+                    $stmt = $this->db()->prepare("
+                        INSERT INTO lote
+                            (id_planta, id_ubicacion, fecha_siembra, cantidad_inicial, cantidad_actual,
+                             costo_unitario, estado, origen, observacion)
+                        VALUES
+                            (:id_planta, :id_ubicacion, CURDATE(), :cantidad_ini, :cantidad_act,
+                             :costo_unitario, 'Activo', 'Compra', :observacion)
+                    ");
+                    $stmt->execute([
+                        ':id_planta'      => $d['id_planta'],
+                        ':id_ubicacion'   => $d['id_ubicacion'],
+                        ':cantidad_ini'   => $d['cantidad'],
+                        ':cantidad_act'   => $d['cantidad'],
+                        ':costo_unitario' => $costoUnitario,
+                        ':observacion'    => 'Ingresado por compra #' . $idCompra,
+                    ]);
+                    $loteId = $this->db()->lastInsertId();
 
-                $estadoVivo = 'Vivo';
-                $origenCompra = 'Compra';
-                $fk = $this->fkEstado();
-                if ($fk) {
-                    $idEstadoVivo = (int)$this->db()->query("SELECT id_estado FROM estado WHERE nombre = 'vivo' LIMIT 1")->fetchColumn();
-                    $idOrigenCompra = (int)$this->db()->query("SELECT id_origen FROM origen WHERE nombre = 'Compra' LIMIT 1")->fetchColumn();
-                } else {
-                    $idEstadoVivo = 0;
-                    $idOrigenCompra = 0;
+                    $stmt2 = $this->db()->prepare("UPDATE plantas SET cantidad_total = cantidad_total + :cantidad WHERE id_planta = :id_planta");
+                    $stmt2->execute([':cantidad' => $d['cantidad'], ':id_planta' => $d['id_planta']]);
+
+                    $resultados[] = ['tipo' => 'planta', 'id' => $d['id_planta'], 'lote_id' => $loteId, 'nombre' => $d['item_nombre'], 'cantidad' => $d['cantidad'], 'costo_unitario' => $costoUnitario];
                 }
-                $stmt = $this->db()->prepare($fk
-                    ? "INSERT INTO lote
-                        (id_planta, id_ubicacion, fecha_siembra, cantidad_inicial, cantidad_actual,
-                         id_estado, id_origen, costo_unitario, observacion)
-                       VALUES
-                        (:id_planta, :id_ubicacion, CURDATE(), :cantidad_ini, :cantidad_act,
-                         :id_estado, :id_origen, :costo_unitario, :observacion)"
-                    : "INSERT INTO lote
-                        (id_planta, id_ubicacion, fecha_siembra, cantidad_inicial, cantidad_actual,
-                         estado, origen, costo_unitario, observacion)
-                       VALUES
-                        (:id_planta, :id_ubicacion, CURDATE(), :cantidad_ini, :cantidad_act,
-                         :estado, :origen, :costo_unitario, :observacion)"
-                );
-                $stmt->execute($fk
-                    ? [
-                        ':id_planta'       => $g['id_item'],
-                        ':id_ubicacion'    => $g['ubicacion'],
-                        ':cantidad_ini'    => $totalPlantas,
-                        ':cantidad_act'    => $totalPlantas,
-                        ':id_estado'       => $idEstadoVivo,
-                        ':id_origen'       => $idOrigenCompra,
-                        ':costo_unitario'  => $costoUnitario,
-                        ':observacion'     => 'Ingresado por compra #' . $idCompra,
-                    ]
-                    : [
-                        ':id_planta'       => $g['id_item'],
-                        ':id_ubicacion'    => $g['ubicacion'],
-                        ':cantidad_ini'    => $totalPlantas,
-                        ':cantidad_act'    => $totalPlantas,
-                        ':estado'          => $estadoVivo,
-                        ':origen'          => $origenCompra,
-                        ':costo_unitario'  => $costoUnitario,
-                        ':observacion'     => 'Ingresado por compra #' . $idCompra,
-                    ]
-                );
-                $loteId = $this->db()->lastInsertId();
-
-                $stmt2 = $this->db()->prepare("UPDATE plantas SET cantidad_total = cantidad_total + :cantidad WHERE id_planta = :id_planta");
-                $stmt2->execute([':cantidad' => $totalPlantas, ':id_planta' => $g['id_item']]);
-
-                $resultados[] = ['tipo' => 'planta', 'id' => $g['id_item'], 'lote_id' => $loteId, 'nombre' => $g['nombre'], 'cantidad' => $totalPlantas, 'costo_unitario' => $costoUnitario];
             }
 
             $this->confirmarTransaccion();

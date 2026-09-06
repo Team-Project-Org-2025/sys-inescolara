@@ -37,6 +37,10 @@ $(document).ready(function () {
           render: (data) => data || '<span class="text-muted">—</span>',
         },
         {
+          data: 'telefono_trabajador',
+          render: (data) => data || '<span class="text-muted">—</span>',
+        },
+        {
           data: 'cargo',
           render: (data) => data || '<span class="text-muted">—</span>',
         },
@@ -123,7 +127,7 @@ $(document).ready(function () {
       $addModal.modal('hide');
     }
 
-    $('#editEmployeeId').val(row.id);
+    $('#editEmployeeId').val(row.id_usuario);
     $('#editEmployeeName').val(row.nombre_trabajador);
     $('#editEmployeeApellido').val(row.apellido_trabajador);
     $('#editEmployeeCedula').val(row.cedula_trabajador);
@@ -165,7 +169,7 @@ $(document).ready(function () {
   // Ver detalle empleado
   $(document).on('click', '.btn-view', function () {
     const row = empleadosTable.row($(this).closest('tr')).data();
-    const id = row.id;
+    const id = row.id_usuario;
     $.getJSON(`${baseUrl}?action=get_detail&id=${id}`, { 'X-Requested-With': 'XMLHttpRequest' })
       .done((res) => {
         if (!res.success) {
@@ -197,14 +201,14 @@ $(document).ready(function () {
   // Eliminar empleado
   $(document).on('click', '.btn-delete', function () {
     const row = empleadosTable.row($(this).closest('tr')).data();
-    const id = row.id;
+    const id = row.id_usuario;
     const nombre = row.nombre_trabajador;
 
     Helpers.confirmDialog(
       '¿Eliminar trabajador?',
       `¿Deseas eliminar <strong>${Helpers.escapeHtml(nombre)}</strong>?`,
       () => {
-        Ajax.post(`${baseUrl}?action=delete_ajax`, { id })
+        Ajax.post(`${baseUrl}?action=delete_ajax`, { id_usuario: id })
           .then((response) => {
             if (response.success) {
               Helpers.toast('success', 'Trabajador eliminado correctamente');

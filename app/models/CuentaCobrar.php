@@ -18,7 +18,7 @@ class CuentaCobrar extends Database
         'referencia'    => ['type' => null,        'required' => false],
         'fecha_pago'    => ['type' => null,        'required' => true],
         'banco'         => ['type' => null,        'required' => false],
-        'id_trabajador' => ['type' => 'cantidad',   'required' => true],
+        'id_usuario' => ['type' => 'cantidad',   'required' => true],
         'observaciones' => ['type' => null,        'required' => false],
     ];
 
@@ -160,13 +160,13 @@ class CuentaCobrar extends Database
                     c.tipo_cedula_cliente,
                     c.cedula_cliente,
                     c.contacto_cliente AS contacto,
-                    CONCAT(t.nombre_trabajador, ' ', t.apellido_trabajador) AS trabajador,
+                    CONCAT(u.nombre_trabajador, ' ', u.apellido_trabajador) AS trabajador,
                     COALESCE(det.monto_total, 0) AS monto_total,
                     COALESCE(pag.total_pagado, 0) AS total_pagado,
                     ROUND(COALESCE(det.monto_total, 0) - COALESCE(pag.total_pagado, 0), 2) AS saldo_pendiente
                 FROM venta v
                 INNER JOIN cliente c ON v.id_cliente = c.id_cliente
-                INNER JOIN trabajadores t ON v.id_trabajador = t.id_trabajador
+                INNER JOIN security.usuarios u ON v.id_trabajador = u.id_usuario
                 LEFT JOIN (
                     SELECT id_venta, SUM(cantidad * precio_unitario) AS monto_total
                     FROM detalle_venta
@@ -215,9 +215,9 @@ class CuentaCobrar extends Database
             $stmt = $this->db()->prepare("
                 SELECT
                     p.*,
-                    CONCAT(t.nombre_trabajador, ' ', t.apellido_trabajador) AS cobrador
+                    CONCAT(u.nombre_trabajador, ' ', u.apellido_trabajador) AS cobrador
                 FROM pago_venta p
-                LEFT JOIN trabajadores t ON p.id_trabajador = t.id_trabajador
+                LEFT JOIN security.usuarios u ON p.id_usuario = u.id_usuario
                 WHERE p.id_venta = :id
                 ORDER BY p.fecha_pago DESC
             ");
@@ -229,14 +229,14 @@ class CuentaCobrar extends Database
         }
     }
 
-    public function registrarPago(int $idVenta, float $monto, string $metodo, ?string $referencia, string $fechaPago, ?string $banco, int $idTrabajador, ?string $observaciones): int
+    public function registrarPago(int $idVenta, float $monto, string $metodo, ?string $referencia, string $fechaPago, ?string $banco, int $idUsuario, ?string $observaciones): int
     {
-        $this->validarPago($idVenta, $monto, $metodo, $referencia, $fechaPago, $banco, $idTrabajador);
+        $this->validarPago($idVenta, $monto, $metodo, $referencia, $fechaPago, $banco, $idUsuario);
 
         try {
             $stmt = $this->db()->prepare("
-                INSERT INTO pago_venta (id_venta, metodo, monto, referencia, fecha_pago, banco, id_trabajador, observaciones)
-                VALUES (:id_venta, :metodo, :monto, :referencia, :fecha_pago, :banco, :id_trabajador, :observaciones)
+                INSERT INTO pago_venta (id_venta, metodo, monto, referencia, fecha_pago, banco, id_usuario, observaciones)
+                VALUES (:id_venta, :metodo, :monto, :referencia, :fecha_pago, :banco, :id_usuario, :observaciones)
             ");
             $stmt->execute([
                 ':id_venta' => $idVenta,
@@ -245,7 +245,7 @@ class CuentaCobrar extends Database
                 ':referencia' => $referencia,
                 ':fecha_pago' => $fechaPago,
                 ':banco' => $banco,
-                ':id_trabajador' => $idTrabajador,
+                ':id_usuario' => $idUsuario,
                 ':observaciones' => $observaciones,
             ]);
             $this->actualizarEstadoVenta($idVenta);
@@ -256,7 +256,7 @@ class CuentaCobrar extends Database
         }
     }
 
-    private function validarPago(int $idVenta, float $monto, string $metodo, ?string $referencia, string $fechaPago, ?string $banco, int $idTrabajador): void
+    private function validarPago(int $idVenta, float $monto, string $metodo, ?string $referencia, string $fechaPago, ?string $banco, int $idUsuario): void
     {
         $this->validateData([
             'id_venta'      => $idVenta,
@@ -265,7 +265,7 @@ class CuentaCobrar extends Database
             'referencia'    => $referencia,
             'fecha_pago'    => $fechaPago,
             'banco'         => $banco,
-            'id_trabajador' => $idTrabajador,
+            'id_usuario'    => $idUsuario,
         ]);
 
         if ($idVenta <= 0) {
@@ -274,7 +274,7 @@ class CuentaCobrar extends Database
         if ($monto <= 0) {
             throw new \InvalidArgumentException('El monto debe ser mayor a cero.');
         }
-        if ($idTrabajador <= 0) {
+        if ($idUsuario <= 0) {
             throw new \InvalidArgumentException('Debe seleccionar el trabajador que cobró.');
         }
 
