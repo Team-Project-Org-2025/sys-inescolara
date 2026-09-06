@@ -132,7 +132,7 @@ $(document).ready(function () {
           <table class="table table-sm table-borderless">
             <tr><td class="text-muted">Fecha Venta:</td><td>${data.fecha_venta}</td></tr>
             <tr><td class="text-muted">Vencimiento:</td><td>${data.fecha_vencimiento || '—'}</td></tr>
-            <tr><td class="text-muted">Vendedor:</td><td>${data.trabajador}</td></tr>
+            <tr><td class="text-muted">Vendedor:</td><td>${data.trabajador || data.nombre_usuario || '—'}</td></tr>
             <tr><td class="text-muted">Monto Total:</td><td><strong>$${Number(data.monto_total).toFixed(2)}</strong></td></tr>
             <tr><td class="text-muted">Total Pagado:</td><td><strong class="text-success">$${Number(data.total_pagado).toFixed(2)}</strong></td></tr>
             <tr><td class="text-muted">Saldo Pendiente:</td><td><strong>$${Number(data.saldo_pendiente).toFixed(2)}</strong></td></tr>

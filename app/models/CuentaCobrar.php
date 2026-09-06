@@ -160,13 +160,14 @@ class CuentaCobrar extends Database
                     c.tipo_cedula_cliente,
                     c.cedula_cliente,
                     c.contacto_cliente AS contacto,
-                    CONCAT(u.nombre_trabajador, ' ', u.apellido_trabajador) AS trabajador,
+                    COALESCE(NULLIF(TRIM(CONCAT(u.nombre_trabajador, ' ', u.apellido_trabajador)), ''), u.nombre_usuario) AS trabajador,
+                    u.nombre_usuario,
                     COALESCE(det.monto_total, 0) AS monto_total,
                     COALESCE(pag.total_pagado, 0) AS total_pagado,
                     ROUND(COALESCE(det.monto_total, 0) - COALESCE(pag.total_pagado, 0), 2) AS saldo_pendiente
                 FROM venta v
                 INNER JOIN cliente c ON v.id_cliente = c.id_cliente
-                INNER JOIN security.usuarios u ON v.id_trabajador = u.id_usuario
+                INNER JOIN security.usuarios u ON v.id_usuario = u.id_usuario
                 LEFT JOIN (
                     SELECT id_venta, SUM(cantidad * precio_unitario) AS monto_total
                     FROM detalle_venta
@@ -215,7 +216,7 @@ class CuentaCobrar extends Database
             $stmt = $this->db()->prepare("
                 SELECT
                     p.*,
-                    CONCAT(u.nombre_trabajador, ' ', u.apellido_trabajador) AS cobrador
+                    COALESCE(NULLIF(TRIM(CONCAT(u.nombre_trabajador, ' ', u.apellido_trabajador)), ''), u.nombre_usuario) AS cobrador
                 FROM pago_venta p
                 LEFT JOIN security.usuarios u ON p.id_usuario = u.id_usuario
                 WHERE p.id_venta = :id

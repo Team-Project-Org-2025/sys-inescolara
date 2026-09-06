@@ -45,7 +45,11 @@ const Ventas = {
                 { data: 'nombre_cliente', defaultContent: '—' },
                 {
                     data: null,
-                    render: (r) => r.nombre_trabajador ? `${r.nombre_trabajador} ${r.apellido_trabajador || ''}` : '—'
+                    render: (r) => {
+                        if (r.nombre_trabajador) return `${r.nombre_trabajador} ${r.apellido_trabajador || ''}`;
+                        if (r.nombre_usuario) return r.nombre_usuario;
+                        return '—';
+                    }
                 },
                 {
                     data: 'fecha_venta',
@@ -685,7 +689,7 @@ const Ventas = {
                     <div class="col-6"><strong>Referencia:</strong> ${v.referencia || ''}</div>
                     <div class="col-6 text-end"><strong>Fecha:</strong> ${v.fecha_venta ? new Date(v.fecha_venta).toLocaleString('es-ES') : ''}</div>
                     <div class="col-6 mt-2"><strong>Cliente:</strong> ${v.nombre_cliente || '—'} ${v.tipo_cedula_cliente ? `— ${v.tipo_cedula_cliente}-${v.cedula_cliente}` : ''}</div>
-                    <div class="col-6 mt-2"><strong>Vendedor:</strong> ${(v.nombre_trabajador || '') + ' ' + (v.apellido_trabajador || '')}</div>
+                    <div class="col-6 mt-2"><strong>Vendedor:</strong> ${(v.nombre_trabajador ? v.nombre_trabajador + ' ' + (v.apellido_trabajador || '') : v.nombre_usuario || '—')}</div>
                     <div class="col-6 mt-2"><strong>Tipo:</strong> ${v.tipo_venta || ''}</div>
                     <div class="col-6 mt-2"><strong>Estado:</strong> ${v.estado || ''}</div>
                     ${v.observaciones ? `<div class="col-12 mt-2"><strong>Observaciones:</strong> ${v.observaciones}</div>` : ''}

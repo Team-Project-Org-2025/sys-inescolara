@@ -160,6 +160,7 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
                         c.apellido_cliente,
                         u.nombre_trabajador,
                         u.apellido_trabajador,
+                        u.nombre_usuario,
                         COALESCE((SELECT SUM(dv.cantidad * dv.precio_unitario) FROM detalle_venta dv WHERE dv.id_venta = v.id_venta), 0) AS monto_subtotal,
                         COALESCE((SELECT SUM(dv.cantidad * dv.precio_unitario) / :iva_mult FROM detalle_venta dv WHERE dv.id_venta = v.id_venta), 0) AS monto_sin_iva,
                         COALESCE((SELECT SUM(pv.monto) FROM pago_venta pv WHERE pv.id_venta = v.id_venta), 0) AS total_pagado
@@ -187,6 +188,7 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
                         c.cedula_cliente,
                         u.nombre_trabajador,
                         u.apellido_trabajador,
+                        u.nombre_usuario,
                         COALESCE((SELECT SUM(dv.cantidad * dv.precio_unitario) FROM detalle_venta dv WHERE dv.id_venta = v.id_venta), 0) AS monto_subtotal,
                         COALESCE((SELECT SUM(pv.monto) FROM pago_venta pv WHERE pv.id_venta = v.id_venta), 0) AS total_pagado
                     FROM venta v
