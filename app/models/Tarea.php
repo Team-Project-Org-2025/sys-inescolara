@@ -396,11 +396,11 @@ class Tarea extends Database implements ReadableInterface, DeletableInterface
 
     public function getAssignments(): array
     {
-        $sql = "SELECT a.*, t.nombre_tarea, u.nombre_trabajador, u.apellido_trabajador,
+        $sql = "SELECT a.*, t.nombre_tarea, u.nombre_trabajador, u.apellido_trabajador, u.nombre_usuario,
                        l.id_lote AS codigo_lote
                 FROM asignar_tarea a
                 LEFT JOIN tareas t ON a.id_tarea = t.id_tarea
-                LEFT JOIN security.usuarios u ON a.id_usuario = u.id_usuario
+                LEFT JOIN `sysinescolara-seguridad`.usuarios u ON a.id_usuario = u.id_usuario
                 LEFT JOIN lote l ON a.id_lote = l.id_lote
                 ORDER BY a.fecha_asignacion DESC";
         $stmt = $this->db()->query($sql);
@@ -409,11 +409,11 @@ class Tarea extends Database implements ReadableInterface, DeletableInterface
 
     public function getAssignmentById(int $id): ?array
     {
-        $sql = "SELECT a.*, t.nombre_tarea, t.descripcion, u.nombre_trabajador, u.apellido_trabajador,
+        $sql = "SELECT a.*, t.nombre_tarea, t.descripcion, u.nombre_trabajador, u.apellido_trabajador, u.nombre_usuario,
                        l.id_lote AS codigo_lote
                 FROM asignar_tarea a
                 LEFT JOIN tareas t ON a.id_tarea = t.id_tarea
-                LEFT JOIN security.usuarios u ON a.id_usuario = u.id_usuario
+                LEFT JOIN `sysinescolara-seguridad`.usuarios u ON a.id_usuario = u.id_usuario
                 LEFT JOIN lote l ON a.id_lote = l.id_lote
                 WHERE a.id_asignacion = :id";
         $stmt = $this->db()->prepare($sql);

@@ -256,7 +256,7 @@ class SeedCollection extends Database implements ReadableInterface, DeletableInt
                         CONCAT(u.nombre, ' ', u.apellido) AS usuario_nombre,
                         ub.nombre_ubicacion
                     FROM recoleccion_semillas r
-                    LEFT JOIN security.usuarios u ON r.id_usuario = u.id_usuario
+                    LEFT JOIN `sysinescolara-seguridad`.usuarios u ON r.id_usuario = u.id_usuario
                     LEFT JOIN ubicacion ub ON r.id_ubicacion = ub.id_ubicacion
                     WHERE r.activo = 1
                     ORDER BY r.fecha_asignacion DESC, r.id_recoleccion DESC";
@@ -276,7 +276,7 @@ class SeedCollection extends Database implements ReadableInterface, DeletableInt
                        CONCAT(u.nombre, ' ', u.apellido) AS usuario_nombre,
                        ub.nombre_ubicacion
                 FROM recoleccion_semillas r
-                LEFT JOIN security.usuarios u ON r.id_usuario = u.id_usuario
+                LEFT JOIN `sysinescolara-seguridad`.usuarios u ON r.id_usuario = u.id_usuario
                 LEFT JOIN ubicacion ub ON r.id_ubicacion = ub.id_ubicacion
                 WHERE r.id_recoleccion = :id
             ");

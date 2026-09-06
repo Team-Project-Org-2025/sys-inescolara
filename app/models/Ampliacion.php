@@ -288,7 +288,7 @@ class Ampliacion extends Database implements ReadableInterface
                         (SELECT COUNT(*) FROM movimiento_planta_detalle d WHERE d.id_movimiento_planta = mp.id_movimiento_planta AND d.tipo = 'entrada' AND d.activo = 1) AS total_entrada
                     FROM movimiento_planta mp
                     LEFT JOIN cliente c ON mp.id_cliente = c.id_cliente
-                    LEFT JOIN seguridad.usuarios u ON mp.id_usuario_gestor = u.id_usuario
+                    LEFT JOIN `sysinescolara-seguridad`.usuarios u ON mp.id_usuario_gestor = u.id_usuario
                     WHERE mp.activo = 1
                     ORDER BY mp.fecha_movimiento DESC, mp.id_movimiento_planta DESC";
             $stmt = $this->db()->query($sql);
@@ -310,7 +310,7 @@ class Ampliacion extends Database implements ReadableInterface
                        c.cedula_cliente
                 FROM movimiento_planta mp
                 LEFT JOIN cliente c ON mp.id_cliente = c.id_cliente
-                LEFT JOIN seguridad.usuarios u ON mp.id_usuario_gestor = u.id_usuario
+                LEFT JOIN `sysinescolara-seguridad`.usuarios u ON mp.id_usuario_gestor = u.id_usuario
                 WHERE mp.id_movimiento_planta = :id
             ");
             $stmt->execute([':id' => $id]);

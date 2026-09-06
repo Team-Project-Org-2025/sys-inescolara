@@ -39,7 +39,10 @@ function initAssignmentsTable() {
         columns: [
             {
                 data: null,
-                render: (d) => `${Helpers.escapeHtml(d.nombre_trabajador || '')} ${Helpers.escapeHtml(d.apellido_trabajador || '')}`,
+                render: (d) => {
+                    if (d.nombre_trabajador) return `${Helpers.escapeHtml(d.nombre_trabajador)} ${Helpers.escapeHtml(d.apellido_trabajador || '')}`;
+                    return Helpers.escapeHtml(d.nombre_usuario || '—');
+                },
             },
             { data: 'nombre_tarea' },
             { data: 'fecha_asignacion' },
@@ -524,7 +527,7 @@ $(document).on('click', '.btn-view-assign', function () {
                         <div class="row">
                             <div class="col-md-4 mb-2">
                                 <small class="text-muted d-block">Trabajador</small>
-                                <span class="fw-semibold">${Helpers.escapeHtml(a.nombre_trabajador || '')} ${Helpers.escapeHtml(a.apellido_trabajador || '')}</span>
+                                <span class="fw-semibold">${a.nombre_trabajador ? Helpers.escapeHtml(a.nombre_trabajador) + ' ' + Helpers.escapeHtml(a.apellido_trabajador || '') : Helpers.escapeHtml(a.nombre_usuario || '—')}</span>
                             </div>
                             <div class="col-md-4 mb-2">
                                 <small class="text-muted d-block">Tarea</small>

@@ -191,10 +191,12 @@ class Empleado extends Database implements ReadableInterface, DeletableInterface
     {
         $instance = new static();
         $db = $instance->getSecurityDb();
-        $stmt = $instance->db()->query("SELECT id_usuario AS id, nombre_trabajador, apellido_trabajador, cedula_trabajador, telefono_trabajador, cargo,
+        $stmt = $instance->db()->query("SELECT id_usuario AS id,
+                COALESCE(NULLIF(nombre_trabajador, ''), nombre_usuario) AS nombre_trabajador,
+                apellido_trabajador, cedula_trabajador, telefono_trabajador, cargo, nombre_usuario,
                 CASE WHEN estatus = 'Activo' THEN 1 ELSE 0 END AS activo
                 FROM $db.`usuarios`
-                WHERE nombre_trabajador IS NOT NULL AND nombre_trabajador != '' AND estatus = 'Activo'
+                WHERE estatus = 'Activo'
                 ORDER BY nombre_trabajador ASC");
         return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
     }
@@ -207,7 +209,9 @@ class Empleado extends Database implements ReadableInterface, DeletableInterface
     public function getById(int $id): ?array
     {
         $db = $this->getSecurityDb();
-        $stmt = $this->db()->prepare("SELECT id_usuario AS id, nombre_trabajador, apellido_trabajador, cedula_trabajador, telefono_trabajador, cargo,
+        $stmt = $this->db()->prepare("SELECT id_usuario AS id,
+                COALESCE(NULLIF(nombre_trabajador, ''), nombre_usuario) AS nombre_trabajador,
+                apellido_trabajador, cedula_trabajador, telefono_trabajador, cargo, nombre_usuario,
                 CASE WHEN estatus = 'Activo' THEN 1 ELSE 0 END AS activo
                 FROM $db.`usuarios` WHERE id_usuario = :id");
         $stmt->execute([':id' => $id]);
