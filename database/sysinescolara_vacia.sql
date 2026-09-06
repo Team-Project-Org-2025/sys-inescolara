@@ -1,7 +1,7 @@
 -- ============================================================================
 -- SYSINECOLARA — Base de Datos Vacía (solo estructura, sin datos)
 -- Generado: 2026-09-01
--- Versión: 3.3 — Tablas de catálogo `estado`, `categoria`, `origen`
+-- Versión: 3.4 — Eliminada tabla `tareas`, nombre_tarea directo en asignar_tarea
 -- ============================================================================
 -- CAMBIOS vs esquema v3.2:
 --  1. ELIMINADOS de `lote`: costo_mano_obra, costo_total_insumo,
@@ -20,6 +20,7 @@
 -- 12. Renombrado id_trabajador_gestor → id_usuario_gestor en movimiento_planta
 -- 13. NUEVAS tablas `estado`, `categoria`, `origen` como catálogos reutilizables
 -- 14. `lote` ahora usa FKs id_estado, id_categoria, id_origen (no más VARCHAR)
+-- 15. ELIMINADA tabla `tareas` → nombre_tarea y descripcion directo en asignar_tarea
 -- ============================================================================
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
@@ -219,37 +220,27 @@ CREATE TABLE IF NOT EXISTS `proveedores` (
   COMMENT='Catálogo de proveedores.';
 
 -- --------------------------------------------------------------------------
--- 5. Tareas
+-- 5. Asignar Tareas
 -- Nota: id_usuario referencia SysInescolara-Seguridad.usuarios.id_usuario
+-- El nombre de la tarea se guarda directamente en asignar_tarea
 -- --------------------------------------------------------------------------
 
-CREATE TABLE IF NOT EXISTS `tareas` (
-  `id_tarea`     INT(11)     NOT NULL AUTO_INCREMENT,
-  `nombre_tarea` VARCHAR(100) NOT NULL,
-  `descripcion`  TEXT         DEFAULT NULL,
-  `activo`       TINYINT(1)  NOT NULL DEFAULT 1,
-  `categoria`    VARCHAR(50) DEFAULT NULL,
-  PRIMARY KEY (`id_tarea`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-  COMMENT='Catálogo de tareas.';
-
 CREATE TABLE IF NOT EXISTS `asignar_tarea` (
-  `id_asignacion`     INT(11)     NOT NULL AUTO_INCREMENT,
-  `id_usuario`        INT(11)     NOT NULL COMMENT 'FK → Seguridad.usuarios.id_usuario',
-  `id_tarea`          INT(11)     NOT NULL,
-  `id_lote`           INT(11)     NOT NULL,
-  `fecha_asignacion`  DATE        NOT NULL,
-  `fecha_cumplimiento` DATE       DEFAULT NULL,
-  `estatus_tarea`     VARCHAR(20) NOT NULL DEFAULT 'pendiente',
-  `horas_dedicadas`   DECIMAL(5,2) DEFAULT NULL,
+  `id_asignacion`     INT(11)       NOT NULL AUTO_INCREMENT,
+  `id_usuario`        INT(11)       NOT NULL COMMENT 'FK → Seguridad.usuarios.id_usuario',
+  `nombre_tarea`      VARCHAR(100)  NOT NULL COMMENT 'Nombre de la tarea',
+  `descripcion`       TEXT          DEFAULT NULL COMMENT 'Descripcion opcional de la tarea',
+  `id_lote`           INT(11)       NOT NULL,
+  `fecha_asignacion`  DATE          NOT NULL,
+  `fecha_cumplimiento` DATE         DEFAULT NULL,
+  `estatus_tarea`     VARCHAR(20)   NOT NULL DEFAULT 'pendiente',
+  `horas_dedicadas`   DECIMAL(5,2)  DEFAULT NULL,
   PRIMARY KEY (`id_asignacion`),
-  KEY `id_tarea`    (`id_tarea`),
-  KEY `id_lote`     (`id_lote`),
-  KEY `id_usuario`  (`id_usuario`),
-  CONSTRAINT `fk_asignacion_tarea` FOREIGN KEY (`id_tarea`) REFERENCES `tareas` (`id_tarea`),
-  CONSTRAINT `fk_asignacion_lote`  FOREIGN KEY (`id_lote`)  REFERENCES `lote`   (`id_lote`)
+  KEY `id_lote`    (`id_lote`),
+  KEY `id_usuario` (`id_usuario`),
+  CONSTRAINT `fk_asignacion_lote` FOREIGN KEY (`id_lote`) REFERENCES `lote` (`id_lote`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-  COMMENT='Nodo central entre talento humano y producción.';
+  COMMENT='Asignacion de tareas a usuarios.';
 
 CREATE TABLE IF NOT EXISTS `registro_insumo` (
   `id_registro_insumo` INT(11)       NOT NULL AUTO_INCREMENT,
