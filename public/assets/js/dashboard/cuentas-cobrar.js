@@ -113,7 +113,9 @@ $(document).ready(function () {
   };
 
   const renderizarDetalle = (data) => {
-    const hoy = new Date().toISOString().split('T')[0];
+    const _dHoy = new Date();
+    const _padHoy = (n) => String(n).padStart(2, '0');
+    const hoy = `${_dHoy.getFullYear()}-${_padHoy(_dHoy.getMonth() + 1)}-${_padHoy(_dHoy.getDate())}`;
     const claseEstado = data.saldo_pendiente <= 0 ? 'badge-pagado' :
       (data.fecha_vencimiento && data.fecha_vencimiento < hoy ? 'badge-vencido' : 'badge-vigente');
     const etiquetaEstado = data.saldo_pendiente <= 0 ? 'Pagado' :
