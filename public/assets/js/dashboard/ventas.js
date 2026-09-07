@@ -535,7 +535,11 @@ const Ventas = {
         formData.set('pagos', JSON.stringify(pagos));
 
         if (!formData.get('fecha_venta')) {
-            formData.set('fecha_venta', new Date().toISOString().slice(0, 19).replace('T', ' '));
+            const ahora = new Date();
+            const pad = (n) => String(n).padStart(2, '0');
+            formData.set('fecha_venta',
+                `${ahora.getFullYear()}-${pad(ahora.getMonth() + 1)}-${pad(ahora.getDate())} ` +
+                `${pad(ahora.getHours())}:${pad(ahora.getMinutes())}:${pad(ahora.getSeconds())}`);
         }
 
         try {
