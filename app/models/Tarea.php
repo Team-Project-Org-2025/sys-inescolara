@@ -29,11 +29,22 @@ class Tarea extends Database
                 $idHerramienta = (int)$t['id_herramienta'];
                 $cantidad = (float)($t['cantidad'] ?? 1);
 
-                $stmt = $this->db()->prepare("SELECT estado FROM herramienta WHERE id_herramienta = :id");
-                $stmt->execute([':id' => $idHerramienta]);
-                $toolEstado = $stmt->fetchColumn();
-                if (!in_array($toolEstado, ['disponible', 'ok'])) {
-                    throw new \Exception("La herramienta no está disponible.");
+                $stmtCheck = $this->db()->prepare("
+                    SELECT h.cantidad, COALESCE(SUM(CASE WHEN a.estatus_tarea = 'pendiente' THEN u.cantidad_usada ELSE 0 END), 0) AS en_uso
+                    FROM herramienta h
+                    LEFT JOIN uso_herramienta u ON u.id_herramienta = h.id_herramienta
+                    LEFT JOIN asignar_tarea a ON u.id_asignacion = a.id_asignacion
+                    WHERE h.id_herramienta = :id
+                    GROUP BY h.id_herramienta
+                ");
+                $stmtCheck->execute([':id' => $idHerramienta]);
+                $check = $stmtCheck->fetch(PDO::FETCH_ASSOC);
+                if (!$check) {
+                    throw new \Exception("Herramienta ID $idHerramienta no encontrada.");
+                }
+                $disponibles = (int)$check['cantidad'] - (int)$check['en_uso'];
+                if ($cantidad > $disponibles) {
+                    throw new \Exception("No hay suficientes unidades de la herramienta ID $idHerramienta. Disponibles: $disponibles, solicitadas: $cantidad.");
                 }
 
                 $stmt = $this->db()->prepare("
@@ -47,9 +58,6 @@ class Tarea extends Database
                     ':fecha_uso'      => $t['fecha_uso'] ?? date('Y-m-d'),
                     ':observacion'    => $t['observacion'] ?? null,
                 ]);
-
-                $stmt = $this->db()->prepare("UPDATE herramienta SET estado = 'ocupado' WHERE id_herramienta = :id");
-                $stmt->execute([':id' => $idHerramienta]);
             }
 
             $this->db()->commit();
@@ -68,11 +76,6 @@ class Tarea extends Database
             $oldAssignment = $this->getAssignmentById($asignacionId);
             if (!$oldAssignment) throw new \Exception("Asignación no encontrada: $asignacionId");
 
-            $oldTools = $this->getToolUsages($asignacionId);
-            foreach ($oldTools as $ot) {
-                $stmt = $this->db()->prepare("UPDATE herramienta SET estado = 'disponible' WHERE id_herramienta = :id");
-                $stmt->execute([':id' => $ot['id_herramienta']]);
-            }
             $stmt = $this->db()->prepare("DELETE FROM uso_herramienta WHERE id_asignacion = :id");
             $stmt->execute([':id' => $asignacionId]);
 
@@ -89,11 +92,22 @@ class Tarea extends Database
                 $idHerramienta = (int)$t['id_herramienta'];
                 $cantidad = (float)($t['cantidad'] ?? 1);
 
-                $stmt = $this->db()->prepare("SELECT estado FROM herramienta WHERE id_herramienta = :id");
-                $stmt->execute([':id' => $idHerramienta]);
-                $toolEstado = $stmt->fetchColumn();
-                if (!in_array($toolEstado, ['disponible', 'ok'])) {
-                    throw new \Exception("La herramienta no está disponible.");
+                $stmtCheck = $this->db()->prepare("
+                    SELECT h.cantidad, COALESCE(SUM(CASE WHEN a.estatus_tarea = 'pendiente' THEN u.cantidad_usada ELSE 0 END), 0) AS en_uso
+                    FROM herramienta h
+                    LEFT JOIN uso_herramienta u ON u.id_herramienta = h.id_herramienta
+                    LEFT JOIN asignar_tarea a ON u.id_asignacion = a.id_asignacion
+                    WHERE h.id_herramienta = :id
+                    GROUP BY h.id_herramienta
+                ");
+                $stmtCheck->execute([':id' => $idHerramienta]);
+                $check = $stmtCheck->fetch(PDO::FETCH_ASSOC);
+                if (!$check) {
+                    throw new \Exception("Herramienta ID $idHerramienta no encontrada.");
+                }
+                $disponibles = (int)$check['cantidad'] - (int)$check['en_uso'];
+                if ($cantidad > $disponibles) {
+                    throw new \Exception("No hay suficientes unidades de la herramienta ID $idHerramienta. Disponibles: $disponibles, solicitadas: $cantidad.");
                 }
 
                 $stmt = $this->db()->prepare("
@@ -107,9 +121,6 @@ class Tarea extends Database
                     ':fecha_uso'      => $t['fecha_uso'] ?? date('Y-m-d'),
                     ':observacion'    => $t['observacion'] ?? null,
                 ]);
-
-                $stmt = $this->db()->prepare("UPDATE herramienta SET estado = 'ocupado' WHERE id_herramienta = :id");
-                $stmt->execute([':id' => $idHerramienta]);
             }
 
             $this->db()->commit();
@@ -258,12 +269,6 @@ class Tarea extends Database
     {
         $this->db()->beginTransaction();
         try {
-            $oldTools = $this->getToolUsages($id);
-            foreach ($oldTools as $ot) {
-                $stmt = $this->db()->prepare("UPDATE herramienta SET estado = 'disponible' WHERE id_herramienta = :id");
-                $stmt->execute([':id' => $ot['id_herramienta']]);
-            }
-
             $stmt = $this->db()->prepare("UPDATE asignar_tarea SET estatus_tarea = 'cancelada' WHERE id_asignacion = ?");
             $stmt->execute([$id]);
 

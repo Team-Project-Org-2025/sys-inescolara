@@ -8,6 +8,16 @@ const baseUrl = DATA.tasksUrl || `${window.BASE_URL || '/'}tareas`;
 
 let assignmentsTable = null;
 
+function refreshData() {
+    return Promise.all([
+        $.ajax({ url: `${baseUrl}?action=get_tools_refresh`, method: 'GET', dataType: 'json', headers: { 'X-Requested-With': 'XMLHttpRequest' } }),
+        $.ajax({ url: `${baseUrl}?action=get_insumos_refresh`, method: 'GET', dataType: 'json', headers: { 'X-Requested-With': 'XMLHttpRequest' } }),
+    ]).then(([toolsResp, insumosResp]) => {
+        if (toolsResp.success && toolsResp.tools) DATA.herramientas = toolsResp.tools;
+        if (insumosResp.success && insumosResp.insumos) DATA.insumos = insumosResp.insumos;
+    }).catch(() => {});
+}
+
 const assignRules = {
   nombre_tarea: 'nombre',
   id_usuario: 'select',
@@ -198,13 +208,15 @@ $('#btnAddToolRow').on('click', addToolRow);
 //  ASSIGN MODAL EVENTS
 // ============================================================
 $('#btnAssignTask').on('click', function () {
-    $('#assignTaskForm')[0].reset();
-    $('#assignTaskForm input[name="id_asignacion"]').val('');
-    $('#toolsBody').empty();
-    $('#assignTaskForm input[name="fecha_asignacion"]').val(DATA.hoy || new Date().toISOString().split('T')[0]);
-    $('#assignTaskModal .modal-title').text('Asignar Tarea');
-    $('#assignTaskModal .btn-primary').text('Guardar Asignación');
-    $('#assignTaskModal').modal({ focus: false }).modal('show');
+    refreshData().then(() => {
+        $('#assignTaskForm')[0].reset();
+        $('#assignTaskForm input[name="id_asignacion"]').val('');
+        $('#toolsBody').empty();
+        $('#assignTaskForm input[name="fecha_asignacion"]').val(DATA.hoy || new Date().toISOString().split('T')[0]);
+        $('#assignTaskModal .modal-title').text('Asignar Tarea');
+        $('#assignTaskModal .btn-primary').text('Guardar Asignación');
+        $('#assignTaskModal').modal({ focus: false }).modal('show');
+    });
 });
 
 $('#assignTaskForm').on('submit', function (e) {
@@ -269,13 +281,14 @@ $('#assignTaskForm').on('submit', function (e) {
     Ajax.post(`${baseUrl}?action=${action}`, data)
         .then((r) => {
             if (r.success) {
-                if (r.herramientas) DATA.herramientas = r.herramientas;
                 const msg = isEdit ? 'Tarea actualizada correctamente' : 'Tarea asignada correctamente';
                 const el = document.getElementById('assignTaskModal');
                 const inst = bootstrap.Modal.getInstance(el) || new bootstrap.Modal(el);
                 inst.hide();
-                assignmentsTable.ajax.reload(null, false);
-                setTimeout(() => Helpers.toast('success', msg), 200);
+                refreshData().then(() => {
+                    assignmentsTable.ajax.reload(null, false);
+                    setTimeout(() => Helpers.toast('success', msg), 200);
+                });
             } else {
                 Helpers.toast('error', r.message);
             }
@@ -364,41 +377,42 @@ $(document).on('click', '.btn-complete-assign', function () {
     $('#completeAssignId').val(id);
     $('#completeAssignForm input[name="fecha_cumplimiento"]').val(DATA.hoy || new Date().toISOString().split('T')[0]);
     $('#completeConsumptionsBody').empty();
-
     $('#completeToolsContainer').html('<div class="text-muted small py-2"><div class="spinner-border spinner-border-sm" role="status"></div> Cargando herramientas...</div>');
     $('#completeAssignModal').modal({ focus: false }).modal('show');
 
-    $.ajax({
-        url: `${baseUrl}?action=get_assignment&id=${id}`,
-        method: 'GET',
-        dataType: 'json',
-        headers: { 'X-Requested-With': 'XMLHttpRequest' },
-    })
-        .done((r) => {
-            const tools = r.tool_usages || [];
-            if (tools.length === 0) {
-                $('#completeToolsContainer').html('<p class="text-muted small">No se registraron herramientas en esta asignación.</p>');
-            } else {
-                const estados = ['disponible', 'requiere_mantenimiento', 'dañado'];
-                const estadosOpts = estados.map(e =>
-                    `<option value="${e}">${e.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase())}</option>`
-                ).join('');
-                let html = '<table class="table table-sm table-bordered mb-0"><thead><tr><th>Herramienta</th><th>Estado Post-Uso</th></tr></thead><tbody>';
-                tools.forEach((t) => {
-                    html += `<tr>
-                        <td>${Helpers.escapeHtml(t.nombre_herramienta || '—')}</td>
-                        <td>
-                            <select class="form-select form-select-sm tool-estado" data-id-uso="${t.id_uso}">${estadosOpts}</select>
-                        </td>
-                    </tr>`;
-                });
-                html += '</tbody></table>';
-                $('#completeToolsContainer').html(html);
-            }
+    refreshData().then(() => {
+        $.ajax({
+            url: `${baseUrl}?action=get_assignment&id=${id}`,
+            method: 'GET',
+            dataType: 'json',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
         })
-        .fail(() => {
-            $('#completeToolsContainer').html('<p class="text-danger small">Error al cargar herramientas.</p>');
-        });
+            .done((r) => {
+                const tools = r.tool_usages || [];
+                if (tools.length === 0) {
+                    $('#completeToolsContainer').html('<p class="text-muted small">No se registraron herramientas en esta asignación.</p>');
+                } else {
+                    const estados = ['disponible', 'requiere_mantenimiento', 'dañado'];
+                    const estadosOpts = estados.map(e =>
+                        `<option value="${e}">${e.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase())}</option>`
+                    ).join('');
+                    let html = '<table class="table table-sm table-bordered mb-0"><thead><tr><th>Herramienta</th><th>Estado Post-Uso</th></tr></thead><tbody>';
+                    tools.forEach((t) => {
+                        html += `<tr>
+                            <td>${Helpers.escapeHtml(t.nombre_herramienta || '—')}</td>
+                            <td>
+                                <select class="form-select form-select-sm tool-estado" data-id-uso="${t.id_uso}">${estadosOpts}</select>
+                            </td>
+                        </tr>`;
+                    });
+                    html += '</tbody></table>';
+                    $('#completeToolsContainer').html(html);
+                }
+            })
+            .fail(() => {
+                $('#completeToolsContainer').html('<p class="text-danger small">Error al cargar herramientas.</p>');
+            });
+    });
 });
 
 $('#completeAssignForm').on('submit', function (e) {
@@ -454,8 +468,10 @@ $('#completeAssignForm').on('submit', function (e) {
                 const el = document.getElementById('completeAssignModal');
                 const inst = bootstrap.Modal.getInstance(el) || new bootstrap.Modal(el);
                 inst.hide();
-                assignmentsTable.ajax.reload(null, false);
-                setTimeout(() => Helpers.toast('success', 'Tarea completada correctamente'), 200);
+                refreshData().then(() => {
+                    assignmentsTable.ajax.reload(null, false);
+                    setTimeout(() => Helpers.toast('success', 'Tarea completada correctamente'), 200);
+                });
             } else {
                 Helpers.toast('error', r.message);
             }
@@ -483,7 +499,9 @@ $(document).on('click', '.btn-cancel-assign', function () {
                 .then((r) => {
                     if (r.success) {
                         Helpers.toast('success', 'Asignación cancelada');
-                        assignmentsTable.ajax.reload(null, false);
+                        refreshData().then(() => {
+                            assignmentsTable.ajax.reload(null, false);
+                        });
                     } else {
                         Helpers.toast('error', r.message);
                     }
@@ -625,50 +643,52 @@ $(document).on('click', '.btn-edit-assign', function () {
     const id = row ? row.id_asignacion : 0;
     if (!id) return;
 
-    $.ajax({
-        url: `${baseUrl}?action=get_assignment&id=${id}`,
-        method: 'GET',
-        dataType: 'json',
-        headers: { 'X-Requested-With': 'XMLHttpRequest' },
-    })
-        .done((r) => {
-            if (!r.success) {
-                Helpers.toast('error', r.message);
-                return;
-            }
-            const a = r.assignment || {};
-            const tools = r.tool_usages || [];
-
-            $('#assignTaskForm')[0].reset();
-            $('#toolsBody').empty();
-
-            $('#assignTaskForm input[name="id_asignacion"]').val(a.id_asignacion);
-            $('#assignTaskForm input[name="nombre_tarea"]').val(a.nombre_tarea || '');
-            $('#assignTaskForm textarea[name="descripcion"]').val(a.descripcion || '');
-            $('#assignTaskForm select[name="id_usuario"]').val(a.id_usuario || '');
-            $('#assignTaskForm input[name="fecha_asignacion"]').val(a.fecha_asignacion || DATA.hoy);
-
-            const toolGroups = {};
-            tools.forEach(function (t) {
-                const hid = t.id_herramienta;
-                if (!toolGroups[hid]) toolGroups[hid] = 0;
-                toolGroups[hid] += parseFloat(t.cantidad_usada || 1);
-            });
-            Object.keys(toolGroups).forEach(function (hid) {
-                addToolRow();
-                const $row = $('#toolsBody tr:last');
-                $row.find('select').val(parseInt(hid)).trigger('change');
-                $row.find('.tool-cantidad-input').val(toolGroups[hid]);
-                updateToolStockHint($row.find('.tool-cantidad-input'));
-            });
-
-            $('#assignTaskModal .modal-title').text('Editar Tarea');
-            $('#assignTaskModal .btn-primary').text('Guardar Cambios');
-            $('#assignTaskModal').modal({ focus: false }).modal('show');
+    refreshData().then(() => {
+        $.ajax({
+            url: `${baseUrl}?action=get_assignment&id=${id}`,
+            method: 'GET',
+            dataType: 'json',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
         })
-        .fail(() => {
-            Helpers.toast('error', 'Error al cargar datos de la asignación.');
-        });
+            .done((r) => {
+                if (!r.success) {
+                    Helpers.toast('error', r.message);
+                    return;
+                }
+                const a = r.assignment || {};
+                const tools = r.tool_usages || [];
+
+                $('#assignTaskForm')[0].reset();
+                $('#toolsBody').empty();
+
+                $('#assignTaskForm input[name="id_asignacion"]').val(a.id_asignacion);
+                $('#assignTaskForm input[name="nombre_tarea"]').val(a.nombre_tarea || '');
+                $('#assignTaskForm textarea[name="descripcion"]').val(a.descripcion || '');
+                $('#assignTaskForm select[name="id_usuario"]').val(a.id_usuario || '');
+                $('#assignTaskForm input[name="fecha_asignacion"]').val(a.fecha_asignacion || DATA.hoy);
+
+                const toolGroups = {};
+                tools.forEach(function (t) {
+                    const hid = t.id_herramienta;
+                    if (!toolGroups[hid]) toolGroups[hid] = 0;
+                    toolGroups[hid] += parseFloat(t.cantidad_usada || 1);
+                });
+                Object.keys(toolGroups).forEach(function (hid) {
+                    addToolRow();
+                    const $row = $('#toolsBody tr:last');
+                    $row.find('select').val(parseInt(hid)).trigger('change');
+                    $row.find('.tool-cantidad-input').val(toolGroups[hid]);
+                    updateToolStockHint($row.find('.tool-cantidad-input'));
+                });
+
+                $('#assignTaskModal .modal-title').text('Editar Tarea');
+                $('#assignTaskModal .btn-primary').text('Guardar Cambios');
+                $('#assignTaskModal').modal({ focus: false }).modal('show');
+            })
+            .fail(() => {
+                Helpers.toast('error', 'Error al cargar datos de la asignación.');
+            });
+    });
 });
 
 // ============================================================

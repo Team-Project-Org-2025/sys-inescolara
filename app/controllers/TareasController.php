@@ -16,6 +16,8 @@ function index(): void
             match ($_SERVER['REQUEST_METHOD'] . '_' . $action) {
                 'GET_get_assignments' => get_assignments(),
                 'GET_get_assignment'  => get_assignment(),
+                'GET_get_tools_refresh' => get_tools_refresh(),
+                'GET_get_insumos_refresh' => get_insumos_refresh(),
                 'POST_assign_ajax'    => assign_ajax(),
                 'POST_edit_ajax'      => edit_ajax(),
                 'POST_complete_ajax'  => complete_ajax(),
@@ -46,6 +48,8 @@ function index(): void
 
 function get_assignments(): void { checkModuleAuth(); tasks_getAssignmentsAjax(); }
 function get_assignment(): void { checkModuleAuth(); tasks_getAssignmentDetailAjax(); }
+function get_tools_refresh(): void { checkModuleAuth(); $m = new Herramienta(); jsonResponse(['success' => true, 'tools' => $m->getAllWithAvailability()]); }
+function get_insumos_refresh(): void { checkModuleAuth(); $m = new Insumo(); jsonResponse(['success' => true, 'insumos' => $m->getAll()]); }
 function assign_ajax(): void { checkModuleAuth(); checkPermisoOrFail('tareas:crear'); tasks_assignAjax(); }
 function complete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('tareas:editar'); tasks_completeAssignmentAjax(); }
 function cancel_ajax(): void { checkModuleAuth(); checkPermisoOrFail('tareas:eliminar'); tasks_cancelAssignmentAjax(); }
