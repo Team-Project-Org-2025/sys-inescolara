@@ -13,8 +13,10 @@ class Backup
         $this->backupDir = defined('ROOT_PATH') ? ROOT_PATH . '_backups' . DIRECTORY_SEPARATOR : dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . '_backups' . DIRECTORY_SEPARATOR;
 
         if (!is_dir($this->backupDir)) {
-            mkdir($this->backupDir, 0755, true);
+            mkdir($this->backupDir, 0777, true);
         }
+
+        @chmod($this->backupDir, 0777);
 
         $this->mysqldumpPath = $this->findMysqldump();
         $this->mysqlPath = $this->findMysql();
@@ -34,6 +36,7 @@ class Backup
     private function detectSocket(): ?string
     {
         $possibleSockets = [
+            '/opt/lampp/var/mysql/mysql.sock',
             '/run/mysqld/mysqld.sock',
             '/var/run/mysqld/mysqld.sock',
             '/var/lib/mysql/mysql.sock',
@@ -49,9 +52,16 @@ class Backup
 
     private function findMysqldump(): string
     {
-        $xamppPath = 'C:\xampp\mysql\bin\mysqldump.exe';
-        if (is_file($xamppPath)) {
-            return $xamppPath;
+        $possiblePaths = [
+            'C:\xampp\mysql\bin\mysqldump.exe',
+            '/opt/lampp/bin/mysqldump',
+            '/usr/bin/mysqldump',
+            '/usr/local/bin/mysqldump',
+        ];
+        foreach ($possiblePaths as $path) {
+            if (is_file($path)) {
+                return $path;
+            }
         }
         $which = trim(shell_exec('which mysqldump 2>/dev/null') ?? '');
         if ($which !== '') {
@@ -62,9 +72,16 @@ class Backup
 
     private function findMysql(): string
     {
-        $xamppPath = 'C:\xampp\mysql\bin\mysql.exe';
-        if (is_file($xamppPath)) {
-            return $xamppPath;
+        $possiblePaths = [
+            'C:\xampp\mysql\bin\mysql.exe',
+            '/opt/lampp/bin/mysql',
+            '/usr/bin/mysql',
+            '/usr/local/bin/mysql',
+        ];
+        foreach ($possiblePaths as $path) {
+            if (is_file($path)) {
+                return $path;
+            }
         }
         $which = trim(shell_exec('which mysql 2>/dev/null') ?? '');
         if ($which !== '') {
@@ -98,7 +115,18 @@ class Backup
 
         if ($exitCode !== 0 || !is_file($filepath) || filesize($filepath) === 0) {
             $errorMsg = !empty($output) ? implode("\n", $output) : 'Error desconocido al crear el respaldo';
-            if (is_file($filepath)) {
+
+            if (is_file($filepath) && filesize($filepath) > 0) {
+                $content = file_get_contents($filepath);
+                if ($content !== false && str_contains($content, 'MariaDB dump')) {
+                    $this->sanitizeDump($filepath);
+                    return [
+                        'success' => true,
+                        'filename' => $filename,
+                        'filepath' => $filepath,
+                        'size' => filesize($filepath),
+                    ];
+                }
                 unlink($filepath);
             }
             return ['success' => false, 'message' => $errorMsg];
