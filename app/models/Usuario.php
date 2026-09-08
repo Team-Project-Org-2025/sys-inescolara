@@ -20,10 +20,15 @@ class Usuario extends Database
     ];
 
 
-    public function __construct()
+    private static bool $bootstrapped = false;
+
+    public function __construct(bool $runBootstrap = false)
     {
         parent::__construct('security');
-        $this->bootstrapDefaults();
+        if ($runBootstrap && !self::$bootstrapped) {
+            $this->bootstrapDefaults();
+            self::$bootstrapped = true;
+        }
     }
 
     private function bootstrapDefaults(): void

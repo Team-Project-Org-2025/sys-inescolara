@@ -15,10 +15,14 @@ function dashboardCheckAuth(): void
         exit();
     }
 
-    // Recargar permisos del usuario desde la BD (para reflejar cambios en tiempo real)
-    require_once ROOT_PATH . 'vendor/autoload.php';
-    $userModel = new \SysInescolara\models\Usuario();
-    \SysInescolara\helpers\Auth::setField('user_permisos', $userModel->getRolePermissions(\SysInescolara\helpers\Auth::roleId(), \SysInescolara\helpers\Auth::id()));
+    // Recargar permisos cada 5 minutos (caché en sesión)
+    $lastCheck = $_SESSION['permisos_last_check'] ?? 0;
+    if (time() - $lastCheck > 300) {
+        require_once ROOT_PATH . 'vendor/autoload.php';
+        $userModel = new \SysInescolara\models\Usuario();
+        \SysInescolara\helpers\Auth::setField('user_permisos', $userModel->getRolePermissions(\SysInescolara\helpers\Auth::roleId(), \SysInescolara\helpers\Auth::id()));
+        $_SESSION['permisos_last_check'] = time();
+    }
 }
 
 function dashboardCheckPermiso(string $codigo): void
