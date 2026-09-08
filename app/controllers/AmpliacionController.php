@@ -17,6 +17,7 @@ function index(): void
                 'GET_get_plantas'        => get_plantas(),
                 'GET_get_ubicaciones'    => get_ubicaciones(),
                 'GET_get_especies'       => get_especies(),
+                'GET_get_gestores'       => get_gestores(),
                 'GET_buscar_clientes'    => buscar_clientes(),
                 'POST_add_ajax'          => add_ajax(),
                 'POST_edit_ajax'         => edit_ajax(),
@@ -39,6 +40,7 @@ function get_lotes(): void { checkModuleAuth(); ampliacion_getLotesAjax(); }
 function get_plantas(): void { checkModuleAuth(); ampliacion_getPlantasAjax(); }
 function get_ubicaciones(): void { checkModuleAuth(); ampliacion_getUbicacionesAjax(); }
 function get_especies(): void { checkModuleAuth(); ampliacion_getEspeciesAjax(); }
+function get_gestores(): void { checkModuleAuth(); ampliacion_getGestoresAjax(); }
 function buscar_clientes(): void { checkModuleAuth(); ampliacion_buscarClientesAjax(); }
 function add_ajax(): void { checkModuleAuth(); checkPermisoOrFail('ampliacion:crear'); ampliacion_handleAdd(); }
 function edit_ajax(): void { checkModuleAuth(); checkPermisoOrFail('ampliacion:editar'); ampliacion_handleEdit(); }
@@ -209,6 +211,13 @@ function ampliacion_getEspeciesAjax(): void
     $model = new Ampliacion();
     $especies = $model->getSpecies();
     jsonResponse(['success' => true, 'especies' => $especies]);
+}
+
+function ampliacion_getGestoresAjax(): void
+{
+    $model = new Ampliacion();
+    $gestores = $model->getGestores();
+    jsonResponse(['success' => true, 'gestores' => $gestores]);
 }
 
 function ampliacion_buscarClientesAjax(): void

@@ -253,15 +253,31 @@ class SeedCollection extends Database implements ReadableInterface, DeletableInt
                         r.estatus,
                         r.observacion,
                         (SELECT COUNT(*) FROM recoleccion_semillas_detalle d WHERE d.id_recoleccion = r.id_recoleccion) AS total_detalles,
-                        CONCAT(u.nombre, ' ', u.apellido) AS usuario_nombre,
                         ub.nombre_ubicacion
                     FROM recoleccion_semillas r
-                    LEFT JOIN `SysInescolara-Seguridad`.usuarios u ON r.id_usuario = u.id_usuario
                     LEFT JOIN ubicacion ub ON r.id_ubicacion = ub.id_ubicacion
                     WHERE r.activo = 1
                     ORDER BY r.fecha_asignacion DESC, r.id_recoleccion DESC";
             $stmt = $this->db()->query($sql);
-            return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+            $rows = $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+
+            $userModel = new \SysInescolara\models\Usuario();
+            $allUsers = $userModel->getAll();
+            $usersMap = [];
+            foreach ($allUsers as $u) {
+                $usersMap[$u['id']] = $u;
+            }
+
+            foreach ($rows as &$row) {
+                $uid = (int)($row['id_usuario'] ?? 0);
+                $user = $usersMap[$uid] ?? null;
+                $row['trabajador_nombre'] = $user
+                    ? trim(($user['nombre_usuario'] ?? '') . ' ' . ($user['apellido_trabajador'] ?? ''))
+                    : '—';
+            }
+            unset($row);
+
+            return $rows;
         } catch (\Throwable $e) {
             error_log('Error en SeedCollection::getAll: ' . $e->getMessage());
             return [];
@@ -273,15 +289,22 @@ class SeedCollection extends Database implements ReadableInterface, DeletableInt
         try {
             $stmt = $this->db()->prepare("
                 SELECT r.*,
-                       CONCAT(u.nombre, ' ', u.apellido) AS usuario_nombre,
                        ub.nombre_ubicacion
                 FROM recoleccion_semillas r
-                LEFT JOIN `SysInescolara-Seguridad`.usuarios u ON r.id_usuario = u.id_usuario
                 LEFT JOIN ubicacion ub ON r.id_ubicacion = ub.id_ubicacion
                 WHERE r.id_recoleccion = :id
             ");
             $stmt->execute([':id' => $id]);
-            return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            if (!$row) return null;
+
+            $userModel = new \SysInescolara\models\Usuario();
+            $user = $userModel->getById((int)$row['id_usuario']);
+            $row['trabajador_nombre'] = $user
+                ? trim(($user['nombre_usuario'] ?? '') . ' ' . ($user['apellido_trabajador'] ?? ''))
+                : '—';
+
+            return $row;
         } catch (\Throwable $e) {
             error_log('Error en SeedCollection::getById: ' . $e->getMessage());
             return null;

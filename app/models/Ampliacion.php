@@ -280,7 +280,7 @@ class Ampliacion extends Database implements ReadableInterface
                         mp.tipo_movimiento,
                         mp.fecha_movimiento,
                         mp.observacion,
-                        CONCAT(u.nombre_trabajador, ' ', u.apellido_trabajador) AS gestor_nombre,
+                        mp.id_usuario_gestor,
                         COALESCE(CONCAT(c.nombre_cliente, ' ', c.apellido_cliente), '—') AS cliente_nombre,
                         c.tipo_cedula_cliente,
                         c.cedula_cliente,
@@ -288,11 +288,28 @@ class Ampliacion extends Database implements ReadableInterface
                         (SELECT COUNT(*) FROM movimiento_planta_detalle d WHERE d.id_movimiento_planta = mp.id_movimiento_planta AND d.tipo = 'entrada' AND d.activo = 1) AS total_entrada
                     FROM movimiento_planta mp
                     LEFT JOIN cliente c ON mp.id_cliente = c.id_cliente
-                    LEFT JOIN `SysInescolara-Seguridad`.usuarios u ON mp.id_usuario_gestor = u.id_usuario
                     WHERE mp.activo = 1
                     ORDER BY mp.fecha_movimiento DESC, mp.id_movimiento_planta DESC";
             $stmt = $this->db()->query($sql);
-            return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+            $rows = $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+
+            $userModel = new \SysInescolara\models\Usuario();
+            $allUsers = $userModel->getAll();
+            $usersMap = [];
+            foreach ($allUsers as $u) {
+                $usersMap[$u['id']] = $u;
+            }
+
+            foreach ($rows as &$row) {
+                $uid = (int)($row['id_usuario_gestor'] ?? 0);
+                $user = $usersMap[$uid] ?? null;
+                $row['gestor_nombre'] = $user
+                    ? trim(($user['nombre_usuario'] ?? '') . ' ' . ($user['apellido_trabajador'] ?? ''))
+                    : '—';
+            }
+            unset($row);
+
+            return $rows;
         } catch (\Throwable $e) {
             error_log('Error en Ampliacion::getAll: ' . $e->getMessage());
             return [];
@@ -304,21 +321,25 @@ class Ampliacion extends Database implements ReadableInterface
         try {
             $stmt = $this->db()->prepare("
                 SELECT mp.*,
-                       CONCAT(u.nombre_trabajador, ' ', u.apellido_trabajador) AS gestor_nombre,
                        COALESCE(CONCAT(c.nombre_cliente, ' ', c.apellido_cliente), '—') AS cliente_nombre,
                        c.tipo_cedula_cliente,
                        c.cedula_cliente
                 FROM movimiento_planta mp
                 LEFT JOIN cliente c ON mp.id_cliente = c.id_cliente
-                LEFT JOIN `SysInescolara-Seguridad`.usuarios u ON mp.id_usuario_gestor = u.id_usuario
                 WHERE mp.id_movimiento_planta = :id
             ");
             $stmt->execute([':id' => $id]);
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
-            if ($row) {
-                $row['detalles'] = $this->getDetails($id);
-            }
-            return $row ?: null;
+            if (!$row) return null;
+
+            $userModel = new \SysInescolara\models\Usuario();
+            $user = $userModel->getById((int)($row['id_usuario_gestor'] ?? 0));
+            $row['gestor_nombre'] = $user
+                ? trim(($user['nombre_usuario'] ?? '') . ' ' . ($user['apellido_trabajador'] ?? ''))
+                : '—';
+
+            $row['detalles'] = $this->getDetails($id);
+            return $row;
         } catch (\Throwable $e) {
             error_log('Error en Ampliacion::getById: ' . $e->getMessage());
             return null;
@@ -452,6 +473,22 @@ class Ampliacion extends Database implements ReadableInterface
     {
         $sp = new Especie();
         return $sp->getAll();
+    }
+
+    public function getGestores(): array
+    {
+        try {
+            $usuario = new \SysInescolara\models\Usuario();
+            $all = $usuario->getAll();
+            $gestores = array_filter($all, function ($u) {
+                return ($u['estatus'] ?? '') === 'Activo'
+                    && (!empty($u['nombre_trabajador']) || !empty($u['nombre_usuario']));
+            });
+            return array_values($gestores);
+        } catch (\Throwable $e) {
+            error_log('Error en Ampliacion::getGestores: ' . $e->getMessage());
+            return [];
+        }
     }
 
     private function createPlant(string $nombreComun, ?string $nombreTecnico, int $idEspecie): int

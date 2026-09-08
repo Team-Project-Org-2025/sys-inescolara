@@ -45,6 +45,7 @@ include_once __DIR__ . '/../common/modal.php';
                                 <tr>
                                     <th>Fecha</th>
                                     <th>Cliente</th>
+                                    <th>Trabajador</th>
                                     <th>Items Salida</th>
                                     <th>Items Entrada</th>
                                     <th>Acciones</th>
@@ -74,13 +75,11 @@ include_once __DIR__ . '/../common/modal.php';
                 </div>
             </div>
             <div class="col-md-4">
-                <label class="form-label" for="id_usuario_gestor">Gestor <span class="text-danger">*</span></label>
+                <label class="form-label" for="id_usuario_gestor">Trabajador <span class="text-danger">*</span></label>
                 <select class="form-select" name="id_usuario_gestor" id="id_usuario_gestor" required>
                     <option value="">Seleccione</option>
                     <?php foreach ($trabajadores as $t): ?>
-                        <option value="<?= (int)$t['id'] ?>">
-                            <?= htmlspecialchars(($t['nombre_trabajador'] ?? '') . ' ' . ($t['apellido_trabajador'] ?? '')) ?>
-                        </option>
+                        <option value="<?= (int)$t['id'] ?>"><?= htmlspecialchars($t['nombre_usuario'] ?? ($t['nombre_trabajador'] ?? '') . ' ' . ($t['apellido_trabajador'] ?? '')) ?></option>
                     <?php endforeach; ?>
                 </select>
             </div>

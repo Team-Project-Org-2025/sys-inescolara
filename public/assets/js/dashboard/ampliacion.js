@@ -5,6 +5,7 @@ import * as C from '../utils/components.js';
 
 $(document).ready(function () {
   const baseUrl = `${window.BASE_URL || '/'}ampliacion`;
+
   let ampliacionTable = null;
   let editandoId = null;
   let lotesCache = [];
@@ -21,25 +22,24 @@ $(document).ready(function () {
     Ajax.get(`${baseUrl}?action=get_lotes`).then((res) => {
       if (res.success) lotesCache = res.lotes;
     }).catch(() => {
-      console.error('Error al cargar lotes');
       Helpers.toast('error', 'Error al cargar los lotes disponibles.');
     });
+
     Ajax.get(`${baseUrl}?action=get_plantas`).then((res) => {
       if (res.success) plantasCache = res.plantas;
     }).catch(() => {
-      console.error('Error al cargar plantas');
       Helpers.toast('error', 'Error al cargar las plantas.');
     });
+
     Ajax.get(`${baseUrl}?action=get_ubicaciones`).then((res) => {
       if (res.success) ubicacionesCache = res.ubicaciones;
     }).catch(() => {
-      console.error('Error al cargar ubicaciones');
       Helpers.toast('error', 'Error al cargar las ubicaciones.');
     });
+
     Ajax.get(`${baseUrl}?action=get_especies`).then((res) => {
       if (res.success) especiesCache = res.especies;
     }).catch(() => {
-      console.error('Error al cargar especies');
       Helpers.toast('error', 'Error al cargar las especies.');
     });
   };
@@ -59,6 +59,7 @@ $(document).ready(function () {
       columns: [
         { data: 'fecha_movimiento' },
         { data: 'cliente_nombre' },
+        { data: 'gestor_nombre' },
         {
           data: 'total_salida',
           render: (data) => {
@@ -395,7 +396,7 @@ $(document).ready(function () {
       <div class="mb-3">
         <p><strong>Cliente:</strong> ${Helpers.escapeHtml(item.cliente_nombre)}${item.tipo_cedula_cliente ? ` — ${item.tipo_cedula_cliente}-${item.cedula_cliente}` : ''}</p>
         <p><strong>Fecha:</strong> ${Helpers.escapeHtml(item.fecha_movimiento)}</p>
-        <p><strong>Gestor:</strong> ${Helpers.escapeHtml(item.gestor_nombre)}</p>
+        <p><strong>Trabajador:</strong> ${Helpers.escapeHtml(item.gestor_nombre)}</p>
         <p><strong>Observación:</strong> ${Helpers.escapeHtml(item.observacion || '—')}</p>
       </div>
       <hr>
@@ -431,12 +432,6 @@ $(document).ready(function () {
 
     $('#detalleModalBody').html(html);
   }
-
-  $(document).on('hide.bs.modal', '#ampliacionModal, #detalleModal', function () {
-    if (document.activeElement && document.activeElement !== document.body) {
-      document.activeElement.blur();
-    }
-  });
 
   $('#ampliacionModal, #detalleModal').on('hidden.bs.modal', function () {
     const $form = $(this).find('form');
