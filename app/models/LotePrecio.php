@@ -39,17 +39,13 @@ class LotePrecio extends Database implements ReadableInterface
                     l.cantidad_actual,
                     p.nombre_comun AS planta_nombre,
                     p.nombre_tecnico,
-                    COALESCE(SUM(ri.costo_unitario * ri.cantidad), 0) AS total_insumos,
                     ROUND(
                         l.costo_unitario +
-                        COALESCE(SUM(ri.costo_unitario * ri.cantidad), 0) +
                         (l.costo_unitario * l.porcentaje_ganancia / 100),
                     2) AS precio_final
                 FROM lote l
                 LEFT JOIN plantas p ON l.id_planta = p.id_planta
-                LEFT JOIN registro_insumo ri ON l.id_lote = ri.id_lote
                 WHERE l.id_lote = :id_lote AND l.activo = 1
-                GROUP BY l.id_lote, l.costo_unitario, l.porcentaje_ganancia, l.cantidad_actual, p.nombre_comun, p.nombre_tecnico
             ");
             $stmt->execute([':id_lote' => $idLote]);
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -106,25 +102,19 @@ class LotePrecio extends Database implements ReadableInterface
                         e.nombre AS estado_nombre,
                         p.nombre_comun AS planta_nombre,
                         sp.nombre_especie AS especie_nombre,
-                        COALESCE(SUM(ri.costo_unitario * ri.cantidad), 0) AS total_insumos,
                         ROUND(
                             l.costo_unitario +
-                            COALESCE(SUM(ri.costo_unitario * ri.cantidad), 0) +
                             (l.costo_unitario * l.porcentaje_ganancia / 100),
                         2) AS precio_final,
                         ROUND(
                             (l.costo_unitario +
-                            COALESCE(SUM(ri.costo_unitario * ri.cantidad), 0) +
                             (l.costo_unitario * l.porcentaje_ganancia / 100)) * l.cantidad_actual,
                         2) AS valor_total_inventario
                     FROM lote l
                     LEFT JOIN plantas p ON l.id_planta = p.id_planta
                     LEFT JOIN especie sp ON p.id_especie = sp.id_especie
                     LEFT JOIN estado e ON l.id_estado = e.id_estado
-                    LEFT JOIN registro_insumo ri ON l.id_lote = ri.id_lote
                     WHERE l.activo = 1
-                    GROUP BY l.id_lote, l.costo_unitario, l.porcentaje_ganancia, l.cantidad_actual,
-                             e.nombre, p.nombre_comun, sp.nombre_especie
                     ORDER BY p.nombre_comun ASC, l.fecha_siembra DESC";
             $stmt = $instance->db()->query($sql);
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];

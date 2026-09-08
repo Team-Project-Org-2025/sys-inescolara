@@ -51,8 +51,6 @@ function complete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('tareas:e
 function cancel_ajax(): void { checkModuleAuth(); checkPermisoOrFail('tareas:eliminar'); tasks_cancelAssignmentAjax(); }
 function edit_ajax(): void { checkModuleAuth(); checkPermisoOrFail('tareas:editar'); tasks_editAjax(); }
 
-// -- Asignación de tareas --
-
 function tasks_assignAjax(): void
 {
     $data = getRequestData();
@@ -79,40 +77,11 @@ function tasks_assignAjax(): void
         jsonResponse(['success' => false, 'message' => 'Se requiere un trabajador.'], 400);
     }
 
-    $rawConsumos = $data['consumptions'] ?? [];
-    $consumptions = [];
-    $suppliesModel = new Insumo();
-    foreach ($rawConsumos as $c) {
-        $idInsumo = (int)($c['id_insumo'] ?? 0);
-        $cantidad = (float)($c['cantidad_usada'] ?? 0);
-        if ($idInsumo <= 0 || $cantidad <= 0) {
-            continue;
-        }
-        $insumo = $suppliesModel->getById($idInsumo);
-        if (!$insumo) {
-            jsonResponse(['success' => false, 'message' => "El insumo ID $idInsumo no existe."], 400);
-        }
-        $stockDisponible = (float)($insumo['stock_actual'] ?? 0);
-        if ($cantidad > $stockDisponible) {
-            jsonResponse([
-                'success' => false,
-                'message' => "Stock insuficiente para {$insumo['nombre_insumo']}. Disponible: $stockDisponible, solicitado: $cantidad.",
-            ], 400);
-        }
-        $consumptions[] = [
-            'id_insumo'      => $idInsumo,
-            'cantidad_usada' => $cantidad,
-            'costo_unitario' => (float)($insumo['costo_unitario_actual'] ?? 0),
-            'stock_actual'   => (float)($insumo['stock_actual'] ?? 0),
-            'fecha_consumo'  => $c['fecha_consumo'] ?? date('Y-m-d'),
-        ];
-    }
-
     $rawTools = $data['tools'] ?? [];
     $tools = [];
     foreach ($rawTools as $t) {
         $idHerramienta = (int)($t['id_herramienta'] ?? 0);
-        $cantidad = (int)($t['cantidad'] ?? 0);
+        $cantidad = (float)($t['cantidad'] ?? 0);
         if ($idHerramienta <= 0 || $cantidad <= 0) continue;
         $tools[] = [
             'id_herramienta' => $idHerramienta,
@@ -123,9 +92,8 @@ function tasks_assignAjax(): void
     }
 
     $model = new Tarea();
-    $asignacionId = $model->assignTaskWithConsumptions($assignmentData, $consumptions, $tools);
+    $asignacionId = $model->assignTask($assignmentData, $tools);
 
-    // Notificar al trabajador asignado
     try {
         $notifModel = new \SysInescolara\models\Notification();
         $notifModel->create(
@@ -141,14 +109,12 @@ function tasks_assignAjax(): void
 
     $toolModel = new Herramienta();
     $freshHerramientas = $toolModel->getAllWithAvailability();
-    $freshInsumos = $suppliesModel->getAll();
 
     jsonResponse([
         'success' => true,
         'message' => 'Tarea asignada correctamente',
         'id_asignacion' => $asignacionId,
         'herramientas' => $freshHerramientas,
-        'insumos' => $freshInsumos,
     ]);
 }
 
@@ -182,81 +148,38 @@ function tasks_editAjax(): void
         jsonResponse(['success' => false, 'message' => 'Se requiere un trabajador.'], 400);
     }
 
-    $rawConsumos = $data['consumptions'] ?? [];
-    $consumptions = [];
-    $suppliesModel = new Insumo();
-    foreach ($rawConsumos as $c) {
-        $idInsumo = (int)($c['id_insumo'] ?? 0);
-        $cantidad = (float)($c['cantidad_usada'] ?? 0);
-        if ($idInsumo <= 0 || $cantidad <= 0) {
-            continue;
-        }
-        $insumo = $suppliesModel->getById($idInsumo);
-        if (!$insumo) {
-            jsonResponse(['success' => false, 'message' => "El insumo ID $idInsumo no existe."], 400);
-        }
-        $consumptions[] = [
-            'id_insumo'      => $idInsumo,
-            'cantidad_usada' => $cantidad,
-            'costo_unitario' => (float)($insumo['costo_unitario_actual'] ?? 0),
-            'fecha_consumo'  => $c['fecha_consumo'] ?? date('Y-m-d'),
-        ];
-    }
-
     $rawTools = $data['tools'] ?? [];
     $tools = [];
     $toolModel = new Herramienta();
 
-    // Sumar cantidades por herramienta
-    $toolCounts = [];
     foreach ($rawTools as $t) {
         $idHerramienta = (int)($t['id_herramienta'] ?? 0);
-        $cantidad = (int)($t['cantidad'] ?? 0);
+        $cantidad = (float)($t['cantidad'] ?? 0);
         if ($idHerramienta <= 0 || $cantidad <= 0) continue;
-        $toolCounts[$idHerramienta] = ($toolCounts[$idHerramienta] ?? 0) + $cantidad;
-    }
 
-    // Validar disponibilidad por cantidad (excluyendo la asignación actual)
-    $model = new Tarea();
-    foreach ($toolCounts as $idHerramienta => $solicitadas) {
         $herramienta = $toolModel->getById($idHerramienta);
         if (!$herramienta) {
             jsonResponse(['success' => false, 'message' => "Herramienta ID $idHerramienta no encontrada."], 400);
         }
-        $usosActivos = $model->countActiveToolUsages($idHerramienta, $idAsignacion);
-        $disponibles = (int)($herramienta['cantidad'] ?? 0);
-        if ($usosActivos + $solicitadas > $disponibles) {
-            jsonResponse([
-                'success' => false,
-                'message' => "No hay suficientes {$herramienta['nombre_herramienta']} disponibles. En uso: $usosActivos, solicitadas: $solicitadas, disponibles: $disponibles.",
-            ], 400);
-        }
-    }
 
-    foreach ($rawTools as $t) {
-        $idHerramienta = (int)($t['id_herramienta'] ?? 0);
-        $cantidad = (int)($t['cantidad'] ?? 0);
-        if ($idHerramienta <= 0 || $cantidad <= 0) continue;
         $tools[] = [
-            'id_herramienta'  => $idHerramienta,
-            'nombre_herramienta' => '',
-            'cantidad'        => $cantidad,
-            'fecha_uso'       => $t['fecha_uso'] ?? date('Y-m-d'),
-            'observacion'     => $t['observacion'] ?? '',
+            'id_herramienta' => $idHerramienta,
+            'cantidad'       => $cantidad,
+            'fecha_uso'      => $t['fecha_uso'] ?? date('Y-m-d'),
+            'observacion'    => $t['observacion'] ?? '',
         ];
     }
 
-    $model->updateAssignmentWithConsumptions($idAsignacion, $assignmentData, $consumptions, $tools);
+    $model = new Tarea();
+    $model->updateAssignment($idAsignacion, $assignmentData, $tools);
 
     $freshHerramientas = $toolModel->getAllWithAvailability();
-    $freshInsumos = $suppliesModel->getAll();
 
     jsonResponse([
         'success' => true,
         'message' => 'Tarea actualizada correctamente',
         'id_asignacion' => $idAsignacion,
         'herramientas' => $freshHerramientas,
-        'insumos' => $freshInsumos,
     ]);
 }
 
@@ -275,12 +198,29 @@ function tasks_completeAssignmentAjax(): void
     $assignment = $model->getAssignmentById($id);
     if (!$assignment) jsonResponse(['success' => false, 'message' => 'Asignación no encontrada'], 404);
 
-    $model->completeAssignment($id, $fechaCumplimiento, $horasDedicadas);
+    $rawConsumos = $data['consumptions'] ?? [];
+    $consumptions = [];
+    $suppliesModel = new Insumo();
+    foreach ($rawConsumos as $c) {
+        $idInsumo = (int)($c['id_insumo'] ?? 0);
+        $cantidad = (float)($c['cantidad'] ?? 0);
+        if ($idInsumo <= 0 || $cantidad <= 0) continue;
+
+        $insumo = $suppliesModel->getById($idInsumo);
+        if (!$insumo) {
+            jsonResponse(['success' => false, 'message' => "El insumo ID $idInsumo no existe."], 400);
+        }
+
+        $consumptions[] = [
+            'id_insumo'  => $idInsumo,
+            'cantidad'   => $cantidad,
+            'id_lote'    => !empty($c['id_lote']) ? (int)$c['id_lote'] : null,
+        ];
+    }
 
     $toolEstados = $data['tool_estados'] ?? [];
-    if (!empty($toolEstados)) {
-        $model->updateToolEstados($id, $toolEstados);
-    }
+
+    $model->completeAssignment($id, $fechaCumplimiento, $horasDedicadas, $consumptions, $toolEstados);
 
     try {
         $notifModel = new \SysInescolara\models\Notification();
@@ -303,7 +243,6 @@ function tasks_cancelAssignmentAjax(): void
 
     $model->cancelAssignment($id);
 
-    // Marcar notificación como leída
     try {
         $notifModel = new \SysInescolara\models\Notification();
         $notifModel->markTaskAssignedAsRead((int)$assignment['id_usuario'], $assignment['nombre_tarea']);
@@ -311,7 +250,7 @@ function tasks_cancelAssignmentAjax(): void
         error_log('Error al marcar notificación como leída: ' . $e->getMessage());
     }
 
-    jsonResponse(['success' => true, 'message' => 'Tarea cancelada correctamente']);
+    jsonResponse(['success' => true, 'message' => 'Asignación cancelada correctamente']);
 }
 
 function tasks_getAssignmentsAjax(): void

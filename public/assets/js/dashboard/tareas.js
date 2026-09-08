@@ -93,89 +93,6 @@ function initAssignmentsTable() {
 }
 
 // ============================================================
-//  CONSUMPTIONS ROW — Add / Remove
-// ============================================================
-function addConsumptionRow() {
-    const $tbody = $('#consumptionsBody');
-    const idx = $tbody.children().length;
-    const insumos = DATA.insumos || [];
-    const hoy = DATA.hoy || new Date().toISOString().split('T')[0];
-    let opts = '<option value="">Seleccione...</option>';
-    insumos.forEach((i) => {
-        const stock = parseFloat(i.stock_actual || 0);
-        opts += `<option value="${i.id}" data-stock="${stock}" data-simbolo="${Helpers.escapeHtml(i.simbolo || '')}">
-            ${Helpers.escapeHtml(i.nombre_insumo)} (Stock: ${stock} ${Helpers.escapeHtml(i.simbolo || '')})
-        </option>`;
-    });
-    const row = `
-        <tr>
-            <td>
-                <select class="form-select form-select-sm" name="consumptions[${idx}][id_insumo]" required>${opts}</select>
-            </td>
-            <td class="text-center align-middle stock-display">—</td>
-            <td>
-                <input type="number" step="0.01" min="0.01" class="form-control form-control-sm cantidad-input" name="consumptions[${idx}][cantidad_usada]" required placeholder="0.00">
-                <small class="stock-hint text-muted"></small>
-            </td>
-
-            <td class="text-center">
-                <button type="button" class="btn btn-sm btn-outline-danger btn-remove-row"><i class="fas fa-trash"></i></button>
-            </td>
-        </tr>`;
-    $tbody.append(row);
-    updateStockHint($tbody.find('tr:last').find('.cantidad-input'));
-}
-
-function updateStockHint($input) {
-    const $tr = $input.closest('tr');
-    const $select = $tr.find('select');
-    const $option = $select.find('option:selected');
-    const stock = parseFloat($option.data('stock') || 0);
-    const cantidad = parseFloat($input.val()) || 0;
-    const $hint = $tr.find('.stock-hint');
-    if (cantidad > stock) {
-        $hint.html('<span class="text-danger fw-semibold"><i class="fas fa-exclamation-triangle"></i> Stock disponible: ' + stock.toFixed(2) + '</span>');
-        $input.addClass('is-invalid');
-    } else {
-        $hint.html(cantidad > 0 ? 'Stock: ' + stock.toFixed(2) : '');
-        $input.removeClass('is-invalid');
-    }
-}
-
-$(document).on('change', '#consumptionsBody select[name$="[id_insumo]"]', function () {
-    const $option = $(this).find('option:selected');
-    const stock = parseFloat($option.data('stock') || 0);
-    const simbolo = $option.data('simbolo') || '';
-    const $tr = $(this).closest('tr');
-    $tr.find('.stock-display').text(stock.toFixed(2) + ' ' + simbolo);
-    updateStockHint($tr.find('.cantidad-input'));
-});
-
-$(document).on('input', '#consumptionsBody .cantidad-input', function () {
-    updateStockHint($(this));
-});
-
-$(document).on('click', '.btn-remove-row', function () {
-    $(this).closest('tr').remove();
-});
-
-// ============================================================
-//  ASSIGN MODAL EVENTS
-// ============================================================
-$('#btnAssignTask').on('click', function () {
-    $('#assignTaskForm')[0].reset();
-    $('#assignTaskForm input[name="id_asignacion"]').val('');
-    $('#consumptionsBody').empty();
-    $('#toolsBody').empty();
-    $('#assignTaskForm input[name="fecha_asignacion"]').val(DATA.hoy || new Date().toISOString().split('T')[0]);
-    $('#assignTaskModal .modal-title').text('Asignar Tarea');
-    $('#assignTaskModal .btn-primary').text('Guardar Asignación');
-    $('#assignTaskModal').modal({ focus: false }).modal('show');
-});
-
-$('#btnAddConsumptionRow').on('click', addConsumptionRow);
-
-// ============================================================
 //  TOOLS — Add / Remove rows + quantity + availability
 // ============================================================
 function recalculateToolAvailability() {
@@ -277,6 +194,19 @@ $(document).on('click', '.btn-remove-tool-row', function () {
 
 $('#btnAddToolRow').on('click', addToolRow);
 
+// ============================================================
+//  ASSIGN MODAL EVENTS
+// ============================================================
+$('#btnAssignTask').on('click', function () {
+    $('#assignTaskForm')[0].reset();
+    $('#assignTaskForm input[name="id_asignacion"]').val('');
+    $('#toolsBody').empty();
+    $('#assignTaskForm input[name="fecha_asignacion"]').val(DATA.hoy || new Date().toISOString().split('T')[0]);
+    $('#assignTaskModal .modal-title').text('Asignar Tarea');
+    $('#assignTaskModal .btn-primary').text('Guardar Asignación');
+    $('#assignTaskModal').modal({ focus: false }).modal('show');
+});
+
 $('#assignTaskForm').on('submit', function (e) {
     e.preventDefault();
 
@@ -288,7 +218,6 @@ $('#assignTaskForm').on('submit', function (e) {
         descripcion: $form.find('[name="descripcion"]').val().trim(),
         id_usuario: parseInt($form.find('[name="id_usuario"]').val()) || 0,
         fecha_asignacion: $form.find('[name="fecha_asignacion"]').val() || DATA.hoy,
-        consumptions: [],
         tools: [],
     };
 
@@ -298,32 +227,6 @@ $('#assignTaskForm').on('submit', function (e) {
     }
     if (!data.id_usuario) {
         Helpers.toast('error', 'Debe seleccionar un trabajador.');
-        return;
-    }
-
-    let hasConsumptionError = false;
-    $('#consumptionsBody tr').each(function () {
-        const $row = $(this);
-        const idInsumo = parseInt($row.find('select').val()) || 0;
-        const cantidad = parseFloat($row.find('input[name$="[cantidad_usada]"]').val()) || 0;
-
-        if (idInsumo) {
-            if (cantidad <= 0) {
-                hasConsumptionError = true;
-                $row.find('.cantidad-input').addClass('is-invalid');
-                return;
-            }
-            const stockDisp = parseFloat($row.find('select option:selected').data('stock') || 0);
-            if (cantidad > stockDisp) {
-                hasConsumptionError = true;
-                $row.find('.cantidad-input').addClass('is-invalid');
-            }
-            data.consumptions.push({ id_insumo: idInsumo, cantidad_usada: cantidad });
-        }
-    });
-
-    if (hasConsumptionError) {
-        Helpers.toast('error', 'Verifique las cantidades de insumos: deben ser mayores a 0 y no superar el stock disponible.');
         return;
     }
 
@@ -367,7 +270,6 @@ $('#assignTaskForm').on('submit', function (e) {
         .then((r) => {
             if (r.success) {
                 if (r.herramientas) DATA.herramientas = r.herramientas;
-                if (r.insumos) DATA.insumos = r.insumos;
                 const msg = isEdit ? 'Tarea actualizada correctamente' : 'Tarea asignada correctamente';
                 const el = document.getElementById('assignTaskModal');
                 const inst = bootstrap.Modal.getInstance(el) || new bootstrap.Modal(el);
@@ -383,9 +285,75 @@ $('#assignTaskForm').on('submit', function (e) {
 
 $('#assignTaskModal').on('hidden.bs.modal', function () {
     Helpers.resetForm($(this).find('form'));
-    $('#consumptionsBody').empty();
     $('#toolsBody').empty();
 });
+
+// ============================================================
+//  COMPLETE — INSUMOS CONSUMIDOS
+// ============================================================
+function addCompleteConsumptionRow() {
+    const $tbody = $('#completeConsumptionsBody');
+    const idx = $tbody.children().length;
+    const insumos = DATA.insumos || [];
+    let opts = '<option value="">Seleccione...</option>';
+    insumos.forEach((i) => {
+        const stock = parseFloat(i.stock_actual || 0);
+        opts += `<option value="${i.id}" data-stock="${stock}" data-simbolo="${Helpers.escapeHtml(i.simbolo || '')}">
+            ${Helpers.escapeHtml(i.nombre_insumo)} (Stock: ${stock} ${Helpers.escapeHtml(i.simbolo || '')})
+        </option>`;
+    });
+    const row = `
+        <tr>
+            <td>
+                <select class="form-select form-select-sm" name="complete_consumptions[${idx}][id_insumo]" required>${opts}</select>
+            </td>
+            <td class="text-center align-middle stock-display">—</td>
+            <td>
+                <input type="number" step="0.01" min="0.01" class="form-control form-control-sm cantidad-input" name="complete_consumptions[${idx}][cantidad]" required placeholder="0.00">
+                <small class="stock-hint text-muted"></small>
+            </td>
+            <td class="text-center">
+                <button type="button" class="btn btn-sm btn-outline-danger btn-remove-complete-row"><i class="fas fa-trash"></i></button>
+            </td>
+        </tr>`;
+    $tbody.append(row);
+    updateCompleteStockHint($tbody.find('tr:last').find('.cantidad-input'));
+}
+
+function updateCompleteStockHint($input) {
+    const $tr = $input.closest('tr');
+    const $select = $tr.find('select');
+    const $option = $select.find('option:selected');
+    const stock = parseFloat($option.data('stock') || 0);
+    const cantidad = parseFloat($input.val()) || 0;
+    const $hint = $tr.find('.stock-hint');
+    if (cantidad > stock) {
+        $hint.html('<span class="text-danger fw-semibold"><i class="fas fa-exclamation-triangle"></i> Stock disponible: ' + stock.toFixed(2) + '</span>');
+        $input.addClass('is-invalid');
+    } else {
+        $hint.html(cantidad > 0 ? 'Stock: ' + stock.toFixed(2) : '');
+        $input.removeClass('is-invalid');
+    }
+}
+
+$(document).on('change', '#completeConsumptionsBody select[name$="[id_insumo]"]', function () {
+    const $option = $(this).find('option:selected');
+    const stock = parseFloat($option.data('stock') || 0);
+    const simbolo = $option.data('simbolo') || '';
+    const $tr = $(this).closest('tr');
+    $tr.find('.stock-display').text(stock.toFixed(2) + ' ' + simbolo);
+    updateCompleteStockHint($tr.find('.cantidad-input'));
+});
+
+$(document).on('input', '#completeConsumptionsBody .cantidad-input', function () {
+    updateCompleteStockHint($(this));
+});
+
+$(document).on('click', '.btn-remove-complete-row', function () {
+    $(this).closest('tr').remove();
+});
+
+$('#btnAddCompleteConsumptionRow').on('click', addCompleteConsumptionRow);
 
 // ============================================================
 //  COMPLETE ASSIGNMENT
@@ -395,6 +363,7 @@ $(document).on('click', '.btn-complete-assign', function () {
     const id = row.id_asignacion;
     $('#completeAssignId').val(id);
     $('#completeAssignForm input[name="fecha_cumplimiento"]').val(DATA.hoy || new Date().toISOString().split('T')[0]);
+    $('#completeConsumptionsBody').empty();
 
     $('#completeToolsContainer').html('<div class="text-muted small py-2"><div class="spinner-border spinner-border-sm" role="status"></div> Cargando herramientas...</div>');
     $('#completeAssignModal').modal({ focus: false }).modal('show');
@@ -409,23 +378,23 @@ $(document).on('click', '.btn-complete-assign', function () {
             const tools = r.tool_usages || [];
             if (tools.length === 0) {
                 $('#completeToolsContainer').html('<p class="text-muted small">No se registraron herramientas en esta asignación.</p>');
-                return;
+            } else {
+                const estados = ['disponible', 'requiere_mantenimiento', 'dañado'];
+                const estadosOpts = estados.map(e =>
+                    `<option value="${e}">${e.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase())}</option>`
+                ).join('');
+                let html = '<table class="table table-sm table-bordered mb-0"><thead><tr><th>Herramienta</th><th>Estado Post-Uso</th></tr></thead><tbody>';
+                tools.forEach((t) => {
+                    html += `<tr>
+                        <td>${Helpers.escapeHtml(t.nombre_herramienta || '—')}</td>
+                        <td>
+                            <select class="form-select form-select-sm tool-estado" data-id-uso="${t.id_uso}">${estadosOpts}</select>
+                        </td>
+                    </tr>`;
+                });
+                html += '</tbody></table>';
+                $('#completeToolsContainer').html(html);
             }
-            const estados = ['disponible', 'requiere_mantenimiento', 'dañado'];
-            const estadosOpts = estados.map(e =>
-                `<option value="${e}">${e.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase())}</option>`
-            ).join('');
-            let html = '<table class="table table-sm table-bordered mb-0"><thead><tr><th>Herramienta</th><th>Estado Post-Uso</th></tr></thead><tbody>';
-            tools.forEach((t) => {
-                html += `<tr>
-                    <td>${Helpers.escapeHtml(t.nombre_herramienta || '—')}</td>
-                    <td>
-                        <select class="form-select form-select-sm tool-estado" data-id-uso="${t.id_uso}">${estadosOpts}</select>
-                    </td>
-                </tr>`;
-            });
-            html += '</tbody></table>';
-            $('#completeToolsContainer').html(html);
         })
         .fail(() => {
             $('#completeToolsContainer').html('<p class="text-danger small">Error al cargar herramientas.</p>');
@@ -434,19 +403,17 @@ $(document).on('click', '.btn-complete-assign', function () {
 
 $('#completeAssignForm').on('submit', function (e) {
     e.preventDefault();
-    console.log('[TAREAS] submit disparado');
     const $form = $(this);
-    if (!validateForm($form, completeRules)) {
-        console.log('[TAREAS] validación falló');
-        return;
-    }
+    if (!validateForm($form, completeRules)) return;
+
     const data = {
         id: parseInt($form.find('[name="id"]').val()) || 0,
         fecha_cumplimiento: $form.find('[name="fecha_cumplimiento"]').val() || DATA.hoy,
         horas_dedicadas: $form.find('[name="horas_dedicadas"]').val() || '',
         tool_estados: [],
+        consumptions: [],
     };
-    if (!data.id) { console.log('[TAREAS] id inválido'); Helpers.toast('error', 'ID inválido'); return; }
+    if (!data.id) { Helpers.toast('error', 'ID inválido'); return; }
 
     $('#completeToolsContainer .tool-estado').each(function () {
         data.tool_estados.push({
@@ -454,45 +421,52 @@ $('#completeAssignForm').on('submit', function (e) {
             estado: $(this).val() || 'ok',
         });
     });
-    console.log('[TAREAS] datos a enviar:', JSON.stringify(data));
+
+    let hasConsumptionError = false;
+    $('#completeConsumptionsBody tr').each(function () {
+        const $row = $(this);
+        const idInsumo = parseInt($row.find('select').val()) || 0;
+        const cantidad = parseFloat($row.find('input[name$="[cantidad]"]').val()) || 0;
+
+        if (idInsumo) {
+            if (cantidad <= 0) {
+                hasConsumptionError = true;
+                $row.find('.cantidad-input').addClass('is-invalid');
+                return;
+            }
+            const stockDisp = parseFloat($row.find('select option:selected').data('stock') || 0);
+            if (cantidad > stockDisp) {
+                hasConsumptionError = true;
+                $row.find('.cantidad-input').addClass('is-invalid');
+            }
+            data.consumptions.push({ id_insumo: idInsumo, cantidad: cantidad });
+        }
+    });
+
+    if (hasConsumptionError) {
+        Helpers.toast('error', 'Verifique las cantidades de insumos: deben ser mayores a 0 y no superar el stock disponible.');
+        return;
+    }
 
     Ajax.post(`${baseUrl}?action=complete_ajax`, data)
         .then((r) => {
-            console.log('[TAREAS] respuesta del servidor:', JSON.stringify(r));
             if (r.success) {
-                console.log('[TAREAS] success=true, buscando modal...');
                 const el = document.getElementById('completeAssignModal');
-                console.log('[TAREAS] element:', el);
-                if (!el) {
-                    console.error('[TAREAS] NO se encontró #completeAssignModal en el DOM');
-                    return;
-                }
-                const inst = bootstrap.Modal.getInstance(el);
-                console.log('[TAREAS] bootstrap.Modal.getInstance:', inst);
-                if (inst) {
-                    console.log('[TAREAS] instancia encontrada, llamando hide()');
-                    inst.hide();
-                } else {
-                    console.log('[TAREAS] NO hay instancia Bootstrap, creando nueva...');
-                    const nuevo = new bootstrap.Modal(el);
-                    nuevo.hide();
-                }
+                const inst = bootstrap.Modal.getInstance(el) || new bootstrap.Modal(el);
+                inst.hide();
                 assignmentsTable.ajax.reload(null, false);
                 setTimeout(() => Helpers.toast('success', 'Tarea completada correctamente'), 200);
             } else {
-                console.log('[TAREAS] success=false:', r.message);
                 Helpers.toast('error', r.message);
             }
         })
-        .catch((err) => {
-            console.error('[TAREAS] error en AJAX:', err);
-            Helpers.toast('error', err);
-        });
+        .catch((err) => Helpers.toast('error', err));
 });
 
 $('#completeAssignModal').on('hidden.bs.modal', function () {
     Helpers.resetForm($(this).find('form'));
     $('#completeToolsContainer').empty();
+    $('#completeConsumptionsBody').empty();
 });
 
 // ============================================================
@@ -580,6 +554,7 @@ $(document).on('click', '.btn-view-assign', function () {
                                 <span class="fw-semibold">${a.horas_dedicadas ? parseFloat(a.horas_dedicadas).toFixed(2) + ' h' : '—'}</span>
                             </div>` : ''}
                         </div>
+                        ${a.descripcion ? `<div class="row mt-2"><div class="col-12"><small class="text-muted d-block">Descripción</small><span class="text-pre-wrap">${Helpers.escapeHtml(a.descripcion)}</span></div></div>` : ''}
                     </div>
                 </div>
 
@@ -595,14 +570,14 @@ $(document).on('click', '.btn-view-assign', function () {
                                 ${(() => {
                                     let total = 0;
                                     const rows = consumos.map(c => {
-                                        const sub = parseFloat(c.cantidad_usada || 0) * parseFloat(c.costo_unitario || 0);
+                                        const sub = parseFloat(c.cantidad || 0) * parseFloat(c.costo_unitario || 0);
                                         total += sub;
                                         return `<tr>
                                             <td>${Helpers.escapeHtml(c.nombre_insumo || '—')}</td>
-                                            <td>${parseFloat(c.cantidad_usada || 0).toFixed(2)} ${Helpers.escapeHtml(c.simbolo || '')}</td>
+                                            <td>${parseFloat(c.cantidad || 0).toFixed(2)} ${Helpers.escapeHtml(c.simbolo || '')}</td>
                                             <td>$${parseFloat(c.costo_unitario || 0).toFixed(2)}</td>
                                             <td><strong>$${sub.toFixed(2)}</strong></td>
-                                            <td>${Helpers.escapeHtml(c.fecha_consumo || '—')}</td>
+                                            <td>${Helpers.escapeHtml(c.fecha_registro || '—')}</td>
                                         </tr>`;
                                     }).join('');
                                     return rows + `<tr class="table-active fw-bold">
@@ -612,10 +587,7 @@ $(document).on('click', '.btn-view-assign', function () {
                                     </tr>`;
                                 })()}
                             </tbody>
-                        </table>
-                        <div class="d-flex justify-content-end mt-2">
-                            <strong>Gasto total en insumos: $${(() => { let t = 0; consumos.forEach(c => { t += parseFloat(c.cantidad_usada || 0) * parseFloat(c.costo_unitario || 0); }); return t.toFixed(2); })()}</strong>
-                        </div>`}
+                        </table>`}
                     </div>
                 </div>
 
@@ -626,19 +598,13 @@ $(document).on('click', '.btn-view-assign', function () {
                     <div class="card-body p-2">
                         ${tools.length === 0 ? '<p class="text-muted mb-0">No se registró uso de herramientas.</p>' : `
                         <table class="table table-sm table-bordered mb-0">
-                            <thead><tr><th>Herramienta</th><th>Cantidad</th></tr></thead>
+                            <thead><tr><th>Herramienta</th><th>Cantidad</th><th>Estado Post-Uso</th></tr></thead>
                             <tbody>
-                                ${(() => {
-                                    const groups = {};
-                                    tools.forEach(t => {
-                                        const name = t.nombre_herramienta || '—';
-                                        groups[name] = (groups[name] || 0) + 1;
-                                    });
-                                    return Object.entries(groups).map(([name, count]) => `<tr>
-                                        <td>${Helpers.escapeHtml(name)}</td>
-                                        <td>${count}</td>
-                                    </tr>`).join('');
-                                })()}
+                                ${tools.map(t => `<tr>
+                                    <td>${Helpers.escapeHtml(t.nombre_herramienta || '—')}</td>
+                                    <td>${parseFloat(t.cantidad_usada || 1).toFixed(0)}</td>
+                                    <td>${Helpers.escapeHtml((t.estado_herramienta_post_uso || '—').replace('_', ' '))}</td>
+                                </tr>`).join('')}
                             </tbody>
                         </table>`}
                     </div>
@@ -671,11 +637,9 @@ $(document).on('click', '.btn-edit-assign', function () {
                 return;
             }
             const a = r.assignment || {};
-            const consumos = r.consumptions || [];
             const tools = r.tool_usages || [];
 
             $('#assignTaskForm')[0].reset();
-            $('#consumptionsBody').empty();
             $('#toolsBody').empty();
 
             $('#assignTaskForm input[name="id_asignacion"]').val(a.id_asignacion);
@@ -684,24 +648,17 @@ $(document).on('click', '.btn-edit-assign', function () {
             $('#assignTaskForm select[name="id_usuario"]').val(a.id_usuario || '');
             $('#assignTaskForm input[name="fecha_asignacion"]').val(a.fecha_asignacion || DATA.hoy);
 
-            consumos.forEach(function (c) {
-                addConsumptionRow();
-                const $row = $('#consumptionsBody tr:last');
-                $row.find('select').val(c.id_insumo).trigger('change');
-                $row.find('.cantidad-input').val(c.cantidad_usada);
-            });
-
             const toolGroups = {};
             tools.forEach(function (t) {
-                const id = t.id_herramienta;
-                if (!toolGroups[id]) toolGroups[id] = 0;
-                toolGroups[id]++;
+                const hid = t.id_herramienta;
+                if (!toolGroups[hid]) toolGroups[hid] = 0;
+                toolGroups[hid] += parseFloat(t.cantidad_usada || 1);
             });
-            Object.keys(toolGroups).forEach(function (id) {
+            Object.keys(toolGroups).forEach(function (hid) {
                 addToolRow();
                 const $row = $('#toolsBody tr:last');
-                $row.find('select').val(parseInt(id)).trigger('change');
-                $row.find('.tool-cantidad-input').val(toolGroups[id]);
+                $row.find('select').val(parseInt(hid)).trigger('change');
+                $row.find('.tool-cantidad-input').val(toolGroups[hid]);
                 updateToolStockHint($row.find('.tool-cantidad-input'));
             });
 

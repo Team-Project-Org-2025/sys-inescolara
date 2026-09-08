@@ -259,12 +259,13 @@ CREATE TABLE IF NOT EXISTS `registro_insumo` (
   COMMENT='Registro unificado de insumos: directo en lote o vía tarea.';
 
 CREATE TABLE IF NOT EXISTS `uso_herramienta` (
-  `id_uso`                      INT(11)     NOT NULL AUTO_INCREMENT,
-  `id_asignacion`               INT(11)     NOT NULL,
-  `id_herramienta`              INT(11)     NOT NULL,
-  `fecha_uso`                   DATE        NOT NULL,
-  `observacion`                 TEXT        DEFAULT NULL,
-  `estado_herramienta_post_uso` VARCHAR(30) NOT NULL DEFAULT 'ok',
+  `id_uso`                      INT(11)       NOT NULL AUTO_INCREMENT,
+  `id_asignacion`               INT(11)       NOT NULL,
+  `id_herramienta`              INT(11)       NOT NULL,
+  `cantidad_usada`              DECIMAL(10,2) NOT NULL DEFAULT 1.00,
+  `fecha_uso`                   DATE          NOT NULL,
+  `observacion`                 TEXT          DEFAULT NULL,
+  `estado_herramienta_post_uso` VARCHAR(30)   NOT NULL DEFAULT 'ok',
   PRIMARY KEY (`id_uso`),
   KEY `id_asignacion` (`id_asignacion`),
   KEY `id_herramienta` (`id_herramienta`),

@@ -1430,14 +1430,10 @@ class Reports extends Database
         try {
             $sql = "SELECT l.id_lote, p.nombre_comun AS planta, l.id_planta, l.cantidad_actual,
                            l.costo_unitario, l.porcentaje_ganancia,
-                           COALESCE(SUM(ri.costo_unitario * ri.cantidad), 0) AS costo_total_insumos,
-                           ROUND(l.costo_unitario + COALESCE(SUM(ri.costo_unitario * ri.cantidad), 0) +
-                                 (l.costo_unitario * l.porcentaje_ganancia / 100), 2) AS precio_final
+                           ROUND(l.costo_unitario + (l.costo_unitario * l.porcentaje_ganancia / 100), 2) AS precio_final
                     FROM lote l
                     LEFT JOIN plantas p ON l.id_planta = p.id_planta
-                    LEFT JOIN registro_insumo ri ON l.id_lote = ri.id_lote
                     WHERE l.activo = 1
-                    GROUP BY l.id_lote, p.nombre_comun, l.costo_unitario, l.porcentaje_ganancia, l.cantidad_actual
                     ORDER BY p.nombre_comun ASC";
             $stmt = $this->db()->query($sql);
             $rows = $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];

@@ -575,19 +575,16 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
                             e.nombre_especie AS detalle,
                             l.costo_unitario,
                             l.porcentaje_ganancia,
-                            COALESCE(SUM(ri.costo_unitario * ri.cantidad), 0) AS total_insumos,
-                            ROUND(l.costo_unitario + COALESCE(SUM(ri.costo_unitario * ri.cantidad), 0) + (l.costo_unitario * l.porcentaje_ganancia / 100), 2) AS precio_unitario,
+                            ROUND(l.costo_unitario + (l.costo_unitario * l.porcentaje_ganancia / 100), 2) AS precio_unitario,
                             NULL AS unidad_simbolo
                         FROM lote l
                         JOIN plantas p ON l.id_planta = p.id_planta AND p.activo = 1
                         LEFT JOIN especie e ON p.id_especie = e.id_especie
-                        LEFT JOIN registro_insumo ri ON l.id_lote = ri.id_lote
                         WHERE l.activo = 1
                         AND l.cantidad_actual > 0";
             if ($hasFilter) {
                 $plantaSql .= " AND (p.nombre_comun LIKE ? OR e.nombre_especie LIKE ? OR p.nombre_tecnico LIKE ?)";
             }
-            $plantaSql .= " GROUP BY l.id_lote, l.costo_unitario, l.porcentaje_ganancia, l.cantidad_actual, p.nombre_comun, e.nombre_especie";
             $plantaSql .= " ORDER BY p.nombre_comun ASC";
             if ($hasFilter) {
                 $plantaSql .= " LIMIT 20";
