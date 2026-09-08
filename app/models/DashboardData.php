@@ -40,7 +40,7 @@ class DashboardData extends Database
         try { $stats['total_plantas'] = (int) $this->db()->query("SELECT COUNT(*) FROM plantas WHERE activo = 1")->fetchColumn(); } catch (\Throwable $e) { $stats['total_plantas'] = 0; }
         try { $stats['total_clientes'] = (int) $this->db()->query("SELECT COUNT(*) FROM cliente WHERE activo = 1")->fetchColumn(); } catch (\Throwable $e) { $stats['total_clientes'] = 0; }
         try { $stats['total_proveedores'] = (int) $this->db()->query("SELECT COUNT(*) FROM proveedores WHERE activo = 1")->fetchColumn(); } catch (\Throwable $e) { $stats['total_proveedores'] = 0; }
-        try { $stats['total_trabajadores'] = (int) $this->db()->query("SELECT COUNT(*) FROM `sysinescolara-seguridad`.usuarios WHERE estatus = 'Activo'")->fetchColumn(); } catch (\Throwable $e) { $stats['total_trabajadores'] = 0; }
+        try { $stats['total_trabajadores'] = (int) $this->db()->query("SELECT COUNT(*) FROM `SysInescolara-Seguridad`.usuarios WHERE estatus = 'Activo'")->fetchColumn(); } catch (\Throwable $e) { $stats['total_trabajadores'] = 0; }
         try { $stats['total_lotes'] = (int) $this->db()->query("SELECT COUNT(*) FROM lote WHERE activo = 1")->fetchColumn(); } catch (\Throwable $e) { $stats['total_lotes'] = 0; }
         try { $stats['total_insumos'] = (int) $this->db()->query("SELECT COUNT(*) FROM insumo WHERE activo = 1")->fetchColumn(); } catch (\Throwable $e) { $stats['total_insumos'] = 0; }
         try { $stats['total_herramientas'] = (int) $this->db()->query("SELECT COUNT(*) FROM herramienta WHERE activo = 1")->fetchColumn(); } catch (\Throwable $e) { $stats['total_herramientas'] = 0; }
@@ -135,7 +135,7 @@ class DashboardData extends Database
                        tr.nombre_usuario AS nombre_trabajador,
                        at.fecha_asignacion, at.fecha_cumplimiento, at.estatus_tarea
                 FROM asignar_tarea at
-                LEFT JOIN `sysinescolara-seguridad`.usuarios tr ON at.id_usuario = tr.id_usuario
+                LEFT JOIN `SysInescolara-Seguridad`.usuarios tr ON at.id_usuario = tr.id_usuario
                 WHERE at.estatus_tarea NOT IN ('completada','cancelada')
                 ORDER BY at.fecha_cumplimiento ASC
                 LIMIT 6

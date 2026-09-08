@@ -176,7 +176,7 @@ class Tarea extends Database
                        a.fecha_cumplimiento, a.estatus_tarea, a.horas_dedicadas,
                        u.nombre_trabajador, u.apellido_trabajador, u.nombre_usuario
                 FROM asignar_tarea a
-                LEFT JOIN `sysinescolara-seguridad`.usuarios u ON a.id_usuario = u.id_usuario
+                LEFT JOIN `SysInescolara-Seguridad`.usuarios u ON a.id_usuario = u.id_usuario
                 ORDER BY a.fecha_asignacion DESC";
         $stmt = $this->db()->query($sql);
         return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
@@ -188,7 +188,7 @@ class Tarea extends Database
                        a.fecha_cumplimiento, a.estatus_tarea, a.horas_dedicadas,
                        u.nombre_trabajador, u.apellido_trabajador, u.nombre_usuario
                 FROM asignar_tarea a
-                LEFT JOIN `sysinescolara-seguridad`.usuarios u ON a.id_usuario = u.id_usuario
+                LEFT JOIN `SysInescolara-Seguridad`.usuarios u ON a.id_usuario = u.id_usuario
                 WHERE a.id_asignacion = :id";
         $stmt = $this->db()->prepare($sql);
         $stmt->execute([':id' => $id]);
