@@ -23,6 +23,7 @@ function index(): void
                 'POST_delete_ajax'        => delete_ajax(),
                 'POST_completar_ajax'     => completar_ajax(),
                 'POST_registrar_insumo_ajax' => registrar_insumo_ajax(),
+                'POST_registrar_y_completar_ajax' => registrar_y_completar_ajax(),
                 default                   => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
             };
         } catch (\Exception $e) {
@@ -42,6 +43,7 @@ function edit_ajax(): void { checkModuleAuth(); checkPermisoOrFail('seed_collect
 function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('seed_collection:eliminar'); recoleccion_handleDelete(); }
 function completar_ajax(): void { checkModuleAuth(); checkPermisoOrFail('seed_collection:editar'); recoleccion_handleCompletar(); }
 function registrar_insumo_ajax(): void { checkModuleAuth(); checkPermisoOrFail('seed_collection:editar'); recoleccion_handleRegistrarInsumo(); }
+function registrar_y_completar_ajax(): void { checkModuleAuth(); checkPermisoOrFail('seed_collection:editar'); recoleccion_handleRegistrarYCompletar(); }
 
 function recoleccion_handleAddEdit(string $mode): void
 {
@@ -131,9 +133,32 @@ function recoleccion_handleRegistrarInsumo(): void
 
     $createdCount = $model->registerSeedsWithTransaction($id, $items);
 
-    if ($createdCount === 0) throw new \Exception('No se pudo registrar ningún insumo. Verifique los datos.');
-
     jsonResponse(['success' => true, 'message' => "$createdCount tipo(s) de semilla registrado(s) correctamente"]);
+}
+
+function recoleccion_handleRegistrarYCompletar(): void
+{
+    $data = getRequestData();
+    $id = (int)($data['id'] ?? 0);
+    if ($id <= 0) throw new \Exception('ID inválido');
+
+    $model = new SeedCollection();
+    $recoleccion = $model->getById($id);
+    if (!$recoleccion) throw new \Exception('No existe la recolección');
+
+    $itemsJson = trim((string)($data['items'] ?? ''));
+    if ($itemsJson === '') throw new \Exception('Debe agregar al menos un tipo de semilla.');
+
+    $items = json_decode($itemsJson, true);
+    if (!is_array($items) || empty($items)) throw new \Exception('Debe agregar al menos un tipo de semilla.');
+
+    $createdCount = $model->registerSeedsWithTransaction($id, $items);
+
+    if ($recoleccion['estatus'] === 'Pendiente') {
+        $model->complete($id, date('Y-m-d'));
+    }
+
+    jsonResponse(['success' => true, 'message' => "$createdCount tipo(s) de semilla registrado(s) y recolección completada"]);
 }
 
 function recoleccion_getDetailsAjax(): void

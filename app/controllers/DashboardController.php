@@ -596,6 +596,8 @@ function seedcollection(): void
     $plantas = $plantModel->getAll();
     $unidadMedidaModel = new \SysInescolara\models\UnidadMedida();
     $unidades = $unidadMedidaModel->getAll();
+    $insumoModel = new \SysInescolara\models\Insumo();
+    $insumos = $insumoModel->getAll();
 
     $view = ROOT_PATH . 'app/views/dashboard/seed-collection.php';
 

@@ -445,49 +445,59 @@ class SeedCollection extends Database implements ReadableInterface, DeletableInt
     {
         $suppliesModel = new Insumo();
         $createdCount = 0;
+        $errors = [];
 
         try {
             $this->db()->beginTransaction();
 
-            foreach ($items as $item) {
-                $nombreSemilla = trim((string)($item['nombre_semilla'] ?? ''));
-                if ($nombreSemilla === '') continue;
-                $idUnidadMedida = (int)($item['id_unidad_medida'] ?? 0);
-                if ($idUnidadMedida <= 0) continue;
+            foreach ($items as $idx => $item) {
+                $idInsumo = (int)($item['id_insumo'] ?? 0);
                 $cantidad = floatval($item['cantidad'] ?? 0);
-                if ($cantidad <= 0) continue;
-                $plantaOrigen = trim((string)($item['planta_origen'] ?? ''));
-                if ($plantaOrigen === '') $plantaOrigen = null;
+                if ($cantidad <= 0) { $errors[] = "Fila " . ($idx + 1) . ": cantidad inválida"; continue; }
 
-                $existing = $suppliesModel->findByNameAndCategory($nombreSemilla, 'Semillas');
-
-                if ($existing) {
-                    $supplyId = (int)$existing['id_insumo'];
-                    $ok = $suppliesModel->increaseStock($supplyId, $cantidad);
+                if ($idInsumo > 0) {
+                    $existing = $suppliesModel->getById($idInsumo);
+                    if (!$existing) { $errors[] = "Fila " . ($idx + 1) . ": insumo no encontrado"; continue; }
+                    $ok = $suppliesModel->increaseStock($idInsumo, $cantidad);
+                    if (!$ok) { $errors[] = "Fila " . ($idx + 1) . ": error al aumentar stock del insumo #" . $idInsumo; continue; }
+                    $nombreSemilla = $existing['nombre_insumo'];
+                    $idUnidadMedida = (int)$existing['id_unidad_medida'];
+                    $supplyId = $idInsumo;
                 } else {
-                    $nuevoInsumo = new Insumo([
-                        'nombre_insumo'          => $nombreSemilla,
-                        'id_unidad_medida'       => $idUnidadMedida,
-                        'categoria'              => 'Semillas',
-                        'stock_actual'           => $cantidad,
-                        'costo_unitario_actual'  => 0,
-                    ]);
-                    $ok = $nuevoInsumo->save();
-                    if (!$ok) continue;
-                    $supplyId = $nuevoInsumo->getId();
+                    $nombreSemilla = trim((string)($item['nombre_insumo'] ?? ''));
+                    if ($nombreSemilla === '') { $errors[] = "Fila " . ($idx + 1) . ": nombre de insumo vacío"; continue; }
+                    $idUnidadMedida = (int)($item['id_unidad_medida'] ?? 0);
+                    if ($idUnidadMedida <= 0) { $errors[] = "Fila " . ($idx + 1) . ": unidad de medida inválida"; continue; }
+
+                    $existing = $suppliesModel->findByNameAndCategory($nombreSemilla, 'Semillas');
+                    if ($existing) {
+                        $supplyId = (int)$existing['id_insumo'];
+                        $ok = $suppliesModel->increaseStock($supplyId, $cantidad);
+                        if (!$ok) { $errors[] = "Fila " . ($idx + 1) . ": error al aumentar stock de '$nombreSemilla'"; continue; }
+                    } else {
+                        $nuevoInsumo = new Insumo([
+                            'nombre_insumo'          => $nombreSemilla,
+                            'id_unidad_medida'       => $idUnidadMedida,
+                            'categoria'              => 'Semillas',
+                            'stock_actual'           => $cantidad,
+                            'costo_unitario_actual'  => 0,
+                        ]);
+                        $ok = $nuevoInsumo->save();
+                        if (!$ok) { $errors[] = "Fila " . ($idx + 1) . ": error al crear insumo '$nombreSemilla' (verifique unidad de medida y nombre)"; continue; }
+                        $supplyId = $nuevoInsumo->getId();
+                    }
                 }
 
-                if (!$ok) continue;
-
-                $ok = $this->addDetail($idRecoleccion, $plantaOrigen, $nombreSemilla, $idUnidadMedida, $cantidad, $supplyId);
-                if (!$ok) continue;
+                $ok = $this->addDetail($idRecoleccion, null, $nombreSemilla, $idUnidadMedida, $cantidad, $supplyId);
+                if (!$ok) { $errors[] = "Fila " . ($idx + 1) . ": error al registrar detalle de '$nombreSemilla'"; continue; }
 
                 $createdCount++;
             }
 
             if ($createdCount === 0) {
                 $this->db()->rollBack();
-                return 0;
+                $errorMsg = !empty($errors) ? implode('; ', $errors) : 'Datos inválidos';
+                throw new \Exception($errorMsg);
             }
 
             $this->db()->commit();

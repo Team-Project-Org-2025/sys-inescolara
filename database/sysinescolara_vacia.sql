@@ -70,6 +70,17 @@ CREATE TABLE IF NOT EXISTS `unidad_medida` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
   COMMENT='Unidades de medida para insumos.';
 
+INSERT INTO `unidad_medida` (`id_unidad_medida`, `nombre_unidad_medida`, `simbolo`, `activo`) VALUES
+  (1, 'Unidad',    'ud', 1),
+  (2, 'Kilogramo', 'kg', 1),
+  (3, 'Gramo',     'g',  1),
+  (4, 'Litro',     'L',  1),
+  (5, 'Mililitro', 'ml', 1),
+  (6, 'Metro',     'm',  1),
+  (7, 'Metro Cuadrado', 'm²', 1),
+  (8, 'Bulto',     'bulto', 1),
+  (9, 'Guacal',    'guacal', 1);
+
 CREATE TABLE IF NOT EXISTS `estado` (
   `id_estado` INT(11)     NOT NULL AUTO_INCREMENT,
   `nombre`    VARCHAR(30) NOT NULL,

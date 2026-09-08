@@ -124,20 +124,20 @@ include_once __DIR__ . '/../common/modal.php';
     <?php modal_form_end('completarForm'); ?>
 
     <!-- Modal Registrar Insumos (múltiples semillas) -->
-    <?php modal_form(['id' => 'insumoModal', 'title' => 'Registrar Semillas Recolectadas', 'formId' => 'insumoForm', 'size' => 'modal-lg', 'hasHiddenId' => true, 'hiddenId' => 'insumoRecoleccionId', 'saveText' => 'Registrar Semillas']); ?>
-        <p style="color: var(--text-secondary);">Agrega los tipos de semillas recolectadas. Cada tipo se registrará como un insumo.</p>
+    <?php modal_form(['id' => 'insumoModal', 'title' => 'Registrar y Completar Recolección', 'formId' => 'insumoForm', 'size' => 'modal-lg', 'hasHiddenId' => true, 'hiddenId' => 'insumoRecoleccionId', 'saveText' => 'Registrar y Completar']); ?>
+        <p style="color: var(--text-secondary);">Selecciona un insumo existente o crea uno nuevo. Indica la cantidad recolectada.</p>
         <div class="table-responsive">
             <table class="table table-bordered" id="insumosTable">
                 <thead class="table-light">
                     <tr>
-                        <th style="width:28%;">Planta de origen</th>
-                        <th style="width:28%;">Nombre de la Semilla</th>
-                        <th style="width:24%;">Cantidad</th>
+                        <th style="width:35%;">Insumo</th>
+                        <th style="width:25%; display:none;" class="th-nuevo-nombre">Nombre nuevo</th>
+                        <th style="width:15%; display:none;" class="th-nuevo-unidad">Unidad</th>
+                        <th style="width:20%;">Cantidad</th>
                         <th style="width:auto;"></th>
                     </tr>
                 </thead>
                 <tbody id="insumosTableBody">
-                    <!-- filas se agregan dinámicamente -->
                 </tbody>
             </table>
         </div>
@@ -146,38 +146,15 @@ include_once __DIR__ . '/../common/modal.php';
         </button>
     <?php modal_form_end('insumoForm'); ?>
 
-    <!-- Template oculto para fila de insumo -->
-    <template id="insumoRowTemplate">
-        <tr>
-            <td>
-                <select class="form-select form-select-sm insumo-planta">
-                    <option value="">Seleccione</option>
-                    <?php foreach ($plantas as $p): ?>
-                        <option value="<?= htmlspecialchars($p['nombre_comun'] ?? $p['nombre_tecnico'] ?? '') ?>">
-                            <?= htmlspecialchars($p['nombre_comun'] ?? $p['nombre_tecnico'] ?? '') ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            </td>
-            <td>
-                <input type="text" class="form-control form-control-sm insumo-nombre" placeholder="Ej: Semillas de Araguaney" required maxlength="50">
-            </td>
-            <td>
-                <input type="number" step="0.01" min="0.01" class="form-control form-control-sm insumo-cantidad" placeholder="0.00" required>
-            </td>
-            <td class="text-center">
-                <button type="button" class="btn btn-sm btn-outline-danger btn-remove-insumo-row" title="Quitar">
-                    <i class="fas fa-times"></i>
-                </button>
-            </td>
-        </tr>
-    </template>
-
     <!-- Modal Detalle de Recolección -->
     <?php modal_detail_start(['id' => 'detailModal', 'title' => 'Detalle de Recolección', 'size' => 'modal-lg', 'bodyId' => 'detailModalBody']); ?>
     <?php modal_detail_end(); ?>
 
     <script src="<?= BASE_URL ?>public/assets/js/dashboard/notifications.js"></script>
+    <script>
+        window.unidadesData = <?= json_encode(array_map(fn($u) => ['id' => (int)$u['id_unidad_medida'], 'nombre' => $u['nombre_unidad_medida'], 'simbolo' => $u['simbolo'] ?? ''], $unidades), JSON_HEX_TAG | JSON_HEX_APOS) ?>;
+        window.insumosData = <?= json_encode(array_map(fn($i) => ['id' => (int)$i['id_insumo'], 'nombre' => $i['nombre_insumo'], 'categoria' => $i['categoria'] ?? '', 'stock' => (float)$i['stock_actual'], 'unidad' => $i['nombre_unidad_medida'] ?? '', 'simbolo' => $i['simbolo'] ?? ''], $insumos), JSON_HEX_TAG | JSON_HEX_APOS) ?>;
+    </script>
     <?= $scripts_links ?>
     <script type="module" src="<?= BASE_URL ?>public/assets/js/dashboard/seed-collection.js?v=<?= time() ?>"></script>
 </body>

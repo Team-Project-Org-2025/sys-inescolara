@@ -47,7 +47,7 @@ $(document).ready(function () {
             if (data.estatus === 'Pendiente') {
               btns.push(
                 C.btnEdit('btn-edit'),
-                C.btnComplete('btn-completar'),
+                C.btnCustom({ label: 'Registrar y completar', icon: 'fa-check-circle', className: 'btn-registrar-insumo', btnClass: 'btn-outline-success' }),
                 C.btnDelete('btn-delete'),
               );
             }
@@ -192,15 +192,12 @@ $(document).ready(function () {
           </div>`;
         if (detalles.length > 0) {
           html += `<h6 class="mb-2">Semillas Registradas</h6><div class="table-responsive"><table class="table table-sm table-bordered">
-            <thead class="table-light"><tr><th>Planta Origen</th><th>Nombre Semilla</th><th>Cantidad</th><th>Unidad</th><th>Insumo</th></tr></thead>
+            <thead class="table-light"><tr><th>Insumo</th><th>Cantidad</th></tr></thead>
             <tbody>`;
           detalles.forEach((d) => {
             html += `<tr>
-              <td>${d.planta_origen ? Helpers.escapeHtml(d.planta_origen) : '<span class="text-muted">—</span>'}</td>
-              <td>${Helpers.escapeHtml(d.nombre_semilla)}</td>
-              <td>${d.cantidad}</td>
-              <td>${Helpers.escapeHtml(d.simbolo || d.nombre_unidad_medida || '')}</td>
-              <td>${d.insumo_nombre ? Helpers.escapeHtml(d.insumo_nombre) : '<span class="text-muted">—</span>'}</td>
+              <td>${d.insumo_nombre ? Helpers.escapeHtml(d.insumo_nombre) : Helpers.escapeHtml(d.nombre_semilla)}</td>
+              <td>${d.cantidad} ${d.simbolo || d.nombre_unidad_medida || ''}</td>
             </tr>`;
           });
           html += '</tbody></table></div>';
@@ -289,12 +286,42 @@ $(document).ready(function () {
       });
   });
 
-  const addInsumoRow = (planta, nombre, cantidad) => {
-    const $template = $($('#insumoRowTemplate').html());
-    if (planta) $template.find('.insumo-planta').val(planta);
-    if (nombre) $template.find('.insumo-nombre').val(nombre);
-    if (cantidad) $template.find('.insumo-cantidad').val(cantidad);
-    $('#insumosTableBody').append($template);
+  const addInsumoRow = () => {
+    const insumos = window.insumosData || [];
+    const unidades = window.unidadesData || [];
+
+    let insumoOpts = '<option value="">-- Seleccionar insumo --</option>';
+    insumos.forEach(i => {
+      insumoOpts += `<option value="${i.id}">${Helpers.escapeHtml(i.nombre)} (${Helpers.escapeHtml(i.simbolo || '')})</option>`;
+    });
+    insumoOpts += '<option value="__nuevo__">+ Crear nuevo insumo</option>';
+
+    let unidadOpts = '<option value="">Unidad</option>';
+    unidades.forEach(u => {
+      unidadOpts += `<option value="${u.id}">${Helpers.escapeHtml(u.nombre)} (${Helpers.escapeHtml(u.simbolo)})</option>`;
+    });
+
+    const html = `
+      <tr>
+        <td>
+          <select class="form-select form-select-sm insumo-id-insumo">${insumoOpts}</select>
+        </td>
+        <td class="td-nuevo-nombre" style="display:none;">
+          <input type="text" class="form-control form-control-sm insumo-nuevo-nombre" placeholder="Nombre del insumo" maxlength="150">
+        </td>
+        <td class="td-nuevo-unidad" style="display:none;">
+          <select class="form-select form-select-sm insumo-nuevo-unidad">${unidadOpts}</select>
+        </td>
+        <td>
+          <input type="number" step="0.01" min="0.01" class="form-control form-control-sm insumo-cantidad" placeholder="Cantidad" required>
+        </td>
+        <td class="text-center">
+          <button type="button" class="btn btn-sm btn-outline-danger btn-remove-insumo-row" title="Quitar">
+            <i class="fas fa-times"></i>
+          </button>
+        </td>
+      </tr>`;
+    $('#insumosTableBody').append(html);
   };
 
   $(document).on('click', '.btn-registrar-insumo', function () {
@@ -302,12 +329,12 @@ $(document).ready(function () {
     const id = row.id;
     $('#insumoRecoleccionId').val(id);
     $('#insumosTableBody').empty();
-    addInsumoRow('', '', '');
+    addInsumoRow();
     $('#insumoModal').modal({ focus: false }).modal('show');
   });
 
   $('#btnAddInsumoRow').on('click', function () {
-    addInsumoRow('', '', '');
+    addInsumoRow();
   });
 
   $(document).on('click', '.btn-remove-insumo-row', function () {
@@ -319,12 +346,23 @@ $(document).ready(function () {
     }
   });
 
-  $(document).on('change', '.insumo-planta', function () {
+  $(document).on('change', '.insumo-id-insumo', function () {
     const $row = $(this).closest('tr');
-    const planta = $(this).val();
-    const $nombreInput = $row.find('.insumo-nombre');
-    if (planta && !$nombreInput.val()) {
-      $nombreInput.val(`Semillas de ${planta}`);
+    const val = $(this).val();
+    if (val === '__nuevo__') {
+      $row.find('.td-nuevo-nombre, .td-nuevo-unidad').show();
+      $row.find('.insumo-nuevo-nombre').attr('required', true);
+      $row.find('.insumo-nuevo-unidad').attr('required', true);
+    } else {
+      $row.find('.td-nuevo-nombre, .td-nuevo-unidad').hide();
+      $row.find('.insumo-nuevo-nombre').removeAttr('required').val('');
+      $row.find('.insumo-nuevo-unidad').removeAttr('required').val('');
+    }
+    const hasNuevo = $('#insumosTableBody .insumo-id-insumo').filter(function () { return $(this).val() === '__nuevo__'; }).length > 0;
+    if (hasNuevo) {
+      $('.th-nuevo-nombre, .th-nuevo-unidad').show();
+    } else {
+      $('.th-nuevo-nombre, .th-nuevo-unidad').hide();
     }
   });
 
@@ -336,26 +374,53 @@ $(document).ready(function () {
 
     $('#insumosTableBody tr').each(function () {
       const $row = $(this);
-      const plantaOrigen = $row.find('.insumo-planta').val() || '';
-      const nombreSemilla = $row.find('.insumo-nombre').val().trim();
-      const cantidad = parseFloat($row.find('.insumo-cantidad').val());
+      const idInsumo = $row.find('.insumo-id-insumo').val();
+      const cantidadRaw = ($row.find('.insumo-cantidad').val() || '').trim();
+      const cantidad = parseFloat(cantidadRaw);
 
-      if (!nombreSemilla || !cantidad || cantidad <= 0) {
+      console.log('FILA:', { idInsumo, cantidadRaw, cantidad });
+
+      if (!idInsumo) {
         valid = false;
         $row.addClass('table-danger');
+        console.log('FALLA: sin insumo seleccionado');
         return;
       }
+
+      if (idInsumo === '__nuevo__') {
+        const nombre = ($row.find('.insumo-nuevo-nombre').val() || '').trim();
+        const idUnidad = parseInt($row.find('.insumo-nuevo-unidad').val()) || 1;
+        console.log('NUEVO:', { nombre, idUnidad, cantidad });
+        if (!nombre || isNaN(cantidad) || cantidad <= 0) {
+          valid = false;
+          $row.addClass('table-danger');
+          console.log('FALLA nuevo:', { nombre: !!nombre, idUnidad, cantidad });
+          return;
+        }
+        items.push({
+          id_insumo: 0,
+          nombre_insumo: nombre,
+          id_unidad_medida: idUnidad,
+          cantidad,
+        });
+      } else {
+        if (isNaN(cantidad) || cantidad <= 0) {
+          valid = false;
+          $row.addClass('table-danger');
+          console.log('FALLA existente:', { cantidad });
+          return;
+        }
+        items.push({
+          id_insumo: parseInt(idInsumo),
+          cantidad,
+        });
+      }
+
       $row.removeClass('table-danger');
-      items.push({
-        planta_origen: plantaOrigen,
-        nombre_semilla: nombreSemilla,
-        id_unidad_medida: 5,
-        cantidad: cantidad,
-      });
     });
 
     if (!valid) {
-      Helpers.toast('error', 'Complete todos los campos de las filas marcadas en rojo.');
+      Helpers.toast('error', 'Complete todos los campos correctamente.');
       return;
     }
 
@@ -364,12 +429,14 @@ $(document).ready(function () {
       return;
     }
 
+    console.log('ITEMS:', items);
+
     const formData = new FormData();
     formData.append('id', id);
     formData.append('items', JSON.stringify(items));
 
     $.ajax({
-      url: `${baseUrl}?action=registrar_insumo_ajax`,
+      url: `${baseUrl}?action=registrar_y_completar_ajax`,
       method: 'POST',
       data: formData,
       processData: false,
