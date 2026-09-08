@@ -551,7 +551,7 @@ class Usuario extends Database
     {
         try {
             $modulos = $this->db()->query("SELECT id_modulo, nombre_modulo, descripcion_modulo FROM modulos ORDER BY nombre_modulo ASC")->fetchAll(PDO::FETCH_ASSOC);
-            $acciones = $this->db()->query("SELECT id_permiso, nombre_permiso FROM permisos ORDER BY id_permiso ASC")->fetchAll(PDO::FETCH_ASSOC);
+            $acciones = $this->db()->query("SELECT id_permiso, nombre_permiso FROM permisos WHERE nombre_permiso IN ('ver','crear','editar','eliminar') ORDER BY id_permiso ASC")->fetchAll(PDO::FETCH_ASSOC);
             return ['modulos' => $modulos, 'acciones' => $acciones];
         } catch (\Throwable $e) {
             error_log("Error al obtener todos los permisos: " . $e->getMessage());

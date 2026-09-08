@@ -64,26 +64,30 @@ function renderPermisosChecklist(array $allPermisos): void
 {
     $modulos = $allPermisos['modulos'] ?? [];
     $acciones = $allPermisos['acciones'] ?? [];
-    foreach ($modulos as $modulo):
-        $idModulo = $modulo['id_modulo'];
-        $nombreModulo = $modulo['nombre_modulo'];
     ?>
-    <div style="margin-bottom:10px;">
-        <div style="font-size:0.8rem;font-weight:600;color:var(--text-primary);margin-bottom:4px;"><?= htmlspecialchars($nombreModulo) ?></div>
-        <div style="display:flex;flex-wrap:wrap;gap:4px 12px;">
-            <?php foreach ($acciones as $accion):
-                $value = $idModulo . ':' . $accion['id_permiso'];
-                $label = ucfirst($accion['nombre_permiso']);
-            ?>
-            <label style="display:flex;align-items:center;gap:4px;font-size:0.8rem;cursor:pointer;">
-                <input type="checkbox" name="permisos[]" value="<?= $value ?>">
-                <?= htmlspecialchars($label) ?>
-            </label>
+    <div style="position:sticky;top:0;z-index:1;background:var(--bg-secondary);padding:6px 2px 4px;margin:0 -12px;padding-left:12px;padding-right:12px;border-bottom:2px solid var(--color-gray-200);">
+        <div style="display:flex;gap:16px 24px;font-size:0.78rem;">
+            <span style="min-width:120px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.03em;">Módulo</span>
+            <?php foreach ($acciones as $accion): ?>
+                <span style="min-width:60px;text-align:center;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.03em;"><?= ucfirst($accion['nombre_permiso']) ?></span>
             <?php endforeach; ?>
         </div>
     </div>
-    <?php
-    endforeach;
+    <?php foreach ($modulos as $modulo):
+        $idModulo = $modulo['id_modulo'];
+        $nombreModulo = $modulo['nombre_modulo'];
+    ?>
+    <div style="display:flex;align-items:center;gap:16px 24px;padding:5px 2px;font-size:0.8rem;border-bottom:1px solid var(--color-gray-100);">
+        <span style="min-width:120px;font-weight:500;color:var(--text-primary);"><?= htmlspecialchars($nombreModulo) ?></span>
+        <?php foreach ($acciones as $accion):
+            $value = $idModulo . ':' . $accion['id_permiso'];
+        ?>
+        <label style="display:flex;align-items:center;justify-content:center;min-width:60px;gap:3px;cursor:pointer;">
+            <input type="checkbox" name="permisos[]" value="<?= $value ?>">
+        </label>
+        <?php endforeach; ?>
+    </div>
+    <?php endforeach;
 }
 ?>
 
