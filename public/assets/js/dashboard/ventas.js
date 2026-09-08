@@ -109,7 +109,6 @@ const Ventas = {
 
     async cargarProductos() {
         const select = document.getElementById('productoSelect');
-        if (select.dataset.cargado) return;
         select.innerHTML = '<option value="">Cargando...</option>';
         try {
             const res = await fetch(`${urlBaseVentas}?accion=buscar_lotes&q=`, {
@@ -154,6 +153,12 @@ const Ventas = {
             select.innerHTML = '<option value="">Error al cargar productos</option>';
             console.error('Error cargando productos:', e);
         }
+    },
+
+    recargarProductos() {
+        const select = document.getElementById('productoSelect');
+        delete select.dataset.cargado;
+        this.cargarProductos();
     },
 
     // ==================== CLIENTE ====================
@@ -305,6 +310,17 @@ const Ventas = {
         div.dataset.idLote = idLote;
         div.dataset.idInsumo = idInsumo;
         div.dataset.tipoItem = esInsumo ? 'insumo' : 'planta';
+
+        if (!esInsumo) {
+            div.dataset.costoUnitario = parseFloat(item.costo_unitario || 0);
+            div.dataset.porcentajeGanancia = parseFloat(item.porcentaje_ganancia || 0);
+            div.dataset.totalInsumos = parseFloat(item.total_insumos || 0);
+        }
+
+        const editBtnHtml = !esInsumo
+            ? `<button type="button" class="btn btn-sm btn-outline-warning py-0 px-1 ms-1 editar-precio-lote" title="Editar precio"><i class="fas fa-pencil-alt" style="font-size:.65rem;"></i></button>`
+            : '';
+
         div.innerHTML = `
             <div class="card-body py-2 px-3">
                 <div class="d-flex justify-content-between align-items-start mb-2">
@@ -328,7 +344,10 @@ const Ventas = {
                     </div>
                     <div class="col-4">
                         <small class="text-muted d-block" style="font-size:.7rem;line-height:1;letter-spacing:.5px;">PRECIO UNIT.</small>
-                            <input type="text" class="form-control form-control-sm precio-producto text-end mt-1" value="${parseFloat(item.precio_unitario || 0).toFixed(2)}" inputmode="decimal" readonly>
+                        <div class="d-flex align-items-center mt-1">
+                            <input type="text" class="form-control form-control-sm precio-producto text-end" value="${parseFloat(item.precio_unitario || 0).toFixed(2)}" inputmode="decimal" readonly>
+                            ${editBtnHtml}
+                        </div>
                     </div>
                     <div class="col-4 text-end">
                         <small class="text-muted d-block" style="font-size:.7rem;line-height:1;letter-spacing:.5px;">SUBTOTAL</small>
@@ -336,6 +355,37 @@ const Ventas = {
                     </div>
                 </div>
             </div>
+            ${!esInsumo ? `
+            <div class="card-footer bg-white border-top py-2 px-3 d-none editar-precio-form">
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label small">Costo Unitario ($)</label>
+                        <input type="number" class="form-control form-control-sm ep-costo" step="0.01" min="0" value="${parseFloat(item.costo_unitario || 0).toFixed(2)}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small">% Ganancia</label>
+                        <input type="number" class="form-control form-control-sm ep-ganancia" step="0.01" min="0" max="100" value="${parseFloat(item.porcentaje_ganancia || 0).toFixed(1)}">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small text-muted">Insumos</label>
+                        <div class="form-control form-control-sm bg-light ep-insumos" style="font-size:.8rem;">$${parseFloat(item.total_insumos || 0).toFixed(2)}</div>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small text-muted">Ganancia ($)</label>
+                        <div class="form-control form-control-sm bg-light ep-ganancia-monto" style="font-size:.8rem;">$0.00</div>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small fw-semibold">Precio Final</label>
+                        <div class="form-control form-control-sm bg-success text-white fw-bold ep-precio-final" style="font-size:.85rem;">$0.00</div>
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <button type="button" class="btn btn-sm btn-success aplicar-precio-lote">
+                        <i class="fas fa-check me-1"></i>Aplicar
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary cancelar-precio-lote ms-1">Cancelar</button>
+                </div>
+            </div>` : ''}
         `;
 
         const cant = div.querySelector('.cantidad-producto');
@@ -359,6 +409,82 @@ const Ventas = {
             this.calcularTotales();
             if (cont.children.length === 0) document.getElementById('sinProductos').style.display = 'block';
         });
+
+        if (!esInsumo) {
+            const editBtn = div.querySelector('.editar-precio-lote');
+            const editForm = div.querySelector('.editar-precio-form');
+            const costoInput = div.querySelector('.ep-costo');
+            const gananciaInput = div.querySelector('.ep-ganancia');
+            const insumosDisplay = div.querySelector('.ep-insumos');
+            const gananciaMontoDisplay = div.querySelector('.ep-ganancia-monto');
+            const precioFinalDisplay = div.querySelector('.ep-precio-final');
+
+            const recalcEditPreview = () => {
+                const costo = parseFloat(costoInput.value) || 0;
+                const ganancia = parseFloat(gananciaInput.value) || 0;
+                const totalInsumos = parseFloat(div.dataset.totalInsumos) || 0;
+                const gananciaMonto = costo * ganancia / 100;
+                const precioFinal = costo + totalInsumos + gananciaMonto;
+                insumosDisplay.textContent = `$${totalInsumos.toFixed(2)}`;
+                gananciaMontoDisplay.textContent = `$${gananciaMonto.toFixed(2)}`;
+                precioFinalDisplay.textContent = `$${precioFinal.toFixed(2)}`;
+            };
+
+            editBtn.addEventListener('click', () => {
+                editForm.classList.toggle('d-none');
+                if (!editForm.classList.contains('d-none')) recalcEditPreview();
+            });
+
+            div.querySelector('.cancelar-precio-lote').addEventListener('click', () => editForm.classList.add('d-none'));
+
+            costoInput.addEventListener('input', recalcEditPreview);
+            gananciaInput.addEventListener('input', recalcEditPreview);
+
+            div.querySelector('.aplicar-precio-lote').addEventListener('click', async () => {
+                const btn = div.querySelector('.aplicar-precio-lote');
+                const costo = parseFloat(costoInput.value) || 0;
+                const ganancia = parseFloat(gananciaInput.value) || 0;
+                const totalInsumos = parseFloat(div.dataset.totalInsumos) || 0;
+                const precioFinal = costo + totalInsumos + (costo * ganancia / 100);
+
+                if (costo <= 0) { Helpers.toast('error', 'El costo unitario debe ser mayor a cero.'); return; }
+                if (ganancia < 0) { Helpers.toast('error', 'El porcentaje no puede ser negativo.'); return; }
+
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Guardando...';
+
+                try {
+                    const res = await fetch(`${urlBaseVentas}?accion=actualizar_precio_lote`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                        body: JSON.stringify({ id_lote: idLote, costo_unitario: costo, porcentaje_ganancia: ganancia })
+                    });
+                    const result = await res.json();
+
+                    div.dataset.costoUnitario = costo;
+                    div.dataset.porcentajeGanancia = ganancia;
+                    precio.value = precioFinal.toFixed(2);
+                    editForm.classList.add('d-none');
+
+                    if (result.success) {
+                        Helpers.toast('success', 'Precio del lote actualizado.');
+                    } else {
+                        Helpers.toast('warning', result.message || 'Precio aplicado localmente.');
+                    }
+                } catch (e) {
+                    div.dataset.costoUnitario = costo;
+                    div.dataset.porcentajeGanancia = ganancia;
+                    precio.value = precioFinal.toFixed(2);
+                    editForm.classList.add('d-none');
+                    Helpers.toast('warning', 'Precio aplicado localmente (sin sincronizar).');
+                } finally {
+                    recalcular();
+                    this.recargarProductos();
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-check me-1"></i>Aplicar';
+                }
+            });
+        }
 
         cont.appendChild(div);
         this.calcularTotales();
@@ -593,7 +719,9 @@ const Ventas = {
         formData.set('pagos', JSON.stringify(pagos));
 
         if (!formData.get('fecha_venta')) {
-            formData.set('fecha_venta', new Date().toISOString().slice(0, 19).replace('T', ' '));
+            const now = new Date();
+            const pad = (n) => String(n).padStart(2, '0');
+            formData.set('fecha_venta', `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`);
         }
 
         try {

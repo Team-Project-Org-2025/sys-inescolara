@@ -5,6 +5,7 @@ require_once __DIR__ . '/controller_helpers.php';
 use SysInescolara\models\Venta;
 use SysInescolara\models\Cliente;
 use SysInescolara\models\Usuario;
+use SysInescolara\models\LotePrecio;
 use SysInescolara\helpers\PdfHelper;
 
 function index(): void
@@ -20,15 +21,16 @@ function index(): void
     if (isAjaxRequest() && $accion !== '') {
         try {
             match ($_SERVER['REQUEST_METHOD'] . '_' . $accion) {
-                'GET_listar'           => listar(),
-                'POST_guardar'         => guardar(),
-                'GET_detalles'         => detalles(),
-                'POST_cancelar'        => cancelar(),
-                'GET_buscar_lotes'     => buscar_lotes(),
-                'GET_precio_lote'      => precio_lote(),
-                'GET_buscar_clientes'  => buscar_clientes(),
-                'GET_trabajadores'     => trabajadores(),
-                default                => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
+                'GET_listar'                   => listar(),
+                'POST_guardar'                 => guardar(),
+                'GET_detalles'                 => detalles(),
+                'POST_cancelar'                => cancelar(),
+                'GET_buscar_lotes'             => buscar_lotes(),
+                'GET_precio_lote'              => precio_lote(),
+                'GET_buscar_clientes'          => buscar_clientes(),
+                'GET_trabajadores'             => trabajadores(),
+                'POST_actualizar_precio_lote'  => actualizar_precio_lote(),
+                default                        => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
             };
         } catch (\Exception $e) {
             handleError($e, true);
@@ -58,6 +60,7 @@ function buscar_lotes(): void { checkModuleAuth(); ventas_buscarLotesAjax(); }
 function buscar_clientes(): void { checkModuleAuth(); ventas_buscarClientesAjax(); }
 function precio_lote(): void { checkModuleAuth(); ventas_precioLoteAjax(); }
 function trabajadores(): void { checkModuleAuth(); ventas_trabajadoresAjax(); }
+function actualizar_precio_lote(): void { checkModuleAuth(); ventas_actualizarPrecioLoteAjax(); }
 function comprobante(): void { checkModuleAuth(); checkPermisoOrFail('ventas:ver'); ventas_comprobanteAjax(); }
 
 function ventas_listarAjax(): void
@@ -106,15 +109,53 @@ function ventas_precioLoteAjax(): void
 
     $modelo = new Venta();
     $lotes = $modelo->obtenerLotesDisponibles('');
-    $precio = 0;
+    $found = null;
     foreach ($lotes as $l) {
         if ((int)$l['id_lote'] === $idLote) {
-            $precio = (float)($l['precio_unitario'] ?? 0);
+            $found = $l;
             break;
         }
     }
 
-    jsonResponse(['success' => true, 'precio' => $precio]);
+    if (!$found) {
+        jsonResponse(['success' => false, 'message' => 'Lote no encontrado']);
+    }
+
+    jsonResponse([
+        'success' => true,
+        'precio' => (float)($found['precio_unitario'] ?? 0),
+        'costo_unitario' => (float)($found['costo_unitario'] ?? 0),
+        'porcentaje_ganancia' => (float)($found['porcentaje_ganancia'] ?? 0),
+        'total_insumos' => (float)($found['total_insumos'] ?? 0),
+    ]);
+}
+
+function ventas_actualizarPrecioLoteAjax(): void
+{
+    $data = getRequestData();
+    $idLote = (int)($data['id_lote'] ?? 0);
+    $costoUnitario = (float)($data['costo_unitario'] ?? 0);
+    $porcentajeGanancia = (float)($data['porcentaje_ganancia'] ?? 0);
+
+    if ($idLote <= 0) {
+        jsonResponse(['success' => false, 'message' => 'ID de lote inválido'], 400);
+    }
+
+    $costoOk = true;
+    $gananciaOk = true;
+
+    if ($costoUnitario > 0) {
+        $costoOk = LotePrecio::actualizarCostoUnitario($idLote, $costoUnitario);
+    }
+
+    $gananciaOk = LotePrecio::actualizarPorcentajeGanancia($idLote, $porcentajeGanancia);
+
+    $ok = $costoOk && $gananciaOk;
+
+    jsonResponse([
+        'success' => $ok,
+        'message' => $ok ? 'Precio del lote actualizado' : 'Error al actualizar el precio',
+    ]);
 }
 
 function ventas_buscarClientesAjax(): void
@@ -154,6 +195,7 @@ function ventas_manejarGuardar(): void
 
     $fechaVenta = trim((string)($_POST['fecha_venta'] ?? ''));
     if ($fechaVenta === '') {
+        date_default_timezone_set('America/Caracas');
         $fechaVenta = date('Y-m-d H:i:s');
     }
 

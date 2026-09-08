@@ -141,8 +141,7 @@ class LotePrecio extends Database implements ReadableInterface
             $stmt = $instance->db()->prepare("
                 UPDATE lote SET costo_unitario = :costo_unitario WHERE id_lote = :id_lote AND activo = 1
             ");
-            $stmt->execute([':costo_unitario' => $costoUnitario, ':id_lote' => $idLote]);
-            return $stmt->rowCount() > 0;
+            return $stmt->execute([':costo_unitario' => $costoUnitario, ':id_lote' => $idLote]);
         } catch (Throwable $e) {
             error_log('Error en LotePrecio::actualizarCostoUnitario: ' . $e->getMessage());
             return false;
@@ -156,8 +155,7 @@ class LotePrecio extends Database implements ReadableInterface
             $stmt = $instance->db()->prepare("
                 UPDATE lote SET porcentaje_ganancia = :porcentaje WHERE id_lote = :id_lote AND activo = 1
             ");
-            $stmt->execute([':porcentaje' => $porcentaje, ':id_lote' => $idLote]);
-            return $stmt->rowCount() > 0;
+            return $stmt->execute([':porcentaje' => $porcentaje, ':id_lote' => $idLote]);
         } catch (Throwable $e) {
             error_log('Error en LotePrecio::actualizarPorcentajeGanancia: ' . $e->getMessage());
             return false;

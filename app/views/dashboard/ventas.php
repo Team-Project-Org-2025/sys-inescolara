@@ -103,9 +103,11 @@ include_once __DIR__ . '/../common/modal.php';
               <div class="row g-3">
                 <div class="col-sm-6">
                   <label class="form-label small fw-semibold">Cliente</label>
-                  <div class="position-relative d-flex">
-                    <input type="text" class="form-control" id="buscarClienteInput" placeholder="Buscar por C.I., nombre o apellido..." autocomplete="off">
-                    <button type="button" class="btn btn-outline-success ms-1 flex-shrink-0" id="toggleQuickClient" title="Registrar cliente rápido"><i class="fas fa-plus"></i></button>
+                  <div class="position-relative">
+                    <div class="d-flex">
+                      <input type="text" class="form-control" id="buscarClienteInput" placeholder="Buscar por C.I., nombre o apellido..." autocomplete="off">
+                      <button type="button" class="btn btn-outline-success ms-1 flex-shrink-0" id="toggleQuickClient" title="Registrar cliente rápido"><i class="fas fa-plus"></i></button>
+                    </div>
                     <input type="hidden" name="id_cliente" id="idClienteHidden">
                     <div id="clienteSearchResults" class="dropdown-menu w-100"></div>
                   </div>
@@ -134,7 +136,7 @@ include_once __DIR__ . '/../common/modal.php';
                     <div class="row g-2 mb-2">
                       <div class="col-md-6">
                         <label class="form-label small">Nombre *</label>
-                        <input type="text" class="form-control form-control-sm" id="qcNombre" required maxlength="50">
+                        <input type="text" class="form-control form-control-sm" id="qcNombre" maxlength="50">
                       </div>
                       <div class="col-md-6">
                         <label class="form-label small">Apellido</label>
