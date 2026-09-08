@@ -103,14 +103,51 @@ include_once __DIR__ . '/../common/modal.php';
               <div class="row g-3">
                 <div class="col-sm-6">
                   <label class="form-label small fw-semibold">Cliente</label>
-                  <div class="position-relative">
+                  <div class="position-relative d-flex">
                     <input type="text" class="form-control" id="buscarClienteInput" placeholder="Buscar por C.I., nombre o apellido..." autocomplete="off">
+                    <button type="button" class="btn btn-outline-success ms-1 flex-shrink-0" id="toggleQuickClient" title="Registrar cliente rápido"><i class="fas fa-plus"></i></button>
                     <input type="hidden" name="id_cliente" id="idClienteHidden">
                     <div id="clienteSearchResults" class="dropdown-menu w-100"></div>
                   </div>
                   <div id="clienteSeleccionado" class="d-none mt-1">
                     <span class="badge bg-success" id="clienteSeleccionadoTexto"></span>
                     <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-1" id="limpiarCliente" title="Cambiar cliente">&times;</button>
+                  </div>
+                  <div id="quickClientForm" class="d-none mt-2 p-3 border rounded bg-light">
+                    <div class="row g-2 mb-2">
+                      <div class="col-3">
+                        <label class="form-label small">Tipo C.I.</label>
+                        <select class="form-select form-select-sm" id="qcTipoCedula">
+                          <option value="">—</option>
+                          <option value="V">V</option>
+                          <option value="E">E</option>
+                          <option value="J">J</option>
+                          <option value="G">G</option>
+                          <option value="P">P</option>
+                        </select>
+                      </div>
+                      <div class="col-9">
+                        <label class="form-label small">Cédula</label>
+                        <input type="text" class="form-control form-control-sm" id="qcCedula" placeholder="Ej: 12345678" maxlength="10">
+                      </div>
+                    </div>
+                    <div class="row g-2 mb-2">
+                      <div class="col-md-6">
+                        <label class="form-label small">Nombre *</label>
+                        <input type="text" class="form-control form-control-sm" id="qcNombre" required maxlength="50">
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label small">Apellido</label>
+                        <input type="text" class="form-control form-control-sm" id="qcApellido" maxlength="50">
+                      </div>
+                    </div>
+                    <div class="mb-2">
+                      <label class="form-label small">Contacto</label>
+                      <input type="text" class="form-control form-control-sm" id="qcContacto" placeholder="Ej: 0412-1234567" maxlength="11">
+                    </div>
+                    <button type="button" class="btn btn-sm btn-success" id="guardarClienteRapido">
+                      <i class="fas fa-check me-1"></i>Guardar y Seleccionar
+                    </button>
                   </div>
                 </div>
                 <div class="col-sm-6">

@@ -1,6 +1,7 @@
 const urlBaseVentas = `${window.BASE_URL || '/'}ventas`;
 
 import { setupRealTimeValidation, validateForm } from '../utils/validation.js';
+import * as Helpers from '../utils/helpers.js';
 import * as C from '../utils/components.js';
 
 const ventasRules = {
@@ -16,6 +17,7 @@ const Ventas = {
         this.initDataTable();
         this.initSelectProducto();
         this.initBuscarCliente();
+        this.initQuickClient();
         this.initPagos();
         this.initPagarCompleto();
         this.initWizard();
@@ -231,6 +233,58 @@ const Ventas = {
         this.clienteInput.placeholder = 'Buscar por C.I., nombre o apellido...';
         this.clienteInput.classList.remove('is-valid');
         this.clienteSeleccionado.classList.add('d-none');
+    },
+
+    initQuickClient() {
+        const toggleBtn = document.getElementById('toggleQuickClient');
+        const form = document.getElementById('quickClientForm');
+        const saveBtn = document.getElementById('guardarClienteRapido');
+
+        toggleBtn.addEventListener('click', () => form.classList.toggle('d-none'));
+        saveBtn.addEventListener('click', () => this.guardarClienteRapido());
+    },
+
+    async guardarClienteRapido() {
+        const nombre = document.getElementById('qcNombre').value.trim();
+        if (!nombre) {
+            Helpers.toast('error', 'El nombre es requerido.');
+            document.getElementById('qcNombre').focus();
+            return;
+        }
+
+        const fd = new FormData();
+        fd.append('nombre_cliente', nombre);
+        fd.append('apellido_cliente', document.getElementById('qcApellido').value.trim());
+        fd.append('tipo_cedula_cliente', document.getElementById('qcTipoCedula').value);
+        fd.append('cedula_cliente', document.getElementById('qcCedula').value.trim());
+        fd.append('contacto_cliente', document.getElementById('qcContacto').value.trim());
+
+        try {
+            const res = await fetch(`${window.BASE_URL || '/'}clientes?action=add_ajax`, {
+                method: 'POST',
+                body: fd,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            const data = await res.json();
+            if (data.success && data.client) {
+                const c = data.client;
+                this.seleccionarCliente(c.id, c.nombre_completo, c.cedula_completa || '');
+                this.limpiarQuickClientForm();
+                document.getElementById('quickClientForm').classList.add('d-none');
+                Helpers.toast('success', 'Cliente registrado y seleccionado.');
+            } else {
+                Helpers.toast('error', data.message || 'Error al guardar cliente.');
+            }
+        } catch (e) {
+            Helpers.toast('error', 'Error de conexión al guardar cliente.');
+        }
+    },
+
+    limpiarQuickClientForm() {
+        ['qcNombre', 'qcApellido', 'qcCedula', 'qcContacto'].forEach(id => {
+            document.getElementById(id).value = '';
+        });
+        document.getElementById('qcTipoCedula').value = '';
     },
 
     agregarProducto(item) {
