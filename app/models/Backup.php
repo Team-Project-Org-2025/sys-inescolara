@@ -199,6 +199,7 @@ class Backup
             $content = substr($content, 3);
         }
 
+        $content = preg_replace('/^mysqldump:.*$/m', '', $content);
         $content = preg_replace('%/\*M!\d*[^*]*\*/%', '', $content);
         $content = preg_replace('%/\*!(\d+)?\s*(.*?)\*/%s', '$2', $content);
         $content = preg_replace('/^\s*\\\\.[^\n]*\n?/m', '', $content);
