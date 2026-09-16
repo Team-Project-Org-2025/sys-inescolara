@@ -3,7 +3,7 @@
 require_once __DIR__ . '/controller_helpers.php';
 
 use SysInescolara\models\CuentaCobrar;
-use SysInescolara\models\Empleado;
+use SysInescolara\models\Usuario;
 use SysInescolara\models\AuditLog;
 
 function index(): void
@@ -27,8 +27,8 @@ function index(): void
         return;
     }
 
-    $employeeModel = new Empleado();
-    $employees = $employeeModel->getAll();
+    $usuarioModel = new Usuario();
+    $usuarios = $usuarioModel->getAll();
 
     $canPay = \SysInescolara\helpers\Auth::hasPermiso('cuentas_cobrar:editar');
 
@@ -120,12 +120,12 @@ function cc_registrarPagoAjax(): void
     $referencia = trim((string)($_POST['referencia'] ?? ''));
     $fechaPago = trim((string)($_POST['fecha_pago'] ?? ''));
     $banco = trim((string)($_POST['banco'] ?? ''));
-    $idTrabajador = (int)($_POST['id_trabajador'] ?? 0);
+    $idUsuario = (int)($_POST['id_usuario'] ?? 0);
     $observaciones = trim((string)($_POST['observaciones'] ?? ''));
 
     if ($idVenta <= 0) throw new \Exception('ID de venta invalido.');
     if ($monto <= 0) throw new \Exception('El monto debe ser mayor a cero.');
-    if ($idTrabajador <= 0) throw new \Exception('Debe seleccionar el trabajador que cobro.');
+    if ($idUsuario <= 0) throw new \Exception('Debe seleccionar el usuario que cobro.');
     if (!in_array($metodo, ['efectivo', 'transferencia', 'punto', 'pago_movil', 'otro'], true)) {
         throw new \Exception('Metodo de pago invalido.');
     }
@@ -164,7 +164,7 @@ function cc_registrarPagoAjax(): void
             $referencia !== '' ? $referencia : null,
             $fechaPago,
             $banco !== '' ? $banco : null,
-            $idTrabajador,
+            $idUsuario,
             $observaciones !== '' ? $observaciones : null
         );
 

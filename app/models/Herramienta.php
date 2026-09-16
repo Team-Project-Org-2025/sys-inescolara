@@ -359,31 +359,33 @@ class Herramienta extends Database implements ReadableInterface, DeletableInterf
                     h.estado,
                     h.fecha_ultimo_mantenimiento,
                     h.observacion,
-                    h.activo,
-                    COALESCE((
-                        SELECT SUM(COALESCE(uh.cantidad_usada, 1))
-                        FROM uso_herramienta uh
-                        JOIN asignar_tarea a ON uh.id_asignacion = a.id_asignacion
-                        WHERE uh.id_herramienta = h.id_herramienta
-                        AND a.estatus_tarea = 'pendiente'
-                    ), 0) AS en_uso,
-                    (h.cantidad - COALESCE((
-                        SELECT SUM(COALESCE(uh.cantidad_usada, 1))
-                        FROM uso_herramienta uh
-                        JOIN asignar_tarea a ON uh.id_asignacion = a.id_asignacion
-                        WHERE uh.id_herramienta = h.id_herramienta
-                        AND a.estatus_tarea = 'pendiente'
-                    ), 0)) AS disponibles
+                    h.activo
                 FROM herramienta h
                 WHERE h.activo = 1
                 ORDER BY h.nombre_herramienta ASC
             ";
             $stmt = $this->db()->query($sql);
             $rows = $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+
+            $sqlUsed = "
+                SELECT u.id_herramienta, COALESCE(SUM(u.cantidad_usada), 0) AS en_uso
+                FROM uso_herramienta u
+                INNER JOIN asignar_tarea a ON u.id_asignacion = a.id_asignacion
+                WHERE a.estatus_tarea = 'pendiente'
+                GROUP BY u.id_herramienta
+            ";
+            $stmtUsed = $this->db()->query($sqlUsed);
+            $usedMap = [];
+            if ($stmtUsed) {
+                foreach ($stmtUsed->fetchAll(PDO::FETCH_ASSOC) as $row) {
+                    $usedMap[(int)$row['id_herramienta']] = (float)$row['en_uso'];
+                }
+            }
+
             foreach ($rows as &$row) {
                 $row['cantidad'] = (int)$row['cantidad'];
-                $row['en_uso'] = (int)$row['en_uso'];
-                $row['disponibles'] = (int)$row['disponibles'];
+                $enUso = $usedMap[(int)$row['id']] ?? 0;
+                $row['disponibles'] = max(0, (int)$row['cantidad'] - (int)$enUso);
             }
             return $rows;
         } catch (\Throwable $e) {
@@ -395,10 +397,9 @@ class Herramienta extends Database implements ReadableInterface, DeletableInterf
     public function getUsages(int $herramientaId): array
     {
         try {
-            $sql = "SELECT u.*, a.id_tarea, t.nombre_tarea
+            $sql = "SELECT u.*, a.id_asignacion, a.nombre_tarea
                     FROM uso_herramienta u
                     LEFT JOIN asignar_tarea a ON u.id_asignacion = a.id_asignacion
-                    LEFT JOIN tareas t ON a.id_tarea = t.id_tarea
                     WHERE u.id_herramienta = :id_herramienta
                     ORDER BY u.fecha_uso DESC";
             $stmt = $this->db()->prepare($sql);

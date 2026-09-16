@@ -4,7 +4,7 @@ require_once __DIR__ . '/controller_helpers.php';
 
 use SysInescolara\models\SeedCollection;//no lo borre
 use SysInescolara\models\Ubicacion;
-use SysInescolara\models\Empleado;//no lo borre
+use SysInescolara\models\Usuario;
 use SysInescolara\models\Planta;
 use SysInescolara\models\Insumo;
 use SysInescolara\models\UnidadMedida;
@@ -23,6 +23,7 @@ function index(): void
                 'POST_delete_ajax'        => delete_ajax(),
                 'POST_completar_ajax'     => completar_ajax(),
                 'POST_registrar_insumo_ajax' => registrar_insumo_ajax(),
+                'POST_registrar_y_completar_ajax' => registrar_y_completar_ajax(),
                 default                   => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
             };
         } catch (\Exception $e) {
@@ -42,14 +43,15 @@ function edit_ajax(): void { checkModuleAuth(); checkPermisoOrFail('seed_collect
 function delete_ajax(): void { checkModuleAuth(); checkPermisoOrFail('seed_collection:eliminar'); recoleccion_handleDelete(); }
 function completar_ajax(): void { checkModuleAuth(); checkPermisoOrFail('seed_collection:editar'); recoleccion_handleCompletar(); }
 function registrar_insumo_ajax(): void { checkModuleAuth(); checkPermisoOrFail('seed_collection:editar'); recoleccion_handleRegistrarInsumo(); }
+function registrar_y_completar_ajax(): void { checkModuleAuth(); checkPermisoOrFail('seed_collection:editar'); recoleccion_handleRegistrarYCompletar(); }
 
 function recoleccion_handleAddEdit(string $mode): void
 {
     $model = new SeedCollection();
     $data = getRequestData();
 
-    $idTrabajador = (int)($data['id_trabajador'] ?? 0);
-    if ($idTrabajador <= 0) throw new \Exception('El trabajador es requerido.');
+    $idUsuario = (int)($data['id_usuario'] ?? 0);
+    if ($idUsuario <= 0) throw new \Exception('El usuario es requerido.');
     $idUbicacion = (int)($data['id_ubicacion'] ?? 0);
     if ($idUbicacion <= 0) throw new \Exception('La ubicación es requerida.');
 
@@ -61,14 +63,14 @@ function recoleccion_handleAddEdit(string $mode): void
     if ($observacion === '') $observacion = null;
 
     if ($mode === 'add') {
-        $model->add($idTrabajador, $idUbicacion, $fechaAsignacion, $observacion);
+        $model->add($idUsuario, $idUbicacion, $fechaAsignacion, $observacion);
         $newId = $model->getLastInsertId() ?? 0;
         jsonResponse(['success' => true, 'message' => 'Recolección registrada correctamente', 'id' => $newId]);
     }
 
     $id = (int)($data['id'] ?? 0);
     if ($id <= 0) throw new \Exception('ID inválido');
-    $model->update($id, $idTrabajador, $idUbicacion, $fechaAsignacion, $observacion);
+    $model->update($id, $idUsuario, $idUbicacion, $fechaAsignacion, $observacion);
     jsonResponse(['success' => true, 'message' => 'Recolección actualizada correctamente']);
 }
 
@@ -131,9 +133,32 @@ function recoleccion_handleRegistrarInsumo(): void
 
     $createdCount = $model->registerSeedsWithTransaction($id, $items);
 
-    if ($createdCount === 0) throw new \Exception('No se pudo registrar ningún insumo. Verifique los datos.');
-
     jsonResponse(['success' => true, 'message' => "$createdCount tipo(s) de semilla registrado(s) correctamente"]);
+}
+
+function recoleccion_handleRegistrarYCompletar(): void
+{
+    $data = getRequestData();
+    $id = (int)($data['id'] ?? 0);
+    if ($id <= 0) throw new \Exception('ID inválido');
+
+    $model = new SeedCollection();
+    $recoleccion = $model->getById($id);
+    if (!$recoleccion) throw new \Exception('No existe la recolección');
+
+    $itemsJson = trim((string)($data['items'] ?? ''));
+    if ($itemsJson === '') throw new \Exception('Debe agregar al menos un tipo de semilla.');
+
+    $items = json_decode($itemsJson, true);
+    if (!is_array($items) || empty($items)) throw new \Exception('Debe agregar al menos un tipo de semilla.');
+
+    $createdCount = $model->registerSeedsWithTransaction($id, $items);
+
+    if ($recoleccion['estatus'] === 'Pendiente') {
+        $model->complete($id, date('Y-m-d'));
+    }
+
+    jsonResponse(['success' => true, 'message' => "$createdCount tipo(s) de semilla registrado(s) y recolección completada"]);
 }
 
 function recoleccion_getDetailsAjax(): void

@@ -3,260 +3,48 @@
 namespace SysInescolara\models;
 
 use SysInescolara\core\Database;
-use SysInescolara\interfaces\ReadableInterface;
-use SysInescolara\interfaces\DeletableInterface;
-use SysInescolara\traits\ValidationTrait;
 use SysInescolara\models\AuditLog;
 use PDO;
 
-class Tarea extends Database implements ReadableInterface, DeletableInterface
+class Tarea extends Database
 {
-    use ValidationTrait;
-
-    private ?int $id = null;
-    private string $nombre;
-    private ?string $descripcion = null;
-    private int $activo = 1; 
-
-    protected array $fillable = ['nombre', 'descripcion', 'activo'];
-    protected array $guarded = ['id'];
-
-  
-    protected array $validationRules = [
-        'nombre_tarea' => ['type' => 'nombre', 'required' => true],
-        'descripcion'  => ['type' => null,     'required' => false],
-    ];
-
-    public function __construct(array $attributes = [])
-    {
-        parent::__construct(); 
-        if (!empty($attributes)) {
-            $this->fill($attributes);
-        }
-    }
-
-
-    public function fill(array $attributes): self
-    {
-        foreach ($attributes as $key => $value) {
-            if (empty($this->fillable) || in_array($key, $this->fillable, true)) {
-                $property = $this->mapColumnToProperty($key);
-                if (property_exists($this, $property)) {
-                    $this->$property = $value;
-                }
-            }
-        }
-        return $this;
-    }
-
-    private function mapColumnToProperty(string $column): string
-    {
-        $map = [
-            'id_tarea'   => 'id',
-            'nombre_tarea' => 'nombre',
-            'descripcion' => 'descripcion',
-            'activo'     => 'activo',
-        ];
-        return $map[$column] ?? $column;
-    }
-
-    // --- Getters y Setters  ---
-    public function getId(): ?int { return $this->id; }
-    public function getNombre(): string { return $this->nombre; }
-    public function setNombre(string $nombre): self { $this->nombre = $nombre; return $this; }
-    public function getDescripcion(): ?string { return $this->descripcion; }
-    public function setDescripcion(?string $descripcion): self { $this->descripcion = $descripcion; return $this; }
-    public function isActivo(): bool { return $this->activo === 1; }
-    public function setActivo(bool $activo): self { $this->activo = $activo ? 1 : 0; return $this; }
-
-    private function validate(): void
-    {
-        $this->validateData([
-            'nombre_tarea' => $this->nombre,
-            'descripcion'  => $this->descripcion,
-        ]);
-    }
-
-    public function save(): bool
-    {
-        $this->validate();
-
-        if ($this->id === null) {
-            $sql = "INSERT INTO tareas (nombre_tarea, descripcion, activo) VALUES (:nombre, :descripcion, :activo)";
-            $stmt = $this->db()->prepare($sql);
-            $result = $stmt->execute([
-                ':nombre'      => $this->nombre,
-                ':descripcion' => $this->descripcion,
-                ':activo'      => $this->activo,
-            ]);
-            if ($result) {
-                $this->id = (int)$this->db()->lastInsertId();
-                return true;
-            }
-            return false;
-        } else {
-            // UPDATE
-            $sql = "UPDATE tareas SET nombre_tarea = :nombre, descripcion = :descripcion, activo = :activo WHERE id_tarea = :id";
-            $stmt = $this->db()->prepare($sql);
-            return $stmt->execute([
-                ':id'          => $this->id,
-                ':nombre'      => $this->nombre,
-                ':descripcion' => $this->descripcion,
-                ':activo'      => $this->activo,
-            ]);
-        }
-    }
-
-
-    public static function find(int $id): ?self
-    {
-        $instance = new static();
-        $stmt = $instance->db()->prepare("SELECT id_tarea, nombre_tarea, descripcion, activo FROM tareas WHERE id_tarea = :id");
-        $stmt->execute([':id' => $id]);
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        if ($row) {
-            return new static($row);
-        }
-        return null;
-    }
-
-    public static function all(): array
-    {
-        $instance = new static();
-        $stmt = $instance->db()->query("SELECT id_tarea, nombre_tarea, descripcion, activo FROM tareas WHERE activo = 1 ORDER BY id_tarea DESC");
-        $rows = $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
-        $objects = [];
-        foreach ($rows as $row) {
-            $objects[] = new static($row);
-        }
-        return $objects;
-    }
-
-    public static function where(string $column, $value, string $operator = '='): array
-    {
-        $instance = new static();
-        $sql = "SELECT id_tarea, nombre_tarea, descripcion, activo FROM tareas WHERE $column $operator :value";
-        $stmt = $instance->db()->prepare($sql);
-        $stmt->execute([':value' => $value]);
-        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        $objects = [];
-        foreach ($rows as $row) {
-            $objects[] = new static($row);
-        }
-        return $objects;
-    }
-
-    public function exists(int $id): bool
-    {
-        $stmt = $this->db()->prepare("SELECT COUNT(*) FROM tareas WHERE id_tarea = :id");
-        $stmt->execute([':id' => $id]);
-        return $stmt->fetchColumn() > 0;
-    }
-
-    public function delete(int $id): bool
-    {
-        $stmt = $this->db()->prepare("UPDATE tareas SET activo = 0 WHERE id_tarea = :id");
-        return $stmt->execute([':id' => $id]);
-    }
-
-    public function restore(int $id): bool
-    {
-        $stmt = $this->db()->prepare("UPDATE tareas SET activo = 1 WHERE id_tarea = :id");
-        return $stmt->execute([':id' => $id]);
-    }
-
-    public function getLastInsertId(): ?int
-    {
-        try {
-            return (int)$this->db()->lastInsertId();
-        } catch (\Throwable $e) {
-            return null;
-        }
-    }
-
-    public function getAll(): array
-    {
-        try {
-            $sql = "SELECT id_tarea AS id, nombre_tarea, descripcion, activo
-                    FROM tareas
-                    WHERE activo = 1
-                    ORDER BY id_tarea DESC";
-            $stmt = $this->db()->query($sql);
-            return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
-        } catch (\Throwable $e) {
-            error_log('Error al obtener tareas: ' . $e->getMessage());
-            return [];
-        }
-    }
-
-    public function getById(int $id): ?array
-    {
-        $stmt = $this->db()->prepare("SELECT id_tarea AS id, nombre_tarea, descripcion FROM tareas WHERE id_tarea = :id");
-        $stmt->execute([':id' => $id]);
-        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
-    }
-
-    public function assignTaskWithConsumptions(array $assignmentData, array $consumptions, array $tools = []): int
+    public function assignTask(array $assignmentData, array $tools = []): int
     {
         $this->db()->beginTransaction();
         try {
-            $tarea = new self([
-                'nombre' => $assignmentData['nombre_tarea'],
-                'descripcion' => $assignmentData['descripcion'] ?? null,
-                'activo' => 1,
-            ]);
-            if (!$tarea->save()) {
-                throw new \Exception("Error al crear la tarea.");
-            }
-            $newTaskId = $tarea->getId();
-
             $stmt = $this->db()->prepare("
-                INSERT INTO asignar_tarea (id_trabajador, id_tarea, id_lote, fecha_asignacion, estatus_tarea)
-                VALUES (:id_trabajador, :id_tarea, :id_lote, :fecha_asignacion, :estatus_tarea)
+                INSERT INTO asignar_tarea (id_usuario, nombre_tarea, descripcion, fecha_asignacion, estatus_tarea)
+                VALUES (:id_usuario, :nombre_tarea, :descripcion, :fecha_asignacion, :estatus_tarea)
             ");
             $stmt->execute([
-                ':id_trabajador'    => $assignmentData['id_trabajador'],
-                ':id_tarea'         => $newTaskId,
-                ':id_lote'          => $assignmentData['id_lote'],
+                ':id_usuario'       => $assignmentData['id_usuario'],
+                ':nombre_tarea'     => $assignmentData['nombre_tarea'],
+                ':descripcion'      => $assignmentData['descripcion'] ?? null,
                 ':fecha_asignacion' => $assignmentData['fecha_asignacion'],
                 ':estatus_tarea'    => $assignmentData['estatus_tarea'] ?? 'pendiente',
             ]);
             $asignacionId = (int)$this->db()->lastInsertId();
 
-            foreach ($consumptions as $consumo) {
-                $stmt = $this->db()->prepare("
-                    INSERT INTO consumo_insumos (id_asignacion, id_insumo, cantidad_usada, costo_unitario, stock_actual, fecha_consumo)
-                    VALUES (:id_asignacion, :id_insumo, :cantidad_usada, :costo_unitario, :stock_actual, :fecha_consumo)
-                ");
-                $stmt->execute([
-                    ':id_asignacion'  => $asignacionId,
-                    ':id_insumo'      => $consumo['id_insumo'],
-                    ':cantidad_usada' => $consumo['cantidad_usada'],
-                    ':costo_unitario' => $consumo['costo_unitario'],
-                    ':stock_actual'   => $consumo['stock_actual'] ?? null,
-                    ':fecha_consumo'  => $consumo['fecha_consumo'],
-                ]);
-
-                $stmt = $this->db()->prepare("
-                    UPDATE insumo
-                    SET stock_actual = GREATEST(0, stock_actual - :cantidad)
-                    WHERE id_insumo = :id_insumo
-                ");
-                $stmt->execute([
-                    ':cantidad'   => $consumo['cantidad_usada'],
-                    ':id_insumo'  => $consumo['id_insumo'],
-                ]);
-            }
-
             foreach ($tools as $t) {
                 $idHerramienta = (int)$t['id_herramienta'];
-                $cantidad = (int)($t['cantidad'] ?? 1);
+                $cantidad = (float)($t['cantidad'] ?? 1);
 
-                $stmt = $this->db()->prepare("SELECT estado FROM herramienta WHERE id_herramienta = :id");
-                $stmt->execute([':id' => $idHerramienta]);
-                $toolEstado = $stmt->fetchColumn();
-                if (!in_array($toolEstado, ['disponible', 'ok'])) {
-                    throw new \Exception("La herramienta no está disponible.");
+                $stmtCheck = $this->db()->prepare("
+                    SELECT h.cantidad, COALESCE(SUM(CASE WHEN a.estatus_tarea = 'pendiente' THEN u.cantidad_usada ELSE 0 END), 0) AS en_uso
+                    FROM herramienta h
+                    LEFT JOIN uso_herramienta u ON u.id_herramienta = h.id_herramienta
+                    LEFT JOIN asignar_tarea a ON u.id_asignacion = a.id_asignacion
+                    WHERE h.id_herramienta = :id
+                    GROUP BY h.id_herramienta
+                ");
+                $stmtCheck->execute([':id' => $idHerramienta]);
+                $check = $stmtCheck->fetch(PDO::FETCH_ASSOC);
+                if (!$check) {
+                    throw new \Exception("Herramienta ID $idHerramienta no encontrada.");
+                }
+                $disponibles = (int)$check['cantidad'] - (int)$check['en_uso'];
+                if ($cantidad > $disponibles) {
+                    throw new \Exception("No hay suficientes unidades de la herramienta ID $idHerramienta. Disponibles: $disponibles, solicitadas: $cantidad.");
                 }
 
                 $stmt = $this->db()->prepare("
@@ -274,12 +62,6 @@ class Tarea extends Database implements ReadableInterface, DeletableInterface
 
             $this->db()->commit();
             AuditLog::record('CREATE', 'asignar_tarea', $asignacionId, null, $assignmentData);
-            if (!empty($consumptions)) {
-                AuditLog::record('CREATE', 'consumo_insumos', $asignacionId, null, ['count' => count($consumptions)]);
-            }
-            if (!empty($tools)) {
-                AuditLog::record('CREATE', 'uso_herramienta', $asignacionId, null, ['count' => count($tools)]);
-            }
             return $asignacionId;
         } catch (\Exception $e) {
             $this->db()->rollBack();
@@ -287,84 +69,45 @@ class Tarea extends Database implements ReadableInterface, DeletableInterface
         }
     }
 
-    public function updateAssignmentWithConsumptions(int $asignacionId, array $assignmentData, array $consumptions, array $tools): void
+    public function updateAssignment(int $asignacionId, array $assignmentData, array $tools = []): void
     {
         $this->db()->beginTransaction();
         try {
             $oldAssignment = $this->getAssignmentById($asignacionId);
             if (!$oldAssignment) throw new \Exception("Asignación no encontrada: $asignacionId");
-            $idTarea = (int)$oldAssignment['id_tarea'];
 
-            $tarea = self::find($idTarea);
-            if (!$tarea) {
-                throw new \Exception("Tarea no encontrada: $idTarea");
-            }
-            $tarea->setNombre($assignmentData['nombre_tarea'])
-                  ->setDescripcion($assignmentData['descripcion'] ?? null);
-            if (!$tarea->save()) {
-                throw new \Exception("Error al actualizar la tarea.");
-            }
-
-            $oldConsumptions = $this->getConsumptions($asignacionId);
-            foreach ($oldConsumptions as $oc) {
-                $stmt = $this->db()->prepare("UPDATE insumo SET stock_actual = stock_actual + :cantidad WHERE id_insumo = :id_insumo");
-                $stmt->execute([':cantidad' => $oc['cantidad_usada'], ':id_insumo' => $oc['id_insumo']]);
-            }
-            $stmt = $this->db()->prepare("DELETE FROM consumo_insumos WHERE id_asignacion = :id");
-            $stmt->execute([':id' => $asignacionId]);
-
-            // Revertir herramientas antiguas
-            $oldTools = $this->getToolUsages($asignacionId);
-            foreach ($oldTools as $ot) {
-                $stmt = $this->db()->prepare("UPDATE herramienta SET estado = 'disponible' WHERE id_herramienta = :id");
-                $stmt->execute([':id' => $ot['id_herramienta']]);
-            }
             $stmt = $this->db()->prepare("DELETE FROM uso_herramienta WHERE id_asignacion = :id");
             $stmt->execute([':id' => $asignacionId]);
 
-            // Actualizar asignación
-            $stmt = $this->db()->prepare("UPDATE asignar_tarea SET id_trabajador = :t, id_lote = :l, fecha_asignacion = :f WHERE id_asignacion = :id");
+            $stmt = $this->db()->prepare("UPDATE asignar_tarea SET id_usuario = :u, nombre_tarea = :n, descripcion = :d, fecha_asignacion = :f WHERE id_asignacion = :id");
             $stmt->execute([
-                ':t'  => $assignmentData['id_trabajador'],
-                ':l'  => $assignmentData['id_lote'],
+                ':u'  => $assignmentData['id_usuario'],
+                ':n'  => $assignmentData['nombre_tarea'],
+                ':d'  => $assignmentData['descripcion'] ?? null,
                 ':f'  => $assignmentData['fecha_asignacion'],
                 ':id' => $asignacionId,
             ]);
 
-            // Insertar nuevos consumos
-            foreach ($consumptions as $c) {
-                $stmt = $this->db()->prepare("SELECT stock_actual FROM insumo WHERE id_insumo = :id");
-                $stmt->execute([':id' => $c['id_insumo']]);
-                $stockActual = (float)$stmt->fetchColumn();
-                if ($c['cantidad_usada'] > $stockActual) {
-                    throw new \Exception("Stock insuficiente para insumo ID {$c['id_insumo']}. Disponible: $stockActual");
-                }
-
-                $stmt = $this->db()->prepare("
-                    INSERT INTO consumo_insumos (id_asignacion, id_insumo, cantidad_usada, costo_unitario, stock_actual, fecha_consumo)
-                    VALUES (:id_asignacion, :id_insumo, :cantidad_usada, :costo_unitario, :stock_actual, :fecha_consumo)
-                ");
-                $stmt->execute([
-                    ':id_asignacion'  => $asignacionId,
-                    ':id_insumo'      => $c['id_insumo'],
-                    ':cantidad_usada' => $c['cantidad_usada'],
-                    ':costo_unitario' => $c['costo_unitario'],
-                    ':stock_actual'   => $stockActual,
-                    ':fecha_consumo'  => $c['fecha_consumo'],
-                ]);
-
-                $stmt = $this->db()->prepare("UPDATE insumo SET stock_actual = GREATEST(0, stock_actual - :c) WHERE id_insumo = :id");
-                $stmt->execute([':c' => $c['cantidad_usada'], ':id' => $c['id_insumo']]);
-            }
-
             foreach ($tools as $t) {
                 $idHerramienta = (int)$t['id_herramienta'];
-                $cantidad = (int)($t['cantidad'] ?? 1);
-                $stmt = $this->db()->prepare("SELECT estado FROM herramienta WHERE id_herramienta = :id");
-                $stmt->execute([':id' => $idHerramienta]);
-                $toolEstado = $stmt->fetchColumn();
-                if (!in_array($toolEstado, ['disponible', 'ok'])) {
-                    throw new \Exception("La herramienta '{$t['nombre_herramienta']}' no está disponible.");
+                $cantidad = (float)($t['cantidad'] ?? 1);
+
+                $stmtCheck = $this->db()->prepare("
+                    SELECT h.cantidad, COALESCE(SUM(CASE WHEN a.estatus_tarea = 'pendiente' THEN u.cantidad_usada ELSE 0 END), 0) AS en_uso
+                    FROM herramienta h
+                    LEFT JOIN uso_herramienta u ON u.id_herramienta = h.id_herramienta
+                    LEFT JOIN asignar_tarea a ON u.id_asignacion = a.id_asignacion
+                    WHERE h.id_herramienta = :id
+                    GROUP BY h.id_herramienta
+                ");
+                $stmtCheck->execute([':id' => $idHerramienta]);
+                $check = $stmtCheck->fetch(PDO::FETCH_ASSOC);
+                if (!$check) {
+                    throw new \Exception("Herramienta ID $idHerramienta no encontrada.");
+                }
+                $disponibles = (int)$check['cantidad'] - (int)$check['en_uso'];
+                if ($cantidad > $disponibles) {
+                    throw new \Exception("No hay suficientes unidades de la herramienta ID $idHerramienta. Disponibles: $disponibles, solicitadas: $cantidad.");
                 }
 
                 $stmt = $this->db()->prepare("
@@ -375,19 +118,13 @@ class Tarea extends Database implements ReadableInterface, DeletableInterface
                     ':id_asignacion'  => $asignacionId,
                     ':id_herramienta' => $idHerramienta,
                     ':cantidad_usada' => $cantidad,
-                    ':fecha_uso'      => $t['fecha_uso'],
+                    ':fecha_uso'      => $t['fecha_uso'] ?? date('Y-m-d'),
                     ':observacion'    => $t['observacion'] ?? null,
                 ]);
             }
 
             $this->db()->commit();
             AuditLog::record('UPDATE', 'asignar_tarea', $asignacionId, null, $assignmentData);
-            if (!empty($consumptions)) {
-                AuditLog::record('UPDATE', 'consumo_insumos', $asignacionId, null, ['count' => count($consumptions)]);
-            }
-            if (!empty($tools)) {
-                AuditLog::record('UPDATE', 'uso_herramienta', $asignacionId, null, ['count' => count($tools)]);
-            }
         } catch (\Exception $e) {
             $this->db()->rollBack();
             throw $e;
@@ -396,12 +133,11 @@ class Tarea extends Database implements ReadableInterface, DeletableInterface
 
     public function getAssignments(): array
     {
-        $sql = "SELECT a.*, t.nombre_tarea, tr.nombre_trabajador, tr.apellido_trabajador,
-                       l.id_lote AS codigo_lote
+        $sql = "SELECT a.id_asignacion, a.nombre_tarea, a.descripcion, a.fecha_asignacion,
+                       a.fecha_cumplimiento, a.estatus_tarea, a.horas_dedicadas,
+                       u.nombre_trabajador, u.apellido_trabajador, u.nombre_usuario
                 FROM asignar_tarea a
-                LEFT JOIN tareas t ON a.id_tarea = t.id_tarea
-                LEFT JOIN trabajadores tr ON a.id_trabajador = tr.id_trabajador
-                LEFT JOIN lote l ON a.id_lote = l.id_lote
+                LEFT JOIN `SysInescolara-Seguridad`.usuarios u ON a.id_usuario = u.id_usuario
                 ORDER BY a.fecha_asignacion DESC";
         $stmt = $this->db()->query($sql);
         return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
@@ -409,12 +145,11 @@ class Tarea extends Database implements ReadableInterface, DeletableInterface
 
     public function getAssignmentById(int $id): ?array
     {
-        $sql = "SELECT a.*, t.nombre_tarea, t.descripcion, tr.nombre_trabajador, tr.apellido_trabajador,
-                       l.id_lote AS codigo_lote
+        $sql = "SELECT a.id_asignacion, a.nombre_tarea, a.descripcion, a.fecha_asignacion,
+                       a.fecha_cumplimiento, a.estatus_tarea, a.horas_dedicadas,
+                       u.nombre_trabajador, u.apellido_trabajador, u.nombre_usuario
                 FROM asignar_tarea a
-                LEFT JOIN tareas t ON a.id_tarea = t.id_tarea
-                LEFT JOIN trabajadores tr ON a.id_trabajador = tr.id_trabajador
-                LEFT JOIN lote l ON a.id_lote = l.id_lote
+                LEFT JOIN `SysInescolara-Seguridad`.usuarios u ON a.id_usuario = u.id_usuario
                 WHERE a.id_asignacion = :id";
         $stmt = $this->db()->prepare($sql);
         $stmt->execute([':id' => $id]);
@@ -424,11 +159,11 @@ class Tarea extends Database implements ReadableInterface, DeletableInterface
     public function getConsumptions(int $asignacionId): array
     {
         $sql = "SELECT c.*, i.nombre_insumo, u.simbolo
-                FROM consumo_insumos c
+                FROM registro_insumo c
                 LEFT JOIN insumo i ON c.id_insumo = i.id_insumo
                 LEFT JOIN unidad_medida u ON i.id_unidad_medida = u.id_unidad_medida
                 WHERE c.id_asignacion = :id_asignacion
-                ORDER BY c.fecha_consumo DESC";
+                ORDER BY c.fecha_registro DESC";
         $stmt = $this->db()->prepare($sql);
         $stmt->execute([':id_asignacion' => $asignacionId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -436,21 +171,19 @@ class Tarea extends Database implements ReadableInterface, DeletableInterface
 
     public function updateToolEstados(int $asignacionId, array $toolEstados): void
     {
-        $this->db()->beginTransaction();
-        try {
-            $stmtUso = $this->db()->prepare("UPDATE uso_herramienta SET estado_herramienta_post_uso = :estado WHERE id_uso = :id_uso AND id_asignacion = :id_asignacion");
-            $stmtHerramienta = $this->db()->prepare("UPDATE herramienta SET estado = :estado WHERE id_herramienta = (SELECT id_herramienta FROM uso_herramienta WHERE id_uso = :id_uso)");
-            foreach ($toolEstados as $te) {
-                $idUso = (int)($te['id_uso'] ?? 0);
-                $estado = $te['estado'] ?? 'ok';
-                if ($idUso <= 0) continue;
-                $stmtUso->execute([':estado' => $estado, ':id_uso' => $idUso, ':id_asignacion' => $asignacionId]);
-                $stmtHerramienta->execute([':estado' => $estado, ':id_uso' => $idUso]);
+        $stmtUso = $this->db()->prepare("UPDATE uso_herramienta SET estado_herramienta_post_uso = :estado WHERE id_uso = :id_uso AND id_asignacion = :id_asignacion");
+        $stmtHerramienta = $this->db()->prepare("UPDATE herramienta SET estado = :estado WHERE id_herramienta = :id_herramienta");
+        foreach ($toolEstados as $te) {
+            $idUso = (int)($te['id_uso'] ?? 0);
+            $estado = $te['estado'] ?? 'ok';
+            if ($idUso <= 0) continue;
+            $stmtUso->execute([':estado' => $estado, ':id_uso' => $idUso, ':id_asignacion' => $asignacionId]);
+            $row = $this->db()->prepare("SELECT id_herramienta FROM uso_herramienta WHERE id_uso = :id_uso LIMIT 1");
+            $row->execute([':id_uso' => $idUso]);
+            $idHerr = $row->fetchColumn();
+            if ($idHerr) {
+                $stmtHerramienta->execute([':estado' => $estado, ':id_herramienta' => (int)$idHerr]);
             }
-            $this->db()->commit();
-        } catch (\Exception $e) {
-            $this->db()->rollBack();
-            throw $e;
         }
     }
 
@@ -466,23 +199,7 @@ class Tarea extends Database implements ReadableInterface, DeletableInterface
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function countActiveToolUsages(int $idHerramienta, ?int $excludeAsignacionId = null): int
-    {
-        $sql = "SELECT SUM(COALESCE(uh.cantidad_usada, 1)) FROM uso_herramienta uh
-                JOIN asignar_tarea a ON uh.id_asignacion = a.id_asignacion
-                WHERE uh.id_herramienta = :id_herramienta
-                AND a.estatus_tarea = 'pendiente'";
-        $params = [':id_herramienta' => $idHerramienta];
-        if ($excludeAsignacionId !== null) {
-            $sql .= " AND a.id_asignacion != :exclude";
-            $params[':exclude'] = $excludeAsignacionId;
-        }
-        $stmt = $this->db()->prepare($sql);
-        $stmt->execute($params);
-        return (int)$stmt->fetchColumn();
-    }
-
-    public function completeAssignment(int $id, string $fechaCumplimiento, ?float $horasDedicadas = null): void
+    public function completeAssignment(int $id, string $fechaCumplimiento, ?float $horasDedicadas = null, array $consumptions = [], array $toolEstados = []): void
     {
         $this->db()->beginTransaction();
         try {
@@ -496,6 +213,46 @@ class Tarea extends Database implements ReadableInterface, DeletableInterface
                 ':fecha' => $fechaCumplimiento,
                 ':horas' => $horasDedicadas,
             ]);
+
+            foreach ($consumptions as $c) {
+                $idInsumo = (int)($c['id_insumo'] ?? 0);
+                $cantidad = (float)($c['cantidad'] ?? 0);
+                if ($idInsumo <= 0 || $cantidad <= 0) continue;
+
+                $stmt = $this->db()->prepare("SELECT stock_actual, costo_unitario_actual FROM insumo WHERE id_insumo = :id");
+                $stmt->execute([':id' => $idInsumo]);
+                $insumo = $stmt->fetch(PDO::FETCH_ASSOC);
+                if (!$insumo) throw new \Exception("Insumo ID $idInsumo no existe.");
+
+                $stockActual = (float)$insumo['stock_actual'];
+                if ($cantidad > $stockActual) {
+                    throw new \Exception("Stock insuficiente para insumo ID $idInsumo. Disponible: $stockActual, solicitado: $cantidad.");
+                }
+
+                $idLote = !empty($c['id_lote']) ? (int)$c['id_lote'] : null;
+                $costoUnitario = (float)$insumo['costo_unitario_actual'];
+
+                $stmt = $this->db()->prepare("
+                    INSERT INTO registro_insumo (id_asignacion, id_lote, id_insumo, cantidad, costo_unitario, fecha_registro)
+                    VALUES (:id_asignacion, :id_lote, :id_insumo, :cantidad, :costo_unitario, :fecha_registro)
+                ");
+                $stmt->execute([
+                    ':id_asignacion'  => $id,
+                    ':id_lote'        => $idLote,
+                    ':id_insumo'      => $idInsumo,
+                    ':cantidad'       => $cantidad,
+                    ':costo_unitario' => $costoUnitario,
+                    ':fecha_registro' => date('Y-m-d'),
+                ]);
+
+                $stmt = $this->db()->prepare("UPDATE insumo SET stock_actual = GREATEST(0, stock_actual - :cantidad) WHERE id_insumo = :id_insumo");
+                $stmt->execute([':cantidad' => $cantidad, ':id_insumo' => $idInsumo]);
+            }
+
+            if (!empty($toolEstados)) {
+                $this->updateToolEstados($id, $toolEstados);
+            }
+
             $this->db()->commit();
             AuditLog::record('UPDATE', 'asignar_tarea', $id, null, [
                 'estatus_tarea' => 'completada',
@@ -512,18 +269,6 @@ class Tarea extends Database implements ReadableInterface, DeletableInterface
     {
         $this->db()->beginTransaction();
         try {
-            $oldConsumptions = $this->getConsumptions($id);
-            foreach ($oldConsumptions as $oc) {
-                $stmt = $this->db()->prepare("UPDATE insumo SET stock_actual = stock_actual + :cantidad WHERE id_insumo = :id_insumo");
-                $stmt->execute([':cantidad' => $oc['cantidad_usada'], ':id_insumo' => $oc['id_insumo']]);
-            }
-
-            $oldTools = $this->getToolUsages($id);
-            foreach ($oldTools as $ot) {
-                $stmt = $this->db()->prepare("UPDATE herramienta SET estado = 'disponible' WHERE id_herramienta = :id");
-                $stmt->execute([':id' => $ot['id_herramienta']]);
-            }
-
             $stmt = $this->db()->prepare("UPDATE asignar_tarea SET estatus_tarea = 'cancelada' WHERE id_asignacion = ?");
             $stmt->execute([$id]);
 

@@ -30,13 +30,18 @@ class Proveedor extends Database implements ReadableInterface, DeletableInterfac
     protected array $fillable = ['nombre_proveedor', 'rif_proveedor', 'contacto_vendedor', 'telefono_proveedor', 'activo'];
     protected array $guarded = ['id_proveedor'];
 
-    public function __construct(array $attributes = [])
+    private static bool $bootstrapped = false;
+
+    public function __construct(array $attributes = [], bool $runBootstrap = false)
     {
         parent::__construct();
+        if ($runBootstrap && !self::$bootstrapped) {
+            $this->bootstrapDefaults();
+            self::$bootstrapped = true;
+        }
         if (!empty($attributes)) {
             $this->fill($attributes);
         }
-        $this->bootstrapDefaults();
     }
 
     private function bootstrapDefaults(): void

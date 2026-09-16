@@ -38,7 +38,7 @@ $(document).ready(function () {
 
   const initDataTable = () => {
     if (typeof SkeletonHelper !== 'undefined') {
-      SkeletonHelper.showTableSkeleton('lotesTable', 5, 6);
+      SkeletonHelper.showTableSkeleton('lotesTable', 5, 8);
     }
     lotesTable = $('#lotesTable').DataTable({
       ajax: {
@@ -70,6 +70,20 @@ $(document).ready(function () {
         },
         { data: 'cantidad_actual' },
         {
+          data: null,
+          orderable: false,
+          render: (data) => {
+            const costo = parseFloat(data.costo_unitario) || 0;
+            const ganancia = parseFloat(data.porcentaje_ganancia) || 0;
+            const precio = costo * (1 + ganancia / 100);
+            return `$${precio.toFixed(2)}`;
+          },
+        },
+        {
+          data: 'porcentaje_ganancia',
+          render: (data) => data != null ? `${parseFloat(data).toFixed(1)}%` : '<span class="text-muted">—</span>',
+        },
+        {
           data: 'estado_nombre',
           render: (data) => Helpers.getBadge(data),
         },
@@ -98,7 +112,7 @@ $(document).ready(function () {
           className: 'btn btn-outline-secondary btn-sm',
           action: () => {
             if (typeof SkeletonHelper !== 'undefined') {
-              SkeletonHelper.showTableSkeleton('lotesTable', 5, 6);
+              SkeletonHelper.showTableSkeleton('lotesTable', 5, 8);
             }
             lotesTable.ajax.reload(null, false);
           },
@@ -138,6 +152,12 @@ $(document).ready(function () {
     $('#viewBatchEstado').text(row.estado_nombre || '—');
     $('#viewBatchCategoria').text(row.categoria_nombre || '—');
     $('#viewBatchOrigen').text(row.origen_nombre || '—');
+    $('#viewBatchCostoUnitario').text(row.costo_unitario != null ? `$${parseFloat(row.costo_unitario).toFixed(2)}` : '—');
+    $('#viewBatchPorcentajeGanancia').text(row.porcentaje_ganancia != null ? `${parseFloat(row.porcentaje_ganancia).toFixed(1)}%` : '—');
+    const costo = parseFloat(row.costo_unitario) || 0;
+    const ganancia = parseFloat(row.porcentaje_ganancia) || 0;
+    const precioFinal = costo * (1 + ganancia / 100);
+    $('#viewBatchPrecioFinal').text(`$${precioFinal.toFixed(2)}`);
     $('#viewBatchObs').text(row.observacion || '—');
 
     $('#viewBatchModal').modal({ focus: false }).modal('show');
@@ -212,6 +232,8 @@ $(document).ready(function () {
     $('#editBatchEstado').val(row.id_estado).prop('disabled', false);
     $('#editBatchCategoria').val(row.id_categoria || '');
     $('#editBatchOrigen').val(row.id_origen);
+    $('#editBatchCostoUnitario').val(row.costo_unitario ?? '');
+    $('#editBatchPorcentajeGanancia').val(row.porcentaje_ganancia ?? '');
     $('#editBatchObs').val(row.observacion);
 
     const imagen = row.imagen;

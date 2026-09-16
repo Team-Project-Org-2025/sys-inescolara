@@ -17,6 +17,7 @@ function index(): void
                 'GET_get_plantas'        => get_plantas(),
                 'GET_get_ubicaciones'    => get_ubicaciones(),
                 'GET_get_especies'       => get_especies(),
+                'GET_get_gestores'       => get_gestores(),
                 'GET_buscar_clientes'    => buscar_clientes(),
                 'POST_add_ajax'          => add_ajax(),
                 'POST_edit_ajax'         => edit_ajax(),
@@ -39,6 +40,7 @@ function get_lotes(): void { checkModuleAuth(); ampliacion_getLotesAjax(); }
 function get_plantas(): void { checkModuleAuth(); ampliacion_getPlantasAjax(); }
 function get_ubicaciones(): void { checkModuleAuth(); ampliacion_getUbicacionesAjax(); }
 function get_especies(): void { checkModuleAuth(); ampliacion_getEspeciesAjax(); }
+function get_gestores(): void { checkModuleAuth(); ampliacion_getGestoresAjax(); }
 function buscar_clientes(): void { checkModuleAuth(); ampliacion_buscarClientesAjax(); }
 function add_ajax(): void { checkModuleAuth(); checkPermisoOrFail('ampliacion:crear'); ampliacion_handleAdd(); }
 function edit_ajax(): void { checkModuleAuth(); checkPermisoOrFail('ampliacion:editar'); ampliacion_handleEdit(); }
@@ -49,7 +51,7 @@ function ampliacion_handleAdd(): void
     $data = getRequestData();
 
     $idCliente = (int)($data['id_cliente'] ?? 0);
-    $idTrabajador = (int)($data['id_trabajador_gestor'] ?? 0);
+    $idTrabajador = (int)($data['id_usuario_gestor'] ?? 0);
     if ($idTrabajador <= 0) throw new \Exception('El trabajador gestor es requerido.');
 
     $salidaItems = isset($data['salida_items']) ? json_decode($data['salida_items'], true) : [];
@@ -84,7 +86,7 @@ function ampliacion_handleAdd(): void
     $model = new Ampliacion();
     $payload = [
         'id_cliente' => $idCliente,
-        'id_trabajador_gestor' => $idTrabajador,
+        'id_usuario_gestor' => $idTrabajador,
         'fecha_movimiento' => trim((string)($data['fecha_movimiento'] ?? '')),
         'observacion' => trim((string)($data['observacion'] ?? '')),
         'salida_items' => $salidaItems,
@@ -103,7 +105,7 @@ function ampliacion_handleEdit(): void
     if ($id <= 0) throw new \Exception('ID inválido');
 
     $idCliente = (int)($data['id_cliente'] ?? 0);
-    $idTrabajador = (int)($data['id_trabajador_gestor'] ?? 0);
+    $idTrabajador = (int)($data['id_usuario_gestor'] ?? 0);
     if ($idTrabajador <= 0) throw new \Exception('El trabajador gestor es requerido.');
 
     $salidaItems = isset($data['salida_items']) ? json_decode($data['salida_items'], true) : [];
@@ -137,7 +139,7 @@ function ampliacion_handleEdit(): void
     $model = new Ampliacion();
     $payload = [
         'id_cliente' => $idCliente,
-        'id_trabajador_gestor' => $idTrabajador,
+        'id_usuario_gestor' => $idTrabajador,
         'fecha_movimiento' => trim((string)($data['fecha_movimiento'] ?? '')),
         'observacion' => trim((string)($data['observacion'] ?? '')),
         'salida_items' => $salidaItems,
@@ -209,6 +211,13 @@ function ampliacion_getEspeciesAjax(): void
     $model = new Ampliacion();
     $especies = $model->getSpecies();
     jsonResponse(['success' => true, 'especies' => $especies]);
+}
+
+function ampliacion_getGestoresAjax(): void
+{
+    $model = new Ampliacion();
+    $gestores = $model->getGestores();
+    jsonResponse(['success' => true, 'gestores' => $gestores]);
 }
 
 function ampliacion_buscarClientesAjax(): void

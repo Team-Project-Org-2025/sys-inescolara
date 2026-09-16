@@ -351,12 +351,11 @@ class Merma extends Database implements ReadableInterface, DeletableInterface
                             COALESCE(p.nombre_comun, CONCAT('Planta #', CAST(l.id_planta AS CHAR))) AS planta_nombre,
                             l.cantidad_actual AS lote_stock,
                             u.nombre_ubicacion,
-                            c.precio_final_sugerido AS precio_unitario
+                            l.costo_unitario AS precio_unitario
                         FROM trazabilidad t
                         LEFT JOIN lote l ON t.id_lote = l.id_lote AND l.activo = 1
                         LEFT JOIN plantas p ON l.id_planta = p.id_planta AND p.activo = 1
                         LEFT JOIN ubicacion u ON l.id_ubicacion = u.id_ubicacion AND u.activo = 1
-                        LEFT JOIN calculo_precio c ON l.id_lote = c.id_lote
                         LEFT JOIN estado e ON t.id_estado = e.id_estado
                         WHERE t.activo = 1 AND t.cantidad > 0
                           AND t.id_estado IN (6, 7)
@@ -371,12 +370,11 @@ class Merma extends Database implements ReadableInterface, DeletableInterface
                             COALESCE(p.nombre_comun, CONCAT('Planta #', CAST(l.id_planta AS CHAR))) AS planta_nombre,
                             l.cantidad_actual AS lote_stock,
                             u.nombre_ubicacion,
-                            c.precio_final_sugerido AS precio_unitario
+                            l.costo_unitario AS precio_unitario
                         FROM trazabilidad t
                         LEFT JOIN lote l ON t.id_lote = l.id_lote AND l.activo = 1
                         LEFT JOIN plantas p ON l.id_planta = p.id_planta AND p.activo = 1
                         LEFT JOIN ubicacion u ON l.id_ubicacion = u.id_ubicacion AND u.activo = 1
-                        LEFT JOIN calculo_precio c ON l.id_lote = c.id_lote
                         WHERE t.activo = 1 AND t.cantidad > 0
                           AND t.estado_salud IS NOT NULL AND t.estado_salud != ''
                           AND t.estado_salud NOT IN ('Vivo', 'Activo', 'Sano')
@@ -432,10 +430,9 @@ class Merma extends Database implements ReadableInterface, DeletableInterface
     {
         $stmt = $this->db()->prepare("
             SELECT t.id_trazabilidad, t.id_lote, t.cantidad,
-                   c.precio_final_sugerido AS precio_unitario
+                   l.costo_unitario AS precio_unitario
             FROM trazabilidad t
             LEFT JOIN lote l ON t.id_lote = l.id_lote
-            LEFT JOIN calculo_precio c ON l.id_lote = c.id_lote
             WHERE t.id_trazabilidad = :id AND t.activo = 1
         ");
         $stmt->execute([':id' => $idTrazabilidad]);

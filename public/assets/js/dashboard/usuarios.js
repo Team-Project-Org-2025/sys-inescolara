@@ -157,7 +157,11 @@ $(document).ready(function () {
     $('#editUserName').val(row.nombre_usuario);
     $('#editUserEmail').val(row.correo_electronico);
     $('#editUserRole').val(row.rol_id).prop('disabled', false).css('pointerEvents', isSuper ? 'none' : '').toggleClass('readonly-look', isSuper);
-    $('#editTrabajadorRef').val(row.id_trabajador_ref || '');
+    $('#editNombreTrabajador').val(row.nombre_trabajador || '');
+    $('#editApellidoTrabajador').val(row.apellido_trabajador || '');
+    $('#editCedulaTrabajador').val(row.cedula_trabajador || '');
+    $('#editTelefonoTrabajador').val(row.telefono_trabajador || '');
+    $('#editCargoTrabajador').val(row.cargo || '');
     $('#editUserPassword').val('');
     $('#editCurrentPassword').val('');
     $('#editUserRoleNote').toggle(isSuper);

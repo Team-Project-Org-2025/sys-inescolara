@@ -1,10 +1,11 @@
 const urlBaseVentas = `${window.BASE_URL || '/'}ventas`;
 
 import { setupRealTimeValidation, validateForm } from '../utils/validation.js';
+import * as Helpers from '../utils/helpers.js';
 import * as C from '../utils/components.js';
 
 const ventasRules = {
-  id_trabajador: 'select',
+  id_usuario: 'select',
   tipo_venta: 'select',
   observaciones: null,
 };
@@ -16,6 +17,7 @@ const Ventas = {
         this.initDataTable();
         this.initSelectProducto();
         this.initBuscarCliente();
+        this.initQuickClient();
         this.initPagos();
         this.initPagarCompleto();
         this.initWizard();
@@ -45,7 +47,11 @@ const Ventas = {
                 { data: 'nombre_cliente', defaultContent: '—' },
                 {
                     data: null,
-                    render: (r) => r.nombre_trabajador ? `${r.nombre_trabajador} ${r.apellido_trabajador || ''}` : '—'
+                    render: (r) => {
+                        if (r.nombre_trabajador) return `${r.nombre_trabajador} ${r.apellido_trabajador || ''}`;
+                        if (r.nombre_usuario) return r.nombre_usuario;
+                        return '—';
+                    }
                 },
                 {
                     data: 'fecha_venta',
@@ -103,7 +109,6 @@ const Ventas = {
 
     async cargarProductos() {
         const select = document.getElementById('productoSelect');
-        if (select.dataset.cargado) return;
         select.innerHTML = '<option value="">Cargando...</option>';
         try {
             const res = await fetch(`${urlBaseVentas}?accion=buscar_lotes&q=`, {
@@ -126,7 +131,7 @@ const Ventas = {
                     const o = document.createElement('option');
                     o.value = `planta|${l.id_lote}`;
                     o.dataset.item = JSON.stringify(l);
-                    o.textContent = `${l.planta_nombre} — Bs. ${fmt(l.precio_unitario)} (Stock: ${l.cantidad_actual})`;
+                    o.textContent = `${l.planta_nombre} — $${fmt(l.precio_unitario)} (Stock: ${l.cantidad_actual})`;
                     og.appendChild(o);
                 });
                 select.appendChild(og);
@@ -138,7 +143,7 @@ const Ventas = {
                     const o = document.createElement('option');
                     o.value = `insumo|${l.id_insumo}`;
                     o.dataset.item = JSON.stringify(l);
-                    o.textContent = `${l.nombre} — Bs. ${fmt(l.precio_unitario)} (Stock: ${l.cantidad_actual} ${l.unidad_simbolo || ''})`;
+                    o.textContent = `${l.nombre} — $${fmt(l.precio_unitario)} (Stock: ${l.cantidad_actual} ${l.unidad_simbolo || ''})`;
                     og.appendChild(o);
                 });
                 select.appendChild(og);
@@ -148,6 +153,12 @@ const Ventas = {
             select.innerHTML = '<option value="">Error al cargar productos</option>';
             console.error('Error cargando productos:', e);
         }
+    },
+
+    recargarProductos() {
+        const select = document.getElementById('productoSelect');
+        delete select.dataset.cargado;
+        this.cargarProductos();
     },
 
     // ==================== CLIENTE ====================
@@ -229,6 +240,58 @@ const Ventas = {
         this.clienteSeleccionado.classList.add('d-none');
     },
 
+    initQuickClient() {
+        const toggleBtn = document.getElementById('toggleQuickClient');
+        const form = document.getElementById('quickClientForm');
+        const saveBtn = document.getElementById('guardarClienteRapido');
+
+        toggleBtn.addEventListener('click', () => form.classList.toggle('d-none'));
+        saveBtn.addEventListener('click', () => this.guardarClienteRapido());
+    },
+
+    async guardarClienteRapido() {
+        const nombre = document.getElementById('qcNombre').value.trim();
+        if (!nombre) {
+            Helpers.toast('error', 'El nombre es requerido.');
+            document.getElementById('qcNombre').focus();
+            return;
+        }
+
+        const fd = new FormData();
+        fd.append('nombre_cliente', nombre);
+        fd.append('apellido_cliente', document.getElementById('qcApellido').value.trim());
+        fd.append('tipo_cedula_cliente', document.getElementById('qcTipoCedula').value);
+        fd.append('cedula_cliente', document.getElementById('qcCedula').value.trim());
+        fd.append('contacto_cliente', document.getElementById('qcContacto').value.trim());
+
+        try {
+            const res = await fetch(`${window.BASE_URL || '/'}clientes?action=add_ajax`, {
+                method: 'POST',
+                body: fd,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            const data = await res.json();
+            if (data.success && data.client) {
+                const c = data.client;
+                this.seleccionarCliente(c.id, c.nombre_completo, c.cedula_completa || '');
+                this.limpiarQuickClientForm();
+                document.getElementById('quickClientForm').classList.add('d-none');
+                Helpers.toast('success', 'Cliente registrado y seleccionado.');
+            } else {
+                Helpers.toast('error', data.message || 'Error al guardar cliente.');
+            }
+        } catch (e) {
+            Helpers.toast('error', 'Error de conexión al guardar cliente.');
+        }
+    },
+
+    limpiarQuickClientForm() {
+        ['qcNombre', 'qcApellido', 'qcCedula', 'qcContacto'].forEach(id => {
+            document.getElementById(id).value = '';
+        });
+        document.getElementById('qcTipoCedula').value = '';
+    },
+
     agregarProducto(item) {
         const cont = document.getElementById('productosContainer');
         document.getElementById('sinProductos').style.display = 'none';
@@ -247,6 +310,17 @@ const Ventas = {
         div.dataset.idLote = idLote;
         div.dataset.idInsumo = idInsumo;
         div.dataset.tipoItem = esInsumo ? 'insumo' : 'planta';
+
+        if (!esInsumo) {
+            div.dataset.costoUnitario = parseFloat(item.costo_unitario || 0);
+            div.dataset.porcentajeGanancia = parseFloat(item.porcentaje_ganancia || 0);
+            div.dataset.totalInsumos = parseFloat(item.total_insumos || 0);
+        }
+
+        const editBtnHtml = !esInsumo
+            ? `<button type="button" class="btn btn-sm btn-outline-warning py-0 px-1 ms-1 editar-precio-lote" title="Editar precio"><i class="fas fa-pencil-alt" style="font-size:.65rem;"></i></button>`
+            : '';
+
         div.innerHTML = `
             <div class="card-body py-2 px-3">
                 <div class="d-flex justify-content-between align-items-start mb-2">
@@ -270,14 +344,48 @@ const Ventas = {
                     </div>
                     <div class="col-4">
                         <small class="text-muted d-block" style="font-size:.7rem;line-height:1;letter-spacing:.5px;">PRECIO UNIT.</small>
-                            <input type="text" class="form-control form-control-sm precio-producto text-end mt-1" value="${parseFloat(item.precio_unitario || 0).toFixed(2)}" inputmode="decimal" readonly>
+                        <div class="d-flex align-items-center mt-1">
+                            <input type="text" class="form-control form-control-sm precio-producto text-end" value="${parseFloat(item.precio_unitario || 0).toFixed(2)}" inputmode="decimal" readonly>
+                            ${editBtnHtml}
+                        </div>
                     </div>
                     <div class="col-4 text-end">
                         <small class="text-muted d-block" style="font-size:.7rem;line-height:1;letter-spacing:.5px;">SUBTOTAL</small>
-                        <div class="subtotal-producto fw-bold mt-1" style="font-size:1rem;">Bs. ${parseFloat(item.precio_unitario || 0).toLocaleString('es-ES', { minimumFractionDigits: 2 })}</div>
+                        <div class="subtotal-producto fw-bold mt-1" style="font-size:1rem;">$${parseFloat(item.precio_unitario || 0).toLocaleString('es-ES', { minimumFractionDigits: 2 })}</div>
                     </div>
                 </div>
             </div>
+            ${!esInsumo ? `
+            <div class="card-footer bg-white border-top py-2 px-3 d-none editar-precio-form">
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label small">Costo Unitario ($)</label>
+                        <input type="number" class="form-control form-control-sm ep-costo" step="0.01" min="0" value="${parseFloat(item.costo_unitario || 0).toFixed(2)}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small">% Ganancia</label>
+                        <input type="number" class="form-control form-control-sm ep-ganancia" step="0.01" min="0" max="100" value="${parseFloat(item.porcentaje_ganancia || 0).toFixed(1)}">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small text-muted">Insumos</label>
+                        <div class="form-control form-control-sm bg-light ep-insumos" style="font-size:.8rem;">$${parseFloat(item.total_insumos || 0).toFixed(2)}</div>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small text-muted">Ganancia ($)</label>
+                        <div class="form-control form-control-sm bg-light ep-ganancia-monto" style="font-size:.8rem;">$0.00</div>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small fw-semibold">Precio Final</label>
+                        <div class="form-control form-control-sm bg-success text-white fw-bold ep-precio-final" style="font-size:.85rem;">$0.00</div>
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <button type="button" class="btn btn-sm btn-success aplicar-precio-lote">
+                        <i class="fas fa-check me-1"></i>Aplicar
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary cancelar-precio-lote ms-1">Cancelar</button>
+                </div>
+            </div>` : ''}
         `;
 
         const cant = div.querySelector('.cantidad-producto');
@@ -287,7 +395,7 @@ const Ventas = {
         const recalcular = () => {
             const c = parseFloat(cant.value) || 0;
             const p = parseFloat(precio.value) || 0;
-            sub.textContent = `Bs. ${(c * p).toLocaleString('es-ES', { minimumFractionDigits: 2 })}`;
+            sub.textContent = `$${(c * p).toLocaleString('es-ES', { minimumFractionDigits: 2 })}`;
             this.calcularTotales();
         };
 
@@ -301,6 +409,82 @@ const Ventas = {
             this.calcularTotales();
             if (cont.children.length === 0) document.getElementById('sinProductos').style.display = 'block';
         });
+
+        if (!esInsumo) {
+            const editBtn = div.querySelector('.editar-precio-lote');
+            const editForm = div.querySelector('.editar-precio-form');
+            const costoInput = div.querySelector('.ep-costo');
+            const gananciaInput = div.querySelector('.ep-ganancia');
+            const insumosDisplay = div.querySelector('.ep-insumos');
+            const gananciaMontoDisplay = div.querySelector('.ep-ganancia-monto');
+            const precioFinalDisplay = div.querySelector('.ep-precio-final');
+
+            const recalcEditPreview = () => {
+                const costo = parseFloat(costoInput.value) || 0;
+                const ganancia = parseFloat(gananciaInput.value) || 0;
+                const totalInsumos = parseFloat(div.dataset.totalInsumos) || 0;
+                const gananciaMonto = costo * ganancia / 100;
+                const precioFinal = costo + totalInsumos + gananciaMonto;
+                insumosDisplay.textContent = `$${totalInsumos.toFixed(2)}`;
+                gananciaMontoDisplay.textContent = `$${gananciaMonto.toFixed(2)}`;
+                precioFinalDisplay.textContent = `$${precioFinal.toFixed(2)}`;
+            };
+
+            editBtn.addEventListener('click', () => {
+                editForm.classList.toggle('d-none');
+                if (!editForm.classList.contains('d-none')) recalcEditPreview();
+            });
+
+            div.querySelector('.cancelar-precio-lote').addEventListener('click', () => editForm.classList.add('d-none'));
+
+            costoInput.addEventListener('input', recalcEditPreview);
+            gananciaInput.addEventListener('input', recalcEditPreview);
+
+            div.querySelector('.aplicar-precio-lote').addEventListener('click', async () => {
+                const btn = div.querySelector('.aplicar-precio-lote');
+                const costo = parseFloat(costoInput.value) || 0;
+                const ganancia = parseFloat(gananciaInput.value) || 0;
+                const totalInsumos = parseFloat(div.dataset.totalInsumos) || 0;
+                const precioFinal = costo + totalInsumos + (costo * ganancia / 100);
+
+                if (costo <= 0) { Helpers.toast('error', 'El costo unitario debe ser mayor a cero.'); return; }
+                if (ganancia < 0) { Helpers.toast('error', 'El porcentaje no puede ser negativo.'); return; }
+
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Guardando...';
+
+                try {
+                    const res = await fetch(`${urlBaseVentas}?accion=actualizar_precio_lote`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                        body: JSON.stringify({ id_lote: idLote, costo_unitario: costo, porcentaje_ganancia: ganancia })
+                    });
+                    const result = await res.json();
+
+                    div.dataset.costoUnitario = costo;
+                    div.dataset.porcentajeGanancia = ganancia;
+                    precio.value = precioFinal.toFixed(2);
+                    editForm.classList.add('d-none');
+
+                    if (result.success) {
+                        Helpers.toast('success', 'Precio del lote actualizado.');
+                    } else {
+                        Helpers.toast('warning', result.message || 'Precio aplicado localmente.');
+                    }
+                } catch (e) {
+                    div.dataset.costoUnitario = costo;
+                    div.dataset.porcentajeGanancia = ganancia;
+                    precio.value = precioFinal.toFixed(2);
+                    editForm.classList.add('d-none');
+                    Helpers.toast('warning', 'Precio aplicado localmente (sin sincronizar).');
+                } finally {
+                    recalcular();
+                    this.recargarProductos();
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-check me-1"></i>Aplicar';
+                }
+            });
+        }
 
         cont.appendChild(div);
         this.calcularTotales();
@@ -319,9 +503,9 @@ const Ventas = {
         const sinIva = total / 1.16;
         const iva = sinIva * 0.16;
 
-        document.getElementById('resumenSubtotal').textContent = `Bs. ${sinIva.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`;
-        document.getElementById('resumenIva').textContent = `Bs. ${iva.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`;
-        document.getElementById('resumenTotal').textContent = `Bs. ${total.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`;
+        document.getElementById('resumenSubtotal').textContent = `$${sinIva.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`;
+        document.getElementById('resumenIva').textContent = `$${iva.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`;
+        document.getElementById('resumenTotal').textContent = `$${total.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`;
 
         this.actualizarBalancePagos(total);
     },
@@ -450,11 +634,11 @@ const Ventas = {
             pagado += parseFloat(inp.value) || 0;
         });
 
-        document.getElementById('totalPagado').textContent = `Bs. ${pagado.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`;
+        document.getElementById('totalPagado').textContent = `$${pagado.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`;
 
         const pendiente = total - pagado;
         const el = document.getElementById('saldoPendiente');
-        el.textContent = `Bs. ${Math.max(0, pendiente).toLocaleString('es-ES', { minimumFractionDigits: 2 })}`;
+        el.textContent = `$${Math.max(0, pendiente).toLocaleString('es-ES', { minimumFractionDigits: 2 })}`;
         el.style.color = Math.abs(pendiente) < 0.01 ? '#198754' : '#dc3545';
     },
 
@@ -535,7 +719,9 @@ const Ventas = {
         formData.set('pagos', JSON.stringify(pagos));
 
         if (!formData.get('fecha_venta')) {
-            formData.set('fecha_venta', new Date().toISOString().slice(0, 19).replace('T', ' '));
+            const now = new Date();
+            const pad = (n) => String(n).padStart(2, '0');
+            formData.set('fecha_venta', `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`);
         }
 
         try {
@@ -685,7 +871,7 @@ const Ventas = {
                     <div class="col-6"><strong>Referencia:</strong> ${v.referencia || ''}</div>
                     <div class="col-6 text-end"><strong>Fecha:</strong> ${v.fecha_venta ? new Date(v.fecha_venta).toLocaleString('es-ES') : ''}</div>
                     <div class="col-6 mt-2"><strong>Cliente:</strong> ${v.nombre_cliente || '—'} ${v.tipo_cedula_cliente ? `— ${v.tipo_cedula_cliente}-${v.cedula_cliente}` : ''}</div>
-                    <div class="col-6 mt-2"><strong>Vendedor:</strong> ${(v.nombre_trabajador || '') + ' ' + (v.apellido_trabajador || '')}</div>
+                    <div class="col-6 mt-2"><strong>Vendedor:</strong> ${(v.nombre_trabajador ? v.nombre_trabajador + ' ' + (v.apellido_trabajador || '') : v.nombre_usuario || '—')}</div>
                     <div class="col-6 mt-2"><strong>Tipo:</strong> ${v.tipo_venta || ''}</div>
                     <div class="col-6 mt-2"><strong>Estado:</strong> ${v.estado || ''}</div>
                     ${v.observaciones ? `<div class="col-12 mt-2"><strong>Observaciones:</strong> ${v.observaciones}</div>` : ''}
@@ -709,18 +895,18 @@ const Ventas = {
                     <td>${tipoLabel}</td>
                     <td>${nombre}${detalle}</td>
                     <td class="text-center">${d.cantidad}</td>
-                    <td class="text-end">Bs. ${parseFloat(d.precio_unitario).toLocaleString('es-ES', { minimumFractionDigits: 2 })}</td>
-                    <td class="text-end">Bs. ${sub.toLocaleString('es-ES', { minimumFractionDigits: 2 })}</td>
+                    <td class="text-end">$${parseFloat(d.precio_unitario).toLocaleString('es-ES', { minimumFractionDigits: 2 })}</td>
+                    <td class="text-end">$${sub.toLocaleString('es-ES', { minimumFractionDigits: 2 })}</td>
                 </tr>`;
             });
 
             html += `</tbody></table>
                 <div class="row">
                     <div class="col-12 col-lg-6 offset-lg-6">
-                        <div class="d-flex justify-content-between"><span>Subtotal (sin IVA):</span><strong>Bs. ${(v.monto_sin_iva || 0).toLocaleString('es-ES', { minimumFractionDigits: 2 })}</strong></div>
-                        <div class="d-flex justify-content-between"><span>IVA (${v.iva_porcentaje || 16}%):</span><strong>Bs. ${(v.monto_iva || 0).toLocaleString('es-ES', { minimumFractionDigits: 2 })}</strong></div>
+                        <div class="d-flex justify-content-between"><span>Subtotal (sin IVA):</span><strong>$${(v.monto_sin_iva || 0).toLocaleString('es-ES', { minimumFractionDigits: 2 })}</strong></div>
+                        <div class="d-flex justify-content-between"><span>IVA (${v.iva_porcentaje || 16}%):</span><strong>$${(v.monto_iva || 0).toLocaleString('es-ES', { minimumFractionDigits: 2 })}</strong></div>
                         <hr>
-                        <div class="d-flex justify-content-between fs-5 fw-bold"><span>TOTAL:</span><span class="text-primary">Bs. ${((v.monto_sin_iva || 0) + (v.monto_iva || 0)).toLocaleString('es-ES', { minimumFractionDigits: 2 })}</span></div>
+                        <div class="d-flex justify-content-between fs-5 fw-bold"><span>TOTAL:</span><span class="text-primary">$${((v.monto_sin_iva || 0) + (v.monto_iva || 0)).toLocaleString('es-ES', { minimumFractionDigits: 2 })}</span></div>
                     </div>
                 </div>`;
 
@@ -732,7 +918,7 @@ const Ventas = {
                         </thead>
                         <tbody>`;
                 pagos.forEach(p => {
-                    html += `<tr><td>${p.metodo || ''}</td><td class="text-end">Bs. ${parseFloat(p.monto).toLocaleString('es-ES', { minimumFractionDigits: 2 })}</td><td>${p.referencia || '—'}</td></tr>`;
+                    html += `<tr><td>${p.metodo || ''}</td><td class="text-end">$${parseFloat(p.monto).toLocaleString('es-ES', { minimumFractionDigits: 2 })}</td><td>${p.referencia || '—'}</td></tr>`;
                 });
                 html += `</tbody></table>`;
             }

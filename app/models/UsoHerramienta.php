@@ -27,11 +27,10 @@ class UsoHerramienta extends Database implements ReadableInterface
     public function getAll(): array
     {
         $sql = "SELECT u.*, h.nombre_herramienta, h.tipo,
-                       t.nombre_tarea
+                       a.nombre_tarea
                 FROM uso_herramienta u
                 LEFT JOIN herramienta h ON u.id_herramienta = h.id_herramienta
                 LEFT JOIN asignar_tarea a ON u.id_asignacion = a.id_asignacion
-                LEFT JOIN tareas t ON a.id_tarea = t.id_tarea
                 ORDER BY u.fecha_uso DESC";
         $stmt = $this->db()->query($sql);
         return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];

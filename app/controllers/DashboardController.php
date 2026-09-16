@@ -15,10 +15,14 @@ function dashboardCheckAuth(): void
         exit();
     }
 
-    // Recargar permisos del usuario desde la BD (para reflejar cambios en tiempo real)
-    require_once ROOT_PATH . 'vendor/autoload.php';
-    $userModel = new \SysInescolara\models\Usuario();
-    \SysInescolara\helpers\Auth::setField('user_permisos', $userModel->getRolePermissions(\SysInescolara\helpers\Auth::roleId(), \SysInescolara\helpers\Auth::id()));
+    // Recargar permisos cada 5 minutos (caché en sesión)
+    $lastCheck = $_SESSION['permisos_last_check'] ?? 0;
+    if (time() - $lastCheck > 300) {
+        require_once ROOT_PATH . 'vendor/autoload.php';
+        $userModel = new \SysInescolara\models\Usuario();
+        \SysInescolara\helpers\Auth::setField('user_permisos', $userModel->getRolePermissions(\SysInescolara\helpers\Auth::roleId(), \SysInescolara\helpers\Auth::id()));
+        $_SESSION['permisos_last_check'] = time();
+    }
 }
 
 function dashboardCheckPermiso(string $codigo): void
@@ -119,8 +123,8 @@ function ventas(): void
     require_once ROOT_PATH . 'vendor/autoload.php';
     $modeloCliente = new \SysInescolara\models\Cliente();
     $clientes = $modeloCliente->getAll();
-    $modeloTrabajador = new \SysInescolara\models\Empleado();
-    $trabajadores = $modeloTrabajador->getAll();
+    $modeloUsuario = new \SysInescolara\models\Usuario();
+    $trabajadores = $modeloUsuario->getAll();
 
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'ventas.php';
@@ -139,8 +143,8 @@ function cuentas_cobrar(): void
     dashboardCheckPermiso('cuentas_cobrar:ver');
 
     require_once ROOT_PATH . 'vendor/autoload.php';
-    $employeeModel = new \SysInescolara\models\Empleado();
-    $employees = $employeeModel->getAll();
+    $userModel = new \SysInescolara\models\Usuario();
+    $employees = $userModel->getAll();
 
     $canPay = \SysInescolara\helpers\Auth::hasPermiso('cuentas_cobrar:editar');
 
@@ -164,8 +168,6 @@ function usuarios(): void
     $userModel = new \SysInescolara\models\Usuario();
     $roles = $userModel->getRoles();
     $allPermisos = $userModel->getAllPermissions();
-    $employeeModel = new \SysInescolara\models\Empleado();
-    $trabajadores = $employeeModel->getAll();
 
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'usuarios.php';
@@ -313,32 +315,6 @@ function compras(): void
     if (!is_file($view)) {
         http_response_code(500);
         echo 'Vista de compras no encontrada.';
-        return;
-    }
-
-    require $view;
-}
-
-function empleados(): void
-{
-    dashboardCheckPermiso('empleados:ver');
-
-    require_once ROOT_PATH . 'vendor/autoload.php';
-    try {
-        $roleModel = new \SysInescolara\models\Role();
-        $roles = $roleModel->getAll();
-        $cargoOptions = array_map(fn($r) => $r['nombre_rol'], $roles);
-        sort($cargoOptions);
-    } catch (\Throwable $e) {
-        $cargoOptions = [];
-    }
-
-    $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
-        . 'dashboard' . DIRECTORY_SEPARATOR . 'empleados.php';
-
-    if (!is_file($view)) {
-        http_response_code(500);
-        echo 'Vista de empleados no encontrada.';
         return;
     }
 
@@ -614,12 +590,14 @@ function seedcollection(): void
     require_once ROOT_PATH . 'vendor/autoload.php';
     $locationModel = new \SysInescolara\models\Ubicacion();
     $ubicaciones = $locationModel->getByTipo('externo');
-    $employeeModel = new \SysInescolara\models\Empleado();
-    $trabajadores = $employeeModel->getAll();
+    $userModel = new \SysInescolara\models\Usuario();
+    $trabajadores = $userModel->getAll();
     $plantModel = new \SysInescolara\models\Planta();
     $plantas = $plantModel->getAll();
     $unidadMedidaModel = new \SysInescolara\models\UnidadMedida();
     $unidades = $unidadMedidaModel->getAll();
+    $insumoModel = new \SysInescolara\models\Insumo();
+    $insumos = $insumoModel->getAll();
 
     $view = ROOT_PATH . 'app/views/dashboard/seed-collection.php';
 
@@ -639,8 +617,8 @@ function ampliacion(): void
     require_once ROOT_PATH . 'vendor/autoload.php';
     $clientModel = new \SysInescolara\models\Cliente();
     $clientes = $clientModel->getAll();
-    $employeeModel = new \SysInescolara\models\Empleado();
-    $trabajadores = $employeeModel->getAll();
+    $userModel = new \SysInescolara\models\Usuario();
+    $trabajadores = $userModel->getAll();
 
     $view = ROOT_PATH . 'app/views/dashboard/ampliacion.php';
 

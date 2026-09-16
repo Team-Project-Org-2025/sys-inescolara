@@ -34,7 +34,7 @@ include_once __DIR__ . '/../common/modal.php';
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
                     <h1>Asignación de Tareas</h1>
-                    <p style="color: var(--text-secondary);">Registra tareas, asígnalas a trabajadores y registra el consumo de insumos.</p>
+                    <p style="color: var(--text-secondary);">Registra tareas, asígnalas a trabajadores con herramientas y registra insumos al completar.</p>
                 </div>
                 <button class="btn btn-primary" id="btnAssignTask">
                     <i class="fas fa-plus"></i> Asignar Tarea
@@ -69,66 +69,36 @@ include_once __DIR__ . '/../common/modal.php';
         <div class="row">
             <div class="col-md-4 mb-3">
                 <label class="form-label">Nombre de la tarea *</label>
-                <input type="text" class="form-control" name="nombre_tarea" required placeholder="Ej: Regar plantas, Podar rosales" maxlength="50">
+                <input type="text" class="form-control" name="nombre_tarea" required placeholder="Ej: Regar plantas, Podar rosales" maxlength="100">
             </div>
             <div class="col-md-4 mb-3">
                 <label class="form-label">Trabajador *</label>
-                <select class="form-select" name="id_trabajador" required>
+                <select class="form-select" name="id_usuario" required>
                     <option value="">Seleccione...</option>
                     <?php foreach ($trabajadores as $t): ?>
-                    <option value="<?= $t['id'] ?>"><?= htmlspecialchars($t['nombre_trabajador'] . ' ' . ($t['apellido_trabajador'] ?? '')) ?></option>
+                    <?php
+                        $displayName = trim(($t['nombre_trabajador'] ?? '') . ' ' . ($t['apellido_trabajador'] ?? ''));
+                        if ($displayName === '') {
+                            $displayName = $t['nombre_usuario'] ?? '—';
+                        }
+                    ?>
+                    <option value="<?= $t['id'] ?>"><?= htmlspecialchars($displayName) ?></option>
                     <?php endforeach; ?>
                 </select>
             </div>
             <div class="col-md-4 mb-3">
-                <label class="form-label">Lote *</label>
-                <select class="form-select" name="id_lote" required>
-                    <option value="">Seleccione...</option>
-                    <?php foreach ($lotes as $l): ?>
-                    <option value="<?= $l['id'] ?>" data-planta="<?= htmlspecialchars($l['planta_nombre'] ?? '') ?>">
-                        #<?= $l['id'] ?> - <?= htmlspecialchars($l['planta_nombre'] ?? '') ?>
-                    </option>
-                    <?php endforeach; ?>
-                </select>
+                <label class="form-label">Fecha de Asignación</label>
+                <input type="date" class="form-control" name="fecha_asignacion">
             </div>
         </div>
         <div class="mb-3">
             <label class="form-label">Descripción</label>
-            <textarea class="form-control" name="descripcion" rows="2" placeholder="Detalles adicionales de la tarea (opcional)" maxlength="500"></textarea>
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Fecha de Asignación</label>
-            <input type="date" class="form-control" name="fecha_asignacion">
-        </div>
-
-        <div class="card border-success mb-3">
-            <div class="card-header d-flex justify-content-between align-items-center py-2 bg-success bg-opacity-10 text-success">
-                <h6 class="mb-0"><i class="fas fa-boxes"></i> Consumo de Insumos</h6>
-                <small class="text-muted">(opcional)</small>
-            </div>
-            <div class="card-body p-2">
-                <table class="table table-sm table-bordered mb-2">
-                    <thead>
-                        <tr>
-                            <th style="width:35%">Insumo</th>
-                            <th style="width:15%">Stock</th>
-                            <th style="width:25%">Cantidad</th>
-                            <th style="width:25%"></th>
-                        </tr>
-                    </thead>
-                    <tbody id="consumptionsBody">
-                        <!-- rows added by JS -->
-                    </tbody>
-                </table>
-                <button type="button" class="btn btn-sm btn-outline-success btn-add-row" id="btnAddConsumptionRow">
-                    <i class="fas fa-plus"></i> Agregar Insumo
-                </button>
-            </div>
+            <textarea class="form-control" name="descripcion" rows="3" placeholder="Describe detalladamente lo que se debe hacer (opcional)" maxlength="500"></textarea>
         </div>
 
         <div class="card border-primary mb-3">
             <div class="card-header d-flex justify-content-between align-items-center py-2 bg-primary bg-opacity-10 text-primary">
-                <h6 class="mb-0"><i class="fas fa-wrench"></i> Uso de Herramientas</h6>
+                <h6 class="mb-0"><i class="fas fa-wrench"></i> Herramientas a Utilizar</h6>
                 <small class="text-muted">(opcional)</small>
             </div>
             <div class="card-body p-2">
@@ -155,15 +125,18 @@ include_once __DIR__ . '/../common/modal.php';
     <!-- ============ MODAL: COMPLETAR ASIGNACIÓN ============ -->
     <?php modal_form(['id' => 'completeAssignModal', 'title' => 'Completar Asignación', 'formId' => 'completeAssignForm', 'size' => 'modal-lg', 'hasHiddenId' => true, 'hiddenId' => 'completeAssignId', 'saveText' => 'Completar', 'saveClass' => 'success']); ?>
         <p>¿Registrar la finalización de esta tarea?</p>
-        <div class="mb-3">
-            <label class="form-label">Fecha de Cumplimiento</label>
-            <input type="date" class="form-control" name="fecha_cumplimiento">
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Fecha de Cumplimiento</label>
+                <input type="date" class="form-control" name="fecha_cumplimiento">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Horas Dedicadas</label>
+                <input type="number" class="form-control" name="horas_dedicadas" step="0.25" min="0" max="999.99" placeholder="ej: 2.5">
+            </div>
         </div>
-        <div class="mb-3">
-            <label class="form-label">Horas Dedicadas</label>
-            <input type="number" class="form-control" name="horas_dedicadas" step="0.25" min="0" max="999.99" placeholder="ej: 2.5">
-        </div>
-        <div class="card border-primary">
+
+        <div class="card border-primary mb-3">
             <div class="card-header d-flex justify-content-between align-items-center py-2 bg-primary bg-opacity-10 text-primary">
                 <h6 class="mb-0"><i class="fas fa-wrench"></i> Estado de Herramientas</h6>
                 <small class="text-muted">Post-uso</small>
@@ -173,6 +146,32 @@ include_once __DIR__ . '/../common/modal.php';
                 <div id="completeToolsContainer">
                     <!-- filled by JS -->
                 </div>
+            </div>
+        </div>
+
+        <div class="card border-success mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center py-2 bg-success bg-opacity-10 text-success">
+                <h6 class="mb-0"><i class="fas fa-boxes"></i> Insumos Consumidos</h6>
+                <small class="text-muted">(opcional)</small>
+            </div>
+            <div class="card-body p-2">
+                <p class="text-muted small mb-2">Registra los insumos utilizados durante la tarea.</p>
+                <table class="table table-sm table-bordered mb-2">
+                    <thead>
+                        <tr>
+                            <th style="width:35%">Insumo</th>
+                            <th style="width:15%">Stock</th>
+                            <th style="width:25%">Cantidad</th>
+                            <th style="width:25%"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="completeConsumptionsBody">
+                        <!-- rows added by JS -->
+                    </tbody>
+                </table>
+                <button type="button" class="btn btn-sm btn-outline-success btn-add-row" id="btnAddCompleteConsumptionRow">
+                    <i class="fas fa-plus"></i> Agregar Insumo
+                </button>
             </div>
         </div>
     <?php modal_form_end('completeAssignForm'); ?>
@@ -191,6 +190,6 @@ include_once __DIR__ . '/../common/modal.php';
             hoy: '<?= date('Y-m-d') ?>'
         };
     </script>
-    <script type="module" src="<?= BASE_URL ?>public/assets/js/dashboard/tareas.js?v=2"></script>
+    <script type="module" src="<?= BASE_URL ?>public/assets/js/dashboard/tareas.js?v=100"></script>
 </body>
 </html>

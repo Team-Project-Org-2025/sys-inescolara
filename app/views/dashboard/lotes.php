@@ -77,6 +77,8 @@ include_once __DIR__ . '/../common/modal.php';
                                     <th>Especie</th>
                                     <th>Ubicación</th>
                                     <th>Cant. Actual</th>
+                                    <th>Precio</th>
+                                    <th>% Ganancia</th>
                                     <th>Estado</th>
                                     <th>Acciones</th>
                                 </tr>
@@ -121,6 +123,16 @@ include_once __DIR__ . '/../common/modal.php';
             <div class="col-6 mb-3">
                 <label class="form-label">Cantidad Actual</label>
                 <input type="number" class="form-control" name="cantidad_actual" id="addBatchQtyCurr" min="0" required readonly>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-6 mb-3">
+                <label class="form-label">Costo Unitario</label>
+                <input type="number" class="form-control" name="costo_unitario" step="0.01" min="0" placeholder="0.00">
+            </div>
+            <div class="col-6 mb-3">
+                <label class="form-label">Porcentaje de Ganancia (%)</label>
+                <input type="number" class="form-control" name="porcentaje_ganancia" step="0.01" min="0" max="100" value="30" placeholder="30">
             </div>
         </div>
         <div class="row">
@@ -198,6 +210,16 @@ include_once __DIR__ . '/../common/modal.php';
             <div class="col-6 mb-3">
                 <label class="form-label">Cantidad Actual</label>
                 <input type="number" class="form-control" name="cantidad_actual" id="editBatchQtyCurr" min="0" required>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-6 mb-3">
+                <label class="form-label">Costo Unitario</label>
+                <input type="number" class="form-control" name="costo_unitario" id="editBatchCostoUnitario" step="0.01" min="0" placeholder="0.00">
+            </div>
+            <div class="col-6 mb-3">
+                <label class="form-label">Porcentaje de Ganancia (%)</label>
+                <input type="number" class="form-control" name="porcentaje_ganancia" id="editBatchPorcentajeGanancia" step="0.01" min="0" max="100" value="30" placeholder="30">
             </div>
         </div>
         <div class="row">
@@ -291,6 +313,18 @@ include_once __DIR__ . '/../common/modal.php';
             <div class="col-md-4">
                 <label class="form-label fw-semibold text-muted small text-uppercase">Estado</label>
                 <p class="fs-5 fw-medium" id="viewBatchEstado">—</p>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-semibold text-muted small text-uppercase">Costo Unitario</label>
+                <p class="fs-5 fw-medium" id="viewBatchCostoUnitario">—</p>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-semibold text-muted small text-uppercase">% Ganancia</label>
+                <p class="fs-5 fw-medium" id="viewBatchPorcentajeGanancia">—</p>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-semibold text-muted small text-uppercase">Precio Final</label>
+                <p class="fs-5 fw-medium text-success fw-bold" id="viewBatchPrecioFinal">—</p>
             </div>
             <div class="col-md-4">
                 <label class="form-label fw-semibold text-muted small text-uppercase">Categoría</label>
