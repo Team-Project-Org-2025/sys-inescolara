@@ -105,7 +105,7 @@ include_once __DIR__ . '/../common/modal.php';
                   <label class="form-label small fw-semibold">Cliente</label>
                   <div class="position-relative">
                     <div class="d-flex">
-                      <input type="text" class="form-control" id="buscarClienteInput" placeholder="Buscar por C.I., nombre o apellido..." autocomplete="off">
+                      <input type="text" class="form-control" id="buscarClienteInput" placeholder="Buscar por cédula..." autocomplete="off" inputmode="numeric" maxlength="10">
                       <button type="button" class="btn btn-outline-success ms-1 flex-shrink-0" id="toggleQuickClient" title="Registrar cliente rápido"><i class="fas fa-plus"></i></button>
                     </div>
                     <input type="hidden" name="id_cliente" id="idClienteHidden">
