@@ -117,7 +117,7 @@ include_once __DIR__ . '/../common/modal.php';
             <select class="form-select" name="id_usuario" required>
                 <option value="">Seleccione...</option>
                 <?php foreach ($employees as $e): ?>
-                <option value="<?= $e['id'] ?>"><?= htmlspecialchars($e['nombre_trabajador'] . ' ' . $e['apellido_trabajador']) ?></option>
+                <option value="<?= $e['id'] ?>"><?= htmlspecialchars($e['nombre_usuario'] ?? trim(($e['nombre_trabajador'] ?? '') . ' ' . ($e['apellido_trabajador'] ?? ''))) ?></option>
                 <?php endforeach; ?>
             </select>
         </div>
