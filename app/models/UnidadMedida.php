@@ -139,7 +139,7 @@ class UnidadMedida extends Database implements ReadableInterface, DeletableInter
     public static function all(): array
     {
         $instance = new static();
-        $sql = "SELECT id_unidad_medida AS id, nombre_unidad_medida, activo 
+        $sql = "SELECT id_unidad_medida AS id, id_unidad_medida, nombre_unidad_medida, simbolo, activo 
                 FROM unidad_medida WHERE activo = 1 ORDER BY nombre_unidad_medida ASC";
         $stmt = $instance->db()->query($sql);
         return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
