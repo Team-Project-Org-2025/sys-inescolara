@@ -47,6 +47,7 @@ $(document).ready(function () {
           {
             data: 'total_insumos',
             className: 'text-end',
+            visible: false,
             render: (data) => Helpers.formatCurrencyBs(data),
           },
           {

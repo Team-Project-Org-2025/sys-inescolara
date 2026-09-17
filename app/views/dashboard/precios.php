@@ -105,15 +105,15 @@ include_once __DIR__ . '/../common/modal.php';
                     </div>
                     <hr>
                     <div class="row g-3">
-                        <div class="col-md-4">
+                        <div class="col-md-3 d-none">
                             <label class="form-label text-muted small">Total Insumos</label>
                             <div class="fw-semibold" id="editTotalInsumos">$0.00</div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <label class="form-label text-muted small">Ganancia ($)</label>
                             <div class="fw-semibold" id="editGananciaMonto">$0.00</div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <label class="form-label text-muted small">Precio Final</label>
                             <div class="price-highlight">
                                 <div class="value" id="editPrecioFinal">$0.00</div>
@@ -137,15 +137,15 @@ include_once __DIR__ . '/../common/modal.php';
             <label class="form-label fw-semibold" id="detalleLoteLabel">—</label>
         </div>
         <div class="row g-3 mb-3">
-            <div class="col-md-3">
+            <div class="col-md-4">
                 <label class="form-label text-muted small">Costo Unitario</label>
                 <div class="fw-semibold" id="detalleCostoUnitario">$0.00</div>
             </div>
-            <div class="col-md-2">
+            <div class="col-md-4">
                 <label class="form-label text-muted small">% Ganancia</label>
                 <div class="fw-semibold" id="detalleGananciaPct">0.0%</div>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-3 d-none">
                 <label class="form-label text-muted small">Total Insumos</label>
                 <div class="fw-semibold" id="detalleTotalResumen">$0.00</div>
             </div>
