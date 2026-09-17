@@ -300,6 +300,11 @@ function ventas_manejarCancelar(): void
         throw new \Exception('La venta ya se encuentra cancelada.');
     }
 
+    $pagos = $modelo->obtenerPagos($id);
+    if (!empty($pagos)) {
+        throw new \Exception('No se puede anular una venta que tiene pagos registrados.');
+    }
+
     $ok = $modelo->cancelar($id);
     if (!$ok) throw new \Exception('Error al cancelar la venta.');
 
