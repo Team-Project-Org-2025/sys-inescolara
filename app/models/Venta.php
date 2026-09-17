@@ -653,13 +653,13 @@ class Venta extends Database implements ReadableInterface, DeletableInterface
                                             cedula_cliente,
                                             apellido_cliente,
                                             contacto_cliente
-                                        FROM cliente
-                                        WHERE activo = 1
-                                        AND (nombre_cliente LIKE ? OR apellido_cliente LIKE ? OR contacto_cliente LIKE ? OR cedula_cliente LIKE ?)
-                                        ORDER BY nombre_cliente ASC, apellido_cliente ASC
-                                        LIMIT 10");
+FROM cliente
+                                    WHERE activo = 1
+                                    AND cedula_cliente LIKE ?
+                                    ORDER BY nombre_cliente ASC, apellido_cliente ASC
+                                    LIMIT 10");
             $searchTerm = "%{$query}%";
-            $stmt->execute([$searchTerm, $searchTerm, $searchTerm, $searchTerm]);
+            $stmt->execute([$searchTerm]);
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
         } catch (Throwable $e) {
             error_log('Error al buscar clientes: ' . $e->getMessage());
