@@ -28,7 +28,7 @@ function index(): void
     }
 
     $usuarioModel = new Usuario();
-    $usuarios = $usuarioModel->getAll();
+    $employees = $usuarioModel->getAll();
 
     $canPay = \SysInescolara\helpers\Auth::hasPermiso('cuentas_cobrar:editar');
 

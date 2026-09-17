@@ -105,7 +105,7 @@ include_once __DIR__ . '/../common/modal.php';
                   <label class="form-label small fw-semibold">Cliente</label>
                   <div class="position-relative">
                     <div class="d-flex">
-                      <input type="text" class="form-control" id="buscarClienteInput" placeholder="Buscar por C.I., nombre o apellido..." autocomplete="off">
+                      <input type="text" class="form-control" id="buscarClienteInput" placeholder="Buscar por cédula..." autocomplete="off" inputmode="numeric" maxlength="10">
                       <button type="button" class="btn btn-outline-success ms-1 flex-shrink-0" id="toggleQuickClient" title="Registrar cliente rápido"><i class="fas fa-plus"></i></button>
                     </div>
                     <input type="hidden" name="id_cliente" id="idClienteHidden">
@@ -173,9 +173,10 @@ include_once __DIR__ . '/../common/modal.php';
               <hr class="my-3">
 
               <label class="form-label small fw-semibold mb-1">Producto</label>
-              <select class="form-select" id="productoSelect">
-                <option value="">Seleccione un producto...</option>
-              </select>
+              <div class="position-relative">
+                <input type="text" class="form-control" id="buscarProductoInput" placeholder="Buscar producto (nombre, especie o insumo)..." autocomplete="off">
+                <div class="list-group position-absolute w-100" id="productoResultados" style="z-index:1000;display:none;max-height:200px;overflow-y:auto;"></div>
+              </div>
 
               <div id="productosContainer"></div>
               <div id="sinProductos" class="alert alert-info text-center py-2 mb-3">

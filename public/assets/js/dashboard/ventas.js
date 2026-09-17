@@ -15,7 +15,7 @@ const Ventas = {
 
     init() {
         this.initDataTable();
-        this.initSelectProducto();
+        this.initBuscarProducto();
         this.initBuscarCliente();
         this.initQuickClient();
         this.initPagos();
@@ -87,78 +87,84 @@ const Ventas = {
         });
     },
 
-    // ==================== SELECT PRODUCTO ====================
+    // ==================== BUSCAR PRODUCTO ====================
 
-    initSelectProducto() {
+    initBuscarProducto() {
+        this.productoInput = document.getElementById('buscarProductoInput');
+        this.productoResultados = document.getElementById('productoResultados');
+        if (!this.productoInput || !this.productoResultados) return;
+        let timeout;
+
+        this.productoInput.addEventListener('input', () => {
+            clearTimeout(timeout);
+            const q = this.productoInput.value.trim();
+            if (q.length < 2) {
+                this.productoResultados.innerHTML = '';
+                this.productoResultados.style.display = 'none';
+                return;
+            }
+            timeout = setTimeout(() => this.buscarProductos(q), 300);
+        });
+
+        this.productoInput.addEventListener('blur', () => setTimeout(() => this.productoResultados.style.display = 'none', 300));
+        this.productoInput.addEventListener('focus', () => {
+            if (this.productoResultados.children.length > 0) this.productoResultados.style.display = 'block';
+        });
+
         const modal = document.getElementById('ventaModal');
         if (modal) {
-            modal.addEventListener('shown.bs.modal', () => this.cargarProductos());
+            modal.addEventListener('hidden.bs.modal', () => {
+                this.productoInput.value = '';
+                this.productoResultados.innerHTML = '';
+                this.productoResultados.style.display = 'none';
+            });
         }
-        document.getElementById('productoSelect').addEventListener('change', (e) => {
-            const opt = e.target.selectedOptions[0];
-            if (!opt || !opt.value) return;
-            try {
-                const item = JSON.parse(opt.dataset.item);
-                this.agregarProducto(item);
-            } catch (err) {
-                console.error('Error al parsear item:', err);
-            }
-            e.target.value = '';
-        });
     },
 
-    async cargarProductos() {
-        const select = document.getElementById('productoSelect');
-        select.innerHTML = '<option value="">Cargando...</option>';
+    async buscarProductos(q) {
         try {
-            const res = await fetch(`${urlBaseVentas}?accion=buscar_lotes&q=`, {
+            const res = await fetch(`${urlBaseVentas}?accion=buscar_lotes&q=${encodeURIComponent(q)}`, {
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
             });
             const data = await res.json();
-            select.innerHTML = '<option value="">Seleccione un producto...</option>';
-            if (!data.success || !data.lotes?.length) {
-                select.innerHTML += '<option value="" disabled>No hay productos disponibles</option>';
-                return;
-            }
-            const plantas = data.lotes.filter(l => l.tipo_item === 'planta');
-            const insumos = data.lotes.filter(l => l.tipo_item === 'insumo');
+            const cont = this.productoResultados;
+            cont.innerHTML = '';
+            cont.style.display = 'none';
+
+            if (!data.success || !data.lotes?.length) return;
+
             const fmt = (n) => parseFloat(n || 0).toLocaleString('es-ES', { minimumFractionDigits: 2 });
+            data.lotes.forEach(l => {
+                const esInsumo = l.tipo_item === 'insumo';
+                const stockLabel = `${l.cantidad_actual}${l.unidad_simbolo || ''}`;
+                const badge = esInsumo
+                    ? '<span class="badge badge-tipo-insumo">Insumo</span>'
+                    : '<span class="badge badge-tipo-planta">Planta</span>';
 
-            if (plantas.length) {
-                const og = document.createElement('optgroup');
-                og.label = '🌱 Plantas';
-                plantas.forEach(l => {
-                    const o = document.createElement('option');
-                    o.value = `planta|${l.id_lote}`;
-                    o.dataset.item = JSON.stringify(l);
-                    o.textContent = `${l.planta_nombre} — $${fmt(l.precio_unitario)} (Stock: ${l.cantidad_actual})`;
-                    og.appendChild(o);
+                const item = document.createElement('button');
+                item.type = 'button';
+                item.className = 'list-group-item list-group-item-action py-1 d-flex justify-content-between align-items-center';
+                item.innerHTML = `
+                    <div>
+                        <span class="me-1">${badge}</span>
+                        <strong>${Helpers.escapeHtml(l.planta_nombre || l.nombre || '')}</strong>
+                        ${l.especie_nombre && !esInsumo ? ` <small class="text-muted">(${Helpers.escapeHtml(l.especie_nombre)})</small>` : ''}
+                        <small class="text-muted d-block">Stock: ${stockLabel}</small>
+                    </div>
+                    <span class="text-success fw-semibold">$${fmt(l.precio_unitario)}</span>
+                `;
+                item.addEventListener('click', () => {
+                    this.agregarProducto(l);
+                    cont.innerHTML = '';
+                    cont.style.display = 'none';
+                    this.productoInput.value = '';
                 });
-                select.appendChild(og);
-            }
-            if (insumos.length) {
-                const og = document.createElement('optgroup');
-                og.label = '📦 Insumos';
-                insumos.forEach(l => {
-                    const o = document.createElement('option');
-                    o.value = `insumo|${l.id_insumo}`;
-                    o.dataset.item = JSON.stringify(l);
-                    o.textContent = `${l.nombre} — $${fmt(l.precio_unitario)} (Stock: ${l.cantidad_actual} ${l.unidad_simbolo || ''})`;
-                    og.appendChild(o);
-                });
-                select.appendChild(og);
-            }
-            select.dataset.cargado = '1';
+                cont.appendChild(item);
+            });
+            cont.style.display = 'block';
         } catch (e) {
-            select.innerHTML = '<option value="">Error al cargar productos</option>';
-            console.error('Error cargando productos:', e);
+            console.error('Error buscando productos:', e);
         }
-    },
-
-    recargarProductos() {
-        const select = document.getElementById('productoSelect');
-        delete select.dataset.cargado;
-        this.cargarProductos();
     },
 
     // ==================== CLIENTE ====================
@@ -173,18 +179,29 @@ const Ventas = {
         let timeout;
 
         this.clienteInput.addEventListener('input', () => {
+            this.clienteInput.value = this.clienteInput.value.replace(/\D/g, '');
             clearTimeout(timeout);
             const q = this.clienteInput.value.trim();
             if (q.length < 2) {
+                this.clienteResultados.innerHTML = '';
                 this.clienteResultados.style.display = 'none';
                 return;
             }
             timeout = setTimeout(() => this.buscarClientes(q), 300);
         });
 
+        this.clienteInput.addEventListener('keypress', (e) => {
+            const charCode = e.which || e.keyCode;
+            if (charCode > 31 && (charCode < 48 || charCode > 57)) {
+                e.preventDefault();
+            }
+        });
+
         this.clienteInput.addEventListener('blur', () => setTimeout(() => this.clienteResultados.style.display = 'none', 300));
         this.clienteInput.addEventListener('focus', () => {
-            if (this.clienteResultados.children.length > 0) this.clienteResultados.style.display = 'block';
+            if (this.clienteInput.value.trim().length >= 2 && this.clienteResultados.children.length > 0) {
+                this.clienteResultados.style.display = 'block';
+            }
         });
 
         this.limpiarClienteBtn.addEventListener('click', () => this.limpiarCliente());
@@ -200,7 +217,11 @@ const Ventas = {
             cont.innerHTML = '';
             cont.style.display = 'none';
 
-            if (!data.success || !data.clientes?.length) return;
+            if (!data.success || !data.clientes?.length) {
+                cont.innerHTML = `<div class="list-group-item py-1 text-muted small">Ningún cliente registrado con la cédula ${Helpers.escapeHtml(q)}.</div>`;
+                cont.style.display = 'block';
+                return;
+            }
 
             data.clientes.forEach(cl => {
                 const item = document.createElement('button');
@@ -229,6 +250,7 @@ const Ventas = {
         this.clienteInput.classList.add('is-valid');
         this.clienteSeleccionadoTexto.textContent = cedula ? `${nombre} — ${cedula}` : nombre;
         this.clienteSeleccionado.classList.remove('d-none');
+        this.clienteResultados.innerHTML = '';
         this.clienteResultados.style.display = 'none';
     },
 
@@ -238,6 +260,8 @@ const Ventas = {
         this.clienteInput.placeholder = 'Buscar por C.I., nombre o apellido...';
         this.clienteInput.classList.remove('is-valid');
         this.clienteSeleccionado.classList.add('d-none');
+        this.clienteResultados.innerHTML = '';
+        this.clienteResultados.style.display = 'none';
     },
 
     initQuickClient() {
@@ -341,6 +365,7 @@ const Ventas = {
                             <input type="number" class="form-control cantidad-producto text-center" value="1" min="1" max="${item.cantidad_actual}" step="${esInsumo ? '0.01' : '1'}">
                             <span class="input-group-text px-1" style="font-size:.7rem;">/ ${stockLabel}</span>
                         </div>
+                        <small class="stock-hint text-muted d-block mt-1" style="font-size:.7rem;"></small>
                     </div>
                     <div class="col-4">
                         <small class="text-muted d-block" style="font-size:.7rem;line-height:1;letter-spacing:.5px;">PRECIO UNIT.</small>
@@ -391,11 +416,25 @@ const Ventas = {
         const cant = div.querySelector('.cantidad-producto');
         const precio = div.querySelector('.precio-producto');
         const sub = div.querySelector('.subtotal-producto');
+        const stockMax = parseFloat(item.cantidad_actual) || 0;
+        const stockHint = div.querySelector('.stock-hint');
+
+        const actualizarStockHint = () => {
+            const c = parseFloat(cant.value) || 0;
+            if (c > stockMax) {
+                stockHint.innerHTML = `<span class="text-danger fw-semibold"><i class="fas fa-exclamation-triangle"></i> Stock disponible: ${stockLabel}</span>`;
+                cant.classList.add('is-invalid');
+            } else {
+                stockHint.textContent = c > 0 ? `Stock: ${stockLabel}` : '';
+                cant.classList.remove('is-invalid');
+            }
+        };
 
         const recalcular = () => {
             const c = parseFloat(cant.value) || 0;
             const p = parseFloat(precio.value) || 0;
             sub.textContent = `$${(c * p).toLocaleString('es-ES', { minimumFractionDigits: 2 })}`;
+            actualizarStockHint();
             this.calcularTotales();
         };
 
@@ -479,7 +518,6 @@ const Ventas = {
                     Helpers.toast('warning', 'Precio aplicado localmente (sin sincronizar).');
                 } finally {
                     recalcular();
-                    this.recargarProductos();
                     btn.disabled = false;
                     btn.innerHTML = '<i class="fas fa-check me-1"></i>Aplicar';
                 }
@@ -533,7 +571,12 @@ const Ventas = {
 
         document.addEventListener('input', (e) => {
             if (e.target.classList.contains('monto-pago')) {
-                e.target.value = e.target.value.replace(/[^0-9.,]/g, '').replace(/,/g, '.');
+                let v = e.target.value.replace(/[^0-9.,]/g, '').replace(/,/g, '.');
+                const idx = v.indexOf('.');
+                if (idx !== -1) {
+                    v = v.slice(0, idx + 1) + v.slice(idx + 1).replace(/\./g, '');
+                }
+                e.target.value = v;
                 const total = parseFloat(document.getElementById('resumenTotal').textContent.replace(/[^0-9,]/g, '').replace(',', '.')) || 0;
                 this.actualizarBalancePagos(total);
             }
@@ -653,6 +696,21 @@ const Ventas = {
     },
 
     async guardarVenta() {
+        let stockValido = true;
+        document.querySelectorAll('#productosContainer .card').forEach(row => {
+            const input = row.querySelector('.cantidad-producto');
+            const cant = parseFloat(input?.value) || 0;
+            const maxStock = parseFloat(input?.getAttribute('max')) || 0;
+            if (cant > maxStock) {
+                stockValido = false;
+                input.classList.add('is-invalid');
+            }
+        });
+        if (!stockValido) {
+            Swal.fire('Error', 'La cantidad no puede superar el stock disponible.', 'warning');
+            return;
+        }
+
         const productos = [];
         document.querySelectorAll('#productosContainer .card').forEach(row => {
             const cant = parseFloat(row.querySelector('.cantidad-producto')?.value) || 0;

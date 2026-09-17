@@ -1,6 +1,8 @@
 <?php
 include_once __DIR__ . '/../common/links.php';
 include_once __DIR__ . '/../common/modal.php';
+
+$estadosDisponibles = array_values(array_filter($estados ?? [], fn($e) => strtolower((string)($e['nombre'] ?? '')) !== 'muerto'));
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -113,7 +115,7 @@ include_once __DIR__ . '/../common/modal.php';
         </div>
         <div class="mb-3">
             <label class="form-label">Fecha de Siembra</label>
-            <input type="date" class="form-control" name="fecha_siembra" required>
+            <input type="date" class="form-control" name="fecha_siembra" max="<?= date('Y-m-d') ?>" required>
         </div>
         <div class="row">
             <div class="col-6 mb-3">
@@ -140,7 +142,7 @@ include_once __DIR__ . '/../common/modal.php';
                 <label class="form-label">Estado</label>
                 <select class="form-select" name="id_estado" id="addBatchEstado" required>
                     <option value="">Seleccione...</option>
-                    <?php foreach ($estados as $e): ?>
+                    <?php foreach ($estadosDisponibles as $e): ?>
                     <option value="<?= $e['id'] ?>"<?= $e['id'] === $estadoVivoId ? ' selected' : '' ?>><?= htmlspecialchars($e['nombre']) ?></option>
                     <?php endforeach; ?>
                 </select>
@@ -200,7 +202,7 @@ include_once __DIR__ . '/../common/modal.php';
         </div>
         <div class="mb-3">
             <label class="form-label">Fecha de Siembra</label>
-            <input type="date" class="form-control" name="fecha_siembra" id="editBatchDate" required>
+            <input type="date" class="form-control" name="fecha_siembra" id="editBatchDate" max="<?= date('Y-m-d') ?>" required>
         </div>
         <div class="row">
             <div class="col-6 mb-3">
@@ -227,7 +229,7 @@ include_once __DIR__ . '/../common/modal.php';
                 <label class="form-label">Estado</label>
                 <select class="form-select" name="id_estado" id="editBatchEstado" required>
                     <option value="">Seleccione...</option>
-                    <?php foreach ($estados as $e): ?>
+                    <?php foreach ($estadosDisponibles as $e): ?>
                     <option value="<?= $e['id'] ?>"><?= htmlspecialchars($e['nombre']) ?></option>
                     <?php endforeach; ?>
                 </select>
