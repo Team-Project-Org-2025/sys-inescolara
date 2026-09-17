@@ -333,6 +333,24 @@ $(document).ready(function () {
 
   $('#pagoModal').on('hidden.bs.modal', function () {
     Helpers.resetForm($(this).find('form'));
+    $('#pagoMontoError').remove();
+  });
+
+  // ============================================================
+  //  Validación de monto en tiempo real (igual que fecha)
+
+  $('#pagoMonto').on('input', function () {
+    const monto = parseFloat($(this).val()) || 0;
+    const saldo = parseFloat($(this).attr('max')) || 0;
+
+    // Limpiar mensaje anterior
+    $('#pagoMontoError').remove();
+
+    if (monto > saldo) {
+      $('#pagoMonto').closest('.col-md-6').append(
+        '<small id="pagoMontoError" class="text-danger">El monto (' + Helpers.formatCurrencyBs(monto) + ') supera el saldo pendiente (' + Helpers.formatCurrencyBs(saldo) + ').</small>'
+      );
+    }
   });
 
   // ============================================================
