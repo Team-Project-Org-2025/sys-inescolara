@@ -47,6 +47,7 @@ $(document).ready(function () {
           {
             data: 'total_insumos',
             className: 'text-end',
+            visible: false,
             render: (data) => Helpers.formatCurrencyBs(data),
           },
           {
@@ -213,6 +214,19 @@ $(document).ready(function () {
   //  DETALLE DE INSUMOS
   // ============================================================
 
+  function fillDetalleResumen(data) {
+    const costo = parseFloat(data.costo_unitario) || 0;
+    const gananciaPct = parseFloat(data.porcentaje_ganancia) || 0;
+    const totalInsumos = parseFloat(data.total_insumos) || 0;
+    const gananciaMonto = costo * gananciaPct / 100;
+    const precioFinal = costo + totalInsumos + gananciaMonto;
+    $('#detalleCostoUnitario').text(Helpers.formatCurrencyBs(costo));
+    $('#detalleGananciaPct').text(`${gananciaPct.toFixed(1)}%`);
+    $('#detalleTotalResumen').text(Helpers.formatCurrencyBs(totalInsumos));
+    $('#detalleGananciaMonto').text(Helpers.formatCurrencyBs(gananciaMonto));
+    $('#detallePrecioFinal').text(Helpers.formatCurrencyBs(precioFinal));
+  }
+
   $(document).on('click', '.btn-ver-insumos', function () {
     const row = preciosTable.row($(this).closest('tr')).data();
     const idLote = row.id_lote;
@@ -221,14 +235,16 @@ $(document).ready(function () {
     $('#detalleInsumosBody').html('<tr><td colspan="6" class="text-center py-3"><div class="spinner-border text-primary"></div></td></tr>');
     $('#detalleTotalInsumos').text('$0.00');
     $('#detalleInsumosFoot').show();
+    $('#detalleInsumosWrap').show();
+    fillDetalleResumen(row);
     $('#detalleInsumosModal').modal('show');
 
     Ajax.get(`${baseUrl}?action=get_detalle&id_lote=${idLote}`)
       .then((r) => {
+        if (r.lote) fillDetalleResumen(r.lote);
         const detalles = (r.success && r.detalles) ? r.detalles : [];
         if (detalles.length === 0) {
-          $('#detalleInsumosBody').html('<tr><td colspan="6" class="text-center text-muted py-4"><i class="fas fa-inbox fa-2x mb-2 d-block"></i>No hay insumos registrados para este lote</td></tr>');
-          $('#detalleInsumosFoot').hide();
+          $('#detalleInsumosWrap').hide();
           return;
         }
         let totalGeneral = 0;

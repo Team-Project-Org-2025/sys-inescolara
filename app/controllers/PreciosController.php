@@ -60,7 +60,8 @@ function prices_getDetalleAjax(): void
         jsonResponse(['success' => false, 'message' => 'ID de lote inválido'], 400);
     }
     $detalles = LotePrecio::getDetalleInsumos($idLote);
-    jsonResponse(['success' => true, 'detalles' => $detalles]);
+    $lote = LotePrecio::calcularPrecioLote($idLote);
+    jsonResponse(['success' => true, 'detalles' => $detalles, 'lote' => $lote]);
 }
 
 function prices_getLotesAjax(): void

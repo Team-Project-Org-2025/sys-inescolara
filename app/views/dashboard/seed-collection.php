@@ -152,7 +152,7 @@ include_once __DIR__ . '/../common/modal.php';
 
     <script src="<?= BASE_URL ?>public/assets/js/dashboard/notifications.js"></script>
     <script>
-        window.unidadesData = <?= json_encode(array_map(fn($u) => ['id' => (int)$u['id_unidad_medida'], 'nombre' => $u['nombre_unidad_medida'], 'simbolo' => $u['simbolo'] ?? ''], $unidades), JSON_HEX_TAG | JSON_HEX_APOS) ?>;
+        window.unidadesData = <?= json_encode(array_map(fn($u) => ['id' => (int)($u['id_unidad_medida'] ?? $u['id'] ?? 0), 'nombre' => $u['nombre_unidad_medida'] ?? '', 'simbolo' => $u['simbolo'] ?? ''], $unidades), JSON_HEX_TAG | JSON_HEX_APOS) ?>;
         window.insumosData = <?= json_encode(array_map(fn($i) => ['id' => (int)$i['id_insumo'], 'nombre' => $i['nombre_insumo'], 'categoria' => $i['categoria'] ?? '', 'stock' => (float)$i['stock_actual'], 'unidad' => $i['nombre_unidad_medida'] ?? '', 'simbolo' => $i['simbolo'] ?? ''], $insumos), JSON_HEX_TAG | JSON_HEX_APOS) ?>;
     </script>
     <?= $scripts_links ?>

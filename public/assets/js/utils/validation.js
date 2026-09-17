@@ -22,6 +22,7 @@ export const REGEX = {
   fechaFormato: /^\d{4}-\d{2}-\d{2}$/, 
   cantidad: /^[1-9]\d*$/,
   decimal: /^(0|[1-9]\d*)(\.\d{1,2})?$/,
+  rifNumero: /^\d{8}-?\d$/,
   text: /^.+/,
 };
 
@@ -126,6 +127,7 @@ export const MESSAGES = {
   fechaFutura: 'La fecha no puede ser posterior al día de hoy',
   cantidad: 'Cantidad inválida (solo números, sin ceros a la izquierda)',
   decimal: 'Valor inválido (solo números positivos, hasta 2 decimales)',
+  rifNumero: 'RIF inválido (formato: 12345678-9)',
 
   default: 'Campo inválido',
 };
@@ -224,6 +226,24 @@ export const setupRealTimeValidation = ($form, rules, isEdit = false) => {
       // 2. Limpiar caracteres inválidos inmediatamente si el usuario arrastra o pega texto
       $input.on('input', function () {
         this.value = this.value.replace(/\D/g, '');
+      });
+    }
+
+    // ========================================================================
+    // BLOQUEO 1.5: PERMITIR SOLO NÚMEROS Y GUION (Para RIF)
+    // ========================================================================
+    if (tipo === 'rifNumero') {
+      // 1. Evitar teclas que no sean números (48-57) o guion (45)
+      $input.on('keypress', function (e) {
+        const charCode = (e.which) ? e.which : e.keyCode;
+        if (charCode > 31 && !(charCode >= 48 && charCode <= 57) && charCode !== 45) {
+          e.preventDefault();
+        }
+      });
+
+      // 2. Limpiar caracteres inválidos si el usuario pega texto
+      $input.on('input', function () {
+        this.value = this.value.replace(/[^0-9-]/g, '');
       });
     }
 

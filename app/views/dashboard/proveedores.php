@@ -64,7 +64,7 @@ include_once __DIR__ . '/../common/modal.php';
         <div class="mb-3">
             <label class="form-label">RIF</label>
             <div class="d-flex gap-2">
-                <select class="form-control" name="rif_tipo" id="addRifTipo" style="max-width: 60px; flex-shrink: 0;">
+                <select class="form-control" name="rif_tipo" id="addRifTipo" style="max-width: 60px; flex-shrink: 0;" required>
                     <option value="">—</option>
                     <option value="J">J</option>
                     <option value="G">G</option>
@@ -72,10 +72,9 @@ include_once __DIR__ . '/../common/modal.php';
                     <option value="E">E</option>
                     <option value="P">P</option>
                 </select>
-                <input type="text" class="form-control" name="rif_numero" id="addRifNumero" placeholder="12345678-9" style="font-family: monospace;" maxlength="9">
+                <input type="text" class="form-control" name="rif_numero" id="addRifNumero" placeholder="12345678-9" style="font-family: monospace;" maxlength="10" required>
                 <input type="hidden" name="rif_proveedor" id="addRifProveedor">
             </div>
-            <small class="text-muted">Opcional</small>
         </div>
         <div class="mb-3">
             <label class="form-label">Nombre del Contacto (Vendedor)</label>
@@ -98,7 +97,7 @@ include_once __DIR__ . '/../common/modal.php';
         <div class="mb-3">
             <label class="form-label">RIF</label>
             <div class="d-flex gap-2">
-                <select class="form-control" name="rif_tipo" id="editRifTipo" style="max-width: 60px; flex-shrink: 0;">
+                <select class="form-control" name="rif_tipo" id="editRifTipo" style="max-width: 60px; flex-shrink: 0;" required>
                     <option value="">—</option>
                     <option value="J">J</option>
                     <option value="G">G</option>
@@ -106,7 +105,7 @@ include_once __DIR__ . '/../common/modal.php';
                     <option value="E">E</option>
                     <option value="P">P</option>
                 </select>
-                <input type="text" class="form-control" name="rif_numero" id="editRifNumero" placeholder="12345678-9" style="font-family: monospace;" maxlength="9">
+                <input type="text" class="form-control" name="rif_numero" id="editRifNumero" placeholder="12345678-9" style="font-family: monospace;" maxlength="10" required>
                 <input type="hidden" name="rif_proveedor" id="editRifProveedor">
             </div>
         </div>

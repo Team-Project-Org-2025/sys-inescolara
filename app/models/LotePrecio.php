@@ -39,12 +39,20 @@ class LotePrecio extends Database implements ReadableInterface
                     l.cantidad_actual,
                     p.nombre_comun AS planta_nombre,
                     p.nombre_tecnico,
+                    COALESCE(ri_total.total_insumos, 0) AS total_insumos,
                     ROUND(
                         l.costo_unitario +
+                        COALESCE(ri_total.total_insumos, 0) +
                         (l.costo_unitario * l.porcentaje_ganancia / 100),
                     2) AS precio_final
                 FROM lote l
                 LEFT JOIN plantas p ON l.id_planta = p.id_planta
+                LEFT JOIN (
+                    SELECT id_lote, SUM(costo_unitario * cantidad) AS total_insumos
+                    FROM registro_insumo
+                    WHERE id_lote IS NOT NULL
+                    GROUP BY id_lote
+                ) ri_total ON ri_total.id_lote = l.id_lote
                 WHERE l.id_lote = :id_lote AND l.activo = 1
             ");
             $stmt->execute([':id_lote' => $idLote]);
@@ -102,15 +110,24 @@ class LotePrecio extends Database implements ReadableInterface
                         e.nombre AS estado_nombre,
                         p.nombre_comun AS planta_nombre,
                         sp.nombre_especie AS especie_nombre,
+                        COALESCE(ri_total.total_insumos, 0) AS total_insumos,
                         ROUND(
                             l.costo_unitario +
+                            COALESCE(ri_total.total_insumos, 0) +
                             (l.costo_unitario * l.porcentaje_ganancia / 100),
                         2) AS precio_final,
                         ROUND(
                             (l.costo_unitario +
+                            COALESCE(ri_total.total_insumos, 0) +
                             (l.costo_unitario * l.porcentaje_ganancia / 100)) * l.cantidad_actual,
                         2) AS valor_total_inventario
                     FROM lote l
+                    LEFT JOIN (
+                        SELECT id_lote, SUM(costo_unitario * cantidad) AS total_insumos
+                        FROM registro_insumo
+                        WHERE id_lote IS NOT NULL
+                        GROUP BY id_lote
+                    ) ri_total ON ri_total.id_lote = l.id_lote
                     LEFT JOIN plantas p ON l.id_planta = p.id_planta
                     LEFT JOIN especie sp ON p.id_especie = sp.id_especie
                     LEFT JOIN estado e ON l.id_estado = e.id_estado

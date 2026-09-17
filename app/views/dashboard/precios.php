@@ -105,15 +105,15 @@ include_once __DIR__ . '/../common/modal.php';
                     </div>
                     <hr>
                     <div class="row g-3">
-                        <div class="col-md-4">
+                        <div class="col-md-3 d-none">
                             <label class="form-label text-muted small">Total Insumos</label>
                             <div class="fw-semibold" id="editTotalInsumos">$0.00</div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <label class="form-label text-muted small">Ganancia ($)</label>
                             <div class="fw-semibold" id="editGananciaMonto">$0.00</div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <label class="form-label text-muted small">Precio Final</label>
                             <div class="price-highlight">
                                 <div class="value" id="editPrecioFinal">$0.00</div>
@@ -132,35 +132,49 @@ include_once __DIR__ . '/../common/modal.php';
     </div>
 
     <!-- Modal Detalle de Insumos -->
-    <?php modal_detail_start(['id' => 'detalleInsumosModal', 'title' => 'Detalle de Insumos', 'size' => 'modal-lg']); ?>
+    <?php modal_detail_start(['id' => 'detalleInsumosModal', 'title' => 'Detalle del Precio del Lote', 'size' => 'modal-lg']); ?>
         <div class="mb-3">
             <label class="form-label fw-semibold" id="detalleLoteLabel">—</label>
         </div>
-        <div class="table-responsive">
-            <table class="table table-sm table-bordered" id="detalleInsumosTable">
-                <thead class="table-light">
-                    <tr>
-                        <th>Insumo</th>
-                        <th class="text-center">Cantidad</th>
-                        <th class="text-end">Costo Unitario</th>
-                        <th class="text-end">Subtotal</th>
-                        <th class="text-center">Origen</th>
-                        <th>Fecha</th>
-                    </tr>
-                </thead>
-                <tbody id="detalleInsumosBody">
-                    <tr>
-                        <td colspan="6" class="text-center text-muted py-3">Cargando...</td>
-                    </tr>
-                </tbody>
-                <tfoot id="detalleInsumosFoot">
-                    <tr>
-                        <th colspan="3" class="text-end">Total Insumos:</th>
-                        <th class="text-end" id="detalleTotalInsumos">$0.00</th>
-                        <th colspan="2"></th>
-                    </tr>
-                </tfoot>
-            </table>
+        <div class="row g-3 mb-3">
+            <div class="col-md-4">
+                <label class="form-label text-muted small">Costo Unitario</label>
+                <div class="fw-semibold" id="detalleCostoUnitario">$0.00</div>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label text-muted small">% Ganancia</label>
+                <div class="fw-semibold" id="detalleGananciaPct">0.0%</div>
+            </div>
+            <div class="col-md-3 d-none">
+                <label class="form-label text-muted small">Total Insumos</label>
+                <div class="fw-semibold" id="detalleTotalResumen">$0.00</div>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label text-muted small">Ganancia ($)</label>
+                <div class="fw-semibold" id="detalleGananciaMonto">$0.00</div>
+            </div>
+        </div>
+        <div class="price-highlight mb-3 d-flex justify-content-between align-items-center">
+            <span>Precio Final</span>
+            <span class="value" id="detallePrecioFinal">$0.00</span>
+        </div>
+        <div id="detalleInsumosWrap">
+            <div class="table-responsive">
+                <table class="table table-sm table-bordered" id="detalleInsumosTable">
+                    <tbody id="detalleInsumosBody">
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-3">Cargando...</td>
+                        </tr>
+                    </tbody>
+                    <tfoot id="detalleInsumosFoot">
+                        <tr>
+                            <th colspan="3" class="text-end">Total Insumos:</th>
+                            <th class="text-end" id="detalleTotalInsumos">$0.00</th>
+                            <th colspan="2"></th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
         </div>
     <?php modal_detail_end(); ?>
 
