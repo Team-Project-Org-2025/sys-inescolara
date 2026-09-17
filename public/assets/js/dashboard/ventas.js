@@ -173,6 +173,7 @@ const Ventas = {
         let timeout;
 
         this.clienteInput.addEventListener('input', () => {
+            this.clienteInput.value = this.clienteInput.value.replace(/\D/g, '');
             clearTimeout(timeout);
             const q = this.clienteInput.value.trim();
             if (q.length < 2) {
@@ -180,6 +181,13 @@ const Ventas = {
                 return;
             }
             timeout = setTimeout(() => this.buscarClientes(q), 300);
+        });
+
+        this.clienteInput.addEventListener('keypress', (e) => {
+            const charCode = e.which || e.keyCode;
+            if (charCode > 31 && (charCode < 48 || charCode > 57)) {
+                e.preventDefault();
+            }
         });
 
         this.clienteInput.addEventListener('blur', () => setTimeout(() => this.clienteResultados.style.display = 'none', 300));
@@ -200,7 +208,11 @@ const Ventas = {
             cont.innerHTML = '';
             cont.style.display = 'none';
 
-            if (!data.success || !data.clientes?.length) return;
+            if (!data.success || !data.clientes?.length) {
+                cont.innerHTML = `<div class="list-group-item py-1 text-muted small">Ningún cliente registrado con la cédula ${Helpers.escapeHtml(q)}.</div>`;
+                cont.style.display = 'block';
+                return;
+            }
 
             data.clientes.forEach(cl => {
                 const item = document.createElement('button');
