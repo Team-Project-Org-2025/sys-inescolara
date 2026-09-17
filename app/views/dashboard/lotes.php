@@ -116,6 +116,7 @@ $estadosDisponibles = array_values(array_filter($estados ?? [], fn($e) => strtol
         <div class="mb-3">
             <label class="form-label">Fecha de Siembra</label>
             <input type="date" class="form-control" name="fecha_siembra" max="<?= date('Y-m-d') ?>" required>
+            <small class="text-muted">No se admiten fechas futuras.</small>
         </div>
         <div class="row">
             <div class="col-6 mb-3">
@@ -203,6 +204,7 @@ $estadosDisponibles = array_values(array_filter($estados ?? [], fn($e) => strtol
         <div class="mb-3">
             <label class="form-label">Fecha de Siembra</label>
             <input type="date" class="form-control" name="fecha_siembra" id="editBatchDate" max="<?= date('Y-m-d') ?>" required>
+            <small class="text-muted">No se admiten fechas futuras.</small>
         </div>
         <div class="row">
             <div class="col-6 mb-3">
