@@ -14,6 +14,10 @@ $(document).ready(function () {
     if (typeof SkeletonHelper !== 'undefined') {
       SkeletonHelper.showTableSkeleton('cuentasTable', 5, 6);
     }
+    // Destruir tabla anterior si existe para evitar error "Cannot reinitialise DataTable"
+    if (tablaCuentas) {
+      tablaCuentas.destroy();
+    }
     tablaCuentas = $('#cuentasTable').DataTable({
       ajax: {
         url: `${urlBase}?action=obtener_cuentas`,
