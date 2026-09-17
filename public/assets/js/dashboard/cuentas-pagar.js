@@ -257,6 +257,7 @@ $(document).ready(function () {
     }
 
     $('#pagoFechaError').remove();
+    $('#pagoMontoError').remove();
 
     const fechaPago = $('#pagoFecha').val();
     const fechaCompra = $('#pagoForm').data('fecha-compra');
