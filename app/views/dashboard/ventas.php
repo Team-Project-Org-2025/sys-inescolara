@@ -173,9 +173,10 @@ include_once __DIR__ . '/../common/modal.php';
               <hr class="my-3">
 
               <label class="form-label small fw-semibold mb-1">Producto</label>
-              <select class="form-select" id="productoSelect">
-                <option value="">Seleccione un producto...</option>
-              </select>
+              <div class="position-relative">
+                <input type="text" class="form-control" id="buscarProductoInput" placeholder="Buscar producto (nombre, especie o insumo)..." autocomplete="off">
+                <div class="list-group position-absolute w-100" id="productoResultados" style="z-index:1000;display:none;max-height:200px;overflow-y:auto;"></div>
+              </div>
 
               <div id="productosContainer"></div>
               <div id="sinProductos" class="alert alert-info text-center py-2 mb-3">
