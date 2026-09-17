@@ -15,7 +15,7 @@ const Ventas = {
 
     init() {
         this.initDataTable();
-        this.initSelectProducto();
+        this.initBuscarProducto();
         this.initBuscarCliente();
         this.initQuickClient();
         this.initPagos();
@@ -87,78 +87,84 @@ const Ventas = {
         });
     },
 
-    // ==================== SELECT PRODUCTO ====================
+    // ==================== BUSCAR PRODUCTO ====================
 
-    initSelectProducto() {
+    initBuscarProducto() {
+        this.productoInput = document.getElementById('buscarProductoInput');
+        this.productoResultados = document.getElementById('productoResultados');
+        if (!this.productoInput || !this.productoResultados) return;
+        let timeout;
+
+        this.productoInput.addEventListener('input', () => {
+            clearTimeout(timeout);
+            const q = this.productoInput.value.trim();
+            if (q.length < 2) {
+                this.productoResultados.innerHTML = '';
+                this.productoResultados.style.display = 'none';
+                return;
+            }
+            timeout = setTimeout(() => this.buscarProductos(q), 300);
+        });
+
+        this.productoInput.addEventListener('blur', () => setTimeout(() => this.productoResultados.style.display = 'none', 300));
+        this.productoInput.addEventListener('focus', () => {
+            if (this.productoResultados.children.length > 0) this.productoResultados.style.display = 'block';
+        });
+
         const modal = document.getElementById('ventaModal');
         if (modal) {
-            modal.addEventListener('shown.bs.modal', () => this.cargarProductos());
+            modal.addEventListener('hidden.bs.modal', () => {
+                this.productoInput.value = '';
+                this.productoResultados.innerHTML = '';
+                this.productoResultados.style.display = 'none';
+            });
         }
-        document.getElementById('productoSelect').addEventListener('change', (e) => {
-            const opt = e.target.selectedOptions[0];
-            if (!opt || !opt.value) return;
-            try {
-                const item = JSON.parse(opt.dataset.item);
-                this.agregarProducto(item);
-            } catch (err) {
-                console.error('Error al parsear item:', err);
-            }
-            e.target.value = '';
-        });
     },
 
-    async cargarProductos() {
-        const select = document.getElementById('productoSelect');
-        select.innerHTML = '<option value="">Cargando...</option>';
+    async buscarProductos(q) {
         try {
-            const res = await fetch(`${urlBaseVentas}?accion=buscar_lotes&q=`, {
+            const res = await fetch(`${urlBaseVentas}?accion=buscar_lotes&q=${encodeURIComponent(q)}`, {
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
             });
             const data = await res.json();
-            select.innerHTML = '<option value="">Seleccione un producto...</option>';
-            if (!data.success || !data.lotes?.length) {
-                select.innerHTML += '<option value="" disabled>No hay productos disponibles</option>';
-                return;
-            }
-            const plantas = data.lotes.filter(l => l.tipo_item === 'planta');
-            const insumos = data.lotes.filter(l => l.tipo_item === 'insumo');
+            const cont = this.productoResultados;
+            cont.innerHTML = '';
+            cont.style.display = 'none';
+
+            if (!data.success || !data.lotes?.length) return;
+
             const fmt = (n) => parseFloat(n || 0).toLocaleString('es-ES', { minimumFractionDigits: 2 });
+            data.lotes.forEach(l => {
+                const esInsumo = l.tipo_item === 'insumo';
+                const stockLabel = `${l.cantidad_actual}${l.unidad_simbolo || ''}`;
+                const badge = esInsumo
+                    ? '<span class="badge badge-tipo-insumo">Insumo</span>'
+                    : '<span class="badge badge-tipo-planta">Planta</span>';
 
-            if (plantas.length) {
-                const og = document.createElement('optgroup');
-                og.label = '🌱 Plantas';
-                plantas.forEach(l => {
-                    const o = document.createElement('option');
-                    o.value = `planta|${l.id_lote}`;
-                    o.dataset.item = JSON.stringify(l);
-                    o.textContent = `${l.planta_nombre} — $${fmt(l.precio_unitario)} (Stock: ${l.cantidad_actual})`;
-                    og.appendChild(o);
+                const item = document.createElement('button');
+                item.type = 'button';
+                item.className = 'list-group-item list-group-item-action py-1 d-flex justify-content-between align-items-center';
+                item.innerHTML = `
+                    <div>
+                        <span class="me-1">${badge}</span>
+                        <strong>${Helpers.escapeHtml(l.planta_nombre || l.nombre || '')}</strong>
+                        ${l.especie_nombre && !esInsumo ? ` <small class="text-muted">(${Helpers.escapeHtml(l.especie_nombre)})</small>` : ''}
+                        <small class="text-muted d-block">Stock: ${stockLabel}</small>
+                    </div>
+                    <span class="text-success fw-semibold">$${fmt(l.precio_unitario)}</span>
+                `;
+                item.addEventListener('click', () => {
+                    this.agregarProducto(l);
+                    cont.innerHTML = '';
+                    cont.style.display = 'none';
+                    this.productoInput.value = '';
                 });
-                select.appendChild(og);
-            }
-            if (insumos.length) {
-                const og = document.createElement('optgroup');
-                og.label = '📦 Insumos';
-                insumos.forEach(l => {
-                    const o = document.createElement('option');
-                    o.value = `insumo|${l.id_insumo}`;
-                    o.dataset.item = JSON.stringify(l);
-                    o.textContent = `${l.nombre} — $${fmt(l.precio_unitario)} (Stock: ${l.cantidad_actual} ${l.unidad_simbolo || ''})`;
-                    og.appendChild(o);
-                });
-                select.appendChild(og);
-            }
-            select.dataset.cargado = '1';
+                cont.appendChild(item);
+            });
+            cont.style.display = 'block';
         } catch (e) {
-            select.innerHTML = '<option value="">Error al cargar productos</option>';
-            console.error('Error cargando productos:', e);
+            console.error('Error buscando productos:', e);
         }
-    },
-
-    recargarProductos() {
-        const select = document.getElementById('productoSelect');
-        delete select.dataset.cargado;
-        this.cargarProductos();
     },
 
     // ==================== CLIENTE ====================
@@ -491,7 +497,6 @@ const Ventas = {
                     Helpers.toast('warning', 'Precio aplicado localmente (sin sincronizar).');
                 } finally {
                     recalcular();
-                    this.recargarProductos();
                     btn.disabled = false;
                     btn.innerHTML = '<i class="fas fa-check me-1"></i>Aplicar';
                 }
