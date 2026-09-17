@@ -305,6 +305,14 @@ class Purchase extends Database implements ReadableInterface, DeletableInterface
     public function crearCuentaPagar(int $idCompra, float $total): bool
     {
         $stmt = $this->db()->prepare("
+            SELECT COUNT(*) FROM cuentas_pagar WHERE id_compra = :id_compra AND activo = 1
+        ");
+        $stmt->execute([':id_compra' => $idCompra]);
+        if ($stmt->fetchColumn() > 0) {
+            return true;
+        }
+
+        $stmt = $this->db()->prepare("
             INSERT INTO cuentas_pagar (id_compra, monto_total, saldo_pendiente)
             VALUES (:id_compra, :monto_total, :saldo_pendiente)
         ");
