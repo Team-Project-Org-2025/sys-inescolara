@@ -74,6 +74,7 @@ function batches_handleAddEdit(string $mode): void
     if ($id_planta <= 0) throw new \Exception('Selecciona una planta.');
     if ($id_ubicacion <= 0) throw new \Exception('Selecciona una ubicación.');
     if ($fecha_siembra === '') throw new \Exception('La fecha de siembra es requerida.');
+    if ($fecha_siembra > date('Y-m-d')) throw new \Exception('La fecha de siembra no puede ser futura.');
     if ($cantidad_inicial <= 0) throw new \Exception('La cantidad inicial debe ser mayor a 0.');
     if ($cantidad_actual < 0) throw new \Exception('La cantidad actual no puede ser negativa.');
     if ($id_estado <= 0) $id_estado = null;
