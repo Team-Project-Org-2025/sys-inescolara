@@ -252,7 +252,9 @@ $(document).ready(function () {
       return;
     }
     if (monto > saldo) {
-      Helpers.toast('error', `El monto (${Helpers.formatCurrencyBs(monto)}) supera el saldo pendiente (${Helpers.formatCurrencyBs(saldo)}).`);
+      $('#pagoMonto').closest('.col-md-6').append(
+        '<small id="pagoMontoError" class="text-danger">El monto (' + Helpers.formatCurrencyBs(monto) + ') supera el saldo pendiente (' + Helpers.formatCurrencyBs(saldo) + ').</small>'
+      );
       return;
     }
 
