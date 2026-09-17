@@ -359,6 +359,7 @@ const Ventas = {
                             <input type="number" class="form-control cantidad-producto text-center" value="1" min="1" max="${item.cantidad_actual}" step="${esInsumo ? '0.01' : '1'}">
                             <span class="input-group-text px-1" style="font-size:.7rem;">/ ${stockLabel}</span>
                         </div>
+                        <small class="stock-hint text-muted d-block mt-1" style="font-size:.7rem;"></small>
                     </div>
                     <div class="col-4">
                         <small class="text-muted d-block" style="font-size:.7rem;line-height:1;letter-spacing:.5px;">PRECIO UNIT.</small>
@@ -409,11 +410,25 @@ const Ventas = {
         const cant = div.querySelector('.cantidad-producto');
         const precio = div.querySelector('.precio-producto');
         const sub = div.querySelector('.subtotal-producto');
+        const stockMax = parseFloat(item.cantidad_actual) || 0;
+        const stockHint = div.querySelector('.stock-hint');
+
+        const actualizarStockHint = () => {
+            const c = parseFloat(cant.value) || 0;
+            if (c > stockMax) {
+                stockHint.innerHTML = `<span class="text-danger fw-semibold"><i class="fas fa-exclamation-triangle"></i> Stock disponible: ${stockLabel}</span>`;
+                cant.classList.add('is-invalid');
+            } else {
+                stockHint.textContent = c > 0 ? `Stock: ${stockLabel}` : '';
+                cant.classList.remove('is-invalid');
+            }
+        };
 
         const recalcular = () => {
             const c = parseFloat(cant.value) || 0;
             const p = parseFloat(precio.value) || 0;
             sub.textContent = `$${(c * p).toLocaleString('es-ES', { minimumFractionDigits: 2 })}`;
+            actualizarStockHint();
             this.calcularTotales();
         };
 
@@ -670,6 +685,21 @@ const Ventas = {
     },
 
     async guardarVenta() {
+        let stockValido = true;
+        document.querySelectorAll('#productosContainer .card').forEach(row => {
+            const input = row.querySelector('.cantidad-producto');
+            const cant = parseFloat(input?.value) || 0;
+            const maxStock = parseFloat(input?.getAttribute('max')) || 0;
+            if (cant > maxStock) {
+                stockValido = false;
+                input.classList.add('is-invalid');
+            }
+        });
+        if (!stockValido) {
+            Swal.fire('Error', 'La cantidad no puede superar el stock disponible.', 'warning');
+            return;
+        }
+
         const productos = [];
         document.querySelectorAll('#productosContainer .card').forEach(row => {
             const cant = parseFloat(row.querySelector('.cantidad-producto')?.value) || 0;
