@@ -17,6 +17,8 @@ function index(): void
                 'POST_delete_ajax' => delete_ajax(),
                 default            => jsonResponse(['success' => false, 'message' => 'Acción AJAX inválida'], 400),
             };
+        } catch (\InvalidArgumentException $e) {
+            jsonResponse(['success' => false, 'message' => $e->getMessage()], 400);
         } catch (\Exception $e) {
             handleError($e, true);
         }
@@ -41,16 +43,14 @@ function suppliers_handleAddEdit(string $mode): void
 {
     $model = new Proveedor();
     $nombre = trim((string)($_POST['nombre_proveedor'] ?? ''));
-    if ($nombre === '') throw new \Exception('El nombre del proveedor es requerido.');
+    if ($nombre === '') throw new \InvalidArgumentException('El nombre del proveedor es requerido.');
     $rif = trim((string)($_POST['rif_proveedor'] ?? ''));
-    if ($rif === '') $rif = null;
+    if ($rif === '') throw new \InvalidArgumentException('El RIF del proveedor es requerido.');
 
-    if ($rif !== null) {
-        $existing = $model->getByRif($rif);
-        $idActual = (int)($_POST['id'] ?? 0);
-        if ($existing && $existing['id'] !== $idActual) {
-            throw new \Exception('El RIF ingresado ya está registrado en otro proveedor.');
-        }
+    $existing = $model->getByRif($rif);
+    $idActual = (int)($_POST['id'] ?? 0);
+    if ($existing && $existing['id'] !== $idActual) {
+        throw new \InvalidArgumentException('El RIF ingresado ya está registrado en otro proveedor.');
     }
     $contacto = trim((string)($_POST['contacto_vendedor'] ?? ''));
     if ($contacto === '') $contacto = null;
@@ -58,15 +58,21 @@ function suppliers_handleAddEdit(string $mode): void
     if ($telefono === '') $telefono = null;
 
     if ($mode === 'add') {
-        $model->add($nombre, $rif, $contacto, $telefono);
+        $success = $model->add($nombre, $rif, $contacto, $telefono);
+        if (!$success) {
+            jsonResponse(['success' => false, 'message' => 'No se pudo guardar el proveedor. Verifique que el RIF no esté registrado.'], 400);
+        }
         $newId = $model->getLastInsertId() ?? 0;
         jsonResponse(['success' => true, 'message' => 'Proveedor agregado correctamente', 'proveedor' => ['id' => $newId, 'nombre_proveedor' => $nombre, 'rif_proveedor' => $rif, 'contacto_vendedor' => $contacto, 'telefono_proveedor' => $telefono]]);
     }
 
     $id = (int)($_POST['id'] ?? 0);
-    if ($id <= 0) throw new \Exception('ID inválido');
+    if ($id <= 0) throw new \InvalidArgumentException('ID inválido');
 
-    $model->update($id, $nombre, $rif, $contacto, $telefono);
+    $success = $model->update($id, $nombre, $rif, $contacto, $telefono);
+    if (!$success) {
+        jsonResponse(['success' => false, 'message' => 'No se pudo actualizar el proveedor. Verifique que el RIF no esté registrado.'], 400);
+    }
     jsonResponse(['success' => true, 'message' => 'Proveedor actualizado correctamente', 'proveedor' => ['id' => $id, 'nombre_proveedor' => $nombre, 'rif_proveedor' => $rif, 'contacto_vendedor' => $contacto, 'telefono_proveedor' => $telefono]]);
 }
 
@@ -74,8 +80,8 @@ function suppliers_handleDelete(): void
 {
     $model = new Proveedor();
     $id = (int)($_POST['id'] ?? 0);
-    if ($id <= 0) throw new \Exception('ID inválido');
-    if (!$model->exists($id)) throw new \Exception('No existe el proveedor');
+    if ($id <= 0) throw new \InvalidArgumentException('ID inválido');
+    if (!$model->exists($id)) throw new \InvalidArgumentException('No existe el proveedor');
 
     $model->delete($id);
     jsonResponse(['success' => true, 'message' => 'Proveedor desactivado correctamente', 'supplierId' => $id]);

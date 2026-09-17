@@ -22,7 +22,7 @@ class Proveedor extends Database implements ReadableInterface, DeletableInterfac
 
     protected array $validationRules = [
         'nombre_proveedor'   => ['type' => 'nombre',   'required' => true],
-        'rif_proveedor'      => ['type' => 'rif',       'required' => false],
+        'rif_proveedor'      => ['type' => 'rif',       'required' => true],
         'contacto_vendedor'  => ['type' => 'nombre',    'required' => false],
         'telefono_proveedor' => ['type' => 'telefono',  'required' => false],
     ];
