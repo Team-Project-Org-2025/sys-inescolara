@@ -183,6 +183,7 @@ const Ventas = {
             clearTimeout(timeout);
             const q = this.clienteInput.value.trim();
             if (q.length < 2) {
+                this.clienteResultados.innerHTML = '';
                 this.clienteResultados.style.display = 'none';
                 return;
             }
@@ -198,7 +199,9 @@ const Ventas = {
 
         this.clienteInput.addEventListener('blur', () => setTimeout(() => this.clienteResultados.style.display = 'none', 300));
         this.clienteInput.addEventListener('focus', () => {
-            if (this.clienteResultados.children.length > 0) this.clienteResultados.style.display = 'block';
+            if (this.clienteInput.value.trim().length >= 2 && this.clienteResultados.children.length > 0) {
+                this.clienteResultados.style.display = 'block';
+            }
         });
 
         this.limpiarClienteBtn.addEventListener('click', () => this.limpiarCliente());
@@ -247,6 +250,7 @@ const Ventas = {
         this.clienteInput.classList.add('is-valid');
         this.clienteSeleccionadoTexto.textContent = cedula ? `${nombre} — ${cedula}` : nombre;
         this.clienteSeleccionado.classList.remove('d-none');
+        this.clienteResultados.innerHTML = '';
         this.clienteResultados.style.display = 'none';
     },
 
@@ -256,6 +260,8 @@ const Ventas = {
         this.clienteInput.placeholder = 'Buscar por C.I., nombre o apellido...';
         this.clienteInput.classList.remove('is-valid');
         this.clienteSeleccionado.classList.add('d-none');
+        this.clienteResultados.innerHTML = '';
+        this.clienteResultados.style.display = 'none';
     },
 
     initQuickClient() {
