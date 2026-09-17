@@ -247,6 +247,7 @@ class Lote extends Database implements ReadableInterface, DeletableInterface
             $sql = "SELECT
                         l.id_lote AS id, l.id_planta, l.id_ubicacion, l.fecha_siembra,
                         l.cantidad_inicial, l.cantidad_actual, l.costo_unitario,
+                        ROUND(l.costo_unitario + (l.costo_unitario * l.porcentaje_ganancia / 100), 2) AS precio_unitario,
                         l.id_estado, l.id_categoria, l.id_origen,
                         l.observacion, l.imagen, l.activo, l.porcentaje_ganancia,
                         p.nombre_comun AS planta_nombre,
