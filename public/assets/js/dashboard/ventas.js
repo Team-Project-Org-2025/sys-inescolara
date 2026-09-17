@@ -571,7 +571,12 @@ const Ventas = {
 
         document.addEventListener('input', (e) => {
             if (e.target.classList.contains('monto-pago')) {
-                e.target.value = e.target.value.replace(/[^0-9.,]/g, '').replace(/,/g, '.');
+                let v = e.target.value.replace(/[^0-9.,]/g, '').replace(/,/g, '.');
+                const idx = v.indexOf('.');
+                if (idx !== -1) {
+                    v = v.slice(0, idx + 1) + v.slice(idx + 1).replace(/\./g, '');
+                }
+                e.target.value = v;
                 const total = parseFloat(document.getElementById('resumenTotal').textContent.replace(/[^0-9,]/g, '').replace(',', '.')) || 0;
                 this.actualizarBalancePagos(total);
             }
