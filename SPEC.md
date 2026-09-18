@@ -66,9 +66,10 @@ Control de inventario, ventas, producción, lotes, insumos, trabajadores, tareas
 | 32 | `UbicacionesController` | index, add/edit/delete_ajax, get_locations |
 | 33 | `UnidadesMedidaController` | index, add/edit/delete_ajax, get_units |
 | 34 | `UsuariosController` | index, add/edit/delete_ajax, get_users |
-| 35 | `VentasController` | listar, guardar, cancelar, detalles, buscar_lotes, precio_lote, buscar_clientes, trabajadores, comprobante |
+| 35 | `PermisosController` | index, get_roles, get_role_permissions, save_ajax |
+| 36 | `VentasController` | listar, guardar, cancelar, detalles, buscar_lotes, precio_lote, buscar_clientes, trabajadores, comprobante |
 
-### Modelos (32 archivos)
+### Modelos (33 archivos)
 - Namespace: `SysInescolara\models`
 - Extienden `SysInescolara\core\Database` (composición con PDO, no herencia)
 - Acceso a BD vía `$this->db()->prepare()` (getter protegido que retorna `PDO`)
@@ -95,6 +96,7 @@ Control de inventario, ventas, producción, lotes, insumos, trabajadores, tareas
 | `Notification` | `notificaciones` | security | — |
 | `Ornato` | `ornatos` | default | Readable, Deletable |
 | `PasswordReset` | `password_resets` | security | — |
+| `Permiso` | `rol_modulo_permiso` + `modulos` + `permisos` | security | — |
 | `Planta` | `plantas` | default | Readable, Deletable |
 | `Proveedor` | `proveedores` | default | Readable, Deletable |
 | `Purchase` | `compra` | default | Readable, Deletable |
@@ -113,10 +115,10 @@ Control de inventario, ventas, producción, lotes, insumos, trabajadores, tareas
 ### Traits
 - `app/traits/ValidationTrait.php` — Validación centralizada con 22 patrones regex (nombre, email, precio, cantidad, cédula, teléfono, RIF, etc.)
 
-### Vistas (49 archivos)
+### Vistas (50 archivos)
 
-**dashboard/ (32 vistas):**
-`ampliacion`, `asistente`, `auditlog`, `backups`, `clientes`, `compras`, `cuentas-cobrar`, `cuentas-pagar`, `empleados`, `especies`, `herramientas`, `index`, `insumos`, `inventario`, `lotes`, `mermas`, `ornatos`, `perfil`, `plantas`, `precios`, `proveedores`, `reports`, `reports_pdf`, `roles`, `seed-collection`, `tareas`, `trazabilidad`, `ubicaciones`, `unidades-medida`, `usuarios`, `ventas`, `ventas_comprobante_pdf`
+**dashboard/ (33 vistas):**
+`ampliacion`, `asistente`, `auditlog`, `backups`, `clientes`, `compras`, `cuentas-cobrar`, `cuentas-pagar`, `empleados`, `especies`, `herramientas`, `index`, `insumos`, `inventario`, `lotes`, `mermas`, `ornatos`, `perfil`, `permisos`, `plantas`, `precios`, `proveedores`, `reports`, `reports_pdf`, `roles`, `seed-collection`, `tareas`, `trazabilidad`, `ubicaciones`, `unidades-medida`, `usuarios`, `ventas`, `ventas_comprobante_pdf`
 
 **auth/ (3 vistas):** `login`, `recuperar`, `reset-password`
 
@@ -128,11 +130,11 @@ Control de inventario, ventas, producción, lotes, insumos, trabajadores, tareas
 
 **public/ (5 vistas):** `catalogo`, `contacto`, `home`, `nosotros`, `servicios`
 
-### Assets JavaScript (41 archivos)
+### Assets JavaScript (42 archivos)
 
 **Root (5):** `asistente.js`, `auth.js`, `data.js`, `main.js`, `sidebar.js`
 
-**dashboard/ (29):** `ampliacion`, `auditlog`, `backups`, `clientes`, `compras`, `cuentas-cobrar`, `cuentas-pagar`, `dashboard`, `empleados`, `especies`, `herramientas`, `insumos`, `inventario`, `lotes`, `mermas`, `notifications`, `ornatos`, `plantas`, `precios`, `proveedores`, `reports`, `roles`, `seed-collection`, `tareas`, `trazabilidad`, `ubicaciones`, `unidades-medida`, `usuarios`, `ventas`
+**dashboard/ (30):** `ampliacion`, `auditlog`, `backups`, `clientes`, `compras`, `cuentas-cobrar`, `cuentas-pagar`, `dashboard`, `empleados`, `especies`, `herramientas`, `insumos`, `inventario`, `lotes`, `mermas`, `notifications`, `ornatos`, `permisos`, `plantas`, `precios`, `proveedores`, `reports`, `roles`, `seed-collection`, `tareas`, `trazabilidad`, `ubicaciones`, `unidades-medida`, `usuarios`, `ventas`
 
 **utils/ (7):** `ajax-handler.js`, `bs5-jquery-bridge.js`, `components.js`, `helpers.js`, `maxlength-counter.js`, `skeleton.js`, `validation.js`
 
@@ -165,6 +167,7 @@ Control de inventario, ventas, producción, lotes, insumos, trabajadores, tareas
 - Sesión con `session_regenerate_id(true)` post-login
 - Acceso a sesión únicamente vía `SysInescolara\helpers\Auth` (clase estática)
 - Métodos Auth: `id()`, `name()`, `email()`, `avatar()`, `roleId()`, `permisos()`, `check()`, `isAdmin()`, `hasPermiso()`, `hasModuleAccess()`, `set()`, `setField()`, `attempt()`, `logout()`
+- **Permisos basados en rol:** `Usuario::getRolePermissions()` lee de `rol_modulo_permiso` (tabla `usuario_modulo_permiso` ya no se usa en runtime). Cache en sesión con refresh cada 5 min (`dashboardCheckAuth`).
 - Recuperación de contraseña vía token + email (SMTP real, Resend API o MailLogger como fallback)
 - reCAPTCHA v2 en login y recuperación
 
@@ -187,6 +190,7 @@ Control de inventario, ventas, producción, lotes, insumos, trabajadores, tareas
 - **Dashboard** con KPIs y estadísticas
 - **Inventario** (ajustes, stock consolidado)
 - **Ventas/POS** — flujo completo: selección de lotes, cálculo de precio, clientes, comprobante PDF
+- **Permisos** — vista dedicada para asignar módulos y acciones (ver/crear/editar/eliminar) a cada rol; matriz renderizada server-side, DataTable de roles, modal con checklist, guardado transaccional + auditoría
 - **Compras** — órdenes de compra con detalles, recepción, cancelación, agregado rápido
 - **Cuentas por Cobrar** — gestión de créditos, registro de pagos, estadísticas
 - **Cuentas por Pagar** — cuentas, pagos, anulación
@@ -210,7 +214,7 @@ Control de inventario, ventas, producción, lotes, insumos, trabajadores, tareas
 - Autenticación con reCAPTCHA v2
 - Recuperación de contraseña (SMTP + Resend API + MailLogger)
 - CSRF Protection (token en sesión, hash_equals)
-- Permisos granulares por módulo/acción (rol + usuario)
+- **Permisos granulares por módulo/acción basados en rol** (`rol_modulo_permiso`); modelo `Permiso` con bootstrap automático y vista dedicada de gestión
 - Soft deletes en todos los modelos principales
 - Validación dual (JS + PHP) con regex centralizados
 - Transacciones atómicas en operaciones multi-tabla
@@ -229,6 +233,7 @@ Control de inventario, ventas, producción, lotes, insumos, trabajadores, tareas
 - **Rama `testing`:** flujo feature/bugfix → testing → develop
 - **Mailer fixes:** timeout 15s (antes 300s), reset de instancia PHPMailer en fallo, eliminación de Timelimit (PHPMailer 7.x)
 - **Migración de esquema DB:** eliminación de tablas `calculo_precio`, `consumo_insumos`, `ajuste_inventario`, `trabajadores`; nuevas tablas `registro_insumo`, `detalle_ornatos`; `compra_detalle` migrado a FKs reales; `lote` con columnas `costo_unitario`/`porcentaje_ganancia`; precios basados en `registro_insumo`; `Venta` usa `id_usuario`
+- **Migración de permisos:** limpieza de tabla `permisos` (eliminación 104 filas legacy + 44 duplicados), adición UNIQUE KEY `uq_nombre_permiso`, re-asignación canónica de 4 acciones (ver/crear/editar/eliminar) a 29 módulos, registro de módulo `permisos` — script `database/migration_permisos.sql`
 
 ### Pendiente (Mejoras Futuras)
 - **Exchange Rate / BCV:** Servicio de tasa Bs/USD con caché

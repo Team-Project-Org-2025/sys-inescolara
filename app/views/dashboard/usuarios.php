@@ -59,38 +59,6 @@ include_once __DIR__ . '/../common/modal.php';
         </div>
     </main>
 
-<?php
-function renderPermisosChecklist(array $allPermisos): void
-{
-    $modulos = $allPermisos['modulos'] ?? [];
-    $acciones = $allPermisos['acciones'] ?? [];
-    ?>
-    <div style="position:sticky;top:0;z-index:1;background:var(--bg-secondary);padding:6px 2px 4px;margin:0 -12px;padding-left:12px;padding-right:12px;border-bottom:2px solid var(--color-gray-200);">
-        <div style="display:flex;gap:16px 24px;font-size:0.78rem;">
-            <span style="min-width:120px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.03em;">Módulo</span>
-            <?php foreach ($acciones as $accion): ?>
-                <span style="min-width:60px;text-align:center;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.03em;"><?= ucfirst($accion['nombre_permiso']) ?></span>
-            <?php endforeach; ?>
-        </div>
-    </div>
-    <?php foreach ($modulos as $modulo):
-        $idModulo = $modulo['id_modulo'];
-        $nombreModulo = $modulo['nombre_modulo'];
-    ?>
-    <div style="display:flex;align-items:center;gap:16px 24px;padding:5px 2px;font-size:0.8rem;border-bottom:1px solid var(--color-gray-100);">
-        <span style="min-width:120px;font-weight:500;color:var(--text-primary);"><?= htmlspecialchars($nombreModulo) ?></span>
-        <?php foreach ($acciones as $accion):
-            $value = $idModulo . ':' . $accion['id_permiso'];
-        ?>
-        <label style="display:flex;align-items:center;justify-content:center;min-width:60px;gap:3px;cursor:pointer;">
-            <input type="checkbox" name="permisos[]" value="<?= $value ?>">
-        </label>
-        <?php endforeach; ?>
-    </div>
-    <?php endforeach;
-}
-?>
-
     <!-- Modals fuera de main-content para evitar conflictos con Bootstrap 5.3 -->
     
     <!-- Add User Modal -->
@@ -135,13 +103,6 @@ function renderPermisosChecklist(array $allPermisos): void
         <div class="mb-3">
             <label class="form-label">Cargo</label>
             <input type="text" class="form-control" name="cargo" maxlength="100">
-        </div>
-        <div class="mb-3 permisos-checklist" id="addPermisosChecklist" style="display:none;">
-            <label class="form-label">Módulos y acciones permitidas</label>
-            <div style="padding:8px 12px;border:1px solid var(--color-gray-200);border-radius:var(--radius-md);background:var(--bg-secondary);max-height:300px;overflow-y:auto;">
-                <?php renderPermisosChecklist($allPermisos); ?>
-            </div>
-            <small class="text-muted">Selecciona los módulos y acciones a los que este usuario tendrá acceso.</small>
         </div>
         <div class="mb-3">
             <label class="form-label">Foto de perfil</label>
@@ -198,13 +159,6 @@ function renderPermisosChecklist(array $allPermisos): void
         <div class="mb-3">
             <label class="form-label">Cargo</label>
             <input type="text" class="form-control" name="cargo" id="editCargo" maxlength="100">
-        </div>
-        <div class="mb-3 permisos-checklist" id="editPermisosChecklist" style="display:none;">
-            <label class="form-label">Módulos y acciones permitidas</label>
-            <div style="padding:8px 12px;border:1px solid var(--color-gray-200);border-radius:var(--radius-md);background:var(--bg-secondary);max-height:300px;overflow-y:auto;">
-                <?php renderPermisosChecklist($allPermisos); ?>
-            </div>
-            <small class="text-muted">Selecciona los módulos y acciones a los que este usuario tendrá acceso.</small>
         </div>
         <div class="mb-3">
             <label class="form-label">Foto de perfil</label>

@@ -42,21 +42,178 @@ class AuditLog extends Database implements ReadableInterface
         }
     }
 
-    public function getAll(): array
+    public function getAll(array $params = []): array
     {
         try {
-            $stmt = $this->db()->query("
+            $where = [];
+            $bind = [];
+
+            if (!empty($params['fecha_desde'])) {
+                $where[] = "al.fecha_accion >= :fecha_desde";
+                $bind[':fecha_desde'] = $params['fecha_desde'] . ' 00:00:00';
+            }
+            if (!empty($params['fecha_hasta'])) {
+                $where[] = "al.fecha_accion <= :fecha_hasta";
+                $bind[':fecha_hasta'] = $params['fecha_hasta'] . ' 23:59:59';
+            }
+            if (!empty($params['id_usuario'])) {
+                $where[] = "al.id_usuario = :id_usuario";
+                $bind[':id_usuario'] = (int)$params['id_usuario'];
+            }
+            if (!empty($params['accion'])) {
+                $where[] = "al.accion = :accion";
+                $bind[':accion'] = $params['accion'];
+            }
+            if (!empty($params['tabla_afectada'])) {
+                $where[] = "al.tabla_afectada = :tabla_afectada";
+                $bind[':tabla_afectada'] = $params['tabla_afectada'];
+            }
+            if (!empty($params['search'])) {
+                $where[] = "(u.nombre_usuario LIKE :search OR al.tabla_afectada LIKE :search OR al.accion LIKE :search)";
+                $bind[':search'] = '%' . $params['search'] . '%';
+            }
+
+            $whereSql = $where ? 'WHERE ' . implode(' AND ', $where) : '';
+
+            $limit = '';
+            $length = (int)($params['length'] ?? 0);
+            if ($length === -1) {
+                // Sin límite (exportación CSV)
+            } elseif ($length > 0) {
+                $limit = 'LIMIT ' . $length;
+                if (!empty($params['start'])) {
+                    $limit .= ' OFFSET ' . (int)$params['start'];
+                }
+            } else {
+                $limit = 'LIMIT 1000';
+            }
+
+            $orderBy = 'ORDER BY al.fecha_accion DESC';
+            if (!empty($params['order_column']) && !empty($params['order_dir'])) {
+                $columns = ['fecha_accion', 'nombre_usuario', 'accion', 'tabla_afectada', 'id_log'];
+                $colIdx = (int)$params['order_column'];
+                $dir = strtoupper($params['order_dir']) === 'ASC' ? 'ASC' : 'DESC';
+                if (isset($columns[$colIdx])) {
+                    $orderBy = "ORDER BY al.{$columns[$colIdx]} {$dir}";
+                }
+            }
+
+            $sql = "
                 SELECT 
                     al.*,
                     u.nombre_usuario
                 FROM auditoria_logs al
                 LEFT JOIN usuarios u ON al.id_usuario = u.id_usuario
-                ORDER BY al.fecha_accion DESC
-                LIMIT 1000
-            ");
+                {$whereSql}
+                {$orderBy}
+                {$limit}
+            ";
+            $stmt = $this->db()->prepare($sql);
+            $stmt->execute($bind);
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
         } catch (\Throwable $e) {
             error_log('Error al obtener auditoría: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    public function countFiltered(array $params = []): int
+    {
+        try {
+            $where = [];
+            $bind = [];
+
+            if (!empty($params['fecha_desde'])) {
+                $where[] = "al.fecha_accion >= :fecha_desde";
+                $bind[':fecha_desde'] = $params['fecha_desde'] . ' 00:00:00';
+            }
+            if (!empty($params['fecha_hasta'])) {
+                $where[] = "al.fecha_accion <= :fecha_hasta";
+                $bind[':fecha_hasta'] = $params['fecha_hasta'] . ' 23:59:59';
+            }
+            if (!empty($params['id_usuario'])) {
+                $where[] = "al.id_usuario = :id_usuario";
+                $bind[':id_usuario'] = (int)$params['id_usuario'];
+            }
+            if (!empty($params['accion'])) {
+                $where[] = "al.accion = :accion";
+                $bind[':accion'] = $params['accion'];
+            }
+            if (!empty($params['tabla_afectada'])) {
+                $where[] = "al.tabla_afectada = :tabla_afectada";
+                $bind[':tabla_afectada'] = $params['tabla_afectada'];
+            }
+            if (!empty($params['search'])) {
+                $where[] = "(u.nombre_usuario LIKE :search OR al.tabla_afectada LIKE :search OR al.accion LIKE :search)";
+                $bind[':search'] = '%' . $params['search'] . '%';
+            }
+
+            $whereSql = $where ? 'WHERE ' . implode(' AND ', $where) : '';
+
+            $sql = "
+                SELECT COUNT(*)
+                FROM auditoria_logs al
+                LEFT JOIN usuarios u ON al.id_usuario = u.id_usuario
+                {$whereSql}
+            ";
+            $stmt = $this->db()->prepare($sql);
+            $stmt->execute($bind);
+            return (int)$stmt->fetchColumn();
+        } catch (\Throwable $e) {
+            error_log('Error al contar auditoría filtrada: ' . $e->getMessage());
+            return 0;
+        }
+    }
+
+    public function countAll(): int
+    {
+        try {
+            $stmt = $this->db()->query("SELECT COUNT(*) FROM auditoria_logs");
+            return (int)$stmt->fetchColumn();
+        } catch (\Throwable $e) {
+            error_log('Error al contar auditoría total: ' . $e->getMessage());
+            return 0;
+        }
+    }
+
+    public function getUsers(): array
+    {
+        try {
+            $stmt = $this->db()->query("
+                SELECT DISTINCT u.id_usuario, u.nombre_usuario
+                FROM auditoria_logs al
+                JOIN usuarios u ON al.id_usuario = u.id_usuario
+                ORDER BY u.nombre_usuario ASC
+            ");
+            return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+        } catch (\Throwable $e) {
+            error_log('Error al obtener usuarios de auditoría: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    public function getActions(): array
+    {
+        try {
+            $stmt = $this->db()->query("
+                SELECT DISTINCT accion FROM auditoria_logs ORDER BY accion ASC
+            ");
+            return $stmt ? $stmt->fetchAll(PDO::FETCH_COLUMN) : [];
+        } catch (\Throwable $e) {
+            error_log('Error al obtener acciones de auditoría: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    public function getTables(): array
+    {
+        try {
+            $stmt = $this->db()->query("
+                SELECT DISTINCT tabla_afectada FROM auditoria_logs ORDER BY tabla_afectada ASC
+            ");
+            return $stmt ? $stmt->fetchAll(PDO::FETCH_COLUMN) : [];
+        } catch (\Throwable $e) {
+            error_log('Error al obtener tablas de auditoría: ' . $e->getMessage());
             return [];
         }
     }

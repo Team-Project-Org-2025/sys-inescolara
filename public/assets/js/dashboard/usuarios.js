@@ -15,9 +15,13 @@ $(document).ready(function () {
     }
     if ($avatar.length) {
       if (avatarUrl) {
-        $avatar.html(`<img src="${avatarUrl}" alt="Avatar" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`);
+        $avatar.html(
+          `<img src="${avatarUrl}" alt="Avatar" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`
+        );
       } else {
-        $avatar.html(`<span class="sidebar-user-initial">${(userName || 'U')[0].toUpperCase()}</span>`);
+        $avatar.html(
+          `<span class="sidebar-user-initial">${(userName || 'U')[0].toUpperCase()}</span>`
+        );
       }
     }
   };
@@ -76,15 +80,6 @@ $(document).ready(function () {
     });
   };
 
-  function togglePermisosChecklist(roleId, container) {
-    const $container = container || $('#permisosChecklist');
-    if (roleId == 1) {
-      $container.hide();
-    } else {
-      $container.show();
-    }
-  }
-
   //Agregar usuario
   $('#btnAddUser').on('click', function () {
     const $editModal = $('#editUserModal');
@@ -92,12 +87,6 @@ $(document).ready(function () {
       $editModal.modal('hide');
     }
     $('#addUserModal').modal({ focus: false }).modal('show');
-    // Reset checklist: mostrar si rol no es admin
-    togglePermisosChecklist(parseInt($('#addUserRole').val()), $('#addPermisosChecklist'));
-  });
-
-  $(document).on('change', '#addUserRole', function () {
-    togglePermisosChecklist(parseInt($(this).val()), $('#addPermisosChecklist'));
   });
 
   $('#addUserForm').on('submit', function (e) {
@@ -156,7 +145,11 @@ $(document).ready(function () {
     $('#editUserIdHidden').val(userId);
     $('#editUserName').val(row.nombre_usuario);
     $('#editUserEmail').val(row.correo_electronico);
-    $('#editUserRole').val(row.rol_id).prop('disabled', false).css('pointerEvents', isSuper ? 'none' : '').toggleClass('readonly-look', isSuper);
+    $('#editUserRole')
+      .val(row.rol_id)
+      .prop('disabled', false)
+      .css('pointerEvents', isSuper ? 'none' : '')
+      .toggleClass('readonly-look', isSuper);
     $('#editNombreTrabajador').val(row.nombre_trabajador || '');
     $('#editApellidoTrabajador').val(row.apellido_trabajador || '');
     $('#editCedulaTrabajador').val(row.cedula_trabajador || '');
@@ -166,21 +159,20 @@ $(document).ready(function () {
     $('#editCurrentPassword').val('');
     $('#editUserRoleNote').toggle(isSuper);
 
-    var roleId = parseInt(row.rol_id);
-    togglePermisosChecklist(isSuper ? 1 : roleId, $('#editPermisosChecklist'));
-    $('#editUserRole').off('change.permisos').on('change.permisos', function () {
-      togglePermisosChecklist(parseInt($(this).val()), $('#editPermisosChecklist'));
-    });
-
     const $currentPwGroup = $('#currentPasswordGroup');
     const $currentPwHelp = $('#currentPasswordHelp');
     if (isOwnAccount || isAdmin) {
       $currentPwGroup.show();
-      $('#editUserPassword').attr('placeholder', 'Nueva contraseña (dejar en blanco para no cambiar)');
+      $('#editUserPassword').attr(
+        'placeholder',
+        'Nueva contraseña (dejar en blanco para no cambiar)'
+      );
       if (isOwnAccount) {
         $currentPwHelp.text('Ingresa tu contraseña actual para cambiarla.');
       } else {
-        $currentPwHelp.text('Como administrador, debes ingresar tu propia contraseña para autorizar el cambio.');
+        $currentPwHelp.text(
+          'Como administrador, debes ingresar tu propia contraseña para autorizar el cambio.'
+        );
       }
     } else {
       $currentPwGroup.hide();
@@ -190,18 +182,12 @@ $(document).ready(function () {
     const avatar = row.avatar;
     const $preview = $('#editAvatarPreview');
     if (avatar) {
-      $preview.show().find('img').attr('src', `${window.BASE_URL || '/'}${avatar}`);
+      $preview
+        .show()
+        .find('img')
+        .attr('src', `${window.BASE_URL || '/'}${avatar}`);
     } else {
       $preview.hide();
-    }
-
-    const userPermisos = row.permisos || [];
-    $('#editPermisosChecklist input[name="permisos[]"]').prop('checked', false);
-    if (userPermisos && Array.isArray(userPermisos)) {
-      userPermisos.forEach((p) => {
-        const val = p.id_modulo + ':' + p.id_permiso;
-        $(`#editPermisosChecklist input[name="permisos[]"][value="${val}"]`).prop('checked', true);
-      });
     }
 
     Validations.clearValidation($('#editUserForm'));
@@ -333,8 +319,6 @@ $(document).ready(function () {
   $('#addUserModal, #editUserModal').on('hidden.bs.modal', function () {
     const $form = $(this).find('form');
     Helpers.resetForm($form);
-    // Desmarcar todos los permisos
-    $(this).find('.permisos-checklist input[type="checkbox"]').prop('checked', false);
   });
 
   initDataTable();

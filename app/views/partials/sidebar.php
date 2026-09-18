@@ -9,7 +9,7 @@ $isActivos = in_array($current, ['inventario', 'lotes', 'trazabilidad', 'insumos
 $isVenta = in_array($current, ['ventas', 'precios', 'clientes', 'cuentas-cobrar', 'cuentas-pagar', 'compras']);
 $isServicios = in_array($current, ['ornatos', 'ampliacion', 'proveedores']);
 $isTarea = in_array($current, ['tareas', 'seed-collection']);
-$isConfiguracion = in_array($current, ['usuarios', 'roles', 'auditlog', 'backups']);
+$isConfiguracion = in_array($current, ['usuarios', 'roles', 'auditlog', 'backups', 'permisos']);
 
 $showInventario = Auth::hasModuleAccess('plantas', 'ver')
     || Auth::hasModuleAccess('ubicaciones', 'ver')
@@ -41,6 +41,7 @@ $showHerramientas = Auth::hasModuleAccess('asistente', 'ver')
 
 $showSistema = Auth::hasModuleAccess('usuarios', 'ver')
     || Auth::hasModuleAccess('roles', 'ver')
+    || Auth::hasModuleAccess('permisos', 'ver')
     || Auth::hasModuleAccess('auditlog', 'ver')
     || Auth::hasModuleAccess('backups', 'ver');
 
@@ -376,6 +377,14 @@ $showSistema = Auth::hasModuleAccess('usuarios', 'ver')
                             <span>Respaldo</span>
                         </a>
                     </li>
+                    <?php if (Auth::hasModuleAccess('permisos', 'ver')): ?>
+                    <li>
+                        <a href="<?= BASE_URL ?>dashboard/permisos" class="nav-link <?= $current === 'permisos' ? 'active' : '' ?>">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><line x1="12" y1="3" x2="12" y2="9"></line><path d="M12 15v6"></path><circle cx="12" cy="15" r="1.5"></circle></svg>
+                            <span>Permisos</span>
+                        </a>
+                    </li>
+                    <?php endif; ?>
                 </ul>
             </div>
         </div>

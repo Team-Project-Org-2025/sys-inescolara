@@ -167,7 +167,6 @@ function usuarios(): void
     require_once ROOT_PATH . 'vendor/autoload.php';
     $userModel = new \SysInescolara\models\Usuario();
     $roles = $userModel->getRoles();
-    $allPermisos = $userModel->getAllPermissions();
 
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'usuarios.php';
@@ -360,7 +359,7 @@ function especies(): void
 
 function auditlog(): void
 {
-    dashboardCheckPermiso('usuarios:ver');
+    dashboardCheckPermiso('auditlog:ver');
     $view = ROOT_PATH . 'app' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR
         . 'dashboard' . DIRECTORY_SEPARATOR . 'auditlog.php';
 
@@ -508,6 +507,26 @@ function roles(): void
     if (!is_file($view)) {
         http_response_code(500);
         echo 'Vista de roles no encontrada.';
+        return;
+    }
+
+    require $view;
+}
+
+function permisos(): void
+{
+    dashboardCheckPermiso('permisos:ver');
+
+    require_once ROOT_PATH . 'vendor/autoload.php';
+    $permisoModel = new \SysInescolara\models\Permiso();
+    $modulos = $permisoModel->getModulos();
+    $acciones = $permisoModel->getAcciones();
+
+    $view = ROOT_PATH . 'app/views/dashboard/permisos.php';
+
+    if (!is_file($view)) {
+        http_response_code(500);
+        echo 'Vista de permisos no encontrada.';
         return;
     }
 

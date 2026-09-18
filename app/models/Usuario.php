@@ -164,6 +164,7 @@ class Usuario extends Database
                 ['ayuda', 'Centro de ayuda'],
                 ['usuarios', 'Administración de usuarios'],
                 ['roles', 'Administración de roles'],
+                ['permisos', 'Gestión de permisos por rol'],
                 ['auditlog', 'Bitácora de auditoría'],
                 ['backups', 'Respaldo y restauración'],
             ];
@@ -604,20 +605,16 @@ class Usuario extends Database
                 return [];
             }
 
-            // Solo usar permisos individuales del usuario (el rol es solo una etiqueta)
-            if ($userId !== null) {
-                $stmt = $this->db()->prepare("
-                    SELECT CONCAT(m.nombre_modulo, ':', p.nombre_permiso) AS permiso
-                    FROM usuario_modulo_permiso ump
-                    JOIN modulos m ON ump.id_modulo = m.id_modulo
-                    JOIN permisos p ON ump.id_permiso = p.id_permiso
-                    WHERE ump.id_usuario = :uid
-                ");
-                $stmt->execute([':uid' => $userId]);
-                return array_column($stmt->fetchAll(PDO::FETCH_ASSOC), 'permiso');
-            }
-
-            return [];
+            // Permisos efectivos por rol (rol_modulo_permiso)
+            $stmt = $this->db()->prepare("
+                SELECT DISTINCT CONCAT(m.nombre_modulo, ':', p.nombre_permiso) AS permiso
+                FROM rol_modulo_permiso rmp
+                JOIN modulos m ON rmp.id_modulo = m.id_modulo
+                JOIN permisos p ON rmp.id_permiso = p.id_permiso
+                WHERE rmp.id_rol = :rol
+            ");
+            $stmt->execute([':rol' => $rolId]);
+            return array_column($stmt->fetchAll(PDO::FETCH_ASSOC), 'permiso');
         } catch (\Throwable $e) {
             error_log("Error al obtener permisos: " . $e->getMessage());
             return [];

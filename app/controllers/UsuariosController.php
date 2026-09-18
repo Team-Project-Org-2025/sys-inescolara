@@ -25,7 +25,6 @@ function index(): void
 
     $model = new Usuario();
     $roles = $model->getRoles();
-    $allPermisos = $model->getAllPermissions();
 
     $view = ROOT_PATH . 'app/views/dashboard/usuarios.php';
     if (!is_file($view)) {
@@ -94,26 +93,15 @@ function users_handleAddEdit(string $mode): void
         $avatar = $result['data']['url'];
     }
 
-    $permisoIds = [];
-    if (isset($_POST['permisos']) && is_array($_POST['permisos'])) {
-        foreach ($_POST['permisos'] as $val) {
-            $parts = explode(':', $val);
-            if (count($parts) === 2) {
-                $permisoIds[] = ['id_modulo' => (int)$parts[0], 'id_permiso' => (int)$parts[1]];
-            }
-        }
-    }
-
     if ($mode === 'add') {
         if ($model->userExists(null, $nombreUsuario)) {
             throw new \Exception('El nombre de usuario ya está registrado');
         }
         $model->add($nombreUsuario, $password, $rolId, $correoElectronico, $avatar);
         $newId = $model->getLastInsertId() ?? 0;
-        if ($rolId !== 1) $model->setUserPermissions($newId, $permisoIds);
         jsonResponse([
             'success' => true, 'message' => 'Usuario agregado',
-            'user' => ['id' => $newId, 'nombre_usuario' => $nombreUsuario, 'correo_electronico' => $correoElectronico, 'rol_id' => $rolId, 'avatar' => $avatar, 'permisos' => $rolId !== 1 ? $model->getUserPermissions($newId) : []],
+            'user' => ['id' => $newId, 'nombre_usuario' => $nombreUsuario, 'correo_electronico' => $correoElectronico, 'rol_id' => $rolId, 'avatar' => $avatar],
         ]);
     }
 
@@ -127,11 +115,6 @@ function users_handleAddEdit(string $mode): void
     }
 
     $model->update($id, $nombreUsuario, $rolId, $correoElectronico, $password !== '' ? $password : null, $avatar);
-    if ($rolId !== 1) {
-        $model->setUserPermissions($id, $permisoIds);
-    } else {
-        $model->setUserPermissions($id, []);
-    }
 
     if (\SysInescolara\helpers\Auth::check() && \SysInescolara\helpers\Auth::id() === $id) {
         \SysInescolara\helpers\Auth::setField('user_nombre', $nombreUsuario);
@@ -140,7 +123,7 @@ function users_handleAddEdit(string $mode): void
 
     jsonResponse([
         'success' => true, 'message' => 'Usuario actualizado',
-        'user' => ['id' => $id, 'nombre_usuario' => $nombreUsuario, 'correo_electronico' => $correoElectronico, 'rol_id' => $rolId, 'avatar' => $avatar, 'permisos' => $rolId !== 1 ? $model->getUserPermissions($id) : []],
+        'user' => ['id' => $id, 'nombre_usuario' => $nombreUsuario, 'correo_electronico' => $correoElectronico, 'rol_id' => $rolId, 'avatar' => $avatar],
     ]);
 }
 
@@ -177,9 +160,5 @@ function users_getUsersAjax(): void
 {
     $model = new Usuario();
     $users = $model->getAll();
-    foreach ($users as &$u) {
-        $u['permisos'] = ($u['rol_id'] ?? 0) !== 1 ? $model->getUserPermissions((int)$u['id']) : [];
-    }
-    unset($u);
     jsonResponse(['success' => true, 'users' => $users, 'count' => count($users)]);
 }
