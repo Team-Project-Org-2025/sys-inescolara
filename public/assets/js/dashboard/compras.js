@@ -20,7 +20,16 @@ $(document).ready(function () {
     { value: 'maduro', label: 'Maduro' },
   ];
 
-  function agregarFilaItem(tipo, idItem, nombre, cantidad, costoUnitario, categoriaLote, idUbicacion, costoLote) {
+  function agregarFilaItem(
+    tipo,
+    idItem,
+    nombre,
+    cantidad,
+    costoUnitario,
+    categoriaLote,
+    idUbicacion,
+    costoLote
+  ) {
     const subtotal = (parseFloat(cantidad) || 0) * (parseFloat(costoUnitario) || 0);
     const fila = `
       <tr>
@@ -51,7 +60,7 @@ $(document).ready(function () {
               </select>
               <select class="form-select form-select-sm item-ubicacion" style="min-width:120px">
                 <option value="">Ubicación...</option>
-                ${(window.UBICACIONES || []).map(u => `<option value="${u.id}" ${idUbicacion == u.id ? 'selected' : ''}>${Helpers.escapeHtml(u.nombre)}</option>`).join('')}
+                ${(window.UBICACIONES || []).map((u) => `<option value="${u.id}" ${idUbicacion == u.id ? 'selected' : ''}>${Helpers.escapeHtml(u.nombre)}</option>`).join('')}
               </select>
             </div>
           </div>
@@ -106,10 +115,20 @@ $(document).ready(function () {
       const mapaLista = { insumo: 'supplies', herramienta: 'tools', planta: 'plantas' };
       const lista = r[mapaLista[tipo]] || [];
       lista.forEach((item) => {
-        const mapaEtiqueta = { insumo: 'nombre_insumo', herramienta: 'nombre_herramienta', planta: 'nombre_comun' };
-        const mapaId = { insumo: item.id_insumo || item.id, herramienta: item.id_herramienta || item.id, planta: item.id };
+        const mapaEtiqueta = {
+          insumo: 'nombre_insumo',
+          herramienta: 'nombre_herramienta',
+          planta: 'nombre_comun',
+        };
+        const mapaId = {
+          insumo: item.id_insumo || item.id,
+          herramienta: item.id_herramienta || item.id,
+          planta: item.id,
+        };
         const etiqueta = item[mapaEtiqueta[tipo]] || '';
-        $select.append(`<option value="${Helpers.escapeHtml(mapaId[tipo])}">${Helpers.escapeHtml(etiqueta)}</option>`);
+        $select.append(
+          `<option value="${Helpers.escapeHtml(mapaId[tipo])}">${Helpers.escapeHtml(etiqueta)}</option>`
+        );
       });
       if (typeof callback === 'function') callback();
     });
@@ -146,7 +165,9 @@ $(document).ready(function () {
         valido = false;
         return;
       }
-      const fkKey = { insumo: 'id_insumo', herramienta: 'id_herramienta', planta: 'id_planta' }[tipo];
+      const fkKey = { insumo: 'id_insumo', herramienta: 'id_herramienta', planta: 'id_planta' }[
+        tipo
+      ];
       const item = { [fkKey]: idItem, cantidad, costo_unitario: costo };
       if (tipo === 'planta') {
         item.costo_unitario = parseFloat($(this).find('.item-costo-lote').val()) || costo;
@@ -194,16 +215,23 @@ $(document).ready(function () {
       herramienta: 'Nombre de la herramienta...',
       planta: 'Nombre común...',
     };
-    const $inputEnLinea = $(`<input type="text" class="form-control form-control-sm flex-grow-1 inline-plant-input" placeholder="${placeholders[tipo] || 'Nombre...'}" autofocus>`);
-    const $btnGuardar = $(`<button type="button" class="btn btn-sm btn-success flex-shrink-0 inline-plant-save" title="Guardar"><i class="fas fa-check"></i></button>`);
-    const $btnCancelar = $(`<button type="button" class="btn btn-sm btn-outline-secondary flex-shrink-0 inline-plant-cancel" title="Cancelar"><i class="fas fa-times"></i></button>`);
+    const $inputEnLinea = $(
+      `<input type="text" class="form-control form-control-sm flex-grow-1 inline-plant-input" placeholder="${placeholders[tipo] || 'Nombre...'}" autofocus>`
+    );
+    const $btnGuardar = $(
+      `<button type="button" class="btn btn-sm btn-success flex-shrink-0 inline-plant-save" title="Guardar"><i class="fas fa-check"></i></button>`
+    );
+    const $btnCancelar = $(
+      `<button type="button" class="btn btn-sm btn-outline-secondary flex-shrink-0 inline-plant-cancel" title="Cancelar"><i class="fas fa-times"></i></button>`
+    );
 
     const $wrapper = $btn.parent();
     $wrapper.append($inputEnLinea);
     if (tipo === 'insumo') {
-      const $unidadSelect = $(`<select class="form-select form-select-sm inline-unidad" style="min-width:110px">
+      const $unidadSelect =
+        $(`<select class="form-select form-select-sm inline-unidad" style="min-width:110px">
         <option value="">Unidad...</option>
-        ${(window.UNIDADES_MEDIDA || []).map(u => `<option value="${u.id}">${Helpers.escapeHtml(u.nombre)}</option>`).join('')}
+        ${(window.UNIDADES_MEDIDA || []).map((u) => `<option value="${u.id}">${Helpers.escapeHtml(u.nombre)}</option>`).join('')}
       </select>`);
       $wrapper.append($unidadSelect);
     }
@@ -239,7 +267,10 @@ $(document).ready(function () {
         planta: 'agregar_planta_rapido',
       };
       const postData = {
-        insumo: { nombre_insumo: nombre, id_unidad_medida: parseInt($wrapper.find('.inline-unidad').val()) || 0 },
+        insumo: {
+          nombre_insumo: nombre,
+          id_unidad_medida: parseInt($wrapper.find('.inline-unidad').val()) || 0,
+        },
         herramienta: { nombre_herramienta: nombre },
         planta: { nombre_comun: nombre },
       };
@@ -255,32 +286,40 @@ $(document).ready(function () {
         data: postData[tipo],
         headers: { 'X-Requested-With': 'XMLHttpRequest' },
         dataType: 'json',
-      }).done((r) => {
-        if (r.success && r[responseKey]) {
-          Helpers.toast('success', `"${Helpers.escapeHtml(nombre)}" creado`);
-          revertirEnLinea();
-          cargarOpcionesItem($fila, tipo, () => {
-            $select.val(String(r[responseKey].id)).trigger('change');
-          });
-        } else {
-          Helpers.toast('error', r.message || 'Error al crear');
+      })
+        .done((r) => {
+          if (r.success && r[responseKey]) {
+            Helpers.toast('success', `"${Helpers.escapeHtml(nombre)}" creado`);
+            revertirEnLinea();
+            cargarOpcionesItem($fila, tipo, () => {
+              $select.val(String(r[responseKey].id)).trigger('change');
+            });
+          } else {
+            Helpers.toast('error', r.message || 'Error al crear');
+            $btnGuardar.prop('disabled', false);
+            $inputEnLinea.prop('disabled', false).focus();
+            if (tipo === 'insumo') $wrapper.find('.inline-unidad').prop('disabled', false);
+          }
+        })
+        .fail(() => {
+          Helpers.toast('error', 'Error de conexión al crear');
           $btnGuardar.prop('disabled', false);
           $inputEnLinea.prop('disabled', false).focus();
           if (tipo === 'insumo') $wrapper.find('.inline-unidad').prop('disabled', false);
-        }
-      }).fail(() => {
-        Helpers.toast('error', 'Error de conexión al crear');
-        $btnGuardar.prop('disabled', false);
-        $inputEnLinea.prop('disabled', false).focus();
-        if (tipo === 'insumo') $wrapper.find('.inline-unidad').prop('disabled', false);
-      });
+        });
     }
 
     $btnGuardar.on('click', crearItem);
     $btnCancelar.on('click', revertirEnLinea);
     $inputEnLinea.on('keydown', (e) => {
-      if (e.key === 'Enter') { e.preventDefault(); crearItem(); }
-      if (e.key === 'Escape') { e.preventDefault(); revertirEnLinea(); }
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        crearItem();
+      }
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        revertirEnLinea();
+      }
     });
   });
 
@@ -306,7 +345,10 @@ $(document).ready(function () {
       },
       columns: [
         { data: 'id_compra', render: (data) => `#${data}` },
-        { data: 'proveedor_nombre', render: (data) => data || '<span class="text-muted">&mdash;</span>' },
+        {
+          data: 'proveedor_nombre',
+          render: (data) => data || '<span class="text-muted">&mdash;</span>',
+        },
         { data: 'fecha_compra' },
         {
           data: null,
@@ -316,9 +358,17 @@ $(document).ready(function () {
             return nc ? `${tp} ${nc}` : tp || '<span class="text-muted">&mdash;</span>';
           },
         },
-        { data: 'subtotal', className: 'text-end', render: (data) => Helpers.formatCurrencyBs(data) },
+        {
+          data: 'subtotal',
+          className: 'text-end',
+          render: (data) => Helpers.formatCurrencyBs(data),
+        },
         { data: 'iva', className: 'text-end', render: (data) => Helpers.formatCurrencyBs(data) },
-        { data: 'total', className: 'text-end', render: (data) => `<strong>${Helpers.formatCurrencyBs(data)}</strong>` },
+        {
+          data: 'total',
+          className: 'text-end',
+          render: (data) => `<strong>${Helpers.formatCurrencyBs(data)}</strong>`,
+        },
         { data: 'items_count', className: 'text-center', render: (data) => data || 0 },
         {
           data: 'estado',
@@ -336,11 +386,13 @@ $(document).ready(function () {
             const sinPagos = parseInt(data.pagos_count) === 0;
             return C.btnGroup(
               C.btnView('btn-detail'),
-              ...(esPendiente ? [
-                C.btnEdit('btn-edit'),
-                C.btnReceive('btn-recibir'),
-                ...(sinPagos ? [C.btnDelete('btn-delete')] : []),
-              ] : []),
+              ...(esPendiente
+                ? [
+                    C.btnEdit('btn-edit'),
+                    C.btnReceive('btn-recibir'),
+                    ...(sinPagos ? [C.btnDelete('btn-delete')] : []),
+                  ]
+                : [])
             );
           },
         },
@@ -379,7 +431,7 @@ $(document).ready(function () {
     $('#compraForm')[0].reset();
     const hoyLocal = new Date();
     $('#frmFecha').val(
-      `${hoyLocal.getFullYear()}-${String(hoyLocal.getMonth()+1).padStart(2,'0')}-${String(hoyLocal.getDate()).padStart(2,'0')}`
+      `${hoyLocal.getFullYear()}-${String(hoyLocal.getMonth() + 1).padStart(2, '0')}-${String(hoyLocal.getDate()).padStart(2, '0')}`
     );
     $('#itemsBody').empty();
     agregarFilaItem('insumo', null, '', 1, 0, 'germinado', null, 0);
@@ -402,7 +454,9 @@ $(document).ready(function () {
     }
 
     let subtotal = 0;
-    items.forEach((it) => { subtotal += it.cantidad * it.costo_unitario; });
+    items.forEach((it) => {
+      subtotal += it.cantidad * it.costo_unitario;
+    });
     $('#frmSubtotal').val(subtotal.toFixed(2));
     $('#frmTotal').val(subtotal.toFixed(2));
 
@@ -452,33 +506,49 @@ $(document).ready(function () {
       method: 'GET',
       dataType: 'json',
       headers: { 'X-Requested-With': 'XMLHttpRequest' },
-    }).done((r) => {
-      if (!r.success || !r.compra) {
-        Helpers.toast('error', 'No se pudo cargar la compra.');
-        return;
-      }
-      const c = r.compra;
-      $('#compraId').val(c.id_compra);
-      $('#frmProveedor').val(c.id_proveedor);
-      $('#frmFecha').val(c.fecha_compra);
-      $('#frmTipoComprobante').val(c.tipo_comprobante || 'Factura');
-      $('#frmNumComprobante').val(c.numero_comprobante || '');
-      $('#frmObservacion').val(c.observacion || '');
+    })
+      .done((r) => {
+        if (!r.success || !r.compra) {
+          Helpers.toast('error', 'No se pudo cargar la compra.');
+          return;
+        }
+        const c = r.compra;
+        $('#compraId').val(c.id_compra);
+        $('#frmProveedor').val(c.id_proveedor);
+        $('#frmFecha').val(c.fecha_compra);
+        $('#frmTipoComprobante').val(c.tipo_comprobante || 'Factura');
+        $('#frmNumComprobante').val(c.numero_comprobante || '');
+        $('#frmObservacion').val(c.observacion || '');
 
-      if (r.details && r.details.length) {
-        r.details.forEach((d) => {
-          let tipo = 'insumo';
-          let idItem = d.id_insumo;
-          if (d.id_herramienta) { tipo = 'herramienta'; idItem = d.id_herramienta; }
-          else if (d.id_planta) { tipo = 'planta'; idItem = d.id_planta; }
-          agregarFilaItem(tipo, idItem, d.item_nombre, d.cantidad, d.costo_unitario, d.categoria_lote, d.id_ubicacion, d.costo_unitario);
-        });
-      } else {
-        agregarFilaItem('insumo', null, '', 1, 0, 'germinado', null, 0);
-      }
-      actualizarTotales();
-      $('#compraModal').modal('show');
-    }).fail(() => Helpers.toast('error', 'Error al cargar datos de la compra.'));
+        if (r.details && r.details.length) {
+          r.details.forEach((d) => {
+            let tipo = 'insumo';
+            let idItem = d.id_insumo;
+            if (d.id_herramienta) {
+              tipo = 'herramienta';
+              idItem = d.id_herramienta;
+            } else if (d.id_planta) {
+              tipo = 'planta';
+              idItem = d.id_planta;
+            }
+            agregarFilaItem(
+              tipo,
+              idItem,
+              d.item_nombre,
+              d.cantidad,
+              d.costo_unitario,
+              d.categoria_lote,
+              d.id_ubicacion,
+              d.costo_unitario
+            );
+          });
+        } else {
+          agregarFilaItem('insumo', null, '', 1, 0, 'germinado', null, 0);
+        }
+        actualizarTotales();
+        $('#compraModal').modal('show');
+      })
+      .fail(() => Helpers.toast('error', 'Error al cargar datos de la compra.'));
   });
 
   // ============================================================
@@ -493,14 +563,15 @@ $(document).ready(function () {
       method: 'GET',
       dataType: 'json',
       headers: { 'X-Requested-With': 'XMLHttpRequest' },
-    }).done((r) => {
-      if (!r.success) {
-        Helpers.toast('error', 'Error al cargar detalle.');
-        return;
-      }
-      const c = r.compra || {};
-      const details = r.details || [];
-      let html = `
+    })
+      .done((r) => {
+        if (!r.success) {
+          Helpers.toast('error', 'Error al cargar detalle.');
+          return;
+        }
+        const c = r.compra || {};
+        const details = r.details || [];
+        let html = `
         <div class="row mb-3">
           <div class="col-md-6">
             <strong>Proveedor:</strong> ${Helpers.escapeHtml(c.proveedor_nombre || '')}<br>
@@ -527,32 +598,33 @@ $(document).ready(function () {
               </tr>
             </thead>
             <tbody>`;
-      let subtotalItems = 0;
-      details.forEach((d) => {
-        subtotalItems += parseFloat(d.subtotal) || 0;
-        let extra = '';
-        if (d.tipo_item === 'planta') {
-          const cat = d.categoria_lote || 'germinado';
-          const ubi = d.id_ubicacion ? ` (Ubic. #${d.id_ubicacion})` : '';
-          extra = `<br><small class="text-muted">${cat}${ubi}</small>`;
-        }
-        html += `<tr>
+        let subtotalItems = 0;
+        details.forEach((d) => {
+          subtotalItems += parseFloat(d.subtotal) || 0;
+          let extra = '';
+          if (d.tipo_item === 'planta') {
+            const cat = d.categoria_lote || 'germinado';
+            const ubi = d.id_ubicacion ? ` (Ubic. #${d.id_ubicacion})` : '';
+            extra = `<br><small class="text-muted">${cat}${ubi}</small>`;
+          }
+          html += `<tr>
           <td><span class="badge bg-${d.tipo_item === 'insumo' ? 'primary' : 'secondary'}">${d.tipo_item}</span></td>
           <td>${Helpers.escapeHtml(d.item_nombre || '')}${extra}</td>
           <td class="text-end">${parseFloat(d.cantidad).toFixed(2)}</td>
           <td class="text-end">${Helpers.formatCurrencyBs(d.costo_unitario)}</td>
           <td class="text-end">${Helpers.formatCurrencyBs(d.subtotal)}</td>
         </tr>`;
-      });
-      html += `</tbody>
+        });
+        html += `</tbody>
             <tfoot>
               <tr class="fw-bold"><td colspan="4" class="text-end">Total:</td><td class="text-end">${Helpers.formatCurrencyBs(c.total)}</td></tr>
             </tfoot>
           </table>
         </div>`;
-      $('#detailBody').html(html);
-      $('#detailModal').modal('show');
-    }).fail(() => Helpers.toast('error', 'Error al cargar detalle.'));
+        $('#detailBody').html(html);
+        $('#detailModal').modal('show');
+      })
+      .fail(() => Helpers.toast('error', 'Error al cargar detalle.'));
   });
 
   // ============================================================
@@ -575,7 +647,8 @@ $(document).ready(function () {
             } else {
               Helpers.toast('error', response.message);
             }
-          }).catch((err) => Helpers.toast('error', err));
+          })
+          .catch((err) => Helpers.toast('error', err));
       },
       'Sí, recibir'
     );
@@ -601,7 +674,8 @@ $(document).ready(function () {
             } else {
               Helpers.toast('error', response.message);
             }
-          }).catch((err) => Helpers.toast('error', err));
+          })
+          .catch((err) => Helpers.toast('error', err));
       },
       'Sí, eliminar'
     );

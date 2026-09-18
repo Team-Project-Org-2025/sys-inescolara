@@ -8,6 +8,7 @@ use SysInescolara\models\Insumo;
 use SysInescolara\models\Herramienta;
 use SysInescolara\models\Ubicacion;
 use SysInescolara\models\Planta;
+use SysInescolara\models\Especie;
 use SysInescolara\models\UnidadMedida;
 function index(): void
 {
@@ -250,15 +251,26 @@ function compras_agregarPlantaRapido(): void
         return;
     }
 
-    $modelo = new Planta();
-    $modelo->add($nombre, $nombre);
-    $nuevoId = $modelo->getLastInsertId() ?? 0;
+    // Buscar o crear especie por defecto
+    $modeloEspecie = new Especie();
+    $especies = $modeloEspecie->getAll();
+    $idEspecie = null;
+    if (!empty($especies)) {
+        $idEspecie = (int)$especies[0]['id'];
+    }
 
-    if ($nuevoId <= 0) {
+    $modelo = new Planta([
+        'nombre_comun'   => $nombre,
+        'nombre_tecnico' => $nombre,
+        'id_especie'     => $idEspecie,
+    ]);
+
+    if (!$modelo->save()) {
         jsonResponse(['success' => false, 'message' => 'Error al crear la planta.'], 500);
         return;
     }
 
+    $nuevoId = $modelo->getId() ?? 0;
     $planta = $modelo->getById($nuevoId);
 
     jsonResponse([
