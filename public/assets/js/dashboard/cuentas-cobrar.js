@@ -213,11 +213,42 @@ $(document).ready(function () {
     $montoInput.attr('max', parseFloat(saldo).toFixed(2));
     $montoInput.data('saldo', parseFloat(saldo));
     $montoInput.attr('placeholder', `Máximo: $${parseFloat(saldo).toFixed(2)}`);
+    $montoInput.removeClass('is-invalid');
+    $('#montoAlert').addClass('d-none');
+    $('#montoAlertText').text('');
     $('#paymentForm')[0].reset();
     $('#payReferenceGroup').hide();
     $('#payMetodo').val('');
     $('#paymentModal').modal('show');
   };
+
+  $(document).on('input', '[name="monto"]', function () {
+    const $montoInput = $(this);
+    const monto = parseFloat($montoInput.val()) || 0;
+    const saldo = parseFloat($montoInput.data('saldo')) || 0;
+    const $alert = $('#montoAlert');
+    const $alertText = $('#montoAlertText');
+    const $submitBtn = $('#paymentForm').find('button[type="submit"]');
+
+    if (monto > saldo + 0.01) {
+      $montoInput.addClass('is-invalid');
+      $alertText.text(
+        `El monto ($${monto.toFixed(2)}) excede el saldo pendiente ($${saldo.toFixed(2)}). Ingrese un monto menor o igual.`
+      );
+      $alert.removeClass('d-none');
+      $submitBtn.prop('disabled', true);
+    } else if (monto > 0 && monto <= saldo + 0.01) {
+      $montoInput.removeClass('is-invalid');
+      $alert.addClass('d-none');
+      $alertText.text('');
+      $submitBtn.prop('disabled', false);
+    } else {
+      $montoInput.removeClass('is-invalid');
+      $alert.addClass('d-none');
+      $alertText.text('');
+      $submitBtn.prop('disabled', false);
+    }
+  });
 
   $('#payMetodo').on('change', function () {
     const val = $(this).val();
@@ -255,23 +286,30 @@ $(document).ready(function () {
     const $montoInput = $(this).find('[name="monto"]');
     const monto = parseFloat($montoInput.val()) || 0;
     const saldo = parseFloat($montoInput.data('saldo')) || 0;
+    const $alert = $('#montoAlert');
+    const $alertText = $('#montoAlertText');
 
     if (monto <= 0) {
-      Helpers.toast('error', 'El monto debe ser mayor a cero.');
+      $montoInput.addClass('is-invalid');
+      $alertText.text('El monto debe ser mayor a cero.');
+      $alert.removeClass('d-none');
       $montoInput.focus();
       return;
     }
 
     if (monto > saldo + 0.01) {
-      Helpers.toast(
-        'error',
-        `El monto ($${monto.toFixed(2)}) excede el saldo pendiente ($${saldo.toFixed(2)}).`
-      );
-      $montoInput.focus();
       $montoInput.addClass('is-invalid');
+      $alertText.text(
+        `El monto ($${monto.toFixed(2)}) excede el saldo pendiente ($${saldo.toFixed(2)}). Ingrese un monto menor o igual.`
+      );
+      $alert.removeClass('d-none');
+      $montoInput.focus();
       return;
     }
+
     $montoInput.removeClass('is-invalid');
+    $alert.addClass('d-none');
+    $alertText.text('');
 
     const formData = new FormData(this);
 
@@ -302,7 +340,15 @@ $(document).ready(function () {
     const $form = $(this).find('form');
     Helpers.resetForm($form);
     $form.find('[name="fecha_pago"]').removeData('fecha-venta');
+    $form
+      .find('[name="monto"]')
+      .removeClass('is-invalid')
+      .removeData('saldo')
+      .removeAttr('max placeholder');
     $('#payReferenceGroup').hide();
+    $('#montoAlert').addClass('d-none');
+    $('#montoAlertText').text('');
+    $form.find('button[type="submit"]').prop('disabled', false);
   });
 
   if ($('#paymentForm').length) {

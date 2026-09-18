@@ -75,6 +75,10 @@ include_once __DIR__ . '/../common/modal.php';
         <div class="mb-3">
             <label class="form-label">Monto <span class="text-danger">*</span></label>
             <input type="number" class="form-control" name="monto" step="0.01" min="0.01" required>
+            <div class="invalid-feedback" id="montoError"></div>
+            <div class="alert alert-danger py-2 mt-2 mb-0 d-none" id="montoAlert">
+                <i class="fas fa-exclamation-triangle me-1"></i><span id="montoAlertText"></span>
+            </div>
         </div>
         <div class="mb-3">
             <label class="form-label">Método de Pago <span class="text-danger">*</span></label>
