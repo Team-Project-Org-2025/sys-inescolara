@@ -10,7 +10,7 @@ $(document).ready(function () {
   const reglasPago = {
     monto: 'precio',
     metodo: 'select',
-    fecha_pago: 'fechaPagoCheck'
+    fecha_pago: 'fechaPagoCheck',
   };
 
   const iniciarTabla = () => {
@@ -25,30 +25,36 @@ $(document).ready(function () {
       columns: [
         {
           data: 'referencia',
-          render: (data, type, row) => type === 'display'
-            ? `<a href="#" class="ver-detalle"><strong>${data}</strong></a>`
-            : data
+          render: (data, type, row) =>
+            type === 'display'
+              ? `<a href="#" class="ver-detalle"><strong>${data}</strong></a>`
+              : data,
         },
         { data: 'nombre_cliente' },
         {
-            data: null,
-            render: (r) => r.tipo_cedula_cliente ? `${r.tipo_cedula_cliente}-${r.cedula_cliente}` : '—'
+          data: null,
+          render: (r) =>
+            r.tipo_cedula_cliente ? `${r.tipo_cedula_cliente}-${r.cedula_cliente}` : '—',
         },
         {
           data: 'fecha_venta',
-          render: (data) => data ? data.split(' ')[0] : '—'
+          render: (data) => (data ? data.split(' ')[0] : '—'),
         },
         {
           data: 'monto_total',
-          render: (data) => `$${Number(data).toFixed(2)}`
+          render: (data) => `$${Number(data).toFixed(2)}`,
         },
         {
           data: 'estado_cuenta',
           render: (data) => {
-            const map = { vigente: 'badge-vigente', vencido: 'badge-vencido', pagado: 'badge-pagado' };
+            const map = {
+              vigente: 'badge-vigente',
+              vencido: 'badge-vencido',
+              pagado: 'badge-pagado',
+            };
             const labels = { vigente: 'Vigente', vencido: 'Vencido', pagado: 'Pagado' };
             return `<span class="badge badge-estado ${map[data] || 'bg-secondary'}">${labels[data] || data}</span>`;
-          }
+          },
         },
         {
           data: null,
@@ -59,8 +65,8 @@ $(document).ready(function () {
               html += C.btnPay('btn-pagar', 'title="Registrar pago"');
             }
             return html;
-          }
-        }
+          },
+        },
       ],
       pageLength: 15,
       responsive: true,
@@ -114,10 +120,18 @@ $(document).ready(function () {
 
   const renderizarDetalle = (data) => {
     const hoy = new Date().toISOString().split('T')[0];
-    const claseEstado = data.saldo_pendiente <= 0 ? 'badge-pagado' :
-      (data.fecha_vencimiento && data.fecha_vencimiento < hoy ? 'badge-vencido' : 'badge-vigente');
-    const etiquetaEstado = data.saldo_pendiente <= 0 ? 'Pagado' :
-      (data.fecha_vencimiento && data.fecha_vencimiento < hoy ? 'Vencido' : 'Vigente');
+    const claseEstado =
+      data.saldo_pendiente <= 0
+        ? 'badge-pagado'
+        : data.fecha_vencimiento && data.fecha_vencimiento < hoy
+          ? 'badge-vencido'
+          : 'badge-vigente';
+    const etiquetaEstado =
+      data.saldo_pendiente <= 0
+        ? 'Pagado'
+        : data.fecha_vencimiento && data.fecha_vencimiento < hoy
+          ? 'Vencido'
+          : 'Vigente';
 
     let html = `
       <div class="row mb-3">
@@ -143,9 +157,10 @@ $(document).ready(function () {
     `;
 
     html += '<h6 class="fw-bold mb-2">Productos</h6>';
-    html += '<table class="table table-sm table-bordered mb-4"><thead><tr><th>Producto</th><th>Cantidad</th><th>Precio Unit.</th><th>Subtotal</th></tr></thead><tbody>';
+    html +=
+      '<table class="table table-sm table-bordered mb-4"><thead><tr><th>Producto</th><th>Cantidad</th><th>Precio Unit.</th><th>Subtotal</th></tr></thead><tbody>';
     if (data.detalles && data.detalles.length > 0) {
-      data.detalles.forEach(d => {
+      data.detalles.forEach((d) => {
         const sub = Number(d.cantidad) * Number(d.precio_unitario);
         html += `<tr><td>${d.producto}</td><td>${d.cantidad}</td><td>$${Number(d.precio_unitario).toFixed(2)}</td><td>$${sub.toFixed(2)}</td></tr>`;
       });
@@ -153,10 +168,15 @@ $(document).ready(function () {
     html += '</tbody></table>';
 
     html += '<h6 class="fw-bold mb-2">Historial de Pagos</h6>';
-    html += '<table class="table table-sm table-bordered"><thead><tr><th>Fecha</th><th>Metodo</th><th>Monto</th><th>Referencia</th><th>Banco</th><th>Estado</th><th>Cobrador</th></tr></thead><tbody>';
+    html +=
+      '<table class="table table-sm table-bordered"><thead><tr><th>Fecha</th><th>Metodo</th><th>Monto</th><th>Referencia</th><th>Banco</th><th>Estado</th><th>Cobrador</th></tr></thead><tbody>';
     if (data.pagos && data.pagos.length > 0) {
-      data.pagos.forEach(p => {
-        const badges = { registrado: 'bg-warning text-dark', confirmado: 'bg-success', rechazado: 'bg-danger' };
+      data.pagos.forEach((p) => {
+        const badges = {
+          registrado: 'bg-warning text-dark',
+          confirmado: 'bg-success',
+          rechazado: 'bg-danger',
+        };
         html += `<tr>
           <td>${p.fecha_pago}</td>
           <td>${p.metodo}</td>
@@ -168,7 +188,8 @@ $(document).ready(function () {
         </tr>`;
       });
     } else {
-      html += '<tr><td colspan="7" class="text-center text-muted">No hay pagos registrados</td></tr>';
+      html +=
+        '<tr><td colspan="7" class="text-center text-muted">No hay pagos registrados</td></tr>';
     }
     html += '</tbody></table>';
 
@@ -181,11 +202,17 @@ $(document).ready(function () {
 
   const abrirModalPago = (id, cliente, saldo, referencia, fechaVenta) => {
     $('#payIdVenta').val(id);
-    $('#payInfo').html(`<strong>${referencia}</strong> — ${cliente} — Saldo pendiente: <strong>$${Number(saldo).toFixed(2)}</strong>`);
+    $('#payInfo').html(
+      `<strong>${referencia}</strong> — ${cliente} — Saldo pendiente: <strong>$${Number(saldo).toFixed(2)}</strong>`
+    );
     const $fechaInput = $('#paymentForm').find('[name="fecha_pago"]');
     if (fechaVenta) {
       $fechaInput.data('fecha-venta', fechaVenta.split(' ')[0]);
     }
+    const $montoInput = $('#paymentForm').find('[name="monto"]');
+    $montoInput.attr('max', parseFloat(saldo).toFixed(2));
+    $montoInput.data('saldo', parseFloat(saldo));
+    $montoInput.attr('placeholder', `Máximo: $${parseFloat(saldo).toFixed(2)}`);
     $('#paymentForm')[0].reset();
     $('#payReferenceGroup').hide();
     $('#payMetodo').val('');
@@ -211,7 +238,9 @@ $(document).ready(function () {
   $(document).on('click', '.btn-pagar', function () {
     const row = tablaCuentas.row($(this).closest('tr')).data();
     const id = row.id_venta;
-    const cedula = row.tipo_cedula_cliente ? `${row.tipo_cedula_cliente}-${row.cedula_cliente}` : '';
+    const cedula = row.tipo_cedula_cliente
+      ? `${row.tipo_cedula_cliente}-${row.cedula_cliente}`
+      : '';
     const cliente = row.nombre_cliente + (cedula ? ` — ${cedula}` : '');
     const saldo = row.saldo_pendiente;
     const referencia = row.referencia;
@@ -222,6 +251,28 @@ $(document).ready(function () {
   $('#paymentForm').on('submit', function (e) {
     e.preventDefault();
     if (!validateForm($(this), reglasPago)) return;
+
+    const $montoInput = $(this).find('[name="monto"]');
+    const monto = parseFloat($montoInput.val()) || 0;
+    const saldo = parseFloat($montoInput.data('saldo')) || 0;
+
+    if (monto <= 0) {
+      Helpers.toast('error', 'El monto debe ser mayor a cero.');
+      $montoInput.focus();
+      return;
+    }
+
+    if (monto > saldo + 0.01) {
+      Helpers.toast(
+        'error',
+        `El monto ($${monto.toFixed(2)}) excede el saldo pendiente ($${saldo.toFixed(2)}).`
+      );
+      $montoInput.focus();
+      $montoInput.addClass('is-invalid');
+      return;
+    }
+    $montoInput.removeClass('is-invalid');
+
     const formData = new FormData(this);
 
     $.ajax({

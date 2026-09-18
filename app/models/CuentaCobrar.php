@@ -301,6 +301,14 @@ class CuentaCobrar extends Database
             throw new \InvalidArgumentException('La fecha de pago no puede ser anterior a la fecha de venta (' . $fechaVenta . ').');
         }
 
+        $saldoPendiente = (float)($venta['saldo_pendiente'] ?? 0);
+        if ($saldoPendiente <= 0) {
+            throw new \InvalidArgumentException('Esta venta ya está completamente pagada.');
+        }
+        if ($monto > $saldoPendiente + 0.01) {
+            throw new \InvalidArgumentException('El monto del pago ($' . number_format($monto, 2, ',', '.') . ') excede el saldo pendiente ($' . number_format($saldoPendiente, 2, ',', '.') . ').');
+        }
+
         if (in_array($metodo, ['transferencia', 'pago_movil'], true)) {
             if ($referencia === null || $referencia === '') {
                 throw new \InvalidArgumentException('La referencia es requerida para transferencias y pago móvil.');
