@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="../vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="bootstrap.php"
+         cacheDirectory=".phpunit.cache"
+         cacheResult="false"
+         colors="true"
+         executionOrder="default"
+         beStrictAboutOutputDuringTests="true"
+         beStrictAboutTestsThatDoNotTestAnything="true"
+         failOnRisky="true"
+         failOnWarning="true"
+         displayDetailsOnTestsThatTriggerDeprecations="true"
+         displayDetailsOnTestsThatTriggerErrors="true"
+         displayDetailsOnTestsThatTriggerNotices="true"
+         displayDetailsOnTestsThatTriggerWarnings="true">
+    <!--
+        El orden de los archivos sigue el orden del sidebar:
+        INVENTARIO -> COMERCIAL -> OPERACIONES -> HERRAMIENTAS -> SISTEMA.
+        Los modelos de soporte (RegistroInsumo, UsoHerramienta, DashboardData,
+        Notification, PasswordReset) cierran su sección.
+    -->
+    <testsuites>
+        <testsuite name="Unit">
+            <file>Unit/Catalogo/PlantaTest.php</file>
+            <file>Unit/Catalogo/EspecieTest.php</file>
+            <file>Unit/Catalogo/UbicacionTest.php</file>
+            <file>Unit/Inventario/InventoryTest.php</file>
+            <file>Unit/Catalogo/LoteTest.php</file>
+            <file>Unit/Operaciones/TrazabilidadTest.php</file>
+            <file>Unit/Inventario/InsumoTest.php</file>
+            <file>Unit/Inventario/HerramientaTest.php</file>
+            <file>Unit/Catalogo/UnidadMedidaTest.php</file>
+            <file>Unit/Operaciones/MermaTest.php</file>
+            <file>Unit/Inventario/RegistroInsumoTest.php</file>
+            <file>Unit/Inventario/UsoHerramientaTest.php</file>
+            <file>Unit/Ventas/VentaTest.php</file>
+            <file>Unit/Inventario/LotePrecioTest.php</file>
+            <file>Unit/Ventas/ClienteTest.php</file>
+            <file>Unit/Ventas/CuentaCobrarTest.php</file>
+            <file>Unit/Compras/CuentaPagarTest.php</file>
+            <file>Unit/Compras/PurchaseTest.php</file>
+            <file>Unit/Ventas/OrnatoTest.php</file>
+            <file>Unit/Operaciones/AmpliacionTest.php</file>
+            <file>Unit/Compras/ProveedorTest.php</file>
+            <file>Unit/Operaciones/TareaTest.php</file>
+            <file>Unit/Operaciones/SeedCollectionTest.php</file>
+            <file>Unit/Analitica/ReportsTest.php</file>
+            <file>Unit/Analitica/DashboardDataTest.php</file>
+            <file>Unit/Seguridad/UsuarioTest.php</file>
+            <file>Unit/Seguridad/RoleTest.php</file>
+            <file>Unit/Seguridad/AuditLogTest.php</file>
+            <file>Unit/Analitica/BackupTest.php</file>
+            <file>Unit/Seguridad/NotificationTest.php</file>
+            <file>Unit/Seguridad/PasswordResetTest.php</file>
+            <file>Unit/AutoloadTest.php</file>
+        </testsuite>
+
+        <testsuite name="Integration">
+            <file>Integration/Catalogo/PlantaRepositoryTest.php</file>
+            <file>Integration/Catalogo/EspecieRepositoryTest.php</file>
+            <file>Integration/Catalogo/UbicacionRepositoryTest.php</file>
+            <file>Integration/Inventario/InventoryRepositoryTest.php</file>
+            <file>Integration/Catalogo/LoteRepositoryTest.php</file>
+            <file>Integration/Operaciones/TrazabilidadRepositoryTest.php</file>
+            <file>Integration/Inventario/InsumoRepositoryTest.php</file>
+            <file>Integration/Inventario/HerramientaRepositoryTest.php</file>
+            <file>Integration/Catalogo/UnidadMedidaRepositoryTest.php</file>
+            <file>Integration/Operaciones/MermaRepositoryTest.php</file>
+            <file>Integration/Inventario/RegistroInsumoRepositoryTest.php</file>
+            <file>Integration/Inventario/UsoHerramientaRepositoryTest.php</file>
+            <file>Integration/Ventas/VentaRepositoryTest.php</file>
+            <file>Integration/Inventario/LotePrecioRepositoryTest.php</file>
+            <file>Integration/Ventas/ClienteRepositoryTest.php</file>
+            <file>Integration/Ventas/CuentaCobrarRepositoryTest.php</file>
+            <file>Integration/Compras/CuentaPagarRepositoryTest.php</file>
+            <file>Integration/Compras/PurchaseRepositoryTest.php</file>
+            <file>Integration/Ventas/OrnatoRepositoryTest.php</file>
+            <file>Integration/Operaciones/AmpliacionRepositoryTest.php</file>
+            <file>Integration/Compras/ProveedorRepositoryTest.php</file>
+            <file>Integration/Operaciones/TareaRepositoryTest.php</file>
+            <file>Integration/Operaciones/SeedCollectionRepositoryTest.php</file>
+            <file>Integration/Analitica/ReportsRepositoryTest.php</file>
+            <file>Integration/Analitica/DashboardDataRepositoryTest.php</file>
+            <file>Integration/Seguridad/UsuarioRepositoryTest.php</file>
+            <file>Integration/Seguridad/RoleRepositoryTest.php</file>
+            <file>Integration/Seguridad/AuditLogRepositoryTest.php</file>
+            <file>Integration/Analitica/BackupRepositoryTest.php</file>
+            <file>Integration/Seguridad/NotificationRepositoryTest.php</file>
+            <file>Integration/Seguridad/PasswordResetRepositoryTest.php</file>
+        </testsuite>
+
+        <testsuite name="Smoke">
+            <file>Smoke/ModelsSmokeTest.php</file>
+        </testsuite>
+    </testsuites>
+
+    <source ignoreIndirectDeprecations="true" restrictNotices="true" restrictWarnings="true">
+        <include>
+            <directory>../app</directory>
+        </include>
+    </source>
+</phpunit>

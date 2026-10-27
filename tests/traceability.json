@@ -1,0 +1,1495 @@
+{
+    "generado": "2026-10-27T16:53:12+01:00",
+    "orden": "sidebar",
+    "resumen": {
+        "requisitos": 31,
+        "casos": 93,
+        "pass": 93,
+        "fail": 0,
+        "skip": 0,
+        "noEjecutado": 0,
+        "pruebas": 945,
+        "pruebasPass": 938,
+        "pruebasFail": 0,
+        "pruebasSkip": 7
+    },
+    "omitidas": [
+        {
+            "idRequisito": "RF-06",
+            "modelo": "Trazabilidad",
+            "tipo": "Integración",
+            "prueba": "save_no_es_portable_a_sqlite",
+            "evidencia": "SysInescolara\\Tests\\Integration\\Operaciones\\TrazabilidadRepositoryTest"
+        },
+        {
+            "idRequisito": "RF-16",
+            "modelo": "CuentaCobrar",
+            "tipo": "Integración",
+            "prueba": "obtenerTodos_con_filtro_de_estado_no_es_portable_a_sqlite",
+            "evidencia": "SysInescolara\\Tests\\Integration\\Ventas\\CuentaCobrarRepositoryTest"
+        },
+        {
+            "idRequisito": "RF-17",
+            "modelo": "CuentaPagar",
+            "tipo": "Integración",
+            "prueba": "registrarPago_completo_marca_la_cuenta_y_la_compra_como_pagadas",
+            "evidencia": "SysInescolara\\Tests\\Integration\\Compras\\CuentaPagarRepositoryTest"
+        },
+        {
+            "idRequisito": "RF-20",
+            "modelo": "Ampliacion",
+            "tipo": "Unitaria",
+            "prueba": "los_metodos_que_instancian_otros_modelos_no_son_portables",
+            "evidencia": "SysInescolara\\Tests\\Unit\\Operaciones\\AmpliacionTest"
+        },
+        {
+            "idRequisito": "RF-20",
+            "modelo": "Ampliacion",
+            "tipo": "Integración",
+            "prueba": "los_metodos_dependientes_de_mysql_no_son_portables",
+            "evidencia": "SysInescolara\\Tests\\Integration\\Operaciones\\AmpliacionRepositoryTest"
+        },
+        {
+            "idRequisito": "RF-23",
+            "modelo": "SeedCollection",
+            "tipo": "Unitaria",
+            "prueba": "register_seeds_with_transaction_no_es_portable",
+            "evidencia": "SysInescolara\\Tests\\Unit\\Operaciones\\SeedCollectionTest"
+        },
+        {
+            "idRequisito": "RF-23",
+            "modelo": "SeedCollection",
+            "tipo": "Integración",
+            "prueba": "los_metodos_dependientes_de_mysql_no_son_portables",
+            "evidencia": "SysInescolara\\Tests\\Integration\\Operaciones\\SeedCollectionRepositoryTest"
+        }
+    ],
+    "modulos": [
+        {
+            "numero": 1,
+            "modelo": "Planta",
+            "moduloSidebar": "Administrar planta",
+            "idRequisito": "RF-01",
+            "descripcionRequisito": "El sistema debe permitir registrar, consultar, editar y dar de baja lógica las plantas del vivero.",
+            "estado": "PASS",
+            "casos": [
+                {
+                    "id": "CP-UNI-01",
+                    "tipo": "Unitaria",
+                    "descripcion": "Validar getters, setters, fill, validaciones y lógica pura de Planta sin base de datos.",
+                    "resultadoEsperado": "Todas las pruebas unitarias de Planta pasan sin abrir MySQL.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Unit\\Catalogo\\PlantaTest",
+                    "pruebas": 12,
+                    "pass": 12,
+                    "fail": 0,
+                    "skip": 0
+                },
+                {
+                    "id": "CP-INT-01",
+                    "tipo": "Integración",
+                    "descripcion": "Ejecutar el SQL real de Planta contra SQLite en memoria: CRUD, consultas y flujos.",
+                    "resultadoEsperado": "Todas las pruebas de integración de Planta pasan sobre SQLite.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Integration\\Catalogo\\PlantaRepositoryTest",
+                    "pruebas": 11,
+                    "pass": 11,
+                    "fail": 0,
+                    "skip": 0
+                },
+                {
+                    "id": "CP-SMOKE-01",
+                    "tipo": "Humo",
+                    "descripcion": "Validar autoload, contrato de clase, interfaces, métodos públicos y doble NoDb de Planta.",
+                    "resultadoEsperado": "Planta se autocarga, extiende Database (salvo Backup), implementa sus interfaces, expone sus métodos y su doble NoDb es instanciable.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Smoke\\ModelsSmokeTest [CP-SMOKE-01 Planta] (contrato + doble NoDb)",
+                    "pruebas": 2,
+                    "pass": 2,
+                    "fail": 0,
+                    "skip": 0
+                }
+            ]
+        },
+        {
+            "numero": 2,
+            "modelo": "Especie",
+            "moduloSidebar": "Administrar especie",
+            "idRequisito": "RF-02",
+            "descripcionRequisito": "El sistema debe permitir administrar el catálogo de especies botánicas asociadas a las plantas.",
+            "estado": "PASS",
+            "casos": [
+                {
+                    "id": "CP-UNI-02",
+                    "tipo": "Unitaria",
+                    "descripcion": "Validar getters, setters, fill, validaciones y lógica pura de Especie sin base de datos.",
+                    "resultadoEsperado": "Todas las pruebas unitarias de Especie pasan sin abrir MySQL.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Unit\\Catalogo\\EspecieTest",
+                    "pruebas": 12,
+                    "pass": 12,
+                    "fail": 0,
+                    "skip": 0
+                },
+                {
+                    "id": "CP-INT-02",
+                    "tipo": "Integración",
+                    "descripcion": "Ejecutar el SQL real de Especie contra SQLite en memoria: CRUD, consultas y flujos.",
+                    "resultadoEsperado": "Todas las pruebas de integración de Especie pasan sobre SQLite.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Integration\\Catalogo\\EspecieRepositoryTest",
+                    "pruebas": 12,
+                    "pass": 12,
+                    "fail": 0,
+                    "skip": 0
+                },
+                {
+                    "id": "CP-SMOKE-02",
+                    "tipo": "Humo",
+                    "descripcion": "Validar autoload, contrato de clase, interfaces, métodos públicos y doble NoDb de Especie.",
+                    "resultadoEsperado": "Especie se autocarga, extiende Database (salvo Backup), implementa sus interfaces, expone sus métodos y su doble NoDb es instanciable.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Smoke\\ModelsSmokeTest [CP-SMOKE-02 Especie] (contrato + doble NoDb)",
+                    "pruebas": 2,
+                    "pass": 2,
+                    "fail": 0,
+                    "skip": 0
+                }
+            ]
+        },
+        {
+            "numero": 3,
+            "modelo": "Ubicacion",
+            "moduloSidebar": "Administrar ubicación",
+            "idRequisito": "RF-03",
+            "descripcionRequisito": "El sistema debe permitir administrar las ubicaciones físicas del vivero y su capacidad.",
+            "estado": "PASS",
+            "casos": [
+                {
+                    "id": "CP-UNI-03",
+                    "tipo": "Unitaria",
+                    "descripcion": "Validar getters, setters, fill, validaciones y lógica pura de Ubicacion sin base de datos.",
+                    "resultadoEsperado": "Todas las pruebas unitarias de Ubicacion pasan sin abrir MySQL.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Unit\\Catalogo\\UbicacionTest",
+                    "pruebas": 12,
+                    "pass": 12,
+                    "fail": 0,
+                    "skip": 0
+                },
+                {
+                    "id": "CP-INT-03",
+                    "tipo": "Integración",
+                    "descripcion": "Ejecutar el SQL real de Ubicacion contra SQLite en memoria: CRUD, consultas y flujos.",
+                    "resultadoEsperado": "Todas las pruebas de integración de Ubicacion pasan sobre SQLite.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Integration\\Catalogo\\UbicacionRepositoryTest",
+                    "pruebas": 14,
+                    "pass": 14,
+                    "fail": 0,
+                    "skip": 0
+                },
+                {
+                    "id": "CP-SMOKE-03",
+                    "tipo": "Humo",
+                    "descripcion": "Validar autoload, contrato de clase, interfaces, métodos públicos y doble NoDb de Ubicacion.",
+                    "resultadoEsperado": "Ubicacion se autocarga, extiende Database (salvo Backup), implementa sus interfaces, expone sus métodos y su doble NoDb es instanciable.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Smoke\\ModelsSmokeTest [CP-SMOKE-03 Ubicacion] (contrato + doble NoDb)",
+                    "pruebas": 2,
+                    "pass": 2,
+                    "fail": 0,
+                    "skip": 0
+                }
+            ]
+        },
+        {
+            "numero": 4,
+            "modelo": "Inventory",
+            "moduloSidebar": "Inventario",
+            "idRequisito": "RF-04",
+            "descripcionRequisito": "El sistema debe consolidar el inventario de plantas, insumos, herramientas y lotes en una sola vista.",
+            "estado": "PASS",
+            "casos": [
+                {
+                    "id": "CP-UNI-04",
+                    "tipo": "Unitaria",
+                    "descripcion": "Validar getters, setters, fill, validaciones y lógica pura de Inventory sin base de datos.",
+                    "resultadoEsperado": "Todas las pruebas unitarias de Inventory pasan sin abrir MySQL.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Unit\\Inventario\\InventoryTest",
+                    "pruebas": 2,
+                    "pass": 2,
+                    "fail": 0,
+                    "skip": 0
+                },
+                {
+                    "id": "CP-INT-04",
+                    "tipo": "Integración",
+                    "descripcion": "Ejecutar el SQL real de Inventory contra SQLite en memoria: CRUD, consultas y flujos.",
+                    "resultadoEsperado": "Todas las pruebas de integración de Inventory pasan sobre SQLite.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Integration\\Inventario\\InventoryRepositoryTest",
+                    "pruebas": 10,
+                    "pass": 10,
+                    "fail": 0,
+                    "skip": 0
+                },
+                {
+                    "id": "CP-SMOKE-04",
+                    "tipo": "Humo",
+                    "descripcion": "Validar autoload, contrato de clase, interfaces, métodos públicos y doble NoDb de Inventory.",
+                    "resultadoEsperado": "Inventory se autocarga, extiende Database (salvo Backup), implementa sus interfaces, expone sus métodos y su doble NoDb es instanciable.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Smoke\\ModelsSmokeTest [CP-SMOKE-04 Inventory] (contrato + doble NoDb)",
+                    "pruebas": 2,
+                    "pass": 2,
+                    "fail": 0,
+                    "skip": 0
+                }
+            ]
+        },
+        {
+            "numero": 5,
+            "modelo": "Lote",
+            "moduloSidebar": "Lote",
+            "idRequisito": "RF-05",
+            "descripcionRequisito": "El sistema debe permitir administrar lotes con su estado, categoría, origen y existencias.",
+            "estado": "PASS",
+            "casos": [
+                {
+                    "id": "CP-UNI-05",
+                    "tipo": "Unitaria",
+                    "descripcion": "Validar getters, setters, fill, validaciones y lógica pura de Lote sin base de datos.",
+                    "resultadoEsperado": "Todas las pruebas unitarias de Lote pasan sin abrir MySQL.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Unit\\Catalogo\\LoteTest",
+                    "pruebas": 18,
+                    "pass": 18,
+                    "fail": 0,
+                    "skip": 0
+                },
+                {
+                    "id": "CP-INT-05",
+                    "tipo": "Integración",
+                    "descripcion": "Ejecutar el SQL real de Lote contra SQLite en memoria: CRUD, consultas y flujos.",
+                    "resultadoEsperado": "Todas las pruebas de integración de Lote pasan sobre SQLite.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Integration\\Catalogo\\LoteRepositoryTest",
+                    "pruebas": 20,
+                    "pass": 20,
+                    "fail": 0,
+                    "skip": 0
+                },
+                {
+                    "id": "CP-SMOKE-05",
+                    "tipo": "Humo",
+                    "descripcion": "Validar autoload, contrato de clase, interfaces, métodos públicos y doble NoDb de Lote.",
+                    "resultadoEsperado": "Lote se autocarga, extiende Database (salvo Backup), implementa sus interfaces, expone sus métodos y su doble NoDb es instanciable.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Smoke\\ModelsSmokeTest [CP-SMOKE-05 Lote] (contrato + doble NoDb)",
+                    "pruebas": 2,
+                    "pass": 2,
+                    "fail": 0,
+                    "skip": 0
+                }
+            ]
+        },
+        {
+            "numero": 6,
+            "modelo": "Trazabilidad",
+            "moduloSidebar": "Trazabilidad",
+            "idRequisito": "RF-06",
+            "descripcionRequisito": "El sistema debe permitir consultar la trazabilidad y disponibilidad de los lotes.",
+            "estado": "PASS",
+            "casos": [
+                {
+                    "id": "CP-UNI-06",
+                    "tipo": "Unitaria",
+                    "descripcion": "Validar getters, setters, fill, validaciones y lógica pura de Trazabilidad sin base de datos.",
+                    "resultadoEsperado": "Todas las pruebas unitarias de Trazabilidad pasan sin abrir MySQL.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Unit\\Operaciones\\TrazabilidadTest",
+                    "pruebas": 15,
+                    "pass": 15,
+                    "fail": 0,
+                    "skip": 0
+                },
+                {
+                    "id": "CP-INT-06",
+                    "tipo": "Integración",
+                    "descripcion": "Ejecutar el SQL real de Trazabilidad contra SQLite en memoria: CRUD, consultas y flujos.",
+                    "resultadoEsperado": "Todas las pruebas de integración de Trazabilidad pasan sobre SQLite.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Integration\\Operaciones\\TrazabilidadRepositoryTest",
+                    "pruebas": 13,
+                    "pass": 12,
+                    "fail": 0,
+                    "skip": 1
+                },
+                {
+                    "id": "CP-SMOKE-06",
+                    "tipo": "Humo",
+                    "descripcion": "Validar autoload, contrato de clase, interfaces, métodos públicos y doble NoDb de Trazabilidad.",
+                    "resultadoEsperado": "Trazabilidad se autocarga, extiende Database (salvo Backup), implementa sus interfaces, expone sus métodos y su doble NoDb es instanciable.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Smoke\\ModelsSmokeTest [CP-SMOKE-06 Trazabilidad] (contrato + doble NoDb)",
+                    "pruebas": 2,
+                    "pass": 2,
+                    "fail": 0,
+                    "skip": 0
+                }
+            ]
+        },
+        {
+            "numero": 7,
+            "modelo": "Insumo",
+            "moduloSidebar": "Insumos",
+            "idRequisito": "RF-07",
+            "descripcionRequisito": "El sistema debe permitir administrar insumos, su unidad de medida y sus existencias.",
+            "estado": "PASS",
+            "casos": [
+                {
+                    "id": "CP-UNI-07",
+                    "tipo": "Unitaria",
+                    "descripcion": "Validar getters, setters, fill, validaciones y lógica pura de Insumo sin base de datos.",
+                    "resultadoEsperado": "Todas las pruebas unitarias de Insumo pasan sin abrir MySQL.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Unit\\Inventario\\InsumoTest",
+                    "pruebas": 12,
+                    "pass": 12,
+                    "fail": 0,
+                    "skip": 0
+                },
+                {
+                    "id": "CP-INT-07",
+                    "tipo": "Integración",
+                    "descripcion": "Ejecutar el SQL real de Insumo contra SQLite en memoria: CRUD, consultas y flujos.",
+                    "resultadoEsperado": "Todas las pruebas de integración de Insumo pasan sobre SQLite.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Integration\\Inventario\\InsumoRepositoryTest",
+                    "pruebas": 13,
+                    "pass": 13,
+                    "fail": 0,
+                    "skip": 0
+                },
+                {
+                    "id": "CP-SMOKE-07",
+                    "tipo": "Humo",
+                    "descripcion": "Validar autoload, contrato de clase, interfaces, métodos públicos y doble NoDb de Insumo.",
+                    "resultadoEsperado": "Insumo se autocarga, extiende Database (salvo Backup), implementa sus interfaces, expone sus métodos y su doble NoDb es instanciable.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Smoke\\ModelsSmokeTest [CP-SMOKE-07 Insumo] (contrato + doble NoDb)",
+                    "pruebas": 2,
+                    "pass": 2,
+                    "fail": 0,
+                    "skip": 0
+                }
+            ]
+        },
+        {
+            "numero": 8,
+            "modelo": "Herramienta",
+            "moduloSidebar": "Herramientas",
+            "idRequisito": "RF-08",
+            "descripcionRequisito": "El sistema debe permitir administrar herramientas, su disponibilidad y su uso en tareas.",
+            "estado": "PASS",
+            "casos": [
+                {
+                    "id": "CP-UNI-08",
+                    "tipo": "Unitaria",
+                    "descripcion": "Validar getters, setters, fill, validaciones y lógica pura de Herramienta sin base de datos.",
+                    "resultadoEsperado": "Todas las pruebas unitarias de Herramienta pasan sin abrir MySQL.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Unit\\Inventario\\HerramientaTest",
+                    "pruebas": 13,
+                    "pass": 13,
+                    "fail": 0,
+                    "skip": 0
+                },
+                {
+                    "id": "CP-INT-08",
+                    "tipo": "Integración",
+                    "descripcion": "Ejecutar el SQL real de Herramienta contra SQLite en memoria: CRUD, consultas y flujos.",
+                    "resultadoEsperado": "Todas las pruebas de integración de Herramienta pasan sobre SQLite.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Integration\\Inventario\\HerramientaRepositoryTest",
+                    "pruebas": 18,
+                    "pass": 18,
+                    "fail": 0,
+                    "skip": 0
+                },
+                {
+                    "id": "CP-SMOKE-08",
+                    "tipo": "Humo",
+                    "descripcion": "Validar autoload, contrato de clase, interfaces, métodos públicos y doble NoDb de Herramienta.",
+                    "resultadoEsperado": "Herramienta se autocarga, extiende Database (salvo Backup), implementa sus interfaces, expone sus métodos y su doble NoDb es instanciable.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Smoke\\ModelsSmokeTest [CP-SMOKE-08 Herramienta] (contrato + doble NoDb)",
+                    "pruebas": 2,
+                    "pass": 2,
+                    "fail": 0,
+                    "skip": 0
+                }
+            ]
+        },
+        {
+            "numero": 9,
+            "modelo": "UnidadMedida",
+            "moduloSidebar": "Unidad de medida",
+            "idRequisito": "RF-09",
+            "descripcionRequisito": "El sistema debe permitir administrar el catálogo de unidades de medida.",
+            "estado": "PASS",
+            "casos": [
+                {
+                    "id": "CP-UNI-09",
+                    "tipo": "Unitaria",
+                    "descripcion": "Validar getters, setters, fill, validaciones y lógica pura de UnidadMedida sin base de datos.",
+                    "resultadoEsperado": "Todas las pruebas unitarias de UnidadMedida pasan sin abrir MySQL.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Unit\\Catalogo\\UnidadMedidaTest",
+                    "pruebas": 11,
+                    "pass": 11,
+                    "fail": 0,
+                    "skip": 0
+                },
+                {
+                    "id": "CP-INT-09",
+                    "tipo": "Integración",
+                    "descripcion": "Ejecutar el SQL real de UnidadMedida contra SQLite en memoria: CRUD, consultas y flujos.",
+                    "resultadoEsperado": "Todas las pruebas de integración de UnidadMedida pasan sobre SQLite.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Integration\\Catalogo\\UnidadMedidaRepositoryTest",
+                    "pruebas": 10,
+                    "pass": 10,
+                    "fail": 0,
+                    "skip": 0
+                },
+                {
+                    "id": "CP-SMOKE-09",
+                    "tipo": "Humo",
+                    "descripcion": "Validar autoload, contrato de clase, interfaces, métodos públicos y doble NoDb de UnidadMedida.",
+                    "resultadoEsperado": "UnidadMedida se autocarga, extiende Database (salvo Backup), implementa sus interfaces, expone sus métodos y su doble NoDb es instanciable.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Smoke\\ModelsSmokeTest [CP-SMOKE-09 UnidadMedida] (contrato + doble NoDb)",
+                    "pruebas": 2,
+                    "pass": 2,
+                    "fail": 0,
+                    "skip": 0
+                }
+            ]
+        },
+        {
+            "numero": 10,
+            "modelo": "Merma",
+            "moduloSidebar": "Mermas",
+            "idRequisito": "RF-10",
+            "descripcionRequisito": "El sistema debe permitir registrar mermas y consultar el inventario en cuarentena.",
+            "estado": "PASS",
+            "casos": [
+                {
+                    "id": "CP-UNI-10",
+                    "tipo": "Unitaria",
+                    "descripcion": "Validar getters, setters, fill, validaciones y lógica pura de Merma sin base de datos.",
+                    "resultadoEsperado": "Todas las pruebas unitarias de Merma pasan sin abrir MySQL.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Unit\\Operaciones\\MermaTest",
+                    "pruebas": 17,
+                    "pass": 17,
+                    "fail": 0,
+                    "skip": 0
+                },
+                {
+                    "id": "CP-INT-10",
+                    "tipo": "Integración",
+                    "descripcion": "Ejecutar el SQL real de Merma contra SQLite en memoria: CRUD, consultas y flujos.",
+                    "resultadoEsperado": "Todas las pruebas de integración de Merma pasan sobre SQLite.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Integration\\Operaciones\\MermaRepositoryTest",
+                    "pruebas": 13,
+                    "pass": 13,
+                    "fail": 0,
+                    "skip": 0
+                },
+                {
+                    "id": "CP-SMOKE-10",
+                    "tipo": "Humo",
+                    "descripcion": "Validar autoload, contrato de clase, interfaces, métodos públicos y doble NoDb de Merma.",
+                    "resultadoEsperado": "Merma se autocarga, extiende Database (salvo Backup), implementa sus interfaces, expone sus métodos y su doble NoDb es instanciable.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Smoke\\ModelsSmokeTest [CP-SMOKE-10 Merma] (contrato + doble NoDb)",
+                    "pruebas": 2,
+                    "pass": 2,
+                    "fail": 0,
+                    "skip": 0
+                }
+            ]
+        },
+        {
+            "numero": 11,
+            "modelo": "RegistroInsumo",
+            "moduloSidebar": "Registro de insumos (soporte)",
+            "idRequisito": "RF-11",
+            "descripcionRequisito": "El sistema debe registrar el consumo de insumos por lote o por asignación de tarea.",
+            "estado": "PASS",
+            "casos": [
+                {
+                    "id": "CP-UNI-11",
+                    "tipo": "Unitaria",
+                    "descripcion": "Validar getters, setters, fill, validaciones y lógica pura de RegistroInsumo sin base de datos.",
+                    "resultadoEsperado": "Todas las pruebas unitarias de RegistroInsumo pasan sin abrir MySQL.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Unit\\Inventario\\RegistroInsumoTest",
+                    "pruebas": 11,
+                    "pass": 11,
+                    "fail": 0,
+                    "skip": 0
+                },
+                {
+                    "id": "CP-INT-11",
+                    "tipo": "Integración",
+                    "descripcion": "Ejecutar el SQL real de RegistroInsumo contra SQLite en memoria: CRUD, consultas y flujos.",
+                    "resultadoEsperado": "Todas las pruebas de integración de RegistroInsumo pasan sobre SQLite.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Integration\\Inventario\\RegistroInsumoRepositoryTest",
+                    "pruebas": 12,
+                    "pass": 12,
+                    "fail": 0,
+                    "skip": 0
+                },
+                {
+                    "id": "CP-SMOKE-11",
+                    "tipo": "Humo",
+                    "descripcion": "Validar autoload, contrato de clase, interfaces, métodos públicos y doble NoDb de RegistroInsumo.",
+                    "resultadoEsperado": "RegistroInsumo se autocarga, extiende Database (salvo Backup), implementa sus interfaces, expone sus métodos y su doble NoDb es instanciable.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Smoke\\ModelsSmokeTest [CP-SMOKE-11 RegistroInsumo] (contrato + doble NoDb)",
+                    "pruebas": 2,
+                    "pass": 2,
+                    "fail": 0,
+                    "skip": 0
+                }
+            ]
+        },
+        {
+            "numero": 12,
+            "modelo": "UsoHerramienta",
+            "moduloSidebar": "Uso de herramientas (soporte)",
+            "idRequisito": "RF-12",
+            "descripcionRequisito": "El sistema debe registrar el uso de herramientas asociado a una asignación de tarea.",
+            "estado": "PASS",
+            "casos": [
+                {
+                    "id": "CP-UNI-12",
+                    "tipo": "Unitaria",
+                    "descripcion": "Validar getters, setters, fill, validaciones y lógica pura de UsoHerramienta sin base de datos.",
+                    "resultadoEsperado": "Todas las pruebas unitarias de UsoHerramienta pasan sin abrir MySQL.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Unit\\Inventario\\UsoHerramientaTest",
+                    "pruebas": 9,
+                    "pass": 9,
+                    "fail": 0,
+                    "skip": 0
+                },
+                {
+                    "id": "CP-INT-12",
+                    "tipo": "Integración",
+                    "descripcion": "Ejecutar el SQL real de UsoHerramienta contra SQLite en memoria: CRUD, consultas y flujos.",
+                    "resultadoEsperado": "Todas las pruebas de integración de UsoHerramienta pasan sobre SQLite.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Integration\\Inventario\\UsoHerramientaRepositoryTest",
+                    "pruebas": 10,
+                    "pass": 10,
+                    "fail": 0,
+                    "skip": 0
+                },
+                {
+                    "id": "CP-SMOKE-12",
+                    "tipo": "Humo",
+                    "descripcion": "Validar autoload, contrato de clase, interfaces, métodos públicos y doble NoDb de UsoHerramienta.",
+                    "resultadoEsperado": "UsoHerramienta se autocarga, extiende Database (salvo Backup), implementa sus interfaces, expone sus métodos y su doble NoDb es instanciable.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Smoke\\ModelsSmokeTest [CP-SMOKE-12 UsoHerramienta] (contrato + doble NoDb)",
+                    "pruebas": 2,
+                    "pass": 2,
+                    "fail": 0,
+                    "skip": 0
+                }
+            ]
+        },
+        {
+            "numero": 13,
+            "modelo": "Venta",
+            "moduloSidebar": "Procesar venta",
+            "idRequisito": "RF-13",
+            "descripcionRequisito": "El sistema debe permitir procesar ventas de contado o crédito con detalles y pagos.",
+            "estado": "PASS",
+            "casos": [
+                {
+                    "id": "CP-UNI-13",
+                    "tipo": "Unitaria",
+                    "descripcion": "Validar getters, setters, fill, validaciones y lógica pura de Venta sin base de datos.",
+                    "resultadoEsperado": "Todas las pruebas unitarias de Venta pasan sin abrir MySQL.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Unit\\Ventas\\VentaTest",
+                    "pruebas": 13,
+                    "pass": 13,
+                    "fail": 0,
+                    "skip": 0
+                },
+                {
+                    "id": "CP-INT-13",
+                    "tipo": "Integración",
+                    "descripcion": "Ejecutar el SQL real de Venta contra SQLite en memoria: CRUD, consultas y flujos.",
+                    "resultadoEsperado": "Todas las pruebas de integración de Venta pasan sobre SQLite.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Integration\\Ventas\\VentaRepositoryTest",
+                    "pruebas": 23,
+                    "pass": 23,
+                    "fail": 0,
+                    "skip": 0
+                },
+                {
+                    "id": "CP-SMOKE-13",
+                    "tipo": "Humo",
+                    "descripcion": "Validar autoload, contrato de clase, interfaces, métodos públicos y doble NoDb de Venta.",
+                    "resultadoEsperado": "Venta se autocarga, extiende Database (salvo Backup), implementa sus interfaces, expone sus métodos y su doble NoDb es instanciable.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Smoke\\ModelsSmokeTest [CP-SMOKE-13 Venta] (contrato + doble NoDb)",
+                    "pruebas": 2,
+                    "pass": 2,
+                    "fail": 0,
+                    "skip": 0
+                }
+            ]
+        },
+        {
+            "numero": 14,
+            "modelo": "LotePrecio",
+            "moduloSidebar": "Gestionar precio",
+            "idRequisito": "RF-14",
+            "descripcionRequisito": "El sistema debe permitir calcular y administrar los precios de los lotes.",
+            "estado": "PASS",
+            "casos": [
+                {
+                    "id": "CP-UNI-14",
+                    "tipo": "Unitaria",
+                    "descripcion": "Validar getters, setters, fill, validaciones y lógica pura de LotePrecio sin base de datos.",
+                    "resultadoEsperado": "Todas las pruebas unitarias de LotePrecio pasan sin abrir MySQL.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Unit\\Inventario\\LotePrecioTest",
+                    "pruebas": 7,
+                    "pass": 7,
+                    "fail": 0,
+                    "skip": 0
+                },
+                {
+                    "id": "CP-INT-14",
+                    "tipo": "Integración",
+                    "descripcion": "Ejecutar el SQL real de LotePrecio contra SQLite en memoria: CRUD, consultas y flujos.",
+                    "resultadoEsperado": "Todas las pruebas de integración de LotePrecio pasan sobre SQLite.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Integration\\Inventario\\LotePrecioRepositoryTest",
+                    "pruebas": 14,
+                    "pass": 14,
+                    "fail": 0,
+                    "skip": 0
+                },
+                {
+                    "id": "CP-SMOKE-14",
+                    "tipo": "Humo",
+                    "descripcion": "Validar autoload, contrato de clase, interfaces, métodos públicos y doble NoDb de LotePrecio.",
+                    "resultadoEsperado": "LotePrecio se autocarga, extiende Database (salvo Backup), implementa sus interfaces, expone sus métodos y su doble NoDb es instanciable.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Smoke\\ModelsSmokeTest [CP-SMOKE-14 LotePrecio] (contrato + doble NoDb)",
+                    "pruebas": 2,
+                    "pass": 2,
+                    "fail": 0,
+                    "skip": 0
+                }
+            ]
+        },
+        {
+            "numero": 15,
+            "modelo": "Cliente",
+            "moduloSidebar": "Gestionar cliente",
+            "idRequisito": "RF-15",
+            "descripcionRequisito": "El sistema debe permitir registrar, consultar, editar y dar de baja lógica a los clientes.",
+            "estado": "PASS",
+            "casos": [
+                {
+                    "id": "CP-UNI-15",
+                    "tipo": "Unitaria",
+                    "descripcion": "Validar getters, setters, fill, validaciones y lógica pura de Cliente sin base de datos.",
+                    "resultadoEsperado": "Todas las pruebas unitarias de Cliente pasan sin abrir MySQL.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Unit\\Ventas\\ClienteTest",
+                    "pruebas": 18,
+                    "pass": 18,
+                    "fail": 0,
+                    "skip": 0
+                },
+                {
+                    "id": "CP-INT-15",
+                    "tipo": "Integración",
+                    "descripcion": "Ejecutar el SQL real de Cliente contra SQLite en memoria: CRUD, consultas y flujos.",
+                    "resultadoEsperado": "Todas las pruebas de integración de Cliente pasan sobre SQLite.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Integration\\Ventas\\ClienteRepositoryTest",
+                    "pruebas": 14,
+                    "pass": 14,
+                    "fail": 0,
+                    "skip": 0
+                },
+                {
+                    "id": "CP-SMOKE-15",
+                    "tipo": "Humo",
+                    "descripcion": "Validar autoload, contrato de clase, interfaces, métodos públicos y doble NoDb de Cliente.",
+                    "resultadoEsperado": "Cliente se autocarga, extiende Database (salvo Backup), implementa sus interfaces, expone sus métodos y su doble NoDb es instanciable.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Smoke\\ModelsSmokeTest [CP-SMOKE-15 Cliente] (contrato + doble NoDb)",
+                    "pruebas": 2,
+                    "pass": 2,
+                    "fail": 0,
+                    "skip": 0
+                }
+            ]
+        },
+        {
+            "numero": 16,
+            "modelo": "CuentaCobrar",
+            "moduloSidebar": "Cuenta por cobrar",
+            "idRequisito": "RF-16",
+            "descripcionRequisito": "El sistema debe permitir consultar cuentas por cobrar, registrar pagos y actualizar su estado.",
+            "estado": "PASS",
+            "casos": [
+                {
+                    "id": "CP-UNI-16",
+                    "tipo": "Unitaria",
+                    "descripcion": "Validar getters, setters, fill, validaciones y lógica pura de CuentaCobrar sin base de datos.",
+                    "resultadoEsperado": "Todas las pruebas unitarias de CuentaCobrar pasan sin abrir MySQL.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Unit\\Ventas\\CuentaCobrarTest",
+                    "pruebas": 17,
+                    "pass": 17,
+                    "fail": 0,
+                    "skip": 0
+                },
+                {
+                    "id": "CP-INT-16",
+                    "tipo": "Integración",
+                    "descripcion": "Ejecutar el SQL real de CuentaCobrar contra SQLite en memoria: CRUD, consultas y flujos.",
+                    "resultadoEsperado": "Todas las pruebas de integración de CuentaCobrar pasan sobre SQLite.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Integration\\Ventas\\CuentaCobrarRepositoryTest",
+                    "pruebas": 18,
+                    "pass": 17,
+                    "fail": 0,
+                    "skip": 1
+                },
+                {
+                    "id": "CP-SMOKE-16",
+                    "tipo": "Humo",
+                    "descripcion": "Validar autoload, contrato de clase, interfaces, métodos públicos y doble NoDb de CuentaCobrar.",
+                    "resultadoEsperado": "CuentaCobrar se autocarga, extiende Database (salvo Backup), implementa sus interfaces, expone sus métodos y su doble NoDb es instanciable.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Smoke\\ModelsSmokeTest [CP-SMOKE-16 CuentaCobrar] (contrato + doble NoDb)",
+                    "pruebas": 2,
+                    "pass": 2,
+                    "fail": 0,
+                    "skip": 0
+                }
+            ]
+        },
+        {
+            "numero": 17,
+            "modelo": "CuentaPagar",
+            "moduloSidebar": "Cuentas por pagar",
+            "idRequisito": "RF-17",
+            "descripcionRequisito": "El sistema debe permitir administrar cuentas por pagar, sus pagos y saldos.",
+            "estado": "PASS",
+            "casos": [
+                {
+                    "id": "CP-UNI-17",
+                    "tipo": "Unitaria",
+                    "descripcion": "Validar getters, setters, fill, validaciones y lógica pura de CuentaPagar sin base de datos.",
+                    "resultadoEsperado": "Todas las pruebas unitarias de CuentaPagar pasan sin abrir MySQL.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Unit\\Compras\\CuentaPagarTest",
+                    "pruebas": 22,
+                    "pass": 22,
+                    "fail": 0,
+                    "skip": 0
+                },
+                {
+                    "id": "CP-INT-17",
+                    "tipo": "Integración",
+                    "descripcion": "Ejecutar el SQL real de CuentaPagar contra SQLite en memoria: CRUD, consultas y flujos.",
+                    "resultadoEsperado": "Todas las pruebas de integración de CuentaPagar pasan sobre SQLite.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Integration\\Compras\\CuentaPagarRepositoryTest",
+                    "pruebas": 21,
+                    "pass": 20,
+                    "fail": 0,
+                    "skip": 1
+                },
+                {
+                    "id": "CP-SMOKE-17",
+                    "tipo": "Humo",
+                    "descripcion": "Validar autoload, contrato de clase, interfaces, métodos públicos y doble NoDb de CuentaPagar.",
+                    "resultadoEsperado": "CuentaPagar se autocarga, extiende Database (salvo Backup), implementa sus interfaces, expone sus métodos y su doble NoDb es instanciable.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Smoke\\ModelsSmokeTest [CP-SMOKE-17 CuentaPagar] (contrato + doble NoDb)",
+                    "pruebas": 2,
+                    "pass": 2,
+                    "fail": 0,
+                    "skip": 0
+                }
+            ]
+        },
+        {
+            "numero": 18,
+            "modelo": "Purchase",
+            "moduloSidebar": "Gestionar compra",
+            "idRequisito": "RF-18",
+            "descripcionRequisito": "El sistema debe permitir registrar compras, sus detalles, recepción y actualización de stock.",
+            "estado": "PASS",
+            "casos": [
+                {
+                    "id": "CP-UNI-18",
+                    "tipo": "Unitaria",
+                    "descripcion": "Validar getters, setters, fill, validaciones y lógica pura de Purchase sin base de datos.",
+                    "resultadoEsperado": "Todas las pruebas unitarias de Purchase pasan sin abrir MySQL.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Unit\\Compras\\PurchaseTest",
+                    "pruebas": 20,
+                    "pass": 20,
+                    "fail": 0,
+                    "skip": 0
+                },
+                {
+                    "id": "CP-INT-18",
+                    "tipo": "Integración",
+                    "descripcion": "Ejecutar el SQL real de Purchase contra SQLite en memoria: CRUD, consultas y flujos.",
+                    "resultadoEsperado": "Todas las pruebas de integración de Purchase pasan sobre SQLite.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Integration\\Compras\\PurchaseRepositoryTest",
+                    "pruebas": 24,
+                    "pass": 24,
+                    "fail": 0,
+                    "skip": 0
+                },
+                {
+                    "id": "CP-SMOKE-18",
+                    "tipo": "Humo",
+                    "descripcion": "Validar autoload, contrato de clase, interfaces, métodos públicos y doble NoDb de Purchase.",
+                    "resultadoEsperado": "Purchase se autocarga, extiende Database (salvo Backup), implementa sus interfaces, expone sus métodos y su doble NoDb es instanciable.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Smoke\\ModelsSmokeTest [CP-SMOKE-18 Purchase] (contrato + doble NoDb)",
+                    "pruebas": 2,
+                    "pass": 2,
+                    "fail": 0,
+                    "skip": 0
+                }
+            ]
+        },
+        {
+            "numero": 19,
+            "modelo": "Ornato",
+            "moduloSidebar": "Gestionar ornatos",
+            "idRequisito": "RF-19",
+            "descripcionRequisito": "El sistema debe permitir registrar y administrar los servicios de ornato.",
+            "estado": "PASS",
+            "casos": [
+                {
+                    "id": "CP-UNI-19",
+                    "tipo": "Unitaria",
+                    "descripcion": "Validar getters, setters, fill, validaciones y lógica pura de Ornato sin base de datos.",
+                    "resultadoEsperado": "Todas las pruebas unitarias de Ornato pasan sin abrir MySQL.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Unit\\Ventas\\OrnatoTest",
+                    "pruebas": 18,
+                    "pass": 18,
+                    "fail": 0,
+                    "skip": 0
+                },
+                {
+                    "id": "CP-INT-19",
+                    "tipo": "Integración",
+                    "descripcion": "Ejecutar el SQL real de Ornato contra SQLite en memoria: CRUD, consultas y flujos.",
+                    "resultadoEsperado": "Todas las pruebas de integración de Ornato pasan sobre SQLite.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Integration\\Ventas\\OrnatoRepositoryTest",
+                    "pruebas": 17,
+                    "pass": 17,
+                    "fail": 0,
+                    "skip": 0
+                },
+                {
+                    "id": "CP-SMOKE-19",
+                    "tipo": "Humo",
+                    "descripcion": "Validar autoload, contrato de clase, interfaces, métodos públicos y doble NoDb de Ornato.",
+                    "resultadoEsperado": "Ornato se autocarga, extiende Database (salvo Backup), implementa sus interfaces, expone sus métodos y su doble NoDb es instanciable.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Smoke\\ModelsSmokeTest [CP-SMOKE-19 Ornato] (contrato + doble NoDb)",
+                    "pruebas": 2,
+                    "pass": 2,
+                    "fail": 0,
+                    "skip": 0
+                }
+            ]
+        },
+        {
+            "numero": 20,
+            "modelo": "Ampliacion",
+            "moduloSidebar": "Gestionar ampliación",
+            "idRequisito": "RF-20",
+            "descripcionRequisito": "El sistema debe permitir registrar ampliaciones e intercambios de plantas entre clientes.",
+            "estado": "PASS",
+            "casos": [
+                {
+                    "id": "CP-UNI-20",
+                    "tipo": "Unitaria",
+                    "descripcion": "Validar getters, setters, fill, validaciones y lógica pura de Ampliacion sin base de datos.",
+                    "resultadoEsperado": "Todas las pruebas unitarias de Ampliacion pasan sin abrir MySQL.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Unit\\Operaciones\\AmpliacionTest",
+                    "pruebas": 24,
+                    "pass": 23,
+                    "fail": 0,
+                    "skip": 1
+                },
+                {
+                    "id": "CP-INT-20",
+                    "tipo": "Integración",
+                    "descripcion": "Ejecutar el SQL real de Ampliacion contra SQLite en memoria: CRUD, consultas y flujos.",
+                    "resultadoEsperado": "Todas las pruebas de integración de Ampliacion pasan sobre SQLite.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Integration\\Operaciones\\AmpliacionRepositoryTest",
+                    "pruebas": 19,
+                    "pass": 18,
+                    "fail": 0,
+                    "skip": 1
+                },
+                {
+                    "id": "CP-SMOKE-20",
+                    "tipo": "Humo",
+                    "descripcion": "Validar autoload, contrato de clase, interfaces, métodos públicos y doble NoDb de Ampliacion.",
+                    "resultadoEsperado": "Ampliacion se autocarga, extiende Database (salvo Backup), implementa sus interfaces, expone sus métodos y su doble NoDb es instanciable.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Smoke\\ModelsSmokeTest [CP-SMOKE-20 Ampliacion] (contrato + doble NoDb)",
+                    "pruebas": 2,
+                    "pass": 2,
+                    "fail": 0,
+                    "skip": 0
+                }
+            ]
+        },
+        {
+            "numero": 21,
+            "modelo": "Proveedor",
+            "moduloSidebar": "Gestionar proveedor",
+            "idRequisito": "RF-21",
+            "descripcionRequisito": "El sistema debe permitir registrar, consultar, editar y dar de baja lógica a los proveedores.",
+            "estado": "PASS",
+            "casos": [
+                {
+                    "id": "CP-UNI-21",
+                    "tipo": "Unitaria",
+                    "descripcion": "Validar getters, setters, fill, validaciones y lógica pura de Proveedor sin base de datos.",
+                    "resultadoEsperado": "Todas las pruebas unitarias de Proveedor pasan sin abrir MySQL.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Unit\\Compras\\ProveedorTest",
+                    "pruebas": 22,
+                    "pass": 22,
+                    "fail": 0,
+                    "skip": 0
+                },
+                {
+                    "id": "CP-INT-21",
+                    "tipo": "Integración",
+                    "descripcion": "Ejecutar el SQL real de Proveedor contra SQLite en memoria: CRUD, consultas y flujos.",
+                    "resultadoEsperado": "Todas las pruebas de integración de Proveedor pasan sobre SQLite.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Integration\\Compras\\ProveedorRepositoryTest",
+                    "pruebas": 18,
+                    "pass": 18,
+                    "fail": 0,
+                    "skip": 0
+                },
+                {
+                    "id": "CP-SMOKE-21",
+                    "tipo": "Humo",
+                    "descripcion": "Validar autoload, contrato de clase, interfaces, métodos públicos y doble NoDb de Proveedor.",
+                    "resultadoEsperado": "Proveedor se autocarga, extiende Database (salvo Backup), implementa sus interfaces, expone sus métodos y su doble NoDb es instanciable.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Smoke\\ModelsSmokeTest [CP-SMOKE-21 Proveedor] (contrato + doble NoDb)",
+                    "pruebas": 2,
+                    "pass": 2,
+                    "fail": 0,
+                    "skip": 0
+                }
+            ]
+        },
+        {
+            "numero": 22,
+            "modelo": "Tarea",
+            "moduloSidebar": "Asignar tarea",
+            "idRequisito": "RF-22",
+            "descripcionRequisito": "El sistema debe permitir asignar tareas, actualizarlas, completarlas o cancelarlas.",
+            "estado": "PASS",
+            "casos": [
+                {
+                    "id": "CP-UNI-22",
+                    "tipo": "Unitaria",
+                    "descripcion": "Validar getters, setters, fill, validaciones y lógica pura de Tarea sin base de datos.",
+                    "resultadoEsperado": "Todas las pruebas unitarias de Tarea pasan sin abrir MySQL.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Unit\\Operaciones\\TareaTest",
+                    "pruebas": 10,
+                    "pass": 10,
+                    "fail": 0,
+                    "skip": 0
+                },
+                {
+                    "id": "CP-INT-22",
+                    "tipo": "Integración",
+                    "descripcion": "Ejecutar el SQL real de Tarea contra SQLite en memoria: CRUD, consultas y flujos.",
+                    "resultadoEsperado": "Todas las pruebas de integración de Tarea pasan sobre SQLite.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Integration\\Operaciones\\TareaRepositoryTest",
+                    "pruebas": 15,
+                    "pass": 15,
+                    "fail": 0,
+                    "skip": 0
+                },
+                {
+                    "id": "CP-SMOKE-22",
+                    "tipo": "Humo",
+                    "descripcion": "Validar autoload, contrato de clase, interfaces, métodos públicos y doble NoDb de Tarea.",
+                    "resultadoEsperado": "Tarea se autocarga, extiende Database (salvo Backup), implementa sus interfaces, expone sus métodos y su doble NoDb es instanciable.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Smoke\\ModelsSmokeTest [CP-SMOKE-22 Tarea] (contrato + doble NoDb)",
+                    "pruebas": 2,
+                    "pass": 2,
+                    "fail": 0,
+                    "skip": 0
+                }
+            ]
+        },
+        {
+            "numero": 23,
+            "modelo": "SeedCollection",
+            "moduloSidebar": "Gestionar recolección",
+            "idRequisito": "RF-23",
+            "descripcionRequisito": "El sistema debe permitir registrar recolecciones de semillas, sus detalles y su cierre.",
+            "estado": "PASS",
+            "casos": [
+                {
+                    "id": "CP-UNI-23",
+                    "tipo": "Unitaria",
+                    "descripcion": "Validar getters, setters, fill, validaciones y lógica pura de SeedCollection sin base de datos.",
+                    "resultadoEsperado": "Todas las pruebas unitarias de SeedCollection pasan sin abrir MySQL.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Unit\\Operaciones\\SeedCollectionTest",
+                    "pruebas": 22,
+                    "pass": 21,
+                    "fail": 0,
+                    "skip": 1
+                },
+                {
+                    "id": "CP-INT-23",
+                    "tipo": "Integración",
+                    "descripcion": "Ejecutar el SQL real de SeedCollection contra SQLite en memoria: CRUD, consultas y flujos.",
+                    "resultadoEsperado": "Todas las pruebas de integración de SeedCollection pasan sobre SQLite.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Integration\\Operaciones\\SeedCollectionRepositoryTest",
+                    "pruebas": 16,
+                    "pass": 15,
+                    "fail": 0,
+                    "skip": 1
+                },
+                {
+                    "id": "CP-SMOKE-23",
+                    "tipo": "Humo",
+                    "descripcion": "Validar autoload, contrato de clase, interfaces, métodos públicos y doble NoDb de SeedCollection.",
+                    "resultadoEsperado": "SeedCollection se autocarga, extiende Database (salvo Backup), implementa sus interfaces, expone sus métodos y su doble NoDb es instanciable.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Smoke\\ModelsSmokeTest [CP-SMOKE-23 SeedCollection] (contrato + doble NoDb)",
+                    "pruebas": 2,
+                    "pass": 2,
+                    "fail": 0,
+                    "skip": 0
+                }
+            ]
+        },
+        {
+            "numero": 24,
+            "modelo": "Reports",
+            "moduloSidebar": "Reportes",
+            "idRequisito": "RF-24",
+            "descripcionRequisito": "El sistema debe generar reportes por módulo con filtros y datos consolidados.",
+            "estado": "PASS",
+            "casos": [
+                {
+                    "id": "CP-UNI-24",
+                    "tipo": "Unitaria",
+                    "descripcion": "Validar getters, setters, fill, validaciones y lógica pura de Reports sin base de datos.",
+                    "resultadoEsperado": "Todas las pruebas unitarias de Reports pasan sin abrir MySQL.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Unit\\Analitica\\ReportsTest",
+                    "pruebas": 7,
+                    "pass": 7,
+                    "fail": 0,
+                    "skip": 0
+                },
+                {
+                    "id": "CP-INT-24",
+                    "tipo": "Integración",
+                    "descripcion": "Ejecutar el SQL real de Reports contra SQLite en memoria: CRUD, consultas y flujos.",
+                    "resultadoEsperado": "Todas las pruebas de integración de Reports pasan sobre SQLite.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Integration\\Analitica\\ReportsRepositoryTest",
+                    "pruebas": 12,
+                    "pass": 12,
+                    "fail": 0,
+                    "skip": 0
+                },
+                {
+                    "id": "CP-SMOKE-24",
+                    "tipo": "Humo",
+                    "descripcion": "Validar autoload, contrato de clase, interfaces, métodos públicos y doble NoDb de Reports.",
+                    "resultadoEsperado": "Reports se autocarga, extiende Database (salvo Backup), implementa sus interfaces, expone sus métodos y su doble NoDb es instanciable.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Smoke\\ModelsSmokeTest [CP-SMOKE-24 Reports] (contrato + doble NoDb)",
+                    "pruebas": 2,
+                    "pass": 2,
+                    "fail": 0,
+                    "skip": 0
+                }
+            ]
+        },
+        {
+            "numero": 25,
+            "modelo": "DashboardData",
+            "moduloSidebar": "Inicio / Dashboard",
+            "idRequisito": "RF-25",
+            "descripcionRequisito": "El sistema debe mostrar indicadores, alertas y actividad reciente en el dashboard.",
+            "estado": "PASS",
+            "casos": [
+                {
+                    "id": "CP-UNI-25",
+                    "tipo": "Unitaria",
+                    "descripcion": "Validar getters, setters, fill, validaciones y lógica pura de DashboardData sin base de datos.",
+                    "resultadoEsperado": "Todas las pruebas unitarias de DashboardData pasan sin abrir MySQL.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Unit\\Analitica\\DashboardDataTest",
+                    "pruebas": 10,
+                    "pass": 10,
+                    "fail": 0,
+                    "skip": 0
+                },
+                {
+                    "id": "CP-INT-25",
+                    "tipo": "Integración",
+                    "descripcion": "Ejecutar el SQL real de DashboardData contra SQLite en memoria: CRUD, consultas y flujos.",
+                    "resultadoEsperado": "Todas las pruebas de integración de DashboardData pasan sobre SQLite.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Integration\\Analitica\\DashboardDataRepositoryTest",
+                    "pruebas": 14,
+                    "pass": 14,
+                    "fail": 0,
+                    "skip": 0
+                },
+                {
+                    "id": "CP-SMOKE-25",
+                    "tipo": "Humo",
+                    "descripcion": "Validar autoload, contrato de clase, interfaces, métodos públicos y doble NoDb de DashboardData.",
+                    "resultadoEsperado": "DashboardData se autocarga, extiende Database (salvo Backup), implementa sus interfaces, expone sus métodos y su doble NoDb es instanciable.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Smoke\\ModelsSmokeTest [CP-SMOKE-25 DashboardData] (contrato + doble NoDb)",
+                    "pruebas": 2,
+                    "pass": 2,
+                    "fail": 0,
+                    "skip": 0
+                }
+            ]
+        },
+        {
+            "numero": 26,
+            "modelo": "Usuario",
+            "moduloSidebar": "Usuario",
+            "idRequisito": "RF-26",
+            "descripcionRequisito": "El sistema debe permitir autenticar usuarios y administrar sus datos, roles y permisos.",
+            "estado": "PASS",
+            "casos": [
+                {
+                    "id": "CP-UNI-26",
+                    "tipo": "Unitaria",
+                    "descripcion": "Validar getters, setters, fill, validaciones y lógica pura de Usuario sin base de datos.",
+                    "resultadoEsperado": "Todas las pruebas unitarias de Usuario pasan sin abrir MySQL.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Unit\\Seguridad\\UsuarioTest",
+                    "pruebas": 21,
+                    "pass": 21,
+                    "fail": 0,
+                    "skip": 0
+                },
+                {
+                    "id": "CP-INT-26",
+                    "tipo": "Integración",
+                    "descripcion": "Ejecutar el SQL real de Usuario contra SQLite en memoria: CRUD, consultas y flujos.",
+                    "resultadoEsperado": "Todas las pruebas de integración de Usuario pasan sobre SQLite.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Integration\\Seguridad\\UsuarioRepositoryTest",
+                    "pruebas": 32,
+                    "pass": 32,
+                    "fail": 0,
+                    "skip": 0
+                },
+                {
+                    "id": "CP-SMOKE-26",
+                    "tipo": "Humo",
+                    "descripcion": "Validar autoload, contrato de clase, interfaces, métodos públicos y doble NoDb de Usuario.",
+                    "resultadoEsperado": "Usuario se autocarga, extiende Database (salvo Backup), implementa sus interfaces, expone sus métodos y su doble NoDb es instanciable.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Smoke\\ModelsSmokeTest [CP-SMOKE-26 Usuario] (contrato + doble NoDb)",
+                    "pruebas": 2,
+                    "pass": 2,
+                    "fail": 0,
+                    "skip": 0
+                }
+            ]
+        },
+        {
+            "numero": 27,
+            "modelo": "Role",
+            "moduloSidebar": "Roles",
+            "idRequisito": "RF-27",
+            "descripcionRequisito": "El sistema debe permitir administrar roles y validar su existencia y asignación.",
+            "estado": "PASS",
+            "casos": [
+                {
+                    "id": "CP-UNI-27",
+                    "tipo": "Unitaria",
+                    "descripcion": "Validar getters, setters, fill, validaciones y lógica pura de Role sin base de datos.",
+                    "resultadoEsperado": "Todas las pruebas unitarias de Role pasan sin abrir MySQL.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Unit\\Seguridad\\RoleTest",
+                    "pruebas": 12,
+                    "pass": 12,
+                    "fail": 0,
+                    "skip": 0
+                },
+                {
+                    "id": "CP-INT-27",
+                    "tipo": "Integración",
+                    "descripcion": "Ejecutar el SQL real de Role contra SQLite en memoria: CRUD, consultas y flujos.",
+                    "resultadoEsperado": "Todas las pruebas de integración de Role pasan sobre SQLite.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Integration\\Seguridad\\RoleRepositoryTest",
+                    "pruebas": 13,
+                    "pass": 13,
+                    "fail": 0,
+                    "skip": 0
+                },
+                {
+                    "id": "CP-SMOKE-27",
+                    "tipo": "Humo",
+                    "descripcion": "Validar autoload, contrato de clase, interfaces, métodos públicos y doble NoDb de Role.",
+                    "resultadoEsperado": "Role se autocarga, extiende Database (salvo Backup), implementa sus interfaces, expone sus métodos y su doble NoDb es instanciable.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Smoke\\ModelsSmokeTest [CP-SMOKE-27 Role] (contrato + doble NoDb)",
+                    "pruebas": 2,
+                    "pass": 2,
+                    "fail": 0,
+                    "skip": 0
+                }
+            ]
+        },
+        {
+            "numero": 28,
+            "modelo": "AuditLog",
+            "moduloSidebar": "Bitácora",
+            "idRequisito": "RF-28",
+            "descripcionRequisito": "El sistema debe registrar y consultar la bitácora de auditoría de las acciones.",
+            "estado": "PASS",
+            "casos": [
+                {
+                    "id": "CP-UNI-28",
+                    "tipo": "Unitaria",
+                    "descripcion": "Validar getters, setters, fill, validaciones y lógica pura de AuditLog sin base de datos.",
+                    "resultadoEsperado": "Todas las pruebas unitarias de AuditLog pasan sin abrir MySQL.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Unit\\Seguridad\\AuditLogTest",
+                    "pruebas": 4,
+                    "pass": 4,
+                    "fail": 0,
+                    "skip": 0
+                },
+                {
+                    "id": "CP-INT-28",
+                    "tipo": "Integración",
+                    "descripcion": "Ejecutar el SQL real de AuditLog contra SQLite en memoria: CRUD, consultas y flujos.",
+                    "resultadoEsperado": "Todas las pruebas de integración de AuditLog pasan sobre SQLite.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Integration\\Seguridad\\AuditLogRepositoryTest",
+                    "pruebas": 8,
+                    "pass": 8,
+                    "fail": 0,
+                    "skip": 0
+                },
+                {
+                    "id": "CP-SMOKE-28",
+                    "tipo": "Humo",
+                    "descripcion": "Validar autoload, contrato de clase, interfaces, métodos públicos y doble NoDb de AuditLog.",
+                    "resultadoEsperado": "AuditLog se autocarga, extiende Database (salvo Backup), implementa sus interfaces, expone sus métodos y su doble NoDb es instanciable.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Smoke\\ModelsSmokeTest [CP-SMOKE-28 AuditLog] (contrato + doble NoDb)",
+                    "pruebas": 2,
+                    "pass": 2,
+                    "fail": 0,
+                    "skip": 0
+                }
+            ]
+        },
+        {
+            "numero": 29,
+            "modelo": "Backup",
+            "moduloSidebar": "Respaldo",
+            "idRequisito": "RF-29",
+            "descripcionRequisito": "El sistema debe permitir crear, listar, descargar y restaurar respaldos de la base de datos.",
+            "estado": "PASS",
+            "casos": [
+                {
+                    "id": "CP-UNI-29",
+                    "tipo": "Unitaria",
+                    "descripcion": "Validar getters, setters, fill, validaciones y lógica pura de Backup sin base de datos.",
+                    "resultadoEsperado": "Todas las pruebas unitarias de Backup pasan sin abrir MySQL.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Unit\\Analitica\\BackupTest",
+                    "pruebas": 10,
+                    "pass": 10,
+                    "fail": 0,
+                    "skip": 0
+                },
+                {
+                    "id": "CP-INT-29",
+                    "tipo": "Integración",
+                    "descripcion": "Ejecutar el SQL real de Backup contra SQLite en memoria: CRUD, consultas y flujos.",
+                    "resultadoEsperado": "Todas las pruebas de integración de Backup pasan sobre SQLite.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Integration\\Analitica\\BackupRepositoryTest",
+                    "pruebas": 10,
+                    "pass": 10,
+                    "fail": 0,
+                    "skip": 0
+                },
+                {
+                    "id": "CP-SMOKE-29",
+                    "tipo": "Humo",
+                    "descripcion": "Validar autoload, contrato de clase, interfaces, métodos públicos y doble NoDb de Backup.",
+                    "resultadoEsperado": "Backup se autocarga, extiende Database (salvo Backup), implementa sus interfaces, expone sus métodos y su doble NoDb es instanciable.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Smoke\\ModelsSmokeTest [CP-SMOKE-29 Backup] (contrato + doble NoDb)",
+                    "pruebas": 2,
+                    "pass": 2,
+                    "fail": 0,
+                    "skip": 0
+                }
+            ]
+        },
+        {
+            "numero": 30,
+            "modelo": "Notification",
+            "moduloSidebar": "Notificaciones (soporte)",
+            "idRequisito": "RF-30",
+            "descripcionRequisito": "El sistema debe mostrar y administrar las notificaciones de cada usuario.",
+            "estado": "PASS",
+            "casos": [
+                {
+                    "id": "CP-UNI-30",
+                    "tipo": "Unitaria",
+                    "descripcion": "Validar getters, setters, fill, validaciones y lógica pura de Notification sin base de datos.",
+                    "resultadoEsperado": "Todas las pruebas unitarias de Notification pasan sin abrir MySQL.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Unit\\Seguridad\\NotificationTest",
+                    "pruebas": 10,
+                    "pass": 10,
+                    "fail": 0,
+                    "skip": 0
+                },
+                {
+                    "id": "CP-INT-30",
+                    "tipo": "Integración",
+                    "descripcion": "Ejecutar el SQL real de Notification contra SQLite en memoria: CRUD, consultas y flujos.",
+                    "resultadoEsperado": "Todas las pruebas de integración de Notification pasan sobre SQLite.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Integration\\Seguridad\\NotificationRepositoryTest",
+                    "pruebas": 15,
+                    "pass": 15,
+                    "fail": 0,
+                    "skip": 0
+                },
+                {
+                    "id": "CP-SMOKE-30",
+                    "tipo": "Humo",
+                    "descripcion": "Validar autoload, contrato de clase, interfaces, métodos públicos y doble NoDb de Notification.",
+                    "resultadoEsperado": "Notification se autocarga, extiende Database (salvo Backup), implementa sus interfaces, expone sus métodos y su doble NoDb es instanciable.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Smoke\\ModelsSmokeTest [CP-SMOKE-30 Notification] (contrato + doble NoDb)",
+                    "pruebas": 2,
+                    "pass": 2,
+                    "fail": 0,
+                    "skip": 0
+                }
+            ]
+        },
+        {
+            "numero": 31,
+            "modelo": "PasswordReset",
+            "moduloSidebar": "Recuperación de contraseña (soporte)",
+            "idRequisito": "RF-31",
+            "descripcionRequisito": "El sistema debe permitir generar, validar y consumir tokens de recuperación de contraseña.",
+            "estado": "PASS",
+            "casos": [
+                {
+                    "id": "CP-UNI-31",
+                    "tipo": "Unitaria",
+                    "descripcion": "Validar getters, setters, fill, validaciones y lógica pura de PasswordReset sin base de datos.",
+                    "resultadoEsperado": "Todas las pruebas unitarias de PasswordReset pasan sin abrir MySQL.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Unit\\Seguridad\\PasswordResetTest",
+                    "pruebas": 4,
+                    "pass": 4,
+                    "fail": 0,
+                    "skip": 0
+                },
+                {
+                    "id": "CP-INT-31",
+                    "tipo": "Integración",
+                    "descripcion": "Ejecutar el SQL real de PasswordReset contra SQLite en memoria: CRUD, consultas y flujos.",
+                    "resultadoEsperado": "Todas las pruebas de integración de PasswordReset pasan sobre SQLite.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Integration\\Seguridad\\PasswordResetRepositoryTest",
+                    "pruebas": 9,
+                    "pass": 9,
+                    "fail": 0,
+                    "skip": 0
+                },
+                {
+                    "id": "CP-SMOKE-31",
+                    "tipo": "Humo",
+                    "descripcion": "Validar autoload, contrato de clase, interfaces, métodos públicos y doble NoDb de PasswordReset.",
+                    "resultadoEsperado": "PasswordReset se autocarga, extiende Database (salvo Backup), implementa sus interfaces, expone sus métodos y su doble NoDb es instanciable.",
+                    "estado": "PASS",
+                    "evidencia": "SysInescolara\\Tests\\Smoke\\ModelsSmokeTest [CP-SMOKE-31 PasswordReset] (contrato + doble NoDb)",
+                    "pruebas": 2,
+                    "pass": 2,
+                    "fail": 0,
+                    "skip": 0
+                }
+            ]
+        }
+    ]
+}
