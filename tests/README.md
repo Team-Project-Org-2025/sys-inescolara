@@ -26,6 +26,9 @@ vendor\bin\phpunit -c tests\phpunit.xml --testsuite Smoke
 
 # Un modelo
 vendor\bin\phpunit -c tests\phpunit.xml --filter Especie
+
+# Un módulo completo (Unit + Integration + Smoke) y comparación con la matriz
+powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\run-module.ps1 Planta
 ```
 
 ## Estructura
@@ -47,6 +50,7 @@ tests/
 ├── Integration/<Dominio>/<Modelo>RepositoryTest.php
 ├── Smoke/ModelsSmokeTest.php
 ├── tools/generate_traceability.php
+├── tools/run-module.ps1
 └── results/junit-*.xml
 ```
 

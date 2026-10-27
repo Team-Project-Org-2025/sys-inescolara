@@ -168,23 +168,200 @@ La matriz contabiliza **945 pruebas ligadas directamente a los 31 modelos**.
 Las 4 restantes de la suite completa son 3 pruebas de autoload
 (`AutoloadTest`) y 1 control de cobertura de modelos.
 
-## 7. Ejecutar un solo módulo
+## 7. Ejecutar y verificar un solo módulo
+
+Cada módulo tiene tres piezas que se ejecutan por separado: su clase unitaria,
+su clase de integración y su caso de humo. Para verificarlo hay dos caminos.
+
+### 7.1 Camino rápido (script incluido)
 
 ```powershell
-vendor\bin\phpunit -c tests\phpunit.xml --filter Planta --do-not-cache-result
+powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\run-module.ps1 Planta
 ```
 
-En PowerShell, si el filtro usa `|`, usa comillas simples:
+El script acepta el nombre del modelo (`Planta`), el número (`01`), el nombre
+del sidebar (`Administrar planta`) o el requisito (`RF-01`). Ejecuta las tres
+suites con `--filter`, guarda los JUnit en
+`tests\results\module-<Modelo>-{unit,integration,smoke}.xml` y compara contra
+`tests/traceability.json`:
+
+```text
+==================================================================
+Modulo: Planta (RF-01) - Administrar planta
+==================================================================
+
+Suite       Ejecutadas Esperadas Pass Fail Skip Aserciones Estado
+-----       ---------- --------- ---- ---- ---- ---------- ------
+Unitaria            12        12   12    0    0         40 COINCIDE
+Integracion         11        11   11    0    0        105 COINCIDE
+Humo                 2         2    2    0    0         24 COINCIDE
+
+RESULTADO: COINCIDE con tests/traceability.json
+```
+
+Sale con código `0` si todo coincide y `1` si algo difiere. Para recorrer los 31
+módulos:
 
 ```powershell
-vendor\bin\phpunit -c tests\phpunit.xml --filter 'Planta|Especie' --do-not-cache-result
+1..31 | ForEach-Object {
+    powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\run-module.ps1 ('{0:00}' -f $_)
+}
 ```
 
-Si el `.bat` de Windows se atora con el pipe, invoca PHPUnit directamente:
+> El script está en ASCII a propósito: Windows PowerShell 5.1 lee los `.ps1`
+> UTF-8 sin BOM como ANSI y rompería los acentos.
+
+### 7.2 Camino manual (comando por comando)
+
+Los tres comandos, con el mismo patrón que se usó para generar la matriz. El
+`--filter` usa el nombre corto de la clase de prueba, sin namespace:
 
 ```powershell
-php vendor\phpunit\phpunit\phpunit -c tests\phpunit.xml --filter 'Planta|Especie' --do-not-cache-result
+php vendor\phpunit\phpunit\phpunit -c tests\phpunit.xml --testsuite Unit        --filter PlantaTest             --log-junit tests\results\module-Planta-unit.xml        --do-not-cache-result
+php vendor\phpunit\phpunit\phpunit -c tests\phpunit.xml --testsuite Integration --filter PlantaRepositoryTest   --log-junit tests\results\module-Planta-integration.xml --do-not-cache-result
+php vendor\phpunit\phpunit\phpunit -c tests\phpunit.xml --testsuite Smoke       --filter CP-SMOKE-01            --log-junit tests\results\module-Planta-smoke.xml       --do-not-cache-result
 ```
+
+Qué esperar en la consola de cada uno:
+
+| Comando | Salida esperada | Código de salida |
+| --- | --- | --- |
+| Unit `PlantaTest` | `OK (12 tests, 40 assertions)` | `0` |
+| Integration `PlantaRepositoryTest` | `OK (11 tests, 105 assertions)` | `0` |
+| Smoke `CP-SMOKE-01` | `OK (2 tests, 24 assertions)` | `0` |
+
+Los mensajes `Error al guardar planta: ...` que aparecen en Unit son
+`error_log()` del modelo probando el camino sin base de datos; **no son
+fallos**. Lo que manda es el código de salida y la línea `OK`/`FAILURES!`.
+
+Para otro módulo cambia solo el `--filter`. Los nombres están en la columna
+**Evidencia** de `TRACEABILITY.md` y en el campo `casos[].evidencia` de
+`traceability.json`.
+
+En PowerShell, si el filtro usa `|`, usa comillas simples y el binario directo:
+
+```powershell
+php vendor\phpunit\phpunit\phpunit -c tests\phpunit.xml --filter 'PlantaTest|EspecieTest' --do-not-cache-result
+```
+
+Evita `vendor\bin\phpunit` cuando uses `|`: es un `.bat` que reexpande `%*` y
+corta el pipe. Con `php vendor\phpunit\phpunit\phpunit` el filtro llega intacto.
+
+### 7.3 Cómo comparar con el `.xml`
+
+El JUnit que genera `--log-junit` tiene esta forma (la cabecera es la que
+importa):
+
+```xml
+<testsuite name="...phpunit.xml" tests="12" assertions="40" errors="0" failures="0" skipped="0">
+  <testsuite name="Unit" tests="12" assertions="40" errors="0" failures="0" skipped="0">
+    <testsuite name="...PlantaTest" file="...PlantaTest.php" tests="12" assertions="40" errors="0" failures="0" skipped="0">
+      <testcase name="valores_por_defecto" ... assertions="7"/>
+```
+
+Revisa estos atributos del nodo raíz:
+
+| Atributo | Significado | Debe ser |
+| --- | --- | --- |
+| `tests` | pruebas ejecutadas | igual a `pruebas` en `traceability.json` |
+| `assertions` | aserciones ejecutadas | igual al valor de referencia |
+| `failures` | pruebas fallidas | `0` |
+| `errors` | errores de ejecución | `0` |
+| `skipped` | pruebas omitidas | igual a `skip` en `traceability.json` |
+
+Comprobación rápida desde PowerShell:
+
+```powershell
+$xml = [xml](Get-Content tests\results\module-Planta-unit.xml -Raw)
+$xml.testsuites.testsuite | Select-Object name, tests, assertions, failures, errors, skipped
+```
+
+Y contra la matriz:
+
+```powershell
+$json = Get-Content tests\traceability.json -Raw | ConvertFrom-Json
+$json.modulos | Where-Object modelo -eq 'Planta' |
+    Select-Object modelo, idRequisito,
+        @{n='unit';e={$_.casos[0].pruebas}},
+        @{n='unitPass';e={$_.casos[0].pass}},
+        @{n='unitSkip';e={$_.casos[0].skip}},
+        @{n='integration';e={$_.casos[1].pruebas}},
+        @{n='smoke';e={$_.casos[2].pruebas}}
+```
+
+Los conteos de referencia de los 31 módulos están en el **Resumen por módulo**
+de [`TRACEABILITY.md`](TRACEABILITY.md) y en `tests/traceability.json`. La
+columna **Omitidos** indica cuántos `skipped` debe reportar el XML; un `SKIP`
+no es un fallo, pero el número debe coincidir.
+
+Si el módulo tiene pruebas omitidas, la consola dirá
+`OK, but some tests were skipped!` y el XML tendrá `skipped="N"`. Por ejemplo:
+
+| Módulo | Unit | Integration | Smoke |
+| --- | --- | --- | --- |
+| `Trazabilidad` | 15/15, 0 skip | 12/13, 1 skip | 2/2, 0 skip |
+| `CuentaPagar` | 22/22, 0 skip | 20/21, 1 skip | 2/2, 0 skip |
+| `Ampliacion` | 23/24, 1 skip | 18/19, 1 skip | 2/2, 0 skip |
+| `SeedCollection` | 21/22, 1 skip | 15/16, 1 skip | 2/2, 0 skip |
+
+### 7.4 Verificación final de los 31 módulos
+
+```powershell
+php vendor\phpunit\phpunit\phpunit -c tests\phpunit.xml --do-not-cache-result
+```
+
+Debe imprimir `OK, but some tests were skipped!` con
+`Tests: 949, Assertions: 11683, Skipped: 7` y código de salida `0`. Después:
+
+```powershell
+php tests\tools\generate_traceability.php
+```
+
+Debe reportar `31 requisitos, 93 casos (93 PASS, 0 FAIL, 0 SKIP, 0 sin ejecutar)`
+y, en la línea siguiente, **945 pruebas de modelo** (938 PASS, 7 SKIP).
+
+### 7.5 Tabla de referencia por módulo
+
+Estos son los conteos que debe mostrar cada ejecución individual. `N/M` =
+pruebas PASS / pruebas ejecutadas.
+
+| # | Modelo | Unitaria | Integración | Humo |
+| ---: | --- | --- | --- | --- |
+| 01 | `Planta` | 12/12 | 11/11 | 2/2 |
+| 02 | `Especie` | 12/12 | 12/12 | 2/2 |
+| 03 | `Ubicacion` | 12/12 | 14/14 | 2/2 |
+| 04 | `Inventory` | 2/2 | 10/10 | 2/2 |
+| 05 | `Lote` | 18/18 | 20/20 | 2/2 |
+| 06 | `Trazabilidad` | 15/15 | 12/13 (1 skip) | 2/2 |
+| 07 | `Insumo` | 12/12 | 13/13 | 2/2 |
+| 08 | `Herramienta` | 13/13 | 18/18 | 2/2 |
+| 09 | `UnidadMedida` | 11/11 | 10/10 | 2/2 |
+| 10 | `Merma` | 17/17 | 13/13 | 2/2 |
+| 11 | `RegistroInsumo` | 11/11 | 12/12 | 2/2 |
+| 12 | `UsoHerramienta` | 9/9 | 10/10 | 2/2 |
+| 13 | `Venta` | 13/13 | 23/23 | 2/2 |
+| 14 | `LotePrecio` | 7/7 | 14/14 | 2/2 |
+| 15 | `Cliente` | 18/18 | 14/14 | 2/2 |
+| 16 | `CuentaCobrar` | 17/17 | 17/18 (1 skip) | 2/2 |
+| 17 | `CuentaPagar` | 22/22 | 20/21 (1 skip) | 2/2 |
+| 18 | `Purchase` | 20/20 | 24/24 | 2/2 |
+| 19 | `Ornato` | 18/18 | 17/17 | 2/2 |
+| 20 | `Ampliacion` | 23/24 (1 skip) | 18/19 (1 skip) | 2/2 |
+| 21 | `Proveedor` | 22/22 | 18/18 | 2/2 |
+| 22 | `Tarea` | 10/10 | 15/15 | 2/2 |
+| 23 | `SeedCollection` | 21/22 (1 skip) | 15/16 (1 skip) | 2/2 |
+| 24 | `Reports` | 7/7 | 12/12 | 2/2 |
+| 25 | `DashboardData` | 10/10 | 14/14 | 2/2 |
+| 26 | `Usuario` | 21/21 | 32/32 | 2/2 |
+| 27 | `Role` | 12/12 | 13/13 | 2/2 |
+| 28 | `AuditLog` | 4/4 | 8/8 | 2/2 |
+| 29 | `Backup` | 10/10 | 10/10 | 2/2 |
+| 30 | `Notification` | 10/10 | 15/15 | 2/2 |
+| 31 | `PasswordReset` | 4/4 | 9/9 | 2/2 |
+
+Las aserciones exactas de cada módulo están en
+[`TRACEABILITY.md`](TRACEABILITY.md) (columna **Evidencia**) y en
+`traceability.json` (`casos[].pruebas`, `casos[].pass`, `casos[].skip`).
 
 ## 8. Regenerar la matriz de trazabilidad
 
