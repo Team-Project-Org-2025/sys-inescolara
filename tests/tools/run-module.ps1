@@ -47,13 +47,19 @@ if ($null -eq $entry) {
     throw "No se encontro el modulo '$Module'. Usa el nombre del modelo (Planta), el numero (01) o el nombre del sidebar."
 }
 
-function Get-ShortClass([string]$Fqcn) {
-    return ($Fqcn -split '\\')[-1]
+function Get-TestPath([string]$Fqcn) {
+    $prefix = 'SysInescolara\Tests\'
+    $relative = $Fqcn
+    if ($Fqcn.StartsWith($prefix)) {
+        $relative = $Fqcn.Substring($prefix.Length)
+    }
+    return "tests\$relative.php"
 }
 
 function Invoke-Suite {
     param(
         [string]$Suite,
+        [string]$TestPath,
         [string]$Filter,
         [string]$LogName
     )
@@ -63,15 +69,26 @@ function Invoke-Suite {
         Remove-Item $logPath -Force
     }
 
-    Write-Host ""
-    Write-Host ">>> $Suite :: --filter $Filter" -ForegroundColor Cyan
+    if ($TestPath) {
+        Write-Host ""
+        Write-Host ">>> $Suite :: $TestPath" -ForegroundColor Cyan
 
-    & php 'vendor\phpunit\phpunit\phpunit' `
-        -c 'tests\phpunit.xml' `
-        --testsuite $Suite `
-        --filter $Filter `
-        --log-junit $logPath `
-        --do-not-cache-result
+        & php 'vendor\phpunit\phpunit\phpunit' `
+            -c 'tests\phpunit.xml' `
+            $TestPath `
+            --log-junit $logPath `
+            --do-not-cache-result
+    } else {
+        Write-Host ""
+        Write-Host ">>> $Suite :: --filter $Filter" -ForegroundColor Cyan
+
+        & php 'vendor\phpunit\phpunit\phpunit' `
+            -c 'tests\phpunit.xml' `
+            --testsuite $Suite `
+            --filter $Filter `
+            --log-junit $logPath `
+            --do-not-cache-result
+    }
 
     $exitCode = $LASTEXITCODE
 
@@ -87,7 +104,7 @@ function Invoke-Suite {
 
     return [pscustomobject]@{
         Suite      = $Suite
-        Filter     = $Filter
+        Filter     = if ($TestPath) { $TestPath } else { $Filter }
         ExitCode   = $exitCode
         Tests      = [int]$node.tests
         Assertions = [int]$node.assertions
@@ -132,16 +149,16 @@ $unitCase = $entry.casos[0]
 $integrationCase = $entry.casos[1]
 $smokeCase = $entry.casos[2]
 
-$unitFilter = Get-ShortClass $unitCase.evidencia
-$integrationFilter = Get-ShortClass $integrationCase.evidencia
+$unitPath = Get-TestPath $unitCase.evidencia
+$integrationPath = Get-TestPath $integrationCase.evidencia
 $smokeId = [regex]::Match($smokeCase.evidencia, 'CP-SMOKE-\d{2}').Value
 
 if ([string]::IsNullOrWhiteSpace($smokeId)) {
     throw "No se pudo extraer el ID de humo desde: $($smokeCase.evidencia)"
 }
 
-$unitResult = Invoke-Suite -Suite 'Unit' -Filter $unitFilter -LogName "module-$($entry.modelo)-unit.xml"
-$integrationResult = Invoke-Suite -Suite 'Integration' -Filter $integrationFilter -LogName "module-$($entry.modelo)-integration.xml"
+$unitResult = Invoke-Suite -Suite 'Unit' -TestPath $unitPath -LogName "module-$($entry.modelo)-unit.xml"
+$integrationResult = Invoke-Suite -Suite 'Integration' -TestPath $integrationPath -LogName "module-$($entry.modelo)-integration.xml"
 $smokeResult = Invoke-Suite -Suite 'Smoke' -Filter $smokeId -LogName "module-$($entry.modelo)-smoke.xml"
 
 $rows = @(

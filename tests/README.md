@@ -1,6 +1,7 @@
 # Pruebas — Sys Inescolara
 
 - **Instrucciones paso a paso:** [`GUIA_PRUEBAS.md`](GUIA_PRUEBAS.md)
+- **Comandos listos para copiar (3 por módulo):** [`COMANDOS_RAPIDOS.md`](COMANDOS_RAPIDOS.md)
 - **Matriz de trazabilidad:** [`TRACEABILITY.md`](TRACEABILITY.md) · [`traceability.json`](traceability.json)
 
 Suite PHPUnit 11.5 con tres niveles:

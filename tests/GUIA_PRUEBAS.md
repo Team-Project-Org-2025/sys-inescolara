@@ -3,6 +3,8 @@
 Esta guía explica cómo ejecutar las tres suites, en qué orden se ejecutan y qué
 resultado se debe esperar en cada una. La matriz de trazabilidad se actualiza
 en [`TRACEABILITY.md`](TRACEABILITY.md) y [`traceability.json`](traceability.json).
+Para copiar y pegar los comandos de un módulo concreto, usa
+[`COMANDOS_RAPIDOS.md`](COMANDOS_RAPIDOS.md).
 
 ## 1. Requisitos
 
@@ -181,9 +183,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\run-module.ps1 P
 
 El script acepta el nombre del modelo (`Planta`), el número (`01`), el nombre
 del sidebar (`Administrar planta`) o el requisito (`RF-01`). Ejecuta las tres
-suites con `--filter`, guarda los JUnit en
-`tests\results\module-<Modelo>-{unit,integration,smoke}.xml` y compara contra
-`tests/traceability.json`:
+suites (por ruta de archivo en Unit/Integration y por ID en Smoke), guarda los
+JUnit en `tests\results\module-<Modelo>-{unit,integration,smoke}.xml` y compara
+contra `tests/traceability.json`:
 
 ```text
 ==================================================================
@@ -213,13 +215,14 @@ módulos:
 
 ### 7.2 Camino manual (comando por comando)
 
-Los tres comandos, con el mismo patrón que se usó para generar la matriz. El
-`--filter` usa el nombre corto de la clase de prueba, sin namespace:
+Los tres comandos, con el mismo patrón que se usó para generar la matriz. Para
+Unit e Integration se pasa la **ruta del archivo de prueba**; para humo se usa
+el `--filter` con el ID del caso:
 
 ```powershell
-php vendor\phpunit\phpunit\phpunit -c tests\phpunit.xml --testsuite Unit        --filter PlantaTest             --log-junit tests\results\module-Planta-unit.xml        --do-not-cache-result
-php vendor\phpunit\phpunit\phpunit -c tests\phpunit.xml --testsuite Integration --filter PlantaRepositoryTest   --log-junit tests\results\module-Planta-integration.xml --do-not-cache-result
-php vendor\phpunit\phpunit\phpunit -c tests\phpunit.xml --testsuite Smoke       --filter CP-SMOKE-01            --log-junit tests\results\module-Planta-smoke.xml       --do-not-cache-result
+php vendor\phpunit\phpunit\phpunit -c tests\phpunit.xml tests\Unit\Catalogo\PlantaTest.php --log-junit tests\results\module-Planta-unit.xml --do-not-cache-result
+php vendor\phpunit\phpunit\phpunit -c tests\phpunit.xml tests\Integration\Catalogo\PlantaRepositoryTest.php --log-junit tests\results\module-Planta-integration.xml --do-not-cache-result
+php vendor\phpunit\phpunit\phpunit -c tests\phpunit.xml --testsuite Smoke --filter CP-SMOKE-01 --log-junit tests\results\module-Planta-smoke.xml --do-not-cache-result
 ```
 
 Qué esperar en la consola de cada uno:
@@ -234,11 +237,17 @@ Los mensajes `Error al guardar planta: ...` que aparecen en Unit son
 `error_log()` del modelo probando el camino sin base de datos; **no son
 fallos**. Lo que manda es el código de salida y la línea `OK`/`FAILURES!`.
 
-Para otro módulo cambia solo el `--filter`. Los nombres están en la columna
-**Evidencia** de `TRACEABILITY.md` y en el campo `casos[].evidencia` de
-`traceability.json`.
+Para otro módulo cambia solo la ruta y el ID de humo. Los tres comandos de cada
+uno de los 31 módulos están listos para copiar en
+[`COMANDOS_RAPIDOS.md`](COMANDOS_RAPIDOS.md).
 
-En PowerShell, si el filtro usa `|`, usa comillas simples y el binario directo:
+> **Por qué la ruta y no `--filter`:** `--filter` es una coincidencia por
+> subcadena. `--filter InsumoTest` también ejecuta `RegistroInsumoTest` (23
+> pruebas en vez de 12) y `--filter HerramientaTest` también ejecuta
+> `UsoHerramientaTest` (22 en vez de 13). Pasar el archivo evita esa ambigüedad.
+
+Si de todas formas usas `--filter` con varios patrones, separa con `|` y usa
+comillas simples y el binario directo:
 
 ```powershell
 php vendor\phpunit\phpunit\phpunit -c tests\phpunit.xml --filter 'PlantaTest|EspecieTest' --do-not-cache-result
