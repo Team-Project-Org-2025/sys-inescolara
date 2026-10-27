@@ -25,6 +25,7 @@
         "test:unit": "phpunit --testsuite Unit",
         "test:integration": "phpunit --testsuite Integration",
         "test:smoke": "phpunit --testsuite Smoke",
-        "test:plantas": "phpunit --filter Planta"
+        "test:plantas": "phpunit --filter '/(PlantaTest|PlantaRepositoryTest|PlantaSmokeTest)::/'",
+        "test:especies": "phpunit --filter '/(EspecieTest|EspecieRepositoryTest|EspecieSmokeTest)::/'"
     }
 }
