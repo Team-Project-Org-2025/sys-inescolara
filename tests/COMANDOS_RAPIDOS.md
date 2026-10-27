@@ -17,8 +17,11 @@ Cada comando debe terminar con código de salida `0` y la línea `OK` o
 `OK, but some tests were skipped!`. Los mensajes de `error_log()` que aparecen
 en Unit (por ejemplo `Error al guardar ...`) no son fallos.
 
-> Atajo: `powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\run-module.ps1 01`
-> ejecuta las tres suites y compara automáticamente contra la matriz.
+> Atajo: el script recibe el número o el nombre del módulo y ejecuta sus tres
+> suites. `... run-module.ps1 05` prueba solo Lote; `... run-module.ps1 all`
+> (o sin argumento) prueba los 31 y compara todo contra la matriz:
+>
+> `powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\run-module.ps1 all`
 
 ## Índice
 

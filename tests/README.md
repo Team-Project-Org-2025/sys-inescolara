@@ -30,6 +30,9 @@ vendor\bin\phpunit -c tests\phpunit.xml --filter Especie
 
 # Un módulo completo (Unit + Integration + Smoke) y comparación con la matriz
 powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\run-module.ps1 Planta
+
+# Los 31 módulos, con resumen y comparación automática
+powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\run-module.ps1 all
 ```
 
 ## Estructura
@@ -39,6 +42,7 @@ tests/
 ├── phpunit.xml
 ├── bootstrap.php
 ├── GUIA_PRUEBAS.md
+├── COMANDOS_RAPIDOS.md
 ├── TRACEABILITY.md
 ├── traceability.json
 ├── Support/

@@ -177,38 +177,109 @@ su clase de integración y su caso de humo. Para verificarlo hay dos caminos.
 
 ### 7.1 Camino rápido (script incluido)
 
+El script recibe **un solo argumento: Qué módulo quieres probar**. Ese argumento
+puede ser el número, el nombre del modelo, el nombre del sidebar o el requisito.
+Si no se pasa nada (o se pasa `all`), prueba los 31.
+
+| Lo que escribes al final | Módulos que prueba | Pruebas ejecutadas |
+| --- | --- | ---: |
+| `01` | solo Planta | 12 + 11 + 2 = 25 |
+| `05` | solo Lote | 18 + 20 + 2 = 40 |
+| `Planta` | solo Planta | 25 |
+| `Lote` | solo Lote | 40 |
+| `RF-05` | solo Lote | 40 |
+| `all` | los 31, en orden de sidebar | 945 |
+| *(nada)* | los 31, en orden de sidebar | 945 |
+
+El número puede ir con o sin cero (`05` o `5` producen lo mismo: solo Lote).
+
+**Siempre ejecuta las tres suites del módulo elegido** (Unitaria + Integración +
+Humo), no una sola. No hay que indicar la suite.
+
+#### Ejemplo: solo Lote (`05`)
+
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\run-module.ps1 Planta
+powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\run-module.ps1 05
 ```
 
-El script acepta el nombre del modelo (`Planta`), el número (`01`), el nombre
-del sidebar (`Administrar planta`) o el requisito (`RF-01`). Ejecuta las tres
-suites (por ruta de archivo en Unit/Integration y por ID en Smoke), guarda los
-JUnit en `tests\results\module-<Modelo>-{unit,integration,smoke}.xml` y compara
-contra `tests/traceability.json`:
+Qué hace, en orden:
+
+1. Busca el módulo `05` en `tests/traceability.json` (modelo `Lote`, `RF-05`).
+2. Ejecuta `tests\Unit\Catalogo\LoteTest.php` → 18 pruebas.
+3. Ejecuta `tests\Integration\Catalogo\LoteRepositoryTest.php` → 20 pruebas.
+4. Ejecuta el caso de humo `CP-SMOKE-05` → 2 pruebas.
+5. Guarda los JUnit en `tests\results\module-Lote-{unit,integration,smoke}.xml`.
+6. Compara los conteos y muestra el resumen.
+
+Salida real (resumida):
 
 ```text
-==================================================================
-Modulo: Planta (RF-01) - Administrar planta
-==================================================================
+>>> Lote :: tests\Unit\Catalogo\LoteTest.php
+OK (18 tests, 83 assertions)
+>>> Lote :: tests\Integration\Catalogo\LoteRepositoryTest.php
+OK (20 tests, 1155 assertions)
+>>> Lote :: --filter CP-SMOKE-05
+OK (2 tests, 24 assertions)
 
+==================================================================
+Modulo: Lote (RF-05) - Lote
+==================================================================
 Suite       Ejecutadas Esperadas Pass Fail Skip Aserciones Estado
------       ---------- --------- ---- ---- ---- ---------- ------
-Unitaria            12        12   12    0    0         40 COINCIDE
-Integracion         11        11   11    0    0        105 COINCIDE
+Unitaria            18        18   18    0    0         83 COINCIDE
+Integracion         20        20   20    0    0       1155 COINCIDE
 Humo                 2         2    2    0    0         24 COINCIDE
 
+#  Modelo Unitaria Integracion Humo Estado
+05 Lote   18/18    20/20       2/2  COINCIDE
+
+Modulos: 1 | COINCIDE: 1 | NO COINCIDE: 0
+Pruebas: 40 | Aserciones: 1262 | FAIL: 0 | SKIP: 0
 RESULTADO: COINCIDE con tests/traceability.json
 ```
 
-Sale con código `0` si todo coincide y `1` si algo difiere. Para recorrer los 31
-módulos:
+En modo de un módulo sí se ve la salida de PHPUnit. Los mensajes
+`Error al guardar lote: ...` son `error_log()` del modelo probando el camino sin
+base de datos; **no son fallos**.
+
+#### Ejemplo: los 31 módulos
 
 ```powershell
-1..31 | ForEach-Object {
-    powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\run-module.ps1 ('{0:00}' -f $_)
-}
+# Explícito
+powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\run-module.ps1 all
+
+# O sin argumento: hace exactamente lo mismo
+powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\run-module.ps1
 ```
+
+Salida esperada al final:
+
+```text
+Ejecutando los 31 modulos (Unit + Integration + Smoke)...
+[01/31] Planta           COINCIDE
+...
+[31/31] PasswordReset    COINCIDE
+
+#  Modelo         Unitaria       Integracion    Humo Estado
+01 Planta         12/12          11/11          2/2  COINCIDE
+...
+31 PasswordReset  4/4            9/9            2/2  COINCIDE
+
+Modulos: 31 | COINCIDE: 31 | NO COINCIDE: 0
+Pruebas: 945 | Aserciones: 11677 | FAIL: 0 | SKIP: 7
+Tiempo: 38,1 s
+RESULTADO: COINCIDE con tests/traceability.json
+```
+
+Tarda alrededor de 40 segundos. En modo `all` no muestra la salida de PHPUnit
+salvo que un módulo falle.
+
+#### Códigos de salida y errores
+
+- `0` → todos los módulos comprobados coinciden con la matriz.
+- `1` → al menos una suite no coincide (o PHPUnit devolvió error); al final se
+  listan los módulos afectados.
+- Si el argumento no corresponde a ningún módulo, el script se detiene con
+  `No se encontro el modulo '<valor>'` y recuerda las formas válidas.
 
 > El script está en ASCII a propósito: Windows PowerShell 5.1 lee los `.ps1`
 > UTF-8 sin BOM como ANSI y rompería los acentos.

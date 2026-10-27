@@ -1,25 +1,25 @@
 <#
 .SYNOPSIS
-    Ejecuta las tres suites de un solo modulo y compara el resultado con la
-    matriz de trazabilidad (tests/traceability.json).
+    Ejecuta las pruebas de uno o de los 31 modulos y compara contra la matriz.
 
 .DESCRIPTION
-    Uso:
+    Un modulo:
         powershell -ExecutionPolicy Bypass -File tests\tools\run-module.ps1 Planta
         powershell -ExecutionPolicy Bypass -File tests\tools\run-module.ps1 01
         powershell -ExecutionPolicy Bypass -File tests\tools\run-module.ps1 "Cuenta por cobrar"
 
-    Genera:
-        tests\results\module-<Modelo>-unit.xml
-        tests\results\module-<Modelo>-integration.xml
-        tests\results\module-<Modelo>-smoke.xml
+    Todos los modulos (31):
+        powershell -ExecutionPolicy Bypass -File tests\tools\run-module.ps1 all
 
-    Y muestra una tabla con lo ejecutado vs. lo esperado. Sale con codigo 1 si
-    algo no coincide.
+    Para cada modulo ejecuta sus tres suites: unitaria, integracion y humo.
+    Guarda los JUnit en tests\results\module-<Modelo>-{unit,integration,smoke}.xml
+    y compara los conteos contra tests\traceability.json.
+
+    Sale con codigo 0 si todo coincide y 1 si algo difiere.
 #>
 param(
-    [Parameter(Mandatory = $true, Position = 0)]
-    [string]$Module
+    [Parameter(Position = 0)]
+    [string]$Module = 'all'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -34,18 +34,7 @@ if (-not (Test-Path $jsonPath)) {
 
 $data = Get-Content $jsonPath -Raw | ConvertFrom-Json
 $normalized = $Module.Trim()
-
-$entry = $data.modulos | Where-Object {
-    $_.modelo -ieq $normalized -or
-    $_.moduloSidebar -ieq $normalized -or
-    $_.idRequisito -ieq $normalized -or
-    ('{0:00}' -f [int]$_.numero) -eq $normalized -or
-    [string]$_.numero -eq $normalized
-} | Select-Object -First 1
-
-if ($null -eq $entry) {
-    throw "No se encontro el modulo '$Module'. Usa el nombre del modelo (Planta), el numero (01) o el nombre del sidebar."
-}
+$runAll = $normalized -in @('all', 'todos', 'todo', '*', '-all')
 
 function Get-TestPath([string]$Fqcn) {
     $prefix = 'SysInescolara\Tests\'
@@ -61,7 +50,8 @@ function Invoke-Suite {
         [string]$Suite,
         [string]$TestPath,
         [string]$Filter,
-        [string]$LogName
+        [string]$LogName,
+        [switch]$Quiet
     )
 
     $logPath = Join-Path $root "tests\results\$LogName"
@@ -69,28 +59,35 @@ function Invoke-Suite {
         Remove-Item $logPath -Force
     }
 
-    if ($TestPath) {
-        Write-Host ""
-        Write-Host ">>> $Suite :: $TestPath" -ForegroundColor Cyan
+    # PHP escribe los error_log() en stderr. Con ErrorActionPreference=Stop,
+    # PowerShell 5.1 convertiria esa salida en un error terminante. Se captura
+    # como texto y se decide despues segun el codigo de salida de PHPUnit.
+    $previousPreference = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
 
-        & php 'vendor\phpunit\phpunit\phpunit' `
+    if ($TestPath) {
+        $output = & php 'vendor\phpunit\phpunit\phpunit' `
             -c 'tests\phpunit.xml' `
             $TestPath `
             --log-junit $logPath `
-            --do-not-cache-result
+            --do-not-cache-result 2>&1
     } else {
-        Write-Host ""
-        Write-Host ">>> $Suite :: --filter $Filter" -ForegroundColor Cyan
-
-        & php 'vendor\phpunit\phpunit\phpunit' `
+        $output = & php 'vendor\phpunit\phpunit\phpunit' `
             -c 'tests\phpunit.xml' `
             --testsuite $Suite `
             --filter $Filter `
             --log-junit $logPath `
-            --do-not-cache-result
+            --do-not-cache-result 2>&1
     }
 
     $exitCode = $LASTEXITCODE
+    $ErrorActionPreference = $previousPreference
+
+    if (-not $Quiet -or $exitCode -ne 0) {
+        foreach ($line in $output) {
+            Write-Host $line
+        }
+    }
 
     if (-not (Test-Path $logPath)) {
         throw "PHPUnit no genero el log $logPath"
@@ -102,15 +99,21 @@ function Invoke-Suite {
         $node = $node[0]
     }
 
+    $tests = [int]$node.tests
+    $failures = [int]$node.failures
+    $errors = [int]$node.errors
+    $skipped = [int]$node.skipped
+
     return [pscustomobject]@{
         Suite      = $Suite
         Filter     = if ($TestPath) { $TestPath } else { $Filter }
         ExitCode   = $exitCode
-        Tests      = [int]$node.tests
+        Tests      = $tests
         Assertions = [int]$node.assertions
-        Failures   = [int]$node.failures
-        Errors     = [int]$node.errors
-        Skipped    = [int]$node.skipped
+        Failures   = $failures
+        Errors     = $errors
+        Skipped    = $skipped
+        Pass       = $tests - $failures - $errors - $skipped
         Log        = $logPath
     }
 }
@@ -124,68 +127,180 @@ function Test-SuiteResult {
 
     $ok = $Actual.ExitCode -eq 0 `
         -and $Actual.Tests -eq [int]$Esperado.pruebas `
+        -and $Actual.Pass -eq [int]$Esperado.pass `
         -and $Actual.Failures -eq [int]$Esperado.fail `
         -and $Actual.Errors -eq 0 `
         -and $Actual.Skipped -eq [int]$Esperado.skip
-
-    $estado = if ($ok) { 'COINCIDE' } else { 'NO COINCIDE' }
-    $color = if ($ok) { 'Green' } else { 'Red' }
 
     [pscustomobject]@{
         Suite      = $Nombre
         Ejecutadas = $Actual.Tests
         Esperadas  = [int]$Esperado.pruebas
-        Pass       = [int]$Esperado.pass
+        Pass       = $Actual.Pass
+        EsperadasPass = [int]$Esperado.pass
         Fail       = $Actual.Failures
         Skip       = $Actual.Skipped
         Aserciones = $Actual.Assertions
-        Estado     = $estado
-        Color      = $color
+        Estado     = if ($ok) { 'COINCIDE' } else { 'NO COINCIDE' }
+        Ok         = $ok
         Log        = $Actual.Log
     }
 }
 
-$unitCase = $entry.casos[0]
-$integrationCase = $entry.casos[1]
-$smokeCase = $entry.casos[2]
+function Invoke-ModuleCheck {
+    param(
+        [pscustomobject]$Entry,
+        [switch]$Quiet
+    )
 
-$unitPath = Get-TestPath $unitCase.evidencia
-$integrationPath = Get-TestPath $integrationCase.evidencia
-$smokeId = [regex]::Match($smokeCase.evidencia, 'CP-SMOKE-\d{2}').Value
+    $unitCase = $Entry.casos[0]
+    $integrationCase = $Entry.casos[1]
+    $smokeCase = $Entry.casos[2]
 
-if ([string]::IsNullOrWhiteSpace($smokeId)) {
-    throw "No se pudo extraer el ID de humo desde: $($smokeCase.evidencia)"
+    $unitPath = Get-TestPath $unitCase.evidencia
+    $integrationPath = Get-TestPath $integrationCase.evidencia
+    $smokeId = [regex]::Match($smokeCase.evidencia, 'CP-SMOKE-\d{2}').Value
+
+    if ([string]::IsNullOrWhiteSpace($smokeId)) {
+        throw "No se pudo extraer el ID de humo desde: $($smokeCase.evidencia)"
+    }
+
+    if (-not $Quiet) {
+        Write-Host ""
+        Write-Host ">>> $($Entry.modelo) :: $unitPath" -ForegroundColor Cyan
+    }
+
+    $unitResult = Invoke-Suite -Suite 'Unit' -TestPath $unitPath -LogName "module-$($Entry.modelo)-unit.xml" -Quiet:$Quiet
+
+    if (-not $Quiet) {
+        Write-Host ">>> $($Entry.modelo) :: $integrationPath" -ForegroundColor Cyan
+    }
+
+    $integrationResult = Invoke-Suite -Suite 'Integration' -TestPath $integrationPath -LogName "module-$($Entry.modelo)-integration.xml" -Quiet:$Quiet
+
+    if (-not $Quiet) {
+        Write-Host ">>> $($Entry.modelo) :: --filter $smokeId" -ForegroundColor Cyan
+    }
+
+    $smokeResult = Invoke-Suite -Suite 'Smoke' -Filter $smokeId -LogName "module-$($Entry.modelo)-smoke.xml" -Quiet:$Quiet
+
+    $rows = @(
+        Test-SuiteResult -Nombre 'Unitaria' -Actual $unitResult -Esperado $unitCase
+        Test-SuiteResult -Nombre 'Integracion' -Actual $integrationResult -Esperado $integrationCase
+        Test-SuiteResult -Nombre 'Humo' -Actual $smokeResult -Esperado $smokeCase
+    )
+
+    $ok = ($rows | Where-Object { -not $_.Ok }).Count -eq 0
+
+    if (-not $Quiet) {
+        Write-Host ""
+        Write-Host "==================================================================" -ForegroundColor Yellow
+        Write-Host ("Modulo: {0} ({1}) - {2}" -f $Entry.modelo, $Entry.idRequisito, $Entry.moduloSidebar) -ForegroundColor Yellow
+        Write-Host "==================================================================" -ForegroundColor Yellow
+
+        $rows | Format-Table Suite, Ejecutadas, Esperadas, Pass, Fail, Skip, Aserciones, Estado -AutoSize | Out-Host
+
+        foreach ($row in $rows) {
+            Write-Host ("{0}: {1}" -f $row.Suite, $row.Estado) -ForegroundColor $(if ($row.Ok) { 'Green' } else { 'Red' })
+            Write-Host ("  Log: {0}" -f $row.Log) -ForegroundColor DarkGray
+        }
+    }
+
+    return [pscustomobject]@{
+        Numero      = [int]$Entry.numero
+        Modelo      = $Entry.modelo
+        Unit        = $rows[0]
+        Integration = $rows[1]
+        Smoke       = $rows[2]
+        Ok          = $ok
+    }
 }
 
-$unitResult = Invoke-Suite -Suite 'Unit' -TestPath $unitPath -LogName "module-$($entry.modelo)-unit.xml"
-$integrationResult = Invoke-Suite -Suite 'Integration' -TestPath $integrationPath -LogName "module-$($entry.modelo)-integration.xml"
-$smokeResult = Invoke-Suite -Suite 'Smoke' -Filter $smokeId -LogName "module-$($entry.modelo)-smoke.xml"
+function Format-Cell([pscustomobject]$Row) {
+    $text = "{0}/{1}" -f $Row.Pass, $Row.Ejecutadas
+    if ($Row.Skip -gt 0) {
+        $text += " ({0} skip)" -f $Row.Skip
+    }
+    return $text
+}
 
-$rows = @(
-    Test-SuiteResult -Nombre 'Unitaria' -Actual $unitResult -Esperado $unitCase
-    Test-SuiteResult -Nombre 'Integracion' -Actual $integrationResult -Esperado $integrationCase
-    Test-SuiteResult -Nombre 'Humo' -Actual $smokeResult -Esperado $smokeCase
-)
+$entries = if ($runAll) {
+    @($data.modulos)
+} else {
+    $entry = $data.modulos | Where-Object {
+        $_.modelo -ieq $normalized -or
+        $_.moduloSidebar -ieq $normalized -or
+        $_.idRequisito -ieq $normalized -or
+        ('{0:00}' -f [int]$_.numero) -eq $normalized -or
+        [string]$_.numero -eq $normalized
+    } | Select-Object -First 1
+
+    if ($null -eq $entry) {
+        throw "No se encontro el modulo '$Module'. Usa el nombre del modelo (Planta), el numero (01), el nombre del sidebar o 'all' para los 31."
+    }
+
+    @($entry)
+}
+
+$started = Get-Date
+$results = @()
+
+if ($runAll) {
+    Write-Host ""
+    Write-Host "Ejecutando los 31 modulos (Unit + Integration + Smoke)..." -ForegroundColor Yellow
+    Write-Host "Directorio: $root" -ForegroundColor DarkGray
+}
+
+foreach ($item in $entries) {
+    $check = Invoke-ModuleCheck -Entry $item -Quiet:$runAll
+    $results += $check
+
+    if ($runAll) {
+        $estado = if ($check.Ok) { 'COINCIDE' } else { 'NO COINCIDE' }
+        $color = if ($check.Ok) { 'Green' } else { 'Red' }
+        Write-Host ("[{0:00}/{1:00}] {2,-16} {3}" -f $check.Numero, $entries.Count, $check.Modelo, $estado) -ForegroundColor $color
+    }
+}
+
+$failed = @($results | Where-Object { -not $_.Ok })
+$elapsed = (Get-Date) - $started
 
 Write-Host ""
 Write-Host "==================================================================" -ForegroundColor Yellow
-Write-Host ("Modulo: {0} ({1}) - {2}" -f $entry.modelo, $entry.idRequisito, $entry.moduloSidebar) -ForegroundColor Yellow
+Write-Host "RESUMEN" -ForegroundColor Yellow
 Write-Host "==================================================================" -ForegroundColor Yellow
 
-$rows | Format-Table Suite, Ejecutadas, Esperadas, Pass, Fail, Skip, Aserciones, Estado -AutoSize
-
-foreach ($row in $rows) {
-    Write-Host ("{0}: {1}" -f $row.Suite, $row.Estado) -ForegroundColor $row.Color
-    Write-Host ("  Log: {0}" -f $row.Log) -ForegroundColor DarkGray
+$summary = $results | ForEach-Object {
+    [pscustomobject]@{
+        '#'            = '{0:00}' -f $_.Numero
+        Modelo         = $_.Modelo
+        Unitaria       = Format-Cell $_.Unit
+        Integracion    = Format-Cell $_.Integration
+        Humo           = Format-Cell $_.Smoke
+        Estado         = if ($_.Ok) { 'COINCIDE' } else { 'NO COINCIDE' }
+    }
 }
 
-$allOk = ($rows | Where-Object { $_.Estado -ne 'COINCIDE' }).Count -eq 0
+$summary | Format-Table -AutoSize | Out-Host
+
+$totalTests = ($results | ForEach-Object { $_.Unit.Ejecutadas + $_.Integration.Ejecutadas + $_.Smoke.Ejecutadas } | Measure-Object -Sum).Sum
+$totalAssertions = ($results | ForEach-Object { $_.Unit.Aserciones + $_.Integration.Aserciones + $_.Smoke.Aserciones } | Measure-Object -Sum).Sum
+$totalSkips = ($results | ForEach-Object { $_.Unit.Skip + $_.Integration.Skip + $_.Smoke.Skip } | Measure-Object -Sum).Sum
+$totalFails = ($results | ForEach-Object { $_.Unit.Fail + $_.Integration.Fail + $_.Smoke.Fail } | Measure-Object -Sum).Sum
+
+Write-Host ("Modulos: {0} | COINCIDE: {1} | NO COINCIDE: {2}" -f $results.Count, ($results.Count - $failed.Count), $failed.Count)
+Write-Host ("Pruebas: {0} | Aserciones: {1} | FAIL: {2} | SKIP: {3}" -f $totalTests, $totalAssertions, $totalFails, $totalSkips)
+Write-Host ("Tiempo: {0:n1} s" -f $elapsed.TotalSeconds)
+Write-Host ("XML por modulo: {0}" -f (Join-Path $root 'tests\results'))
 
 Write-Host ""
-if ($allOk) {
+if ($failed.Count -eq 0) {
     Write-Host "RESULTADO: COINCIDE con tests/traceability.json" -ForegroundColor Green
     exit 0
 }
 
 Write-Host "RESULTADO: NO COINCIDE con tests/traceability.json" -ForegroundColor Red
+foreach ($item in $failed) {
+    Write-Host ("  - {0:00} {1}" -f $item.Numero, $item.Modelo) -ForegroundColor Red
+}
 exit 1
