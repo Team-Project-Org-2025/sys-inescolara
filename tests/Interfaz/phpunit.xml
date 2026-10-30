@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="../../vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="bootstrap.php"
+         cacheDirectory=".phpunit.cache"
+         cacheResult="false"
+         colors="true"
+         executionOrder="default"
+         beStrictAboutOutputDuringTests="false"
+         beStrictAboutTestsThatDoNotTestAnything="false"
+         failOnRisky="false"
+         failOnWarning="false"
+         displayDetailsOnTestsThatTriggerDeprecations="true"
+         displayDetailsOnTestsThatTriggerErrors="true"
+         displayDetailsOnTestsThatTriggerNotices="true"
+         displayDetailsOnTestsThatTriggerWarnings="true">
+    <testsuites>
+        <testsuite name="Autenticacion">
+            <directory>Autenticacion</directory>
+        </testsuite>
+        <testsuite name="Navegacion">
+            <directory>Navegacion</directory>
+        </testsuite>
+        <testsuite name="Publico">
+            <directory>Publico</directory>
+        </testsuite>
+        <testsuite name="Catalogo">
+            <directory>Catalogo</directory>
+        </testsuite>
+        <testsuite name="Inventario">
+            <directory>Inventario</directory>
+        </testsuite>
+        <testsuite name="Comercial">
+            <directory>Comercial</directory>
+        </testsuite>
+        <testsuite name="Operaciones">
+            <directory>Operaciones</directory>
+        </testsuite>
+        <testsuite name="Sistema">
+            <directory>Sistema</directory>
+        </testsuite>
+    </testsuites>
+</phpunit>

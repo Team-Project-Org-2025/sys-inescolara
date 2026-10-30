@@ -3,6 +3,7 @@
 - **Instrucciones paso a paso:** [`GUIA_PRUEBAS.md`](GUIA_PRUEBAS.md)
 - **Comandos listos para copiar (3 por módulo):** [`COMANDOS_RAPIDOS.md`](COMANDOS_RAPIDOS.md)
 - **Matriz de trazabilidad:** [`TRACEABILITY.md`](TRACEABILITY.md) · [`traceability.json`](traceability.json)
+- **Pruebas de interfaz (Selenium):** [`Interfaz/README.md`](Interfaz/README.md)
 
 Suite PHPUnit 11.5 con tres niveles:
 
@@ -11,6 +12,7 @@ Suite PHPUnit 11.5 con tres niveles:
 | `Unit` | `tests/Unit` | No | Getters, setters, `fill`, validaciones y lógica pura |
 | `Integration` | `tests/Integration` | SQLite en memoria | SQL real de los modelos, CRUD y flujos entre tablas |
 | `Smoke` | `tests/Smoke` | No | Autoload, contratos de clases, archivos y arranque |
+| `Interfaz` | `tests/Interfaz` | MySQL real | Flujos E2E en navegador con Selenium |
 
 ## Comandos
 
@@ -33,6 +35,13 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\run-module.ps1 P
 
 # Los 31 módulos, con resumen y comparación automática
 powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\run-module.ps1 all
+
+# Interfaz: preparar ChromeDriver, usuario y carpetas
+powershell -ExecutionPolicy Bypass -File tests\tools\setup-interfaz.ps1
+
+# Interfaz: toda la suite o una suite concreta
+powershell -ExecutionPolicy Bypass -File tests\tools\run-interfaz.ps1
+powershell -ExecutionPolicy Bypass -File tests\tools\run-interfaz.ps1 -Suite Comercial
 ```
 
 ## Estructura
