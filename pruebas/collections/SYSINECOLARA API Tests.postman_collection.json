@@ -1,0 +1,1303 @@
+{
+  "info": {
+    "_postman_id": "a7f4c2e1-5b9d-4c3a-8e21-6f0d4b7c9a10",
+    "name": "SYSINECOLARA — Pruebas API",
+    "description": "Pruebas automatizadas de los endpoints JSON de SYSINECOLARA (sesión PHP + CSRF + CRUD de Plantas).\n\nOrden: 00 logout → 01 GET login (CSRF) → 02 POST login → GETs → CRUD de Plantas.\nEjecutar con el environment \"SysInescolara Local\" y, para las 3 filas, con data/plantas.csv.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "00 · Autenticación",
+      "item": [
+        {
+          "name": "00 · GET /login/logout — limpiar sesión anterior",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Limpieza de estado de ejecuciones anteriores.",
+                  "['authCookie', 'csrfToken', 'createdPlantId', 'loginOk'].forEach((key) => {",
+                  "  pm.environment.unset(key);",
+                  "});",
+                  "",
+                  "// Vaciar el cookie jar para no arrastrar una sesión autenticada.",
+                  "try {",
+                  "  pm.cookies.jar().clear(pm.request.url, function () {});",
+                  "} catch (e) {",
+                  "  console.log('No se pudo limpiar el cookie jar:', e.message);",
+                  "}",
+                  "",
+                  "// Quitar cualquier header Cookie inyectado manualmente.",
+                  "pm.request.headers.remove('Cookie');",
+                  "",
+                  "console.log('Estado de sesión limpiado.');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// El logout siempre redirige a /login, exista o no una sesión activa.",
+                  "pm.test('Logout responde 302 (o llega al login)', () => {",
+                  "  pm.expect([302, 200], 'Status recibido: ' + pm.response.code).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 302) {",
+                  "  pm.test('Location contiene /login', () => {",
+                  "    pm.expect(pm.response.headers.get('Location') || '').to.include('/login');",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "text/html"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/login/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login",
+                "logout"
+              ]
+            },
+            "description": "Best-effort: destruye cualquier sesión previa para que la corrida sea reproducible."
+          },
+          "response": []
+        },
+        {
+          "name": "01 · GET /login — sesión y CSRF",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Variables de sesión limpias para esta ejecución.",
+                  "['authCookie', 'csrfToken', 'createdPlantId', 'loginOk'].forEach((key) => {",
+                  "  pm.environment.unset(key);",
+                  "});",
+                  "",
+                  "try {",
+                  "  pm.cookies.jar().clear(pm.request.url, function () {});",
+                  "} catch (e) {",
+                  "  console.log('No se pudo limpiar el cookie jar:', e.message);",
+                  "}",
+                  "",
+                  "pm.request.headers.remove('Cookie');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ============================================================",
+                  "// 1) Obtener la sesión anónima + token CSRF del formulario de login",
+                  "// ============================================================",
+                  "const html = pm.response.text();",
+                  "",
+                  "pm.test('a) Status code 200', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('b) Tiempo de respuesta < 2000 ms', () => {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});",
+                  "",
+                  "pm.test('c) La respuesta es HTML', () => {",
+                  "  pm.expect(pm.response.headers.get('Content-Type') || '').to.include('text/html');",
+                  "});",
+                  "",
+                  "pm.test('Formulario de login presente', () => {",
+                  "  pm.expect(html).to.include('id=\"loginForm\"');",
+                  "});",
+                  "",
+                  "// Busca <input type=\"hidden\" name=\"_csrf_token\" value=\"...\">",
+                  "const csrfMatch = html.match(/name=\"_csrf_token\"\\s+value=\"([a-f0-9]{32,})\"/i);",
+                  "pm.test('Token CSRF presente en el HTML', () => {",
+                  "  pm.expect(csrfMatch, 'No se encontró _csrf_token en el HTML').to.not.be.null;",
+                  "});",
+                  "",
+                  "if (csrfMatch) {",
+                  "  pm.environment.set('csrfToken', csrfMatch[1]);",
+                  "  console.log('csrfToken capturado (' + csrfMatch[1].length + ' caracteres).');",
+                  "}",
+                  "",
+                  "// Captura la PHPSESSID anónima: el token CSRF pertenece a ESTA sesión.",
+                  "let sessionId = null;",
+                  "try {",
+                  "  sessionId = pm.cookies.get('PHPSESSID');",
+                  "} catch (e) {",
+                  "  sessionId = null;",
+                  "}",
+                  "",
+                  "if (!sessionId) {",
+                  "  const raw = pm.response.headers.get('Set-Cookie') || '';",
+                  "  const match = raw.match(/PHPSESSID=([^;]+)/);",
+                  "  if (match) sessionId = match[1];",
+                  "}",
+                  "",
+                  "pm.test('Cookie PHPSESSID inicial capturada', () => {",
+                  "  pm.expect(sessionId, 'No se encontró PHPSESSID').to.be.a('string');",
+                  "  pm.expect(sessionId.length).to.be.above(0);",
+                  "});",
+                  "",
+                  "if (sessionId) {",
+                  "  pm.environment.set('authCookie', sessionId);",
+                  "  console.log('PHPSESSID inicial guardada en el environment.');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "text/html"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            },
+            "description": "Obtiene PHPSESSID anónima y extrae el _csrf_token del formulario."
+          },
+          "response": []
+        },
+        {
+          "name": "02 · POST /login — autenticación",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get('csrfToken')) {",
+                  "  throw new Error('Falta csrfToken. Ejecuta primero \"01 · GET /login — sesión y CSRF\".');",
+                  "}",
+                  "if (!pm.environment.get('authCookie')) {",
+                  "  throw new Error('Falta authCookie. Ejecuta primero \"01 · GET /login — sesión y CSRF\".');",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ============================================================",
+                  "// 2) Autenticación. La API responde 302 -> /dashboard si es correcta.",
+                  "//    Si Postman sigue la redirección, llega un 200 con el dashboard.",
+                  "// ============================================================",
+                  "const location = pm.response.headers.get('Location') || '';",
+                  "const bodyText = pm.response.text();",
+                  "const isRedirect = pm.response.code === 302 && location.includes('/dashboard');",
+                  "const isDashboard = pm.response.code === 200 && !/id=\"loginForm\"/i.test(bodyText);",
+                  "",
+                  "pm.test('Status 302 (o dashboard si se siguió la redirección)', () => {",
+                  "  pm.expect(pm.response.code, 'Status recibido: ' + pm.response.code).to.satisfy(",
+                  "    (code) => code === 302 || (code === 200 && isDashboard)",
+                  "  );",
+                  "});",
+                  "",
+                  "pm.test('La respuesta NO es el formulario de login', () => {",
+                  "  pm.expect(bodyText).to.not.include('id=\"loginForm\"');",
+                  "});",
+                  "",
+                  "if (pm.response.code === 302) {",
+                  "  pm.test('Location contiene /dashboard', () => {",
+                  "    pm.expect(location).to.include('/dashboard');",
+                  "  });",
+                  "}",
+                  "",
+                  "// Mensaje de diagnóstico si el login fue rechazado.",
+                  "if (pm.response.code === 200) {",
+                  "  const hint = /Verificación de seguridad fallida|Usuario o contraseña incorrectos|complete todos los campos/i.exec(bodyText);",
+                  "  if (hint) console.error('Login rechazado: ' + hint[0]);",
+                  "}",
+                  "",
+                  "// ------------------------------------------------------------",
+                  "// Captura de la NUEVA cookie tras session_regenerate_id(true)",
+                  "// ------------------------------------------------------------",
+                  "let sessionId = null;",
+                  "try {",
+                  "  sessionId = pm.cookies.get('PHPSESSID');",
+                  "} catch (e) {",
+                  "  sessionId = null;",
+                  "}",
+                  "",
+                  "if (!sessionId) {",
+                  "  const raw = pm.response.headers.get('Set-Cookie') || '';",
+                  "  const match = raw.match(/PHPSESSID=([^;]+)/);",
+                  "  if (match) sessionId = match[1];",
+                  "}",
+                  "",
+                  "pm.test('Nueva PHPSESSID capturada', () => {",
+                  "  pm.expect(sessionId, 'No se encontró PHPSESSID en la respuesta').to.be.a('string');",
+                  "  pm.expect(sessionId.length).to.be.above(0);",
+                  "});",
+                  "",
+                  "if (isRedirect && sessionId) {",
+                  "  pm.environment.set('authCookie', sessionId);",
+                  "  pm.environment.set('loginOk', 'true');",
+                  "  console.log('Login OK. PHPSESSID autenticada guardada en el environment.');",
+                  "} else if (!isRedirect) {",
+                  "  pm.test('Credenciales y reCAPTCHA válidos', () => {",
+                  "    pm.expect(isRedirect, 'Login falló: revisa usuario, password y reCAPTCHA').to.equal(true);",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "nombre_usuario",
+                  "value": "{{usuario}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{password}}",
+                  "type": "text"
+                },
+                {
+                  "key": "g-recaptcha-response",
+                  "value": "{{recaptchaToken}}",
+                  "type": "text"
+                },
+                {
+                  "key": "_csrf_token",
+                  "value": "{{csrfToken}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            },
+            "description": "Autentica y captura la nueva PHPSESSID (session_regenerate_id). En local usa las llaves de prueba de reCAPTCHA; ver README."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "10 · GET (listados)",
+      "item": [
+        {
+          "name": "09 · GET Especies (setup de especie_id)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let body = null;",
+                  "try {",
+                  "  body = pm.response.json();",
+                  "} catch (e) {",
+                  "  body = null;",
+                  "}",
+                  "",
+                  "pm.test('a) Status code 200', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('b) Tiempo de respuesta < 1000 ms', () => {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(1000);",
+                  "});",
+                  "",
+                  "pm.test('c) La respuesta es JSON válido', () => {",
+                  "  pm.expect(body).to.be.an('object');",
+                  "  pm.expect(body).to.not.be.null;",
+                  "});",
+                  "",
+                  "pm.test('d) especies es un array con datos', () => {",
+                  "  pm.expect(body).to.have.property('especies').that.is.an('array');",
+                  "  pm.expect(body.especies.length, 'No hay especies: crea una antes de correr el CRUD').to.be.above(0);",
+                  "});",
+                  "",
+                  "// Guarda la primera especie para que \"20 · POST Plantas — crear\" la use.",
+                  "if (body && Array.isArray(body.especies) && body.especies.length > 0) {",
+                  "  const speciesId = Number(body.especies[0].id);",
+                  "  if (speciesId > 0) {",
+                  "    pm.environment.set('especieId', speciesId);",
+                  "    console.log('especieId para las pruebas =', speciesId);",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Requested-With",
+                "value": "XMLHttpRequest"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/especies/get_species",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "especies",
+                "get_species"
+              ]
+            },
+            "description": "Determina una especie válida para la creación de plantas por CSV."
+          },
+          "response": []
+        },
+        {
+          "name": "10 · GET Plantas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ============================================================",
+                  "// Endpoint GET: /plantas/get_plants",
+                  "// Contrato real: { success: true, plantas: [...], count: n }",
+                  "// NOTA: este proyecto NO devuelve el formato DataTables todavía.",
+                  "// ============================================================",
+                  "let body = null;",
+                  "try {",
+                  "  body = pm.response.json();",
+                  "} catch (e) {",
+                  "  body = null;",
+                  "}",
+                  "",
+                  "const limit = Number(pm.environment.get('maxResponseTime') || 1000);",
+                  "",
+                  "pm.test('a) Status code 200', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('b) Tiempo de respuesta < ' + limit + ' ms', () => {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(limit);",
+                  "});",
+                  "",
+                  "pm.test('c) Content-Type application/json', () => {",
+                  "  pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json');",
+                  "});",
+                  "",
+                  "pm.test('c) La respuesta es JSON válido', () => {",
+                  "  pm.expect(body, 'El cuerpo no es JSON parseable').to.be.an('object');",
+                  "  pm.expect(body).to.not.be.null;",
+                  "});",
+                  "",
+                  "pm.test('Contrato: success === true', () => {",
+                  "  pm.expect(body).to.have.property('success', true);",
+                  "});",
+                  "",
+                  "pm.test('d) La propiedad \"plantas\" es un array', () => {",
+                  "  pm.expect(body).to.have.property('plantas').that.is.an('array');",
+                  "});",
+                  "",
+                  "// El array vacío es válido si la tabla aún no tiene datos. Indica en",
+                  "// \"seededCollections\" (environment) qué módulos SÍ deben traer registros.",
+                  "const seeded = (pm.environment.get('seededCollections') || 'plantas,lotes,especies')",
+                  "  .split(',')",
+                  "  .map((item) => item.trim())",
+                  "  .filter(Boolean);",
+                  "",
+                  "if (seeded.includes('plantas')) {",
+                  "  pm.test('d) El array \"plantas\" no está vacío', () => {",
+                  "    pm.expect(body['plantas'].length, '\"plantas\" llegó vacío (revisa el seed de la BD)').to.be.above(0);",
+                  "  });",
+                  "} else {",
+                  "  console.log('\"plantas\" puede estar vacío. Agrégalo a seededCollections si tu BD tiene datos.');",
+                  "}",
+                  "",
+                  "// Si el endpoint migra al formato DataTables server-side, estas",
+                  "// comprobaciones se activan automáticamente.",
+                  "if (body && ('recordsTotal' in body || 'data' in body)) {",
+                  "  pm.test('d) Estructura DataTables (data/recordsTotal/recordsFiltered)', () => {",
+                  "    pm.expect(body).to.have.property('data').that.is.an('array');",
+                  "    pm.expect(body).to.have.property('recordsTotal').that.is.a('number');",
+                  "    pm.expect(body).to.have.property('recordsFiltered').that.is.a('number');",
+                  "    pm.expect(body.data.length).to.be.above(0);",
+                  "  });",
+                  "}",
+                  "",
+                  "console.log(",
+                  "  '[plantas] ' + (body && body['plantas'] ? body['plantas'].length : 0) +",
+                  "  ' registros · ' + pm.response.responseTime + ' ms'",
+                  ");"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Requested-With",
+                "value": "XMLHttpRequest"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/plantas/get_plants",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "plantas",
+                "get_plants"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "11 · GET Clientes",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ============================================================",
+                  "// Endpoint GET: /clientes/get_clients",
+                  "// Contrato real: { success: true, clientes: [...], count: n }",
+                  "// NOTA: este proyecto NO devuelve el formato DataTables todavía.",
+                  "// ============================================================",
+                  "let body = null;",
+                  "try {",
+                  "  body = pm.response.json();",
+                  "} catch (e) {",
+                  "  body = null;",
+                  "}",
+                  "",
+                  "const limit = Number(pm.environment.get('maxResponseTime') || 1000);",
+                  "",
+                  "pm.test('a) Status code 200', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('b) Tiempo de respuesta < ' + limit + ' ms', () => {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(limit);",
+                  "});",
+                  "",
+                  "pm.test('c) Content-Type application/json', () => {",
+                  "  pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json');",
+                  "});",
+                  "",
+                  "pm.test('c) La respuesta es JSON válido', () => {",
+                  "  pm.expect(body, 'El cuerpo no es JSON parseable').to.be.an('object');",
+                  "  pm.expect(body).to.not.be.null;",
+                  "});",
+                  "",
+                  "pm.test('Contrato: success === true', () => {",
+                  "  pm.expect(body).to.have.property('success', true);",
+                  "});",
+                  "",
+                  "pm.test('d) La propiedad \"clientes\" es un array', () => {",
+                  "  pm.expect(body).to.have.property('clientes').that.is.an('array');",
+                  "});",
+                  "",
+                  "// El array vacío es válido si la tabla aún no tiene datos. Indica en",
+                  "// \"seededCollections\" (environment) qué módulos SÍ deben traer registros.",
+                  "const seeded = (pm.environment.get('seededCollections') || 'plantas,lotes,especies')",
+                  "  .split(',')",
+                  "  .map((item) => item.trim())",
+                  "  .filter(Boolean);",
+                  "",
+                  "if (seeded.includes('clientes')) {",
+                  "  pm.test('d) El array \"clientes\" no está vacío', () => {",
+                  "    pm.expect(body['clientes'].length, '\"clientes\" llegó vacío (revisa el seed de la BD)').to.be.above(0);",
+                  "  });",
+                  "} else {",
+                  "  console.log('\"clientes\" puede estar vacío. Agrégalo a seededCollections si tu BD tiene datos.');",
+                  "}",
+                  "",
+                  "// Si el endpoint migra al formato DataTables server-side, estas",
+                  "// comprobaciones se activan automáticamente.",
+                  "if (body && ('recordsTotal' in body || 'data' in body)) {",
+                  "  pm.test('d) Estructura DataTables (data/recordsTotal/recordsFiltered)', () => {",
+                  "    pm.expect(body).to.have.property('data').that.is.an('array');",
+                  "    pm.expect(body).to.have.property('recordsTotal').that.is.a('number');",
+                  "    pm.expect(body).to.have.property('recordsFiltered').that.is.a('number');",
+                  "    pm.expect(body.data.length).to.be.above(0);",
+                  "  });",
+                  "}",
+                  "",
+                  "console.log(",
+                  "  '[clientes] ' + (body && body['clientes'] ? body['clientes'].length : 0) +",
+                  "  ' registros · ' + pm.response.responseTime + ' ms'",
+                  ");"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Requested-With",
+                "value": "XMLHttpRequest"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/clientes/get_clients",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "clientes",
+                "get_clients"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "12 · GET Insumos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ============================================================",
+                  "// Endpoint GET: /insumos/get_supplies",
+                  "// Contrato real: { success: true, supplies: [...], count: n }",
+                  "// NOTA: este proyecto NO devuelve el formato DataTables todavía.",
+                  "// ============================================================",
+                  "let body = null;",
+                  "try {",
+                  "  body = pm.response.json();",
+                  "} catch (e) {",
+                  "  body = null;",
+                  "}",
+                  "",
+                  "const limit = Number(pm.environment.get('maxResponseTime') || 1000);",
+                  "",
+                  "pm.test('a) Status code 200', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('b) Tiempo de respuesta < ' + limit + ' ms', () => {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(limit);",
+                  "});",
+                  "",
+                  "pm.test('c) Content-Type application/json', () => {",
+                  "  pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json');",
+                  "});",
+                  "",
+                  "pm.test('c) La respuesta es JSON válido', () => {",
+                  "  pm.expect(body, 'El cuerpo no es JSON parseable').to.be.an('object');",
+                  "  pm.expect(body).to.not.be.null;",
+                  "});",
+                  "",
+                  "pm.test('Contrato: success === true', () => {",
+                  "  pm.expect(body).to.have.property('success', true);",
+                  "});",
+                  "",
+                  "pm.test('d) La propiedad \"supplies\" es un array', () => {",
+                  "  pm.expect(body).to.have.property('supplies').that.is.an('array');",
+                  "});",
+                  "",
+                  "// El array vacío es válido si la tabla aún no tiene datos. Indica en",
+                  "// \"seededCollections\" (environment) qué módulos SÍ deben traer registros.",
+                  "const seeded = (pm.environment.get('seededCollections') || 'plantas,lotes,especies')",
+                  "  .split(',')",
+                  "  .map((item) => item.trim())",
+                  "  .filter(Boolean);",
+                  "",
+                  "if (seeded.includes('supplies')) {",
+                  "  pm.test('d) El array \"supplies\" no está vacío', () => {",
+                  "    pm.expect(body['supplies'].length, '\"supplies\" llegó vacío (revisa el seed de la BD)').to.be.above(0);",
+                  "  });",
+                  "} else {",
+                  "  console.log('\"supplies\" puede estar vacío. Agrégalo a seededCollections si tu BD tiene datos.');",
+                  "}",
+                  "",
+                  "// Si el endpoint migra al formato DataTables server-side, estas",
+                  "// comprobaciones se activan automáticamente.",
+                  "if (body && ('recordsTotal' in body || 'data' in body)) {",
+                  "  pm.test('d) Estructura DataTables (data/recordsTotal/recordsFiltered)', () => {",
+                  "    pm.expect(body).to.have.property('data').that.is.an('array');",
+                  "    pm.expect(body).to.have.property('recordsTotal').that.is.a('number');",
+                  "    pm.expect(body).to.have.property('recordsFiltered').that.is.a('number');",
+                  "    pm.expect(body.data.length).to.be.above(0);",
+                  "  });",
+                  "}",
+                  "",
+                  "console.log(",
+                  "  '[supplies] ' + (body && body['supplies'] ? body['supplies'].length : 0) +",
+                  "  ' registros · ' + pm.response.responseTime + ' ms'",
+                  ");"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Requested-With",
+                "value": "XMLHttpRequest"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/insumos/get_supplies",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "insumos",
+                "get_supplies"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "13 · GET Lotes",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ============================================================",
+                  "// Endpoint GET: /lotes/get_batches",
+                  "// Contrato real: { success: true, lotes: [...], count: n }",
+                  "// NOTA: este proyecto NO devuelve el formato DataTables todavía.",
+                  "// ============================================================",
+                  "let body = null;",
+                  "try {",
+                  "  body = pm.response.json();",
+                  "} catch (e) {",
+                  "  body = null;",
+                  "}",
+                  "",
+                  "const limit = Number(pm.environment.get('maxResponseTime') || 1000);",
+                  "",
+                  "pm.test('a) Status code 200', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('b) Tiempo de respuesta < ' + limit + ' ms', () => {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(limit);",
+                  "});",
+                  "",
+                  "pm.test('c) Content-Type application/json', () => {",
+                  "  pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json');",
+                  "});",
+                  "",
+                  "pm.test('c) La respuesta es JSON válido', () => {",
+                  "  pm.expect(body, 'El cuerpo no es JSON parseable').to.be.an('object');",
+                  "  pm.expect(body).to.not.be.null;",
+                  "});",
+                  "",
+                  "pm.test('Contrato: success === true', () => {",
+                  "  pm.expect(body).to.have.property('success', true);",
+                  "});",
+                  "",
+                  "pm.test('d) La propiedad \"lotes\" es un array', () => {",
+                  "  pm.expect(body).to.have.property('lotes').that.is.an('array');",
+                  "});",
+                  "",
+                  "// El array vacío es válido si la tabla aún no tiene datos. Indica en",
+                  "// \"seededCollections\" (environment) qué módulos SÍ deben traer registros.",
+                  "const seeded = (pm.environment.get('seededCollections') || 'plantas,lotes,especies')",
+                  "  .split(',')",
+                  "  .map((item) => item.trim())",
+                  "  .filter(Boolean);",
+                  "",
+                  "if (seeded.includes('lotes')) {",
+                  "  pm.test('d) El array \"lotes\" no está vacío', () => {",
+                  "    pm.expect(body['lotes'].length, '\"lotes\" llegó vacío (revisa el seed de la BD)').to.be.above(0);",
+                  "  });",
+                  "} else {",
+                  "  console.log('\"lotes\" puede estar vacío. Agrégalo a seededCollections si tu BD tiene datos.');",
+                  "}",
+                  "",
+                  "// Si el endpoint migra al formato DataTables server-side, estas",
+                  "// comprobaciones se activan automáticamente.",
+                  "if (body && ('recordsTotal' in body || 'data' in body)) {",
+                  "  pm.test('d) Estructura DataTables (data/recordsTotal/recordsFiltered)', () => {",
+                  "    pm.expect(body).to.have.property('data').that.is.an('array');",
+                  "    pm.expect(body).to.have.property('recordsTotal').that.is.a('number');",
+                  "    pm.expect(body).to.have.property('recordsFiltered').that.is.a('number');",
+                  "    pm.expect(body.data.length).to.be.above(0);",
+                  "  });",
+                  "}",
+                  "",
+                  "console.log(",
+                  "  '[lotes] ' + (body && body['lotes'] ? body['lotes'].length : 0) +",
+                  "  ' registros · ' + pm.response.responseTime + ' ms'",
+                  ");"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Requested-With",
+                "value": "XMLHttpRequest"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/lotes/get_batches",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "lotes",
+                "get_batches"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "14 · GET Ventas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ============================================================",
+                  "// Endpoint GET: /ventas/listar",
+                  "// Contrato real: { success: true, ventas: [...], count: n }",
+                  "// NOTA: este proyecto NO devuelve el formato DataTables todavía.",
+                  "// ============================================================",
+                  "let body = null;",
+                  "try {",
+                  "  body = pm.response.json();",
+                  "} catch (e) {",
+                  "  body = null;",
+                  "}",
+                  "",
+                  "const limit = Number(pm.environment.get('maxResponseTime') || 1000);",
+                  "",
+                  "pm.test('a) Status code 200', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('b) Tiempo de respuesta < ' + limit + ' ms', () => {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(limit);",
+                  "});",
+                  "",
+                  "pm.test('c) Content-Type application/json', () => {",
+                  "  pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json');",
+                  "});",
+                  "",
+                  "pm.test('c) La respuesta es JSON válido', () => {",
+                  "  pm.expect(body, 'El cuerpo no es JSON parseable').to.be.an('object');",
+                  "  pm.expect(body).to.not.be.null;",
+                  "});",
+                  "",
+                  "pm.test('Contrato: success === true', () => {",
+                  "  pm.expect(body).to.have.property('success', true);",
+                  "});",
+                  "",
+                  "pm.test('d) La propiedad \"ventas\" es un array', () => {",
+                  "  pm.expect(body).to.have.property('ventas').that.is.an('array');",
+                  "});",
+                  "",
+                  "// El array vacío es válido si la tabla aún no tiene datos. Indica en",
+                  "// \"seededCollections\" (environment) qué módulos SÍ deben traer registros.",
+                  "const seeded = (pm.environment.get('seededCollections') || 'plantas,lotes,especies')",
+                  "  .split(',')",
+                  "  .map((item) => item.trim())",
+                  "  .filter(Boolean);",
+                  "",
+                  "if (seeded.includes('ventas')) {",
+                  "  pm.test('d) El array \"ventas\" no está vacío', () => {",
+                  "    pm.expect(body['ventas'].length, '\"ventas\" llegó vacío (revisa el seed de la BD)').to.be.above(0);",
+                  "  });",
+                  "} else {",
+                  "  console.log('\"ventas\" puede estar vacío. Agrégalo a seededCollections si tu BD tiene datos.');",
+                  "}",
+                  "",
+                  "// Si el endpoint migra al formato DataTables server-side, estas",
+                  "// comprobaciones se activan automáticamente.",
+                  "if (body && ('recordsTotal' in body || 'data' in body)) {",
+                  "  pm.test('d) Estructura DataTables (data/recordsTotal/recordsFiltered)', () => {",
+                  "    pm.expect(body).to.have.property('data').that.is.an('array');",
+                  "    pm.expect(body).to.have.property('recordsTotal').that.is.a('number');",
+                  "    pm.expect(body).to.have.property('recordsFiltered').that.is.a('number');",
+                  "    pm.expect(body.data.length).to.be.above(0);",
+                  "  });",
+                  "}",
+                  "",
+                  "console.log(",
+                  "  '[ventas] ' + (body && body['ventas'] ? body['ventas'].length : 0) +",
+                  "  ' registros · ' + pm.response.responseTime + ' ms'",
+                  ");"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Requested-With",
+                "value": "XMLHttpRequest"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ventas/listar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ventas",
+                "listar"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "20 · POST (escritura y limpieza)",
+      "item": [
+        {
+          "name": "20 · POST Plantas — crear (CSV)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ============================================================",
+                  "// Resolución de datos para Data-Driven Testing.",
+                  "// Si se ejecuta con -d plantas.csv, usa la fila de la iteración.",
+                  "// Si se envía suelto (sin CSV), genera valores por defecto.",
+                  "// ============================================================",
+                  "function fromCsvOr(key, fallback) {",
+                  "  let value;",
+                  "  try {",
+                  "    value = pm.iterationData.get(key);",
+                  "  } catch (e) {",
+                  "    value = undefined;",
+                  "  }",
+                  "  if (value === undefined || value === null || String(value).trim() === '') {",
+                  "    value = fallback;",
+                  "  }",
+                  "  pm.variables.set(key, String(value));",
+                  "}",
+                  "",
+                  "fromCsvOr('nombre_comun', 'Planta Postman');",
+                  "fromCsvOr('nombre_tecnico', 'Especie de prueba');",
+                  "fromCsvOr('especie_id', pm.environment.get('especieId') || '1');",
+                  "",
+                  "if (!pm.environment.get('authCookie')) {",
+                  "  throw new Error('Falta authCookie. Ejecuta el login antes de crear plantas.');",
+                  "}",
+                  "",
+                  "console.log('Creando planta:', pm.variables.get('nombre_comun'), '| especie_id:', pm.variables.get('especie_id'));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let body = null;",
+                  "try {",
+                  "  body = pm.response.json();",
+                  "} catch (e) {",
+                  "  body = null;",
+                  "}",
+                  "",
+                  "pm.test('Status 200 o 201', () => {",
+                  "  pm.expect([200, 201], 'Status recibido: ' + pm.response.code).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "pm.test('Content-Type application/json', () => {",
+                  "  pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json');",
+                  "});",
+                  "",
+                  "pm.test('JSON válido', () => {",
+                  "  pm.expect(body).to.be.an('object');",
+                  "  pm.expect(body).to.not.be.null;",
+                  "});",
+                  "",
+                  "pm.test('success === true', () => {",
+                  "  pm.expect(body).to.have.property('success', true);",
+                  "});",
+                  "",
+                  "pm.test('Incluye un mensaje de éxito', () => {",
+                  "  pm.expect(body.message).to.be.a('string');",
+                  "  pm.expect(body.message.trim()).to.not.equal('');",
+                  "});",
+                  "",
+                  "pm.test('Devuelve el ID de la planta creada', () => {",
+                  "  pm.expect(body).to.have.nested.property('plant.id');",
+                  "  pm.expect(body.plant.id).to.be.a('number').and.to.be.above(0);",
+                  "});",
+                  "",
+                  "if (body && body.success === true && body.plant && body.plant.id) {",
+                  "  pm.environment.set('createdPlantId', body.plant.id);",
+                  "  console.log('createdPlantId =', body.plant.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              },
+              {
+                "key": "X-Requested-With",
+                "value": "XMLHttpRequest"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "nombre_comun",
+                  "value": "{{nombre_comun}}",
+                  "type": "text"
+                },
+                {
+                  "key": "nombre_tecnico",
+                  "value": "{{nombre_tecnico}}",
+                  "type": "text"
+                },
+                {
+                  "key": "especie_id",
+                  "value": "{{especie_id}}",
+                  "type": "text"
+                },
+                {
+                  "key": "_csrf_token",
+                  "value": "{{csrfToken}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/plantas/add_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "plantas",
+                "add_ajax"
+              ]
+            },
+            "description": "Se ejecuta una vez por fila de data/plantas.csv."
+          },
+          "response": []
+        },
+        {
+          "name": "21 · POST Plantas — editar",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let body = null;",
+                  "try {",
+                  "  body = pm.response.json();",
+                  "} catch (e) {",
+                  "  body = null;",
+                  "}",
+                  "",
+                  "const expectedId = Number(pm.environment.get('createdPlantId') || 0);",
+                  "",
+                  "pm.test('Status 200', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('success === true', () => {",
+                  "  pm.expect(body).to.have.property('success', true);",
+                  "});",
+                  "",
+                  "pm.test('Mensaje de actualización', () => {",
+                  "  pm.expect(body.message).to.be.a('string');",
+                  "  pm.expect(body.message.toLowerCase()).to.include('actualizada');",
+                  "});",
+                  "",
+                  "pm.test('Actualiza la planta creada en esta iteración', () => {",
+                  "  pm.expect(body).to.have.nested.property('plant.id');",
+                  "  pm.expect(body.plant.id).to.equal(expectedId);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              },
+              {
+                "key": "X-Requested-With",
+                "value": "XMLHttpRequest"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id",
+                  "value": "{{createdPlantId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "nombre_comun",
+                  "value": "{{nombre_comun}} Editada",
+                  "type": "text"
+                },
+                {
+                  "key": "nombre_tecnico",
+                  "value": "{{nombre_tecnico}}",
+                  "type": "text"
+                },
+                {
+                  "key": "especie_id",
+                  "value": "{{especie_id}}",
+                  "type": "text"
+                },
+                {
+                  "key": "_csrf_token",
+                  "value": "{{csrfToken}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/plantas/edit_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "plantas",
+                "edit_ajax"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "22 · POST Plantas — eliminar (limpieza)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let body = null;",
+                  "try {",
+                  "  body = pm.response.json();",
+                  "} catch (e) {",
+                  "  body = null;",
+                  "}",
+                  "",
+                  "const expectedId = Number(pm.environment.get('createdPlantId') || 0);",
+                  "",
+                  "pm.test('Status 200', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('success === true', () => {",
+                  "  pm.expect(body).to.have.property('success', true);",
+                  "});",
+                  "",
+                  "pm.test('Mensaje de desactivación', () => {",
+                  "  pm.expect(body.message).to.be.a('string');",
+                  "  pm.expect(body.message.toLowerCase()).to.include('desactivada');",
+                  "});",
+                  "",
+                  "pm.test('El ID eliminado coincide con el creado', () => {",
+                  "  pm.expect(body.plantId).to.equal(expectedId);",
+                  "});",
+                  "",
+                  "// Limpieza del estado para la siguiente iteración del CSV.",
+                  "if (body && body.success === true) {",
+                  "  pm.environment.unset('createdPlantId');",
+                  "  console.log('Planta de prueba desactivada (soft delete).');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              },
+              {
+                "key": "X-Requested-With",
+                "value": "XMLHttpRequest"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id",
+                  "value": "{{createdPlantId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "_csrf_token",
+                  "value": "{{csrfToken}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/plantas/delete_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "plantas",
+                "delete_ajax"
+              ]
+            },
+            "description": "Soft delete de la planta creada en la misma iteración."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// ============================================================",
+          "// SYSINECOLARA · Pre-request global (corre en TODAS las peticiones)",
+          "// Inyecta la sesión PHP y el token CSRF guardados en el environment.",
+          "// ============================================================",
+          "const requestName = pm.info.requestName || '';",
+          "",
+          "// 00 y 01 crean/limpian la sesión: no deben reutilizar la cookie anterior.",
+          "const isSessionBootstrap = requestName.startsWith('00') || requestName.startsWith('01');",
+          "",
+          "if (!isSessionBootstrap) {",
+          "  const sessionId = pm.environment.get('authCookie');",
+          "  if (sessionId) {",
+          "    // Header explícito: funciona igual en local y en Render, aunque el",
+          "    // cookie jar de Postman esté vacío o el dominio cambie.",
+          "    pm.request.headers.upsert({",
+          "      key: 'Cookie',",
+          "      value: 'PHPSESSID=' + sessionId,",
+          "    });",
+          "  }",
+          "",
+          "  const csrf = pm.environment.get('csrfToken');",
+          "  if (csrf) {",
+          "    // La API actual no lee este header en AJAX (checkCsrf() sale antes),",
+          "    // pero lo dejamos listo para endpoints POST/PUT/DELETE que sí lo exijan.",
+          "    pm.request.headers.upsert({ key: 'X-CSRF-Token', value: csrf });",
+          "  }",
+          "}"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "maxResponseTime",
+      "value": "1000"
+    }
+  ]
+}
