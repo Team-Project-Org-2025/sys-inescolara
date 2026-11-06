@@ -13,6 +13,7 @@ Suite PHPUnit 11.5 con tres niveles:
 | `Integration` | `tests/Integration` | SQLite en memoria | SQL real de los modelos, CRUD y flujos entre tablas |
 | `Smoke` | `tests/Smoke` | No | Autoload, contratos de clases, archivos y arranque |
 | `Interfaz` | `tests/Interfaz` | MySQL real | Flujos E2E en navegador con Selenium |
+| `Aceptación` | `tests/aceptacion` | MySQL real | Aceptación del sistema con Codeception + WebDriver |
 
 ## Comandos
 
@@ -42,6 +43,10 @@ powershell -ExecutionPolicy Bypass -File tests\tools\setup-interfaz.ps1
 # Interfaz: toda la suite o una suite concreta
 powershell -ExecutionPolicy Bypass -File tests\tools\run-interfaz.ps1
 powershell -ExecutionPolicy Bypass -File tests\tools\run-interfaz.ps1 -Suite Comercial
+
+# Aceptación (Codeception + WebDriver): matriz en tests/aceptacion/ACEPTACION.md
+./tests/aceptacion/run.sh
+php tests/tools/generate_aceptacion.php
 ```
 
 ## Estructura

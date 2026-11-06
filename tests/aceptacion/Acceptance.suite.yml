@@ -1,0 +1,25 @@
+actor: AcceptanceTester
+
+modules:
+    enabled:
+        - WebDriver:
+            url: '%ACEPTACION_URL%'
+            browser: chrome
+            host: 127.0.0.1
+            port: '%ACEPTACION_DRIVER_PORT%'
+            path: /
+            window_size: 1440x900
+            pageload_timeout: 60
+            clear_cookies: true
+            capabilities:
+                goog:chromeOptions:
+                    binary: '%ACEPTACION_BROWSER%'
+                    args:
+                        - '--headless=new'
+                        - '--no-sandbox'
+                        - '--disable-gpu'
+                        - '--disable-dev-shm-usage'
+                        - '--disable-notifications'
+                        - '--lang=es-VE'
+        - Asserts
+        - Tests\Aceptacion\Support\Helper\Aceptacion
