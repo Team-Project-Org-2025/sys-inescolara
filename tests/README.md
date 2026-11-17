@@ -37,6 +37,15 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\run-module.ps1 P
 # Los 31 módulos, con resumen y comparación automática
 powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\run-module.ps1 all
 
+# Integración + humo con el ejecutor multiplataforma (Linux, macOS y Windows)
+php tests/tools/run-tests.php                       # ambas suites, los 31 módulos
+php tests/tools/run-tests.php --suite=integration    # solo integración
+php tests/tools/run-tests.php --suite=smoke          # solo humo
+php tests/tools/run-tests.php --module=13            # un módulo (integración + humo)
+php tests/tools/run-tests.php --list                 # enumera los 31 módulos
+./tests/tools/run-tests.sh                           # atajo en Linux/macOS
+tests\tools\run-tests.bat                            # atajo en Windows
+
 # Interfaz: preparar ChromeDriver, usuario y carpetas
 powershell -ExecutionPolicy Bypass -File tests\tools\setup-interfaz.ps1
 
@@ -70,6 +79,9 @@ tests/
 ├── Smoke/ModelsSmokeTest.php
 ├── tools/generate_traceability.php
 ├── tools/run-module.ps1
+├── tools/run-tests.php
+├── tools/run-tests.sh
+├── tools/run-tests.bat
 └── results/junit-*.xml
 ```
 

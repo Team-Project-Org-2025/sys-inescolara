@@ -23,6 +23,51 @@ en Unit (por ejemplo `Error al guardar ...`) no son fallos.
 >
 > `powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\run-module.ps1 all`
 
+## Ejecutor multiplataforma (integración + humo)
+
+El ejecutor `tests/tools/run-tests.php` funciona igual en Linux, macOS y
+Windows. Ejecuta las suites de integración y humo, muestra un resumen por
+suite y guarda el log y el XML JUnit en `tests/results/`.
+
+```bash
+# Ambas suites, los 31 módulos
+php tests/tools/run-tests.php
+
+# Solo una suite
+php tests/tools/run-tests.php --suite=integration
+php tests/tools/run-tests.php --suite=smoke
+
+# Un módulo por número o por nombre
+php tests/tools/run-tests.php --module=13
+php tests/tools/run-tests.php --module=Venta --suite=smoke
+
+# Utilidades
+php tests/tools/run-tests.php --list       # enumera los 31 módulos
+php tests/tools/run-tests.php --dry-run    # muestra los comandos sin ejecutar
+php tests/tools/run-tests.php --help
+```
+
+Atajos por sistema operativo:
+
+```bash
+# Linux / macOS
+./tests/tools/run-tests.sh
+./tests/tools/run-tests.sh --suite=integration --module=13
+
+# Windows (CMD o PowerShell)
+tests\tools\run-tests.bat
+tests\tools\run-tests.bat --suite=smoke --module=13
+```
+
+Si `pdo_sqlite` no está habilitado globalmente, indique la ruta de la
+extensión (repetible):
+
+```bash
+php tests/tools/run-tests.php --suite=integration \
+  --extension=/usr/lib/php/modules/sqlite3.so \
+  --extension=/usr/lib/php/modules/pdo_sqlite.so
+```
+
 ## Índice
 
 | # | Modelo | # | Modelo | # | Modelo |
