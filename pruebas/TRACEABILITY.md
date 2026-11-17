@@ -52,7 +52,7 @@ Cobertura completa del CRUD: **1 requisito** (RF-01 Plantas). Cobertura parcial 
 
 > `✅ PASS` = cubierto y verificado por la suite Postman.
 > `➖ N/A` = sin endpoint en la suite Postman; **no es un fallo**: su cobertura
-> está en la suite PHPUnit (`tests/TRACEABILITY.md`).
+> está en la suite PHPUnit (`tests/tools/reportes/formatos/resultados/TRACEABILITY.md`).
 
 | RF | Módulo | Cobertura Postman | Casos | Evidencia / cobertura alternativa | Estado |
 | --- | --- | --- | --- | --- | --- |
@@ -94,7 +94,7 @@ No hay pruebas omitidas dentro de la suite Postman.
 
 Los 24 requisitos marcados `➖ N/A` no son omisiones de ejecución: simplemente no
 tienen un caso en la suite de API. Su trazabilidad completa está en
-[`../tests/TRACEABILITY.md`](../tests/TRACEABILITY.md).
+[`../tests/tools/reportes/formatos/resultados/TRACEABILITY.md`](../tests/tools/reportes/formatos/resultados/TRACEABILITY.md).
 
 ## Observaciones de contrato
 

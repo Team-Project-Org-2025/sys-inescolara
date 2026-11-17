@@ -5,16 +5,16 @@
 .DESCRIPTION
     Requiere Apache, MySQL y ChromeDriver disponibles. Si no se indica
     -Suite, ejecuta todas las suites. Guarda el JUnit en
-    tests\Interfaz\results\junit-<suite>.xml.
+    tests\tools\interfaz\formatos\resultados\junit-<suite>.xml.
 
 .EXAMPLE
-    powershell -ExecutionPolicy Bypass -File tests\tools\run-interfaz.ps1
+    powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\run-interfaz.ps1
 
 .EXAMPLE
-    powershell -ExecutionPolicy Bypass -File tests\tools\run-interfaz.ps1 -Suite Inventario
+    powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\run-interfaz.ps1 -Suite Inventario
 
 .EXAMPLE
-    powershell -ExecutionPolicy Bypass -File tests\tools\run-interfaz.ps1 -Filter VentasTest -Headless
+    powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\run-interfaz.ps1 -Filter VentasTest -Headless
 #>
 param(
     [string]$Suite = 'all',
@@ -24,7 +24,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$root = Resolve-Path (Join-Path $PSScriptRoot '..\..')
+$root = Resolve-Path (Join-Path $PSScriptRoot '..\..\..\..')
 Set-Location $root
 
 if ($Headless) {
@@ -32,11 +32,11 @@ if ($Headless) {
 }
 
 if (-not $SkipSeed) {
-    & php 'tests\tools\seed-interfaz.php'
+    & php 'tests\tools\interfaz\scripts\seed-interfaz.php'
     if ($LASTEXITCODE -ne 0) { throw 'No se pudo preparar el usuario de prueba.' }
 }
 
-$resultsDir = Join-Path $root 'tests\Interfaz\results'
+$resultsDir = Join-Path $root 'tests\tools\interfaz\formatos\resultados'
 if (-not (Test-Path $resultsDir)) { New-Item -ItemType Directory -Path $resultsDir -Force | Out-Null }
 
 $logName = if ($Filter -ne '') { 'filter-' + ($Filter -replace '[^A-Za-z0-9_-]', '_') } else { $Suite.ToLower() }
@@ -60,5 +60,5 @@ $code = $LASTEXITCODE
 
 Write-Host ''
 Write-Host "Resultados: $logPath" -ForegroundColor Cyan
-Write-Host "Capturas:   tests\Interfaz\results\screenshots" -ForegroundColor Cyan
+Write-Host "Capturas:   tests\tools\interfaz\formatos\resultados\screenshots" -ForegroundColor Cyan
 exit $code

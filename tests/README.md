@@ -1,8 +1,9 @@
 # Pruebas — Sys Inescolara
 
+- **Índice de ejecutores y comandos:** [`tools/README.md`](tools/README.md)
 - **Instrucciones paso a paso:** [`GUIA_PRUEBAS.md`](GUIA_PRUEBAS.md)
-- **Comandos listos para copiar (3 por módulo):** [`COMANDOS_RAPIDOS.md`](COMANDOS_RAPIDOS.md)
-- **Matriz de trazabilidad:** [`TRACEABILITY.md`](TRACEABILITY.md) · [`traceability.json`](traceability.json)
+- **Comandos manuales por módulo (93 casos):** [`COMANDOS_RAPIDOS.md`](COMANDOS_RAPIDOS.md)
+- **Matriz de trazabilidad:** [`TRACEABILITY.md`](tools/reportes/formatos/resultados/TRACEABILITY.md) · [`traceability.json`](tools/reportes/formatos/resultados/traceability.json)
 - **Pruebas de interfaz (Selenium):** [`Interfaz/README.md`](Interfaz/README.md)
 
 Suite PHPUnit 11.5 con tres niveles:
@@ -17,45 +18,45 @@ Suite PHPUnit 11.5 con tres niveles:
 
 ## Comandos
 
-Siempre desde la raíz del proyecto:
+Cada ejecutor tiene su propia guía con parámetros, ejemplos, archivos que
+genera y códigos de salida. Empieza por [`tools/README.md`](tools/README.md).
+
+| Necesito… | Comando | Guía |
+| --- | --- | --- |
+| Un módulo completo (Unit + Integration + Smoke) | `powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\run-module.ps1 05` | [`tools/phpunit/scripts/run-module.md`](tools/phpunit/scripts/run-module.md) |
+| Los 31 módulos y comparación con la matriz | `powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\run-module.ps1 all` | [`tools/phpunit/scripts/run-module.md`](tools/phpunit/scripts/run-module.md) |
+| Integration + Smoke en cualquier sistema operativo | `php tests/tools/phpunit/scripts/run-tests.php` | [`tools/phpunit/scripts/run-tests.md`](tools/phpunit/scripts/run-tests.md) |
+| Una suite, archivo, clase o método concreto | `php vendor\phpunit\phpunit\phpunit -c tests\phpunit.xml ...` | [Recetas PHPUnit](tools/README.md#recetas-phpunit) |
+| Interfaz E2E con Selenium | `powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\run-interfaz.ps1` | [`tools/interfaz/scripts/run-interfaz.md`](tools/interfaz/scripts/run-interfaz.md) |
+| Preparar ChromeDriver y el usuario E2E | `powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\setup-interfaz.ps1` | [`tools/interfaz/scripts/setup-interfaz.md`](tools/interfaz/scripts/setup-interfaz.md) |
+| Aceptación (Codeception) | `./tests/tools/aceptacion/scripts/run-aceptacion.sh` | [`aceptacion/README.md`](aceptacion/README.md) |
+| Regenerar la matriz PHPUnit | `php tests\tools\reportes\scripts\generate_traceability.php` | [`tools/reportes/scripts/generate_traceability.md`](tools/reportes/scripts/generate_traceability.md) |
+
+Comandos esenciales (siempre desde la raíz del proyecto):
 
 ```powershell
-# Toda la suite
-vendor\bin\phpunit -c tests\phpunit.xml
+# Toda la suite PHPUnit
+php vendor\phpunit\phpunit\phpunit -c tests\phpunit.xml --do-not-cache-result
 
-# Por nivel
-vendor\bin\phpunit -c tests\phpunit.xml --testsuite Unit
-vendor\bin\phpunit -c tests\phpunit.xml --testsuite Integration
-vendor\bin\phpunit -c tests\phpunit.xml --testsuite Smoke
+# Un módulo: Unit + Integration + Smoke, comparado con la matriz
+powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\run-module.ps1 Planta
 
-# Un modelo
-vendor\bin\phpunit -c tests\phpunit.xml --filter Especie
+# Los 31 módulos
+powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\run-module.ps1 all
 
-# Un módulo completo (Unit + Integration + Smoke) y comparación con la matriz
-powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\run-module.ps1 Planta
+# Integración + humo, todos o un módulo (Linux, macOS y Windows)
+php tests/tools/phpunit/scripts/run-tests.php
+php tests/tools/phpunit/scripts/run-tests.php --module=13
 
-# Los 31 módulos, con resumen y comparación automática
-powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\run-module.ps1 all
+# Interfaz: preparar y ejecutar
+powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\setup-interfaz.ps1
+powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\run-interfaz.ps1
+powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\run-interfaz.ps1 -Suite Comercial
 
-# Integración + humo con el ejecutor multiplataforma (Linux, macOS y Windows)
-php tests/tools/run-tests.php                       # ambas suites, los 31 módulos
-php tests/tools/run-tests.php --suite=integration    # solo integración
-php tests/tools/run-tests.php --suite=smoke          # solo humo
-php tests/tools/run-tests.php --module=13            # un módulo (integración + humo)
-php tests/tools/run-tests.php --list                 # enumera los 31 módulos
-./tests/tools/run-tests.sh                           # atajo en Linux/macOS
-tests\tools\run-tests.bat                            # atajo en Windows
-
-# Interfaz: preparar ChromeDriver, usuario y carpetas
-powershell -ExecutionPolicy Bypass -File tests\tools\setup-interfaz.ps1
-
-# Interfaz: toda la suite o una suite concreta
-powershell -ExecutionPolicy Bypass -File tests\tools\run-interfaz.ps1
-powershell -ExecutionPolicy Bypass -File tests\tools\run-interfaz.ps1 -Suite Comercial
-
-# Aceptación (Codeception + WebDriver): matriz en tests/aceptacion/ACEPTACION.md
-./tests/aceptacion/run.sh
-php tests/tools/generate_aceptacion.php
+# Aceptación y su matriz
+./tests/tools/aceptacion/scripts/run-aceptacion.sh
+php tests/tools/reportes/scripts/generate_aceptacion.php
+php tests/tools/reportes/scripts/generate_traceability.php
 ```
 
 ## Estructura
@@ -66,8 +67,6 @@ tests/
 ├── bootstrap.php
 ├── GUIA_PRUEBAS.md
 ├── COMANDOS_RAPIDOS.md
-├── TRACEABILITY.md
-├── traceability.json
 ├── Support/
 │   ├── NoDbTrait.php
 │   ├── SqliteTrait.php
@@ -77,12 +76,36 @@ tests/
 ├── Unit/<Dominio>/<Modelo>Test.php
 ├── Integration/<Dominio>/<Modelo>RepositoryTest.php
 ├── Smoke/ModelsSmokeTest.php
-├── tools/generate_traceability.php
-├── tools/run-module.ps1
-├── tools/run-tests.php
-├── tools/run-tests.sh
-├── tools/run-tests.bat
-└── results/junit-*.xml
+├── Interfaz/                         # suite E2E Selenium
+├── aceptacion/                       # suite Codeception (runner en tools/)
+└── tools/
+    ├── README.md                     # índice + estándar scripts/formatos
+    ├── phpunit/
+    │   ├── scripts/
+    │   │   ├── run-module.ps1/.md    # Unit + Integration + Smoke por módulo
+    │   │   └── run-tests.php/.md/.sh/.bat
+    │   └── formatos/
+    │       ├── plantillas/junit-reporte.xml
+    │       └── resultados/           # JUnit llenos (ignorados por git)
+    ├── interfaz/
+    │   ├── scripts/
+    │   │   ├── run-interfaz.ps1/.md
+    │   │   ├── setup-interfaz.ps1/.md
+    │   │   └── seed-interfaz.php/.md
+    │   └── formatos/
+    │       ├── plantillas/junit-reporte.xml
+    │       └── resultados/           # JUnit, capturas y descargas
+    ├── aceptacion/
+    │   └── formatos/
+    │       ├── plantillas/junit-reporte.xml
+    │       └── resultados/           # report.xml de Codeception
+    └── reportes/
+        ├── scripts/
+        │   ├── generate_traceability.php/.md
+        │   └── generate_aceptacion.php/.md
+        └── formatos/
+            ├── plantillas/           # matrices vacías
+            └── resultados/           # matrices llenas (versionadas)
 ```
 
 El orden de ejecución de `Unit` e `Integration` está fijado en

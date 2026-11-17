@@ -6,21 +6,21 @@ declare(strict_types=1);
  * Genera la matriz de trazabilidad a partir de los logs JUnit de PHPUnit.
  *
  * Uso:
- *   php tests/tools/generate_traceability.php
+ *   php tests/tools/reportes/scripts/generate_traceability.php
  *
  * Lee (si existen):
- *   tests/results/junit-unit.xml
- *   tests/results/junit-integration.xml
- *   tests/results/junit-smoke.xml
+ *   tests/tools/phpunit/formatos/resultados/junit-unit.xml
+ *   tests/tools/phpunit/formatos/resultados/junit-integration.xml
+ *   tests/tools/phpunit/formatos/resultados/junit-smoke.xml
  *
  * Escribe:
- *   tests/TRACEABILITY.md
- *   tests/traceability.json
+ *   tests/tools/reportes/formatos/resultados/TRACEABILITY.md
+ *   tests/tools/reportes/formatos/resultados/traceability.json
  */
 
-$root = dirname(__DIR__, 2);
+$root = dirname(__DIR__, 4);
 $testsDir = $root . '/tests';
-$resultsDir = $testsDir . '/results';
+$resultsDir = $testsDir . '/tools/phpunit/formatos/resultados';
 
 /**
  * Orden canónico = orden del sidebar. Los modelos de soporte se ubican al
@@ -410,24 +410,19 @@ $unitCases = loadJunit($resultsDir . '/junit-unit.xml');
 $integrationCases = loadJunit($resultsDir . '/junit-integration.xml');
 $smokeCasesAll = loadJunit($resultsDir . '/junit-smoke.xml');
 
-$json = [
-    'generado' => date('c'),
-    'orden' => 'sidebar',
-    'resumen' => [
-        'requisitos' => 0,
-        'casos' => 0,
-        'pass' => 0,
-        'fail' => 0,
-        'skip' => 0,
-        'noEjecutado' => 0,
-        'pruebas' => 0,
-        'pruebasPass' => 0,
-        'pruebasFail' => 0,
-        'pruebasSkip' => 0,
-    ],
-    'omitidas' => [],
-    'modulos' => [],
-];
+$formatDir = dirname(__DIR__) . '/formatos';
+$templateDir = $formatDir . '/plantillas';
+$outputDir = $formatDir . '/resultados';
+
+$jsonTemplate = $templateDir . '/traceability.plantilla.json';
+if (!is_file($jsonTemplate)) {
+    fwrite(STDERR, "[ERROR] No existe la plantilla: {$jsonTemplate}" . PHP_EOL);
+    exit(3);
+}
+
+/** @var array<string, mixed> $json */
+$json = json_decode((string) file_get_contents($jsonTemplate), true, 512, JSON_THROW_ON_ERROR);
+$json['generado'] = date('c');
 
 $rows = [];
 $moduleRows = [];
@@ -579,38 +574,11 @@ foreach (modules() as $index => $module) {
 
 $json['resumen']['requisitos'] = count($json['modulos']);
 
-$markdown = "# Matriz de Trazabilidad de Pruebas — Sys Inescolara\n\n";
-$markdown .= sprintf("Generado: `%s` · Orden: sidebar del sistema\n\n", date('Y-m-d H:i:s'));
-$markdown .= "## Resumen\n\n";
-$markdown .= "| Requisitos | Casos | Casos PASS | Casos FAIL | Casos SKIP | No ejecutados |\n";
-$markdown .= "| ---: | ---: | ---: | ---: | ---: | ---: |\n";
-$markdown .= sprintf(
-    "| %d | %d | %d | %d | %d | %d |\n\n",
-    $json['resumen']['requisitos'],
-    $json['resumen']['casos'],
-    $json['resumen']['pass'],
-    $json['resumen']['fail'],
-    $json['resumen']['skip'],
-    $json['resumen']['noEjecutado']
-);
-$markdown .= sprintf(
-    "Pruebas individuales ejecutadas: **%d** · PASS: **%d** · FAIL: **%d** · SKIP: **%d**.\n\n",
-    $json['resumen']['pruebas'],
-    $json['resumen']['pruebasPass'],
-    $json['resumen']['pruebasFail'],
-    $json['resumen']['pruebasSkip']
-);
 $modulesWithSkips = array_filter($moduleRows, static fn (array $row): bool => $row['skip'] > 0);
-$markdown .= sprintf(
-    "Módulos con al menos una prueba omitida: **%d** (%s).\n\n",
-    count($modulesWithSkips),
-    implode(', ', array_map(static fn (array $row): string => $row['model'], $modulesWithSkips)) ?: 'ninguno'
-);
-$markdown .= "## Resumen por módulo\n\n";
-$markdown .= "| # | Módulo | Modelo | Unitaria | Integración | Humo | Omitidos | Estado |\n";
-$markdown .= "| ---: | --- | --- | --- | --- | --- | ---: | --- |\n";
+
+$moduleTable = '';
 foreach ($moduleRows as $row) {
-    $markdown .= sprintf(
+    $moduleTable .= sprintf(
         "| %02d | %s | `%s` | %s (%d/%d) | %s (%d/%d) | %s (%d/%d) | %d | %s |\n",
         $row['n'],
         $row['module'],
@@ -629,12 +597,9 @@ foreach ($moduleRows as $row) {
     );
 }
 
-$markdown .= "\n## Matriz detallada\n\n";
-$markdown .= "| ID Requisito / HU | Descripción del Requisito (o HU) | ID Caso de Prueba | Tipo de Prueba | Descripción del Caso de Prueba | Resultado Esperado | Estado | Evidencia |\n";
-$markdown .= "| --- | --- | --- | --- | --- | --- | --- | --- |\n";
-
+$detailTable = '';
 foreach ($rows as $row) {
-    $markdown .= sprintf(
+    $detailTable .= sprintf(
         "| %s | %s | %s | %s | %s | %s | %s | %s |\n",
         $row['requisito'],
         str_replace('|', '\\|', $row['descripcionRequisito']),
@@ -647,14 +612,14 @@ foreach ($rows as $row) {
     );
 }
 
-$markdown .= "\n## Pruebas omitidas (SKIP)\n\n";
+$skipTable = '';
 if ($skippedRows === []) {
-    $markdown .= "No hay pruebas omitidas.\n";
+    $skipTable = "No hay pruebas omitidas.\n";
 } else {
-    $markdown .= "| Requisito | Módulo | Tipo | Prueba | Evidencia | Motivo |\n";
-    $markdown .= "| --- | --- | --- | --- | --- | --- |\n";
+    $skipTable .= "| Requisito | Módulo | Tipo | Prueba | Evidencia | Motivo |\n";
+    $skipTable .= "| --- | --- | --- | --- | --- | --- |\n";
     foreach ($skippedRows as $row) {
-        $markdown .= sprintf(
+        $skipTable .= sprintf(
             "| %s | %s | %s | `%s` | `%s` | Limitación documentada en el test (SQL exclusivo de MySQL o modelo que abre una conexión real). |\n",
             $row['requisito'],
             $row['modelo'],
@@ -665,20 +630,42 @@ if ($skippedRows === []) {
     }
 }
 
-$markdown .= "\n## Cómo leer esta matriz\n\n";
-$markdown .= "- **PASS:** todos los casos del tipo ejecutaron sin fallos. Un caso PASS puede incluir pruebas SKIP; revisa la columna **Omitidos** y la sección de pruebas omitidas.\n";
-$markdown .= "- **FAIL:** al menos un caso falló; revisa `tests/results/junit-*.xml`.\n";
-$markdown .= "- **SKIP:** el caso se omitió por una limitación documentada (por ejemplo SQL exclusivo de MySQL).\n";
-$markdown .= "- **NO EJECUTADO:** no existe el log JUnit de esa suite; ejecuta los comandos de `GUIA_PRUEBAS.md`.\n";
-$markdown .= "- La evidencia incluye la clase/método y el conteo `PASS/total`.\n";
+$markdownTemplate = $templateDir . '/TRACEABILITY.plantilla.md';
+if (!is_file($markdownTemplate)) {
+    fwrite(STDERR, "[ERROR] No existe la plantilla: {$markdownTemplate}" . PHP_EOL);
+    exit(3);
+}
+
+$markdown = strtr((string) file_get_contents($markdownTemplate), [
+    '{{GENERADO}}' => date('Y-m-d H:i:s'),
+    '{{RESUMEN_REQUISITOS}}' => (string) $json['resumen']['requisitos'],
+    '{{RESUMEN_CASOS}}' => (string) $json['resumen']['casos'],
+    '{{RESUMEN_PASS}}' => (string) $json['resumen']['pass'],
+    '{{RESUMEN_FAIL}}' => (string) $json['resumen']['fail'],
+    '{{RESUMEN_SKIP}}' => (string) $json['resumen']['skip'],
+    '{{RESUMEN_NO_EJECUTADO}}' => (string) $json['resumen']['noEjecutado'],
+    '{{PRUEBAS}}' => (string) $json['resumen']['pruebas'],
+    '{{PRUEBAS_PASS}}' => (string) $json['resumen']['pruebasPass'],
+    '{{PRUEBAS_FAIL}}' => (string) $json['resumen']['pruebasFail'],
+    '{{PRUEBAS_SKIP}}' => (string) $json['resumen']['pruebasSkip'],
+    '{{MODULOS_SKIP_CANTIDAD}}' => (string) count($modulesWithSkips),
+    '{{MODULOS_SKIP_LISTA}}' => implode(', ', array_map(static fn (array $row): string => $row['model'], $modulesWithSkips)) ?: 'ninguno',
+    '{{FILAS_MODULOS}}' => rtrim($moduleTable, "\n"),
+    '{{FILAS_DETALLE}}' => rtrim($detailTable, "\n"),
+    '{{TABLA_OMITIDAS}}' => rtrim($skipTable, "\n"),
+    '{{RUTA_RESULTADOS}}' => 'tests/tools/phpunit/formatos/resultados/junit-*.xml',
+]);
 
 if (!is_dir($resultsDir)) {
     mkdir($resultsDir, 0777, true);
 }
+if (!is_dir($outputDir)) {
+    mkdir($outputDir, 0777, true);
+}
 
-file_put_contents($testsDir . '/TRACEABILITY.md', $markdown);
+file_put_contents($outputDir . '/TRACEABILITY.md', $markdown);
 file_put_contents(
-    $testsDir . '/traceability.json',
+    $outputDir . '/traceability.json',
     json_encode($json, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . PHP_EOL
 );
 

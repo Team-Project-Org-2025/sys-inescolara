@@ -4,10 +4,12 @@ Suite de aceptación con **Codeception 5** + **WebDriver** que recorre la
 aplicación real en un navegador (Brave/Chrome headless) y valida los 31
 requisitos funcionales del sistema.
 
-- **Matriz de resultados:** [`ACEPTACION.md`](ACEPTACION.md)
+- **Matriz de resultados:** [`ACEPTACION.md`](../tools/reportes/formatos/resultados/ACEPTACION.md)
+- **Ejecutor de la suite:** [`../tools/aceptacion/scripts/run-aceptacion.md`](../tools/aceptacion/scripts/run-aceptacion.md)
+- **Guía del generador de la matriz:** [`../tools/reportes/scripts/generate_aceptacion.md`](../tools/reportes/scripts/generate_aceptacion.md)
 - **Configuración:** [`codeception.yml`](codeception.yml) · [`Acceptance.suite.yml`](Acceptance.suite.yml)
 - **Servidor de pruebas:** [`server/`](server) (PHP embebido, sin tocar Apache)
-- **Reporte JUnit:** `_output/report.xml`
+- **Reporte JUnit:** `tests/tools/aceptacion/formatos/resultados/report.xml`
 
 ## Requisitos
 
@@ -21,10 +23,10 @@ requisitos funcionales del sistema.
 
 ```bash
 # Toda la suite
-./tests/aceptacion/run.sh
+./tests/tools/aceptacion/scripts/run-aceptacion.sh
 
 # Un archivo concreto
-./tests/aceptacion/run.sh AutenticacionCest
+./tests/tools/aceptacion/scripts/run-aceptacion.sh AutenticacionCest
 ```
 
 El script:
@@ -34,7 +36,7 @@ El script:
    `tests/aceptacion/server/router.php`.
 3. Levanta `chromedriver` en el puerto `9515`.
 4. Crea/actualiza el usuario `e2e_admin` (`e2e_admin` / `E2eAdmin123!`).
-5. Ejecuta Codeception y guarda `_output/report.xml`.
+5. Ejecuta Codeception y guarda `tests/tools/aceptacion/formatos/resultados/report.xml`.
 6. Detiene los procesos que levantó.
 
 ## Variables de entorno

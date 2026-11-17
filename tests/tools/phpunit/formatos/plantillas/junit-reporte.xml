@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Formato vacío de un reporte JUnit de PHPUnit.
+
+    PHPUnit llena este formato con --log-junit. Se guarda una copia por
+    suite/módulo en ../resultados/ (por ejemplo module-Lote-unit.xml).
+-->
+<testsuites>
+    <testsuite name="{{SUITE}}" tests="0" assertions="0" errors="0" failures="0" skipped="0" time="0.000">
+        <!--
+            Una entrada por prueba ejecutada:
+
+            <testcase name="{{PRUEBA}}" class="{{CLASE}}" classname="{{CLASE_CON_PUNTOS}}"
+                      file="{{ARCHIVO}}" line="0" assertions="0" time="0.000">
+                <failure type="...">...</failure>   opcional
+                <skipped/>                           opcional
+            </testcase>
+        -->
+    </testsuite>
+</testsuites>

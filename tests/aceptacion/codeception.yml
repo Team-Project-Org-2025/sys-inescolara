@@ -3,7 +3,7 @@ support_namespace: Support
 
 paths:
     tests: .
-    output: _output
+    output: ../tools/aceptacion/formatos/resultados
     data: data
     support: _support
     envs: _envs

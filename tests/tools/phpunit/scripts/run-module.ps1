@@ -4,16 +4,16 @@
 
 .DESCRIPTION
     Un modulo:
-        powershell -ExecutionPolicy Bypass -File tests\tools\run-module.ps1 Planta
-        powershell -ExecutionPolicy Bypass -File tests\tools\run-module.ps1 01
-        powershell -ExecutionPolicy Bypass -File tests\tools\run-module.ps1 "Cuenta por cobrar"
+        powershell -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\run-module.ps1 Planta
+        powershell -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\run-module.ps1 01
+        powershell -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\run-module.ps1 "Cuenta por cobrar"
 
     Todos los modulos (31):
-        powershell -ExecutionPolicy Bypass -File tests\tools\run-module.ps1 all
+        powershell -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\run-module.ps1 all
 
     Para cada modulo ejecuta sus tres suites: unitaria, integracion y humo.
-    Guarda los JUnit en tests\results\module-<Modelo>-{unit,integration,smoke}.xml
-    y compara los conteos contra tests\traceability.json.
+    Guarda los JUnit en tests\tools\phpunit\formatos\resultados\module-<Modelo>-{unit,integration,smoke}.xml
+    y compara los conteos contra tests\tools\reportes\formatos\resultados\traceability.json.
 
     Sale con codigo 0 si todo coincide y 1 si algo difiere.
 #>
@@ -24,12 +24,12 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-$root = Resolve-Path (Join-Path $PSScriptRoot '..\..')
+$root = Resolve-Path (Join-Path $PSScriptRoot '..\..\..\..')
 Set-Location $root
 
-$jsonPath = Join-Path $root 'tests\traceability.json'
+$jsonPath = Join-Path $root 'tests\tools\reportes\formatos\resultados\traceability.json'
 if (-not (Test-Path $jsonPath)) {
-    throw "No existe $jsonPath. Ejecuta primero: php tests\tools\generate_traceability.php"
+    throw "No existe $jsonPath. Ejecuta primero: php tests\tools\reportes\scripts\generate_traceability.php"
 }
 
 $data = Get-Content $jsonPath -Raw | ConvertFrom-Json
@@ -54,7 +54,7 @@ function Invoke-Suite {
         [switch]$Quiet
     )
 
-    $logPath = Join-Path $root "tests\results\$LogName"
+    $logPath = Join-Path $root "tests\tools\phpunit\formatos\resultados\$LogName"
     if (Test-Path $logPath) {
         Remove-Item $logPath -Force
     }
@@ -291,15 +291,15 @@ $totalFails = ($results | ForEach-Object { $_.Unit.Fail + $_.Integration.Fail + 
 Write-Host ("Modulos: {0} | COINCIDE: {1} | NO COINCIDE: {2}" -f $results.Count, ($results.Count - $failed.Count), $failed.Count)
 Write-Host ("Pruebas: {0} | Aserciones: {1} | FAIL: {2} | SKIP: {3}" -f $totalTests, $totalAssertions, $totalFails, $totalSkips)
 Write-Host ("Tiempo: {0:n1} s" -f $elapsed.TotalSeconds)
-Write-Host ("XML por modulo: {0}" -f (Join-Path $root 'tests\results'))
+Write-Host ("XML por modulo: {0}" -f (Join-Path $root 'tests\tools\phpunit\formatos\resultados'))
 
 Write-Host ""
 if ($failed.Count -eq 0) {
-    Write-Host "RESULTADO: COINCIDE con tests/traceability.json" -ForegroundColor Green
+    Write-Host "RESULTADO: COINCIDE con tests/tools/reportes/formatos/resultados/traceability.json" -ForegroundColor Green
     exit 0
 }
 
-Write-Host "RESULTADO: NO COINCIDE con tests/traceability.json" -ForegroundColor Red
+Write-Host "RESULTADO: NO COINCIDE con tests/tools/reportes/formatos/resultados/traceability.json" -ForegroundColor Red
 foreach ($item in $failed) {
     Write-Host ("  - {0:00} {1}" -f $item.Numero, $item.Modelo) -ForegroundColor Red
 }

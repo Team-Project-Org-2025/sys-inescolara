@@ -4,16 +4,17 @@ declare(strict_types=1);
 
 /**
  * Genera la matriz de pruebas de aceptación a partir del reporte JUnit de
- * Codeception (`tests/aceptacion/_output/report.xml`).
+ * Codeception (`tests/tools/aceptacion/formatos/resultados/report.xml`).
  *
  * Uso:
- *   php tests/tools/generate_aceptacion.php
+ *   php tests/tools/reportes/scripts/generate_aceptacion.php
  */
 
-$root = dirname(__DIR__, 2);
+$root = dirname(__DIR__, 4);
 $acceptanceDir = $root . '/tests/aceptacion';
-$reportFile = $acceptanceDir . '/_output/report.xml';
-$outputFile = $acceptanceDir . '/ACEPTACION.md';
+$reportFile = $root . '/tests/tools/aceptacion/formatos/resultados/report.xml';
+$outputFile = $root . '/tests/tools/reportes/formatos/resultados/ACEPTACION.md';
+$templateFile = dirname(__DIR__) . '/formatos/plantillas/ACEPTACION.plantilla.md';
 
 require_once $root . '/vendor/autoload.php';
 require_once $acceptanceDir . '/_support/ModuleCatalog.php';
@@ -207,22 +208,8 @@ $icon = static fn (string $state): string => match ($state) {
     default => '⏳ NO EJECUTADO',
 };
 
-$md = [];
-$md[] = '# Matriz de Pruebas de Aceptación — Sys Inescolara';
-$md[] = '';
-$md[] = 'Generado: `' . date('Y-m-d H:i:s') . '` · Codeception 5 + WebDriver (Brave/Chrome headless) · Orden: requisitos RF-01 a RF-31';
-$md[] = '';
-$md[] = '## Resumen';
-$md[] = '';
-$md[] = '| Casos | PASS | FAIL | SKIP | No ejecutados | Tiempo total |';
-$md[] = '| ---: | ---: | ---: | ---: | ---: | ---: |';
-$md[] = sprintf('| %d | %d | %d | %d | %d | %.2f s |', $total, $pass, $fail, $skip, $notRun, $totalTime);
-$md[] = '';
-$md[] = '## Resumen por requisito';
-$md[] = '';
-$md[] = '| # | Requisito | Módulo / pantalla | Casos | Estado |';
-$md[] = '| ---: | --- | --- | ---: | --- |';
 $stateRank = ['FAIL' => 3, 'NO EJECUTADO' => 2, 'SKIP' => 1, 'PASS' => 0];
+$requirementRows = '';
 for ($num = 1; $num <= 31; $num++) {
     $rf = sprintf('RF-%02d', $num);
     $rfCases = array_filter($cases, static fn ($c) => $c['rf'] === $rf);
@@ -236,8 +223,8 @@ for ($num = 1; $num <= 31; $num++) {
             $worst = $rfCase['estado'];
         }
     }
-    $md[] = sprintf(
-        '| %02d | %s | %s | %d | %s |',
+    $requirementRows .= sprintf(
+        "| %02d | %s | %s | %d | %s |\n",
         $num,
         $rf,
         $primary['module'],
@@ -245,11 +232,8 @@ for ($num = 1; $num <= 31; $num++) {
         $icon($worst)
     );
 }
-$md[] = '';
-$md[] = '## Matriz detallada';
-$md[] = '';
-$md[] = '| ID Requisito / HU | Descripción del Requisito (o HU) | ID Caso de Prueba | Tipo de Prueba | Descripción del Caso de Prueba | Resultado Esperado | Estado | Evidencia |';
-$md[] = '| --- | --- | --- | --- | --- | --- | --- | --- |';
+
+$detailRows = '';
 foreach ($cases as $id => $case) {
     $evidence = '`' . $case['clase'] . '::' . $case['metodo'] . '`';
     if ($case['estado'] === 'PASS') {
@@ -257,8 +241,8 @@ foreach ($cases as $id => $case) {
     } elseif ($case['estado'] === 'FAIL') {
         $evidence .= ' — ' . str_replace(["\r", "\n", '|'], ' ', mb_substr($case['detail'], 0, 220));
     }
-    $md[] = sprintf(
-        '| %s | %s | %s | %s | %s | %s | %s | %s |',
+    $detailRows .= sprintf(
+        "| %s | %s | %s | %s | %s | %s | %s | %s |\n",
         $case['rf'],
         $requirements[$case['rf']] ?? '',
         $id,
@@ -269,41 +253,48 @@ foreach ($cases as $id => $case) {
         $evidence
     );
 }
-$md[] = '';
 
+$failSection = '';
 if ($fail > 0) {
-    $md[] = '## Fallos';
-    $md[] = '';
+    $failSection .= "## Fallos\n\n";
     foreach ($cases as $id => $case) {
         if ($case['estado'] !== 'FAIL') {
             continue;
         }
-        $md[] = '### ' . $id . ' — ' . $case['module'];
-        $md[] = '';
-        $md[] = '```text';
-        $md[] = mb_substr($case['detail'], 0, 4000);
-        $md[] = '```';
-        $md[] = '';
+        $failSection .= '### ' . $id . ' — ' . $case['module'] . "\n\n";
+        $failSection .= "```text\n" . mb_substr($case['detail'], 0, 4000) . "\n```\n\n";
     }
 }
 
-$md[] = '## Entorno de ejecución';
-$md[] = '';
-$md[] = '- **Aplicación:** `' . (getenv('ACEPTACION_URL') ?: 'http://127.0.0.1:8099/') . '` (servidor PHP embebido de aceptación).';
-$md[] = '- **Navegador:** `' . (getenv('ACEPTACION_BROWSER') ?: '/opt/brave-bin/brave') . '` en modo headless.';
-$md[] = '- **PHP:** ' . PHP_VERSION . '.';
-$md[] = '- **Usuario de pruebas:** `' . (getenv('ACEPTACION_USER') ?: 'e2e_admin') . '` (rol Administrador).';
-$md[] = '- **Reporte JUnit:** `tests/aceptacion/_output/report.xml`.';
-$md[] = '';
-$md[] = '## Notas';
-$md[] = '';
-$md[] = '- La suite usa las claves de prueba oficiales de Google reCAPTCHA v2 en `tests/aceptacion/server/index.php`; no modifica `.env` ni la aplicación en producción.';
-$md[] = '- Las pruebas de aceptación de módulos validan carga real, encabezado, contenido y DataTables por AJAX. Las pruebas CRUD crean datos con prefijo `ACE` y los eliminan al final.';
-$md[] = '- Un caso `PASS` exige que el escenario completo haya terminado sin excepciones ni aserciones fallidas.';
-$md[] = '- Para regenerar esta matriz: `./tests/aceptacion/run.sh` y luego `php tests/tools/generate_aceptacion.php`.';
-$md[] = '';
+if (!is_file($templateFile)) {
+    fwrite(STDERR, "[ERROR] No existe la plantilla: {$templateFile}" . PHP_EOL);
+    exit(3);
+}
 
-file_put_contents($outputFile, implode(PHP_EOL, $md) . PHP_EOL);
+$markdown = strtr((string) file_get_contents($templateFile), [
+    '{{GENERADO}}' => date('Y-m-d H:i:s'),
+    '{{TOTAL}}' => (string) $total,
+    '{{PASS}}' => (string) $pass,
+    '{{FAIL}}' => (string) $fail,
+    '{{SKIP}}' => (string) $skip,
+    '{{NO_EJECUTADO}}' => (string) $notRun,
+    '{{TIEMPO}}' => sprintf('%.2f', $totalTime),
+    '{{FILAS_REQUISITOS}}' => rtrim($requirementRows, "\n"),
+    '{{FILAS_DETALLE}}' => rtrim($detailRows, "\n"),
+    '{{SECCION_FALLOS}}' => $failSection,
+    '{{URL}}' => getenv('ACEPTACION_URL') ?: 'http://127.0.0.1:8099/',
+    '{{BROWSER}}' => getenv('ACEPTACION_BROWSER') ?: '/opt/brave-bin/brave',
+    '{{PHP}}' => PHP_VERSION,
+    '{{USER}}' => getenv('ACEPTACION_USER') ?: 'e2e_admin',
+    '{{REPORTE}}' => 'tests/tools/aceptacion/formatos/resultados/report.xml',
+]);
+
+$outputDir = dirname($outputFile);
+if (!is_dir($outputDir)) {
+    mkdir($outputDir, 0777, true);
+}
+
+file_put_contents($outputFile, $markdown);
 
 printf(
     "Matriz generada: %d casos (%d PASS, %d FAIL, %d SKIP, %d sin ejecutar)\n%s\n",

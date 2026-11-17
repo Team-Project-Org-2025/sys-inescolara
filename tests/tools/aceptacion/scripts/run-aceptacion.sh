@@ -2,9 +2,9 @@
 #
 # Ejecuta la suite de aceptación (Codeception + WebDriver) de Sys Inescolara.
 #
-#   ./tests/aceptacion/run.sh              # toda la suite
-#   ./tests/aceptacion/run.sh AutenticacionCest
-#   ACEPTACION_BROWSER=/usr/bin/chromium ./tests/aceptacion/run.sh
+#   ./tests/tools/aceptacion/scripts/run-aceptacion.sh              # toda la suite
+#   ./tests/tools/aceptacion/scripts/run-aceptacion.sh AutenticacionCest
+#   ACEPTACION_BROWSER=/usr/bin/chromium ./tests/tools/aceptacion/scripts/run-aceptacion.sh
 #
 # El script levanta, si no están ya activos:
 #   - la aplicación en un servidor PHP embebido (tests/aceptacion/server)
@@ -13,7 +13,7 @@
 
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
 ACE_DIR="$ROOT/tests/aceptacion"
 APP_PORT="${ACEPTACION_PORT:-8099}"
 DRIVER_PORT="${ACEPTACION_DRIVER_PORT:-9515}"
@@ -21,7 +21,7 @@ APP_URL="${ACEPTACION_URL:-http://127.0.0.1:${APP_PORT}/}"
 BROWSER_BIN="${ACEPTACION_BROWSER:-/opt/brave-bin/brave}"
 DRIVER_BIN="${ACEPTACION_DRIVER_BIN:-$ACE_DIR/bin/chromedriver}"
 DRIVER_VERSION="${ACEPTACION_DRIVER_VERSION:-156.0.8078.80}"
-RESULT_DIR="$ACE_DIR/_output"
+RESULT_DIR="$ROOT/tests/tools/aceptacion/formatos/resultados"
 
 APP_PID=""
 DRIVER_PID=""
@@ -99,7 +99,7 @@ else
 fi
 
 echo ">>> Preparando usuario de pruebas (e2e_admin)"
-php "$ROOT/tests/tools/seed-interfaz.php"
+php "$ROOT/tests/tools/interfaz/scripts/seed-interfaz.php"
 
 echo ">>> Ejecutando Codeception"
 cd "$ROOT"

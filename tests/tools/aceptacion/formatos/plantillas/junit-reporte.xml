@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Formato vacío del reporte JUnit de Codeception (pruebas de aceptación).
+
+    ./tests/aceptacion/run.sh llena este formato con --xml y lo guarda en
+    ../resultados/report.xml.
+-->
+<testsuites>
+    <testsuite name="{{SUITE}}" tests="0" assertions="0" errors="0" failures="0" skipped="0" time="0.000">
+        <!--
+            Una entrada por escenario ejecutado:
+
+            <testcase name="{{METODO}}" class="{{CLASE}}" file="{{ARCHIVO}}"
+                      assertions="0" time="0.000">
+                <failure type="...">...</failure>   opcional
+                <skipped/>                           opcional
+            </testcase>
+        -->
+    </testsuite>
+</testsuites>

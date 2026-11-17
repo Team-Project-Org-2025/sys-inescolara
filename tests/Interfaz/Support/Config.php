@@ -44,7 +44,7 @@ final class Config
 
     public static function resultsDir(): string
     {
-        return self::ensureDir(self::env('INTERFAZ_RESULTS', PROJECT_ROOT . '/tests/Interfaz/results'));
+        return self::ensureDir(self::env('INTERFAZ_RESULTS', PROJECT_ROOT . '/tests/tools/interfaz/formatos/resultados'));
     }
 
     public static function screenshotsDir(): string

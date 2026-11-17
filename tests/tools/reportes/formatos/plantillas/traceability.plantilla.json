@@ -1,0 +1,18 @@
+{
+    "generado": "{{GENERADO}}",
+    "orden": "sidebar",
+    "resumen": {
+        "requisitos": 0,
+        "casos": 0,
+        "pass": 0,
+        "fail": 0,
+        "skip": 0,
+        "noEjecutado": 0,
+        "pruebas": 0,
+        "pruebasPass": 0,
+        "pruebasFail": 0,
+        "pruebasSkip": 0
+    },
+    "omitidas": [],
+    "modulos": []
+}

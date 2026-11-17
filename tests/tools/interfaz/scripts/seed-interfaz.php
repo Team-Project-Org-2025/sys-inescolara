@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-require_once dirname(__DIR__) . '/Interfaz/bootstrap.php';
+require_once dirname(__DIR__, 3) . '/Interfaz/bootstrap.php';
 
 use SysInescolara\Tests\Interfaz\Support\Config;
 use SysInescolara\Tests\Interfaz\Support\Db;

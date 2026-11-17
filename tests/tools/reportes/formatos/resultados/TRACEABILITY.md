@@ -1,6 +1,6 @@
 # Matriz de Trazabilidad de Pruebas — Sys Inescolara
 
-Generado: `2026-10-27 16:53:12` · Orden: sidebar del sistema
+Generado: `2026-11-18 00:07:16` · Orden: sidebar del sistema
 
 ## Resumen
 
@@ -161,7 +161,7 @@ Módulos con al menos una prueba omitida: **5** (Trazabilidad, CuentaCobrar, Cue
 ## Cómo leer esta matriz
 
 - **PASS:** todos los casos del tipo ejecutaron sin fallos. Un caso PASS puede incluir pruebas SKIP; revisa la columna **Omitidos** y la sección de pruebas omitidas.
-- **FAIL:** al menos un caso falló; revisa `tests/results/junit-*.xml`.
+- **FAIL:** al menos un caso falló; revisa `tests/tools/phpunit/formatos/resultados/junit-*.xml`.
 - **SKIP:** el caso se omitió por una limitación documentada (por ejemplo SQL exclusivo de MySQL).
 - **NO EJECUTADO:** no existe el log JUnit de esa suite; ejecuta los comandos de `GUIA_PRUEBAS.md`.
 - La evidencia incluye la clase/método y el conteo `PASS/total`.

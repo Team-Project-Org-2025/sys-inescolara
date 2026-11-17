@@ -7,10 +7,10 @@ declare(strict_types=1);
  * Ejecutor multiplataforma de las suites de integración y humo.
  *
  * Uso:
- *   php tests/tools/run-tests.php
- *   php tests/tools/run-tests.php --suite=integration
- *   php tests/tools/run-tests.php --module=13
- *   php tests/tools/run-tests.php --module=Venta --suite=smoke
+ *   php tests/tools/phpunit/scripts/run-tests.php
+ *   php tests/tools/phpunit/scripts/run-tests.php --suite=integration
+ *   php tests/tools/phpunit/scripts/run-tests.php --module=13
+ *   php tests/tools/phpunit/scripts/run-tests.php --module=Venta --suite=smoke
  *
  * Funciona igual en Linux, macOS y Windows porque invoca PHP y PHPUnit
  * mediante rutas absolutas y argumentos en forma de arreglo (sin shell).
@@ -21,11 +21,11 @@ const EXIT_FAIL = 1;
 const EXIT_USAGE = 2;
 const EXIT_ENV = 3;
 
-$root = dirname(__DIR__, 2);
+$root = dirname(__DIR__, 4);
 $config = $root . DIRECTORY_SEPARATOR . 'tests' . DIRECTORY_SEPARATOR . 'phpunit.xml';
 $phpunit = $root . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'phpunit'
     . DIRECTORY_SEPARATOR . 'phpunit' . DIRECTORY_SEPARATOR . 'phpunit';
-$resultsDefault = $root . DIRECTORY_SEPARATOR . 'tests' . DIRECTORY_SEPARATOR . 'results';
+$resultsDefault = $root . DIRECTORY_SEPARATOR . 'tests' . DIRECTORY_SEPARATOR . 'tools' . DIRECTORY_SEPARATOR . 'phpunit' . DIRECTORY_SEPARATOR . 'formatos' . DIRECTORY_SEPARATOR . 'resultados';
 
 /**
  * @return array<string, mixed>
@@ -123,14 +123,14 @@ Ejecutor de pruebas — Sys Inescolara
 =====================================
 
 Uso:
-  php tests/tools/run-tests.php [opciones]
+  php tests/tools/phpunit/scripts/run-tests.php [opciones]
 
 Opciones:
   --suite=all|integration|smoke  Suite a ejecutar (por defecto: all)
   --module=NN|Nombre            Ejecuta solo un módulo (01-31 o su nombre)
   --extension=RUTA              Carga una extensión PHP (repetible)
   --php-arg=ARG                 Argumento adicional para el PHP hijo (repetible)
-  --results-dir=RUTA            Directorio de logs y XML (por defecto tests/results)
+  --results-dir=RUTA            Directorio de logs y XML (por defecto tests/tools/phpunit/formatos/resultados)
   --no-testdox                  No muestra el detalle testdox
   --no-junit                    No genera reportes JUnit XML
   --dry-run                     Muestra los comandos sin ejecutarlos
@@ -139,19 +139,19 @@ Opciones:
   -h, --help                    Muestra esta ayuda
 
 Ejemplos:
-  php tests/tools/run-tests.php
-  php tests/tools/run-tests.php --suite=integration
-  php tests/tools/run-tests.php --suite=smoke
-  php tests/tools/run-tests.php --module=13
-  php tests/tools/run-tests.php --module=Venta --suite=smoke
-  php tests/tools/run-tests.php --module=05 --extension=/usr/lib/php/modules/pdo_sqlite.so
-  php tests/tools/run-tests.php --dry-run
+  php tests/tools/phpunit/scripts/run-tests.php
+  php tests/tools/phpunit/scripts/run-tests.php --suite=integration
+  php tests/tools/phpunit/scripts/run-tests.php --suite=smoke
+  php tests/tools/phpunit/scripts/run-tests.php --module=13
+  php tests/tools/phpunit/scripts/run-tests.php --module=Venta --suite=smoke
+  php tests/tools/phpunit/scripts/run-tests.php --module=05 --extension=/usr/lib/php/modules/pdo_sqlite.so
+  php tests/tools/phpunit/scripts/run-tests.php --dry-run
 
 En Linux/macOS también puede usar:
-  ./tests/tools/run-tests.sh
+  ./tests/tools/phpunit/scripts/run-tests.sh
 
 En Windows:
-  tests\tools\run-tests.bat
+  tests\tools\phpunit\scripts\run-tests.bat
 
 Requisitos:
   - PHP 8.2 o superior con las extensiones PDO y pdo_sqlite para integración.

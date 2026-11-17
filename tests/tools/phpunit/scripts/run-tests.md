@@ -1,0 +1,155 @@
+# `run-tests.php` — integración + humo multiplataforma
+
+> **Tipo:** PHPUnit · Integration + Smoke · PHP (Windows, Linux y macOS)
+>
+> **Atajos:** `run-tests.sh` (Linux/macOS) y `run-tests.bat` (Windows)
+
+## Qué hace
+
+Ejecuta las suites **Integration** y **Smoke** de todos los módulos o de uno
+solo, sin depender de PowerShell. Muestra el comando real, el detalle testdox,
+un resumen por suite y guarda log + JUnit en `tests/tools/phpunit/formatos/resultados/`.
+
+> **No ejecuta `Unit`.** Para las tres suites de un módulo usa
+> [`run-module.ps1`](run-module.md). Para Unit en Linux/macOS usa PHPUnit
+> directamente (ver [`README.md#recetas-phpunit`](../../README.md#recetas-phpunit)).
+
+## Requisitos
+
+- PHP 8.2 o superior en el `PATH`.
+- PHPUnit instalado en `vendor/` (`composer install`).
+- Para integración: driver `pdo_sqlite`. El script intenta detectarlo y, si no
+  lo encuentra, explica cómo instalarlo.
+- Para humo no hace falta base de datos.
+
+## Uso
+
+```bash
+php tests/tools/phpunit/scripts/run-tests.php [opciones]
+```
+
+### Atajos
+
+```bash
+# Linux / macOS
+./tests/tools/phpunit/scripts/run-tests.sh
+./tests/tools/phpunit/scripts/run-tests.sh --suite=smoke --module=13
+
+# Windows (CMD o PowerShell)
+tests\tools\phpunit\scripts\run-tests.bat
+tests\tools\phpunit\scripts\run-tests.bat --suite=integration --module=13
+```
+
+Los atajos solo comprueban que `php` exista y reenvían todos los argumentos.
+
+## Opciones
+
+| Opción | Valor | Descripción |
+| --- | --- | --- |
+| `--suite` | `all` (por defecto), `integration`, `smoke` | Suite a ejecutar. |
+| `--module` | `01`–`31` o nombre | Ejecuta solo ese módulo. |
+| `--extension` | ruta | Carga una extensión PHP (repetible). |
+| `--php-arg` | argumento | Argumento adicional para el PHP hijo (repetible). |
+| `--results-dir` | ruta | Directorio de logs y XML (por defecto `tests/tools/phpunit/formatos/resultados`). |
+| `--no-testdox` | — | No muestra el detalle testdox. |
+| `--no-junit` | — | No genera reportes JUnit XML. |
+| `--dry-run` | — | Muestra los comandos sin ejecutarlos. |
+| `--list` | — | Enumera los 31 módulos disponibles. |
+| `--verbose` | — | Muestra información adicional. |
+| `-h`, `--help` | — | Muestra la ayuda integrada. |
+
+`--module` acepta el número (`13`), el nombre (`Venta`), mayúsculas/minúsculas
+y acentos; la búsqueda normaliza ambos lados.
+
+## Ejemplos
+
+### Ambas suites, todos los módulos
+
+```bash
+php tests/tools/phpunit/scripts/run-tests.php
+```
+
+### Una sola suite
+
+```bash
+php tests/tools/phpunit/scripts/run-tests.php --suite=integration
+php tests/tools/phpunit/scripts/run-tests.php --suite=smoke
+```
+
+### Un módulo
+
+```bash
+# Integración + humo de Venta
+php tests/tools/phpunit/scripts/run-tests.php --module=13
+
+# Solo el humo de Venta
+php tests/tools/phpunit/scripts/run-tests.php --module=Venta --suite=smoke
+```
+
+### Ver antes de ejecutar
+
+```bash
+php tests/tools/phpunit/scripts/run-tests.php --list
+php tests/tools/phpunit/scripts/run-tests.php --dry-run
+php tests/tools/phpunit/scripts/run-tests.php --help
+```
+
+### SQLite manual
+
+Si `pdo_sqlite` no está habilitado globalmente, indica la ruta de la extensión
+(repetible):
+
+```bash
+php tests/tools/phpunit/scripts/run-tests.php --suite=integration \
+  --extension=/usr/lib/php/modules/sqlite3.so \
+  --extension=/usr/lib/php/modules/pdo_sqlite.so
+```
+
+En Windows:
+
+```powershell
+php tests\tools\phpunit\scripts\run-tests.php --extension=C:\xampp\php\ext\php_pdo_sqlite.dll
+```
+
+## Qué genera
+
+Con los valores por defecto, en `tests/tools/phpunit/formatos/resultados/`:
+
+| Archivo | Contenido |
+| --- | --- |
+| `integration-<slug>-<fecha>.xml` | JUnit de integración. |
+| `integration-<slug>-<fecha>.log` | Salida completa del proceso. |
+| `smoke-<slug>-<fecha>.xml` | JUnit de humo. |
+| `smoke-<slug>-<fecha>.log` | Salida completa del proceso. |
+
+`<slug>` es `all` o `NN-Modelo` (por ejemplo `13-Venta`). La fecha tiene el
+formato `YYYYMMDD-HHMMSS`.
+
+## Códigos de salida
+
+| Código | Significado |
+| ---: | --- |
+| `0` | Todas las ejecuciones terminaron bien. |
+| `1` | Al menos una suite falló. |
+| `2` | Error de uso: opción desconocida, valor inválido o módulo inexistente. |
+| `3` | Error de entorno: falta PHPUnit, `pdo_sqlite` o no se pudo crear la carpeta de resultados. |
+
+Si `--suite=all` o `integration` y falta `pdo_sqlite`, la integración se marca
+como `NO EJECUTADA`, el humo sí corre y el script termina con `3`.
+
+## Solución de problemas
+
+| Síntoma | Causa probable | Solución |
+| --- | --- | --- |
+| `La suite de integración requiere el driver PDO SQLite` | `pdo_sqlite` deshabilitado. | Habilítalo en `php.ini` o usa `--extension=...`. |
+| `Módulo no encontrado` | Número fuera de 01–31 o nombre mal escrito. | Ejecuta `--list`. |
+| `Opción no reconocida` | Argumento con formato incorrecto. | Usa `--opcion=valor` o `--opcion valor`. |
+| `No se encontró PHPUnit` | Falta `vendor/`. | Ejecuta `composer install`. |
+| Quiero Unit también | El script no lo incluye por diseño. | Usa `run-module.ps1` o PHPUnit. |
+
+## Ver también
+
+- Tres suites por módulo: [`run-module.md`](run-module.md)
+- Comandos manuales de los 93 casos:
+  [`COMANDOS_RAPIDOS.md`](../../../COMANDOS_RAPIDOS.md)
+- Recetas PHPUnit: [`README.md#recetas-phpunit`](../../README.md#recetas-phpunit)

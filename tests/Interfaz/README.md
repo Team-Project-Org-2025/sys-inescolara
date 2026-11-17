@@ -3,6 +3,10 @@
 Suite E2E con `php-webdriver` + ChromeDriver que recorre la aplicación real en
 XAMPP (`http://localhost/sys-inescolara/`).
 
+> Guías de los scripts: [`../tools/interfaz/scripts/setup-interfaz.md`](../tools/interfaz/scripts/setup-interfaz.md),
+> [`../tools/interfaz/scripts/run-interfaz.md`](../tools/interfaz/scripts/run-interfaz.md) y
+> [`../tools/interfaz/scripts/seed-interfaz.md`](../tools/interfaz/scripts/seed-interfaz.md).
+
 ## Requisitos
 
 - XAMPP con **Apache** y **MySQL** iniciados.
@@ -16,34 +20,34 @@ XAMPP (`http://localhost/sys-inescolara/`).
 
 ```powershell
 composer install
-powershell -ExecutionPolicy Bypass -File tests\tools\setup-interfaz.ps1
+powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\setup-interfaz.ps1
 ```
 
 El script verifica PHP, PHPUnit, php-webdriver y ChromeDriver, crea las carpetas
-de resultados y ejecuta `tests\tools\seed-interfaz.php`. Para omitir la semilla:
+de resultados y ejecuta `tests\tools\interfaz\scripts\seed-interfaz.php`. Para omitir la semilla:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File tests\tools\setup-interfaz.ps1 -SkipSeed
+powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\setup-interfaz.ps1 -SkipSeed
 ```
 
 ## Ejecución
 
 ```powershell
 # Toda la suite
-powershell -ExecutionPolicy Bypass -File tests\tools\run-interfaz.ps1
+powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\run-interfaz.ps1
 
 # Una suite (Autenticacion, Navegacion, Publico, Catalogo, Inventario,
 # Comercial, Operaciones, Sistema)
-powershell -ExecutionPolicy Bypass -File tests\tools\run-interfaz.ps1 -Suite Inventario
+powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\run-interfaz.ps1 -Suite Inventario
 
 # Un archivo o prueba concreta
-powershell -ExecutionPolicy Bypass -File tests\tools\run-interfaz.ps1 -Filter VentasTest
+powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\run-interfaz.ps1 -Filter VentasTest
 
 # Sin ventana de Chrome
-powershell -ExecutionPolicy Bypass -File tests\tools\run-interfaz.ps1 -Headless
+powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\run-interfaz.ps1 -Headless
 
 # Sin volver a crear el usuario
-powershell -ExecutionPolicy Bypass -File tests\tools\run-interfaz.ps1 -SkipSeed
+powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\run-interfaz.ps1 -SkipSeed
 ```
 
 También se puede invocar PHPUnit directamente:
@@ -52,8 +56,8 @@ También se puede invocar PHPUnit directamente:
 php vendor\phpunit\phpunit\phpunit -c tests\Interfaz\phpunit.xml --testsuite Comercial
 ```
 
-Los JUnit quedan en `tests/Interfaz/results/junit-*.xml`. Las capturas de los
-fallos se guardan en `tests/Interfaz/results/screenshots/`.
+Los JUnit quedan en `tests/tools/interfaz/formatos/resultados/junit-*.xml`. Las capturas de los
+fallos se guardan en `tests/tools/interfaz/formatos/resultados/screenshots/`.
 
 ## Configuración
 
@@ -67,7 +71,7 @@ sobrescribirlas con variables de entorno:
 | `INTERFAZ_HEADLESS` | `0` |
 | `INTERFAZ_USER` | `e2e_admin` |
 | `INTERFAZ_PASSWORD` | `E2eAdmin123!` |
-| `INTERFAZ_RESULTS` | `tests/Interfaz/results` |
+| `INTERFAZ_RESULTS` | `tests/tools/interfaz/formatos/resultados` |
 | `DB_*` / `DB_SEC_*` | Valores del `.env` |
 
 ## Cobertura

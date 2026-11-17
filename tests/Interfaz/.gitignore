@@ -1,4 +1,4 @@
 /bin/
-/results/
+# /results/ -> movido a tools/interfaz/formatos/resultados
 /.env.interfaz.bak
 /.phpunit.cache/

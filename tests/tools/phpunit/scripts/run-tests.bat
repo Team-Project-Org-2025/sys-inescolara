@@ -1,18 +1,18 @@
 @echo off
 rem =====================================================================
 rem  Ejecutor multiplataforma de pruebas - Sys Inescolara
-rem  Envoltura para Windows de tests\tools\run-tests.php
+rem  Envoltura para Windows de tests\tools\phpunit\scripts\run-tests.php
 rem
 rem  Uso:
-rem    tests\tools\run-tests.bat
-rem    tests\tools\run-tests.bat --suite=integration
-rem    tests\tools\run-tests.bat --suite=smoke
-rem    tests\tools\run-tests.bat --module=13
+rem    tests\tools\phpunit\scripts\run-tests.bat
+rem    tests\tools\phpunit\scripts\run-tests.bat --suite=integration
+rem    tests\tools\phpunit\scripts\run-tests.bat --suite=smoke
+rem    tests\tools\phpunit\scripts\run-tests.bat --module=13
 rem =====================================================================
 setlocal EnableExtensions
 
 set "SCRIPT_DIR=%~dp0"
-set "ROOT_DIR=%SCRIPT_DIR%..\..\"
+set "ROOT_DIR=%SCRIPT_DIR%..\..\..\..\"
 set "RUNNER=%SCRIPT_DIR%run-tests.php"
 
 where php >nul 2>nul

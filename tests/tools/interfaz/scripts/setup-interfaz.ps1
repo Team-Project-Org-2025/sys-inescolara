@@ -7,10 +7,10 @@
     semilla del usuario de prueba y prepara las carpetas de resultados.
 
 .EXAMPLE
-    powershell -ExecutionPolicy Bypass -File tests\tools\setup-interfaz.ps1
+    powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\setup-interfaz.ps1
 
 .EXAMPLE
-    powershell -ExecutionPolicy Bypass -File tests\tools\setup-interfaz.ps1 -SkipSeed
+    powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\setup-interfaz.ps1 -SkipSeed
 #>
 param(
     [switch]$SkipSeed,
@@ -18,7 +18,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$root = Resolve-Path (Join-Path $PSScriptRoot '..\..')
+$root = Resolve-Path (Join-Path $PSScriptRoot '..\..\..\..')
 Set-Location $root
 
 Write-Host '==> Verificando PHP' -ForegroundColor Cyan
@@ -47,13 +47,13 @@ if (-not (Test-Path $driver)) {
 & $driver --version
 
 Write-Host '==> Preparando carpetas de resultados' -ForegroundColor Cyan
-foreach ($dir in @('tests\Interfaz\results', 'tests\Interfaz\results\screenshots', 'tests\Interfaz\results\downloads')) {
+foreach ($dir in @('tests\tools\interfaz\formatos\resultados', 'tests\tools\interfaz\formatos\resultados\screenshots', 'tests\tools\interfaz\formatos\resultados\downloads')) {
     if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
 }
 
 if (-not $SkipSeed) {
     Write-Host '==> Creando/actualizando usuario de prueba' -ForegroundColor Cyan
-    & php 'tests\tools\seed-interfaz.php'
+    & php 'tests\tools\interfaz\scripts\seed-interfaz.php'
     if ($LASTEXITCODE -ne 0) { throw 'No se pudo crear el usuario de prueba.' }
 }
 
@@ -67,4 +67,4 @@ try {
 
 Write-Host ''
 Write-Host 'Entorno de interfaz listo.' -ForegroundColor Green
-Write-Host 'Ejecute: powershell -ExecutionPolicy Bypass -File tests\tools\run-interfaz.ps1'
+Write-Host 'Ejecute: powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\run-interfaz.ps1'

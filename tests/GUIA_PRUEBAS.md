@@ -2,9 +2,12 @@
 
 Esta guía explica cómo ejecutar las tres suites, en qué orden se ejecutan y qué
 resultado se debe esperar en cada una. La matriz de trazabilidad se actualiza
-en [`TRACEABILITY.md`](TRACEABILITY.md) y [`traceability.json`](traceability.json).
-Para copiar y pegar los comandos de un módulo concreto, usa
-[`COMANDOS_RAPIDOS.md`](COMANDOS_RAPIDOS.md).
+en [`TRACEABILITY.md`](tools/reportes/formatos/resultados/TRACEABILITY.md) y [`traceability.json`](tools/reportes/formatos/resultados/traceability.json).
+
+- Para elegir el ejecutor correcto: [`tools/README.md`](tools/README.md).
+- Para la guía detallada de un script: `tools/<script>.md`.
+- Para copiar y pegar los comandos de un módulo concreto (93 casos manuales):
+  [`COMANDOS_RAPIDOS.md`](COMANDOS_RAPIDOS.md).
 
 ## 1. Requisitos
 
@@ -164,7 +167,7 @@ Resultados de referencia de la última ejecución (2026-10-27):
 Las 7 pruebas omitidas son limitaciones documentadas de SQLite frente a MySQL
 (por ejemplo `HAVING` sin `GROUP BY`, `UPDATE ... LIMIT`, `information_schema`
 o métodos que instancian modelos que abren MySQL real). Están listadas en
-[`TRACEABILITY.md`](TRACEABILITY.md#pruebas-omitidas-skip).
+[`TRACEABILITY.md`](tools/reportes/formatos/resultados/TRACEABILITY.md#pruebas-omitidas-skip).
 
 La matriz contabiliza **945 pruebas ligadas directamente a los 31 modelos**.
 Las 4 restantes de la suite completa son 3 pruebas de autoload
@@ -176,6 +179,8 @@ Cada módulo tiene tres piezas que se ejecutan por separado: su clase unitaria,
 su clase de integración y su caso de humo. Para verificarlo hay dos caminos.
 
 ### 7.1 Camino rápido (script incluido)
+
+> Guía completa del script: [`tools/phpunit/scripts/run-module.md`](tools/phpunit/scripts/run-module.md).
 
 El script recibe **un solo argumento: Qué módulo quieres probar**. Ese argumento
 puede ser el número, el nombre del modelo, el nombre del sidebar o el requisito.
@@ -199,16 +204,16 @@ Humo), no una sola. No hay que indicar la suite.
 #### Ejemplo: solo Lote (`05`)
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\run-module.ps1 05
+powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\run-module.ps1 05
 ```
 
 Qué hace, en orden:
 
-1. Busca el módulo `05` en `tests/traceability.json` (modelo `Lote`, `RF-05`).
+1. Busca el módulo `05` en `tests/tools/reportes/formatos/resultados/traceability.json` (modelo `Lote`, `RF-05`).
 2. Ejecuta `tests\Unit\Catalogo\LoteTest.php` → 18 pruebas.
 3. Ejecuta `tests\Integration\Catalogo\LoteRepositoryTest.php` → 20 pruebas.
 4. Ejecuta el caso de humo `CP-SMOKE-05` → 2 pruebas.
-5. Guarda los JUnit en `tests\results\module-Lote-{unit,integration,smoke}.xml`.
+5. Guarda los JUnit en `tests\tools\phpunit\formatos\resultados\module-Lote-{unit,integration,smoke}.xml`.
 6. Compara los conteos y muestra el resumen.
 
 Salida real (resumida):
@@ -234,7 +239,7 @@ Humo                 2         2    2    0    0         24 COINCIDE
 
 Modulos: 1 | COINCIDE: 1 | NO COINCIDE: 0
 Pruebas: 40 | Aserciones: 1262 | FAIL: 0 | SKIP: 0
-RESULTADO: COINCIDE con tests/traceability.json
+RESULTADO: COINCIDE con tests/tools/reportes/formatos/resultados/traceability.json
 ```
 
 En modo de un módulo sí se ve la salida de PHPUnit. Los mensajes
@@ -245,10 +250,10 @@ base de datos; **no son fallos**.
 
 ```powershell
 # Explícito
-powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\run-module.ps1 all
+powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\run-module.ps1 all
 
 # O sin argumento: hace exactamente lo mismo
-powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\run-module.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\run-module.ps1
 ```
 
 Salida esperada al final:
@@ -267,7 +272,7 @@ Ejecutando los 31 modulos (Unit + Integration + Smoke)...
 Modulos: 31 | COINCIDE: 31 | NO COINCIDE: 0
 Pruebas: 945 | Aserciones: 11677 | FAIL: 0 | SKIP: 7
 Tiempo: 38,1 s
-RESULTADO: COINCIDE con tests/traceability.json
+RESULTADO: COINCIDE con tests/tools/reportes/formatos/resultados/traceability.json
 ```
 
 Tarda alrededor de 40 segundos. En modo `all` no muestra la salida de PHPUnit
@@ -291,9 +296,9 @@ Unit e Integration se pasa la **ruta del archivo de prueba**; para humo se usa
 el `--filter` con el ID del caso:
 
 ```powershell
-php vendor\phpunit\phpunit\phpunit -c tests\phpunit.xml tests\Unit\Catalogo\PlantaTest.php --log-junit tests\results\module-Planta-unit.xml --do-not-cache-result
-php vendor\phpunit\phpunit\phpunit -c tests\phpunit.xml tests\Integration\Catalogo\PlantaRepositoryTest.php --log-junit tests\results\module-Planta-integration.xml --do-not-cache-result
-php vendor\phpunit\phpunit\phpunit -c tests\phpunit.xml --testsuite Smoke --filter CP-SMOKE-01 --log-junit tests\results\module-Planta-smoke.xml --do-not-cache-result
+php vendor\phpunit\phpunit\phpunit -c tests\phpunit.xml tests\Unit\Catalogo\PlantaTest.php --log-junit tests\tools\phpunit\formatos\resultados\module-Planta-unit.xml --do-not-cache-result
+php vendor\phpunit\phpunit\phpunit -c tests\phpunit.xml tests\Integration\Catalogo\PlantaRepositoryTest.php --log-junit tests\tools\phpunit\formatos\resultados\module-Planta-integration.xml --do-not-cache-result
+php vendor\phpunit\phpunit\phpunit -c tests\phpunit.xml --testsuite Smoke --filter CP-SMOKE-01 --log-junit tests\tools\phpunit\formatos\resultados\module-Planta-smoke.xml --do-not-cache-result
 ```
 
 Qué esperar en la consola de cada uno:
@@ -310,7 +315,9 @@ fallos**. Lo que manda es el código de salida y la línea `OK`/`FAILURES!`.
 
 Para otro módulo cambia solo la ruta y el ID de humo. Los tres comandos de cada
 uno de los 31 módulos están listos para copiar en
-[`COMANDOS_RAPIDOS.md`](COMANDOS_RAPIDOS.md).
+[`COMANDOS_RAPIDOS.md`](COMANDOS_RAPIDOS.md). El script equivalente es
+[`tools/phpunit/scripts/run-module.ps1`](tools/phpunit/scripts/run-module.md); para una sola suite, archivo o
+método usa las [recetas PHPUnit](tools/README.md#recetas-phpunit).
 
 > **Por qué la ruta y no `--filter`:** `--filter` es una coincidencia por
 > subcadena. `--filter InsumoTest` también ejecuta `RegistroInsumoTest` (23
@@ -352,14 +359,14 @@ Revisa estos atributos del nodo raíz:
 Comprobación rápida desde PowerShell:
 
 ```powershell
-$xml = [xml](Get-Content tests\results\module-Planta-unit.xml -Raw)
+$xml = [xml](Get-Content tests\tools\phpunit\formatos\resultados\module-Planta-unit.xml -Raw)
 $xml.testsuites.testsuite | Select-Object name, tests, assertions, failures, errors, skipped
 ```
 
 Y contra la matriz:
 
 ```powershell
-$json = Get-Content tests\traceability.json -Raw | ConvertFrom-Json
+$json = Get-Content tests\tools\reportes\formatos\resultados\traceability.json -Raw | ConvertFrom-Json
 $json.modulos | Where-Object modelo -eq 'Planta' |
     Select-Object modelo, idRequisito,
         @{n='unit';e={$_.casos[0].pruebas}},
@@ -370,7 +377,7 @@ $json.modulos | Where-Object modelo -eq 'Planta' |
 ```
 
 Los conteos de referencia de los 31 módulos están en el **Resumen por módulo**
-de [`TRACEABILITY.md`](TRACEABILITY.md) y en `tests/traceability.json`. La
+de [`TRACEABILITY.md`](tools/reportes/formatos/resultados/TRACEABILITY.md) y en `tests/tools/reportes/formatos/resultados/traceability.json`. La
 columna **Omitidos** indica cuántos `skipped` debe reportar el XML; un `SKIP`
 no es un fallo, pero el número debe coincidir.
 
@@ -394,7 +401,7 @@ Debe imprimir `OK, but some tests were skipped!` con
 `Tests: 949, Assertions: 11683, Skipped: 7` y código de salida `0`. Después:
 
 ```powershell
-php tests\tools\generate_traceability.php
+php tests\tools\reportes\scripts\generate_traceability.php
 ```
 
 Debe reportar `31 requisitos, 93 casos (93 PASS, 0 FAIL, 0 SKIP, 0 sin ejecutar)`
@@ -440,27 +447,30 @@ pruebas PASS / pruebas ejecutadas.
 | 31 | `PasswordReset` | 4/4 | 9/9 | 2/2 |
 
 Las aserciones exactas de cada módulo están en
-[`TRACEABILITY.md`](TRACEABILITY.md) (columna **Evidencia**) y en
+[`TRACEABILITY.md`](tools/reportes/formatos/resultados/TRACEABILITY.md) (columna **Evidencia**) y en
 `traceability.json` (`casos[].pruebas`, `casos[].pass`, `casos[].skip`).
 
 ## 8. Regenerar la matriz de trazabilidad
 
+> Guía completa del generador:
+> [`tools/reportes/scripts/generate_traceability.md`](tools/reportes/scripts/generate_traceability.md).
+
 1. Ejecuta las tres suites guardando JUnit:
 
 ```powershell
-New-Item -ItemType Directory -Force tests\results | Out-Null
-php vendor\phpunit\phpunit\phpunit -c tests\phpunit.xml --testsuite Unit        --log-junit tests\results\junit-unit.xml        --do-not-cache-result
-php vendor\phpunit\phpunit\phpunit -c tests\phpunit.xml --testsuite Integration --log-junit tests\results\junit-integration.xml --do-not-cache-result
-php vendor\phpunit\phpunit\phpunit -c tests\phpunit.xml --testsuite Smoke       --log-junit tests\results\junit-smoke.xml       --do-not-cache-result
+New-Item -ItemType Directory -Force tests\tools\phpunit\formatos\resultados | Out-Null
+php vendor\phpunit\phpunit\phpunit -c tests\phpunit.xml --testsuite Unit        --log-junit tests\tools\phpunit\formatos\resultados\junit-unit.xml        --do-not-cache-result
+php vendor\phpunit\phpunit\phpunit -c tests\phpunit.xml --testsuite Integration --log-junit tests\tools\phpunit\formatos\resultados\junit-integration.xml --do-not-cache-result
+php vendor\phpunit\phpunit\phpunit -c tests\phpunit.xml --testsuite Smoke       --log-junit tests\tools\phpunit\formatos\resultados\junit-smoke.xml       --do-not-cache-result
 ```
 
 2. Regenera los documentos:
 
 ```powershell
-php tests\tools\generate_traceability.php
+php tests\tools\reportes\scripts\generate_traceability.php
 ```
 
-Esto sobrescribe `tests/TRACEABILITY.md` y `tests/traceability.json` con el
+Esto sobrescribe `tests/tools/reportes/formatos/resultados/TRACEABILITY.md` y `tests/tools/reportes/formatos/resultados/traceability.json` con el
 estado real (`PASS`, `FAIL`, `SKIP` o `NO EJECUTADO`) de cada caso.
 
 ## 9. Convenciones para agregar pruebas

@@ -1,2 +1,2 @@
 .phpunit.cache/
-results/*.xml
+# results/*.xml -> movido a tools/phpunit/formatos/resultados

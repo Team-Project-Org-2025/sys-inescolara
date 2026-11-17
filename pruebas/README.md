@@ -28,7 +28,8 @@ Especies, Clientes, Insumos, Lotes y Ventas**, y el CRUD de **Plantas**
 | --- | --- |
 | [`COMANDOS.md`](COMANDOS.md) | Todos los comandos y pasos listos para copiar y pegar: requisitos, servidor, CLI, GUI, diagnóstico y limpieza. |
 | [`TRACEABILITY.md`](TRACEABILITY.md) | Matriz de trazabilidad: casos de prueba, cobertura de los 31 requisitos y observaciones de contrato. |
-| [`../tests/TRACEABILITY.md`](../tests/TRACEABILITY.md) | Matriz de la suite PHPUnit, complementaria a esta. |
+| [`../tests/tools/reportes/formatos/resultados/TRACEABILITY.md`](../tests/tools/reportes/formatos/resultados/TRACEABILITY.md) | Matriz de la suite PHPUnit, complementaria a esta. |
+| [`../tests/tools/README.md`](../tests/tools/README.md) | Índice de ejecutores de pruebas (PHPUnit, Selenium, aceptación y estos scripts de API). |
 
 ---
 

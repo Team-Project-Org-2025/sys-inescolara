@@ -26,7 +26,7 @@ final class DriverFactory
         $driverPath = Config::driverPath();
         if (!is_file($driverPath)) {
             throw new \RuntimeException(
-                'No se encontró chromedriver.exe en ' . $driverPath . '. Ejecute tests/tools/setup-interfaz.ps1.'
+                'No se encontró chromedriver.exe en ' . $driverPath . '. Ejecute tests/tools/interfaz/scripts/setup-interfaz.ps1.'
             );
         }
 
