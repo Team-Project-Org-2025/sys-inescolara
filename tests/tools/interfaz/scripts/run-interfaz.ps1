@@ -32,7 +32,7 @@ if ($Headless) {
 }
 
 if (-not $SkipSeed) {
-    & php 'tests\tools\interfaz\scripts\seed-interfaz.php'
+    & php 'tests\tools\interfaz\scripts\lib\seed-interfaz.php'
     if ($LASTEXITCODE -ne 0) { throw 'No se pudo preparar el usuario de prueba.' }
 }
 

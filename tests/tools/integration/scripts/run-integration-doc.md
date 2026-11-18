@@ -1,6 +1,9 @@
-# `run-integration-doc.ps1` — integración + formato Word
+# `run-integration-doc` — integración + formato Word
 
-> **Tipo:** PowerShell · PHPUnit · Word (Open XML)
+> **Tipo:** PHPUnit · Word (Open XML) · PowerShell y Bash
+>
+> **Ejecutores:** `run-integration-doc.ps1` (Windows) y
+> `run-integration-doc.sh` (Linux/macOS)
 >
 > **Atajo:** ejecuta las 31 pruebas de integración, genera una captura nueva por
 > módulo y llena una **copia** del formato Word. El documento original nunca se
@@ -41,23 +44,28 @@ de presentación de PHPUnit.
 
 ## Requisitos
 
-- PHP 8.2 o superior en el `PATH`.
+- PHP 8.2 o superior en el `PATH`, con `dom`, `mbstring` y `zlib`.
 - PHPUnit instalado en `vendor/` (`composer install`).
 - Driver `pdo_sqlite` habilitado.
-- PowerShell 5.1 o superior.
+- Chrome, Chromium, Edge o Brave para renderizar las capturas.
 - El formato original en
   `tests/tools/integration/formatos/plantillas/`.
+- PowerShell 5.1+ en Windows, o Bash en Linux/macOS.
+
+El ejecutor Bash no necesita `zip` ni `unzip`: el motor
+`scripts/lib/integration-doc.php` lee y escribe el `.docx` con un lector/escritor
+ZIP propio sobre `zlib`.
 
 ## Uso
+
+### Windows (PowerShell)
 
 ```powershell
 # Los 31 módulos (recomendado)
 powershell -ExecutionPolicy Bypass -File tests\tools\integration\scripts\run-integration-doc.ps1
 
-# Un módulo por número
+# Un módulo por número o por nombre
 powershell -ExecutionPolicy Bypass -File tests\tools\integration\scripts\run-integration-doc.ps1 -Module 29
-
-# Un módulo por nombre de modelo
 powershell -ExecutionPolicy Bypass -File tests\tools\integration\scripts\run-integration-doc.ps1 -Module Backup
 
 # Elegir la ruta de salida
@@ -67,13 +75,36 @@ powershell -ExecutionPolicy Bypass -File tests\tools\integration\scripts\run-int
 powershell -ExecutionPolicy Bypass -File tests\tools\integration\scripts\run-integration-doc.ps1 -KeepWorking
 ```
 
+### Linux / macOS (Bash)
+
+```bash
+# Los 31 módulos (recomendado)
+./tests/tools/integration/scripts/run-integration-doc.sh
+
+# Un módulo por número o por nombre
+./tests/tools/integration/scripts/run-integration-doc.sh --module=29
+./tests/tools/integration/scripts/run-integration-doc.sh --module=Backup
+
+# Elegir la ruta de salida
+./tests/tools/integration/scripts/run-integration-doc.sh --module=PasswordReset --output=/tmp/cuadro-31.docx
+
+# Conservar los JUnit temporales
+./tests/tools/integration/scripts/run-integration-doc.sh --keep-working
+```
+
+Si el navegador no está en una ruta conocida:
+
+```bash
+CHROME_BIN=/usr/bin/chromium ./tests/tools/integration/scripts/run-integration-doc.sh
+```
+
 ## Parámetros
 
-| Parámetro | Valor por defecto | Descripción |
-| --- | --- | --- |
-| `-Module` | `all` | `all`, un número `01`-`31` o parte del nombre del modelo. |
-| `-Output` | `formatos/resultados/Formato-Prueba-Integración-<fecha>.docx` | Ruta del `.docx` de salida. |
-| `-KeepWorking` | desactivado | Conserva los JUnit temporales de la corrida. |
+| PowerShell | Bash | Valor por defecto | Descripción |
+| --- | --- | --- | --- |
+| `-Module` | `--module` | `all` | `all`, un número `01`-`31` o parte del nombre del modelo. |
+| `-Output` | `--output` | `formatos/resultados/Formato-Prueba-Integración-<fecha>.docx` | Ruta del `.docx` de salida. |
+| `-KeepWorking` | `--keep-working` | desactivado | Conserva los JUnit temporales de la corrida. |
 
 ## Qué genera
 
@@ -104,7 +135,7 @@ exclusivos de MySQL que no son portables a SQLite.
 
 ## Modo parcial
 
-Si usas `-Module`, el script solo ejecuta y actualiza los cuadros elegidos. El
+Si eliges un módulo, el script solo ejecuta y actualiza los cuadros elegidos. El
 resumen general se marca como **parcial** y la cobertura indica cuántos módulos
 se ejecutaron. Los cuadros no elegidos conservan los datos del formato.
 
@@ -114,14 +145,15 @@ se ejecutaron. Los cuadros no elegidos conservan los datos del formato.
 | ---: | --- |
 | `0` | Copia generada sin fallos. |
 | `1` | Hay módulos con fallos; revisa el JUnit y las observaciones. |
-| `2` | El filtro `-Module` no coincide con ningún módulo. |
-| `3` | Error de entorno: falta PHP, PHPUnit o el formato original. |
+| `2` | El filtro de módulo no coincide con ninguno. |
+| `3` | Error de entorno: falta PHP, PHPUnit, Chrome o el formato original. |
 
 ## Solución de problemas
 
 | Síntoma | Causa | Solución |
 | --- | --- | --- |
-| `ERROR: no se encontró php en el PATH` | PHP no está en el `PATH`. | Abre una consola nueva o agrega `C:\xampp\php`. |
+| `no se encontró php en el PATH` | PHP no está en el `PATH`. | Abre una consola nueva o agrega `C:\xampp\php`. |
+| `No se encontró Chrome/Chromium` | El navegador no está en una ruta conocida (Linux). | Define `CHROME_BIN` con la ruta del binario. |
 | `falta el formato original` | El `.docx` no está en `plantillas/`. | Restaura el archivo original en esa ruta. |
 | `No se puede tener acceso al archivo` al guardar | La copia está abierta en Word. | Ciérrala y vuelve a ejecutar. |
 | Todos los cuadros salen `NO EJECUTADO` | No se ejecutó PHPUnit. | Revisa la salida y el `--log-junit` temporal. |

@@ -53,7 +53,7 @@ foreach ($dir in @('tests\tools\interfaz\formatos\resultados', 'tests\tools\inte
 
 if (-not $SkipSeed) {
     Write-Host '==> Creando/actualizando usuario de prueba' -ForegroundColor Cyan
-    & php 'tests\tools\interfaz\scripts\seed-interfaz.php'
+    & php 'tests\tools\interfaz\scripts\lib\seed-interfaz.php'
     if ($LASTEXITCODE -ne 0) { throw 'No se pudo crear el usuario de prueba.' }
 }
 

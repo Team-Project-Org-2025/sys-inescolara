@@ -7,14 +7,14 @@ declare(strict_types=1);
  * Codeception (`tests/tools/aceptacion/formatos/resultados/report.xml`).
  *
  * Uso:
- *   php tests/tools/reportes/scripts/generate_aceptacion.php
+ *   php tests/tools/reportes/scripts/lib/generate_aceptacion.php
  */
 
-$root = dirname(__DIR__, 4);
+$root = dirname(__DIR__, 5);
 $acceptanceDir = $root . '/tests/aceptacion';
 $reportFile = $root . '/tests/tools/aceptacion/formatos/resultados/report.xml';
 $outputFile = $root . '/tests/tools/reportes/formatos/resultados/ACEPTACION.md';
-$templateFile = dirname(__DIR__) . '/formatos/plantillas/ACEPTACION.plantilla.md';
+$templateFile = dirname(__DIR__, 2) . '/formatos/plantillas/ACEPTACION.plantilla.md';
 
 require_once $root . '/vendor/autoload.php';
 require_once $acceptanceDir . '/_support/ModuleCatalog.php';

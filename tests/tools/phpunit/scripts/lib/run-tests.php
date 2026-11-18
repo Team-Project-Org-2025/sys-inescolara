@@ -7,10 +7,10 @@ declare(strict_types=1);
  * Ejecutor multiplataforma de las suites de integración y humo.
  *
  * Uso:
- *   php tests/tools/phpunit/scripts/run-tests.php
- *   php tests/tools/phpunit/scripts/run-tests.php --suite=integration
- *   php tests/tools/phpunit/scripts/run-tests.php --module=13
- *   php tests/tools/phpunit/scripts/run-tests.php --module=Venta --suite=smoke
+ *   php tests/tools/phpunit/scripts/lib/run-tests.php
+ *   php tests/tools/phpunit/scripts/lib/run-tests.php --suite=integration
+ *   php tests/tools/phpunit/scripts/lib/run-tests.php --module=13
+ *   php tests/tools/phpunit/scripts/lib/run-tests.php --module=Venta --suite=smoke
  *
  * Funciona igual en Linux, macOS y Windows porque invoca PHP y PHPUnit
  * mediante rutas absolutas y argumentos en forma de arreglo (sin shell).
@@ -21,7 +21,7 @@ const EXIT_FAIL = 1;
 const EXIT_USAGE = 2;
 const EXIT_ENV = 3;
 
-$root = dirname(__DIR__, 4);
+$root = dirname(__DIR__, 5);
 $config = $root . DIRECTORY_SEPARATOR . 'tests' . DIRECTORY_SEPARATOR . 'phpunit.xml';
 $phpunit = $root . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'phpunit'
     . DIRECTORY_SEPARATOR . 'phpunit' . DIRECTORY_SEPARATOR . 'phpunit';
@@ -123,7 +123,7 @@ Ejecutor de pruebas — Sys Inescolara
 =====================================
 
 Uso:
-  php tests/tools/phpunit/scripts/run-tests.php [opciones]
+  php tests/tools/phpunit/scripts/lib/run-tests.php [opciones]
 
 Opciones:
   --suite=all|integration|smoke  Suite a ejecutar (por defecto: all)
@@ -139,19 +139,19 @@ Opciones:
   -h, --help                    Muestra esta ayuda
 
 Ejemplos:
-  php tests/tools/phpunit/scripts/run-tests.php
-  php tests/tools/phpunit/scripts/run-tests.php --suite=integration
-  php tests/tools/phpunit/scripts/run-tests.php --suite=smoke
-  php tests/tools/phpunit/scripts/run-tests.php --module=13
-  php tests/tools/phpunit/scripts/run-tests.php --module=Venta --suite=smoke
-  php tests/tools/phpunit/scripts/run-tests.php --module=05 --extension=/usr/lib/php/modules/pdo_sqlite.so
-  php tests/tools/phpunit/scripts/run-tests.php --dry-run
+  php tests/tools/phpunit/scripts/lib/run-tests.php
+  php tests/tools/phpunit/scripts/lib/run-tests.php --suite=integration
+  php tests/tools/phpunit/scripts/lib/run-tests.php --suite=smoke
+  php tests/tools/phpunit/scripts/lib/run-tests.php --module=13
+  php tests/tools/phpunit/scripts/lib/run-tests.php --module=Venta --suite=smoke
+  php tests/tools/phpunit/scripts/lib/run-tests.php --module=05 --extension=/usr/lib/php/modules/pdo_sqlite.so
+  php tests/tools/phpunit/scripts/lib/run-tests.php --dry-run
 
 En Linux/macOS también puede usar:
   ./tests/tools/phpunit/scripts/run-tests.sh
 
 En Windows:
-  tests\tools\phpunit\scripts\run-tests.bat
+  powershell -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\run-tests.ps1
 
 Requisitos:
   - PHP 8.2 o superior con las extensiones PDO y pdo_sqlite para integración.

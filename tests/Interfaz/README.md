@@ -3,9 +3,8 @@
 Suite E2E con `php-webdriver` + ChromeDriver que recorre la aplicación real en
 XAMPP (`http://localhost/sys-inescolara/`).
 
-> Guías de los scripts: [`../tools/interfaz/scripts/setup-interfaz.md`](../tools/interfaz/scripts/setup-interfaz.md),
-> [`../tools/interfaz/scripts/run-interfaz.md`](../tools/interfaz/scripts/run-interfaz.md) y
-> [`../tools/interfaz/scripts/seed-interfaz.md`](../tools/interfaz/scripts/seed-interfaz.md).
+> Guías de los scripts: [`../tools/interfaz/scripts/setup-interfaz.md`](../tools/interfaz/scripts/setup-interfaz.md) y
+> [`../tools/interfaz/scripts/run-interfaz.md`](../tools/interfaz/scripts/run-interfaz.md).
 
 ## Requisitos
 
@@ -24,10 +23,19 @@ powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\setup-inte
 ```
 
 El script verifica PHP, PHPUnit, php-webdriver y ChromeDriver, crea las carpetas
-de resultados y ejecuta `tests\tools\interfaz\scripts\seed-interfaz.php`. Para omitir la semilla:
+de resultados y ejecuta la semilla interna
+`tests/tools/interfaz/scripts/lib/seed-interfaz.php`. Para omitir la semilla:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\setup-interfaz.ps1 -SkipSeed
+```
+
+En Linux/macOS:
+
+```bash
+composer install
+./tests/tools/interfaz/scripts/setup-interfaz.sh
+./tests/tools/interfaz/scripts/setup-interfaz.sh --skip-seed
 ```
 
 ## Ejecución
@@ -48,6 +56,16 @@ powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\run-interf
 
 # Sin volver a crear el usuario
 powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\run-interfaz.ps1 -SkipSeed
+```
+
+En Linux/macOS:
+
+```bash
+./tests/tools/interfaz/scripts/run-interfaz.sh
+./tests/tools/interfaz/scripts/run-interfaz.sh --suite Inventario
+./tests/tools/interfaz/scripts/run-interfaz.sh --filter VentasTest
+./tests/tools/interfaz/scripts/run-interfaz.sh --headless
+./tests/tools/interfaz/scripts/run-interfaz.sh --skip-seed
 ```
 
 También se puede invocar PHPUnit directamente:

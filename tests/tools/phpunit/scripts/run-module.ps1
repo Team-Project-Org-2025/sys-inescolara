@@ -29,7 +29,7 @@ Set-Location $root
 
 $jsonPath = Join-Path $root 'tests\tools\reportes\formatos\resultados\traceability.json'
 if (-not (Test-Path $jsonPath)) {
-    throw "No existe $jsonPath. Ejecuta primero: php tests\tools\reportes\scripts\generate_traceability.php"
+    throw "No existe $jsonPath. Ejecuta primero: powershell -ExecutionPolicy Bypass -File tests\tools\reportes\scripts\generate_traceability.ps1"
 }
 
 $data = Get-Content $jsonPath -Raw | ConvertFrom-Json

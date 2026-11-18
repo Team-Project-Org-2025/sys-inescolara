@@ -401,8 +401,10 @@ Debe imprimir `OK, but some tests were skipped!` con
 `Tests: 949, Assertions: 11683, Skipped: 7` y código de salida `0`. Después:
 
 ```powershell
-php tests\tools\reportes\scripts\generate_traceability.php
+powershell -ExecutionPolicy Bypass -File tests\tools\reportes\scripts\generate_traceability.ps1
 ```
+
+En Linux/macOS: `./tests/tools/reportes/scripts/generate_traceability.sh`.
 
 Debe reportar `31 requisitos, 93 casos (93 PASS, 0 FAIL, 0 SKIP, 0 sin ejecutar)`
 y, en la línea siguiente, **945 pruebas de modelo** (938 PASS, 7 SKIP).
@@ -467,8 +469,10 @@ php vendor\phpunit\phpunit\phpunit -c tests\phpunit.xml --testsuite Smoke       
 2. Regenera los documentos:
 
 ```powershell
-php tests\tools\reportes\scripts\generate_traceability.php
+powershell -ExecutionPolicy Bypass -File tests\tools\reportes\scripts\generate_traceability.ps1
 ```
+
+En Linux/macOS: `./tests/tools/reportes/scripts/generate_traceability.sh`.
 
 Esto sobrescribe `tests/tools/reportes/formatos/resultados/TRACEABILITY.md` y `tests/tools/reportes/formatos/resultados/traceability.json` con el
 estado real (`PASS`, `FAIL`, `SKIP` o `NO EJECUTADO`) de cada caso.

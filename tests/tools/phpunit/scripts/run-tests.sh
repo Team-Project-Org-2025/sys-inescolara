@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
-# Ejecutor multiplataforma de pruebas — Sys Inescolara
-# Envoltura para Linux/macOS de tests/tools/phpunit/scripts/run-tests.php
+# Ejecutor de Integration + Smoke — Sys Inescolara
+# Envoltura para Linux/macOS de tests/tools/phpunit/scripts/lib/run-tests.php
 #
 # Uso:
 #   ./tests/tools/phpunit/scripts/run-tests.sh
@@ -13,7 +13,8 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/../../../.." && pwd)"
-RUNNER="${SCRIPT_DIR}/run-tests.php"
+PHP_BIN="${PHP_BIN:-php}"
+RUNNER="${SCRIPT_DIR}/lib/run-tests.php"
 
 if ! command -v php >/dev/null 2>&1; then
     echo "[ERROR] No se encontró el ejecutable 'php' en el PATH." >&2

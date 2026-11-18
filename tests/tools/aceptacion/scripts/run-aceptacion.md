@@ -1,6 +1,8 @@
-# `run-aceptacion.sh` — suite de aceptación completa
+# `run-aceptacion` — suite de aceptación completa
 
-> **Tipo:** Codeception + WebDriver · Bash (Linux/macOS)
+> **Tipo:** Codeception + WebDriver · PowerShell y Bash
+>
+> **Ejecutores:** `run-aceptacion.ps1` (Windows) y `run-aceptacion.sh` (Linux/macOS)
 >
 > **Atajo:** levanta la aplicación y ChromeDriver, prepara el usuario
 > `e2e_admin`, ejecuta la suite y deja el JUnit en
@@ -26,18 +28,27 @@
 - PHP 8.2+ y dependencias de Composer (`composer install`).
 - MySQL con `sysinescolara` y `SysInescolara-Seguridad`.
 - Google Chrome, Chromium o Brave.
-- Bash (Linux/macOS). En Windows usa WSL o ejecuta Codeception directamente.
+- PowerShell 5.1+ en Windows, o Bash en Linux/macOS.
+
+En Windows el navegador se detecta en las rutas habituales de Chrome o Edge; en
+Linux/macOS el valor por defecto es `/opt/brave-bin/brave`. Define
+`ACEPTACION_BROWSER` para cambiarlo.
 
 ## Uso
 
+### Windows (PowerShell)
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tests\tools\aceptacion\scripts\run-aceptacion.ps1
+powershell -ExecutionPolicy Bypass -File tests\tools\aceptacion\scripts\run-aceptacion.ps1 AutenticacionCest
+$env:ACEPTACION_BROWSER = 'C:\Program Files\Google\Chrome\Application\chrome.exe'
+```
+
+### Linux / macOS (Bash)
+
 ```bash
-# Toda la suite
 ./tests/tools/aceptacion/scripts/run-aceptacion.sh
-
-# Un archivo concreto
 ./tests/tools/aceptacion/scripts/run-aceptacion.sh AutenticacionCest
-
-# Cambiar el navegador
 ACEPTACION_BROWSER=/usr/bin/chromium ./tests/tools/aceptacion/scripts/run-aceptacion.sh
 ```
 
@@ -50,8 +61,8 @@ ejecutar. Sin argumento corre toda la suite.
 | --- | --- |
 | `ACEPTACION_URL` | `http://127.0.0.1:8099/` |
 | `ACEPTACION_PORT` | `8099` |
-| `ACEPTACION_BROWSER` | `/opt/brave-bin/brave` |
-| `ACEPTACION_DRIVER_BIN` | `tests/aceptacion/bin/chromedriver` |
+| `ACEPTACION_BROWSER` | Windows: Chrome/Edge detectado · Linux/macOS: `/opt/brave-bin/brave` |
+| `ACEPTACION_DRIVER_BIN` | Windows: `tests/aceptacion/bin/chromedriver.exe` · Linux: `tests/aceptacion/bin/chromedriver` |
 | `ACEPTACION_DRIVER_VERSION` | `156.0.8078.80` |
 | `ACEPTACION_DRIVER_PORT` | `9515` |
 | `ACEPTACION_USER` | `e2e_admin` |
@@ -71,8 +82,18 @@ La carpeta `resultados/` está ignorada por git; la plantilla
 ## Regenerar la matriz
 
 ```bash
+# 1) Ejecutar la suite
 ./tests/tools/aceptacion/scripts/run-aceptacion.sh
-php tests/tools/reportes/scripts/generate_aceptacion.php
+
+# 2) Regenerar ACEPTACION.md
+./tests/tools/reportes/scripts/generate_aceptacion.sh
+```
+
+En Windows:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tests\tools\aceptacion\scripts\run-aceptacion.ps1
+powershell -ExecutionPolicy Bypass -File tests\tools\reportes\scripts\generate_aceptacion.ps1
 ```
 
 La guía del generador está en

@@ -1,17 +1,19 @@
-# `run-tests.php` — integración + humo multiplataforma
+# `run-tests` — integración + humo multiplataforma
 
-> **Tipo:** PHPUnit · Integration + Smoke · PHP (Windows, Linux y macOS)
+> **Tipo:** PHPUnit · Integration + Smoke · PowerShell y Bash
 >
-> **Atajos:** `run-tests.sh` (Linux/macOS) y `run-tests.bat` (Windows)
+> **Ejecutores:** `run-tests.ps1` (Windows) y `run-tests.sh` (Linux/macOS)
+>
+> **Motor interno:** `lib/run-tests.php`
 
 ## Qué hace
 
 Ejecuta las suites **Integration** y **Smoke** de todos los módulos o de uno
-solo, sin depender de PowerShell. Muestra el comando real, el detalle testdox,
-un resumen por suite y guarda log + JUnit en `tests/tools/phpunit/formatos/resultados/`.
+solo. Muestra el comando real, el detalle testdox, un resumen por suite y guarda
+log + JUnit en `tests/tools/phpunit/formatos/resultados/`.
 
 > **No ejecuta `Unit`.** Para las tres suites de un módulo usa
-> [`run-module.ps1`](run-module.md). Para Unit en Linux/macOS usa PHPUnit
+> [`run-module`](run-module.md). Para Unit en Linux/macOS usa PHPUnit
 > directamente (ver [`README.md#recetas-phpunit`](../../README.md#recetas-phpunit)).
 
 ## Requisitos
@@ -21,26 +23,29 @@ un resumen por suite y guarda log + JUnit en `tests/tools/phpunit/formatos/resul
 - Para integración: driver `pdo_sqlite`. El script intenta detectarlo y, si no
   lo encuentra, explica cómo instalarlo.
 - Para humo no hace falta base de datos.
+- PowerShell 5.1+ en Windows, o Bash en Linux/macOS.
 
 ## Uso
 
-```bash
-php tests/tools/phpunit/scripts/run-tests.php [opciones]
+### Windows (PowerShell)
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\run-tests.ps1 [opciones]
 ```
 
-### Atajos
+### Linux / macOS (Bash)
 
 ```bash
-# Linux / macOS
-./tests/tools/phpunit/scripts/run-tests.sh
-./tests/tools/phpunit/scripts/run-tests.sh --suite=smoke --module=13
-
-# Windows (CMD o PowerShell)
-tests\tools\phpunit\scripts\run-tests.bat
-tests\tools\phpunit\scripts\run-tests.bat --suite=integration --module=13
+./tests/tools/phpunit/scripts/run-tests.sh [opciones]
 ```
 
-Los atajos solo comprueban que `php` exista y reenvían todos los argumentos.
+Los dos ejecutores solo comprueban que `php` exista y reenvían todos los
+argumentos al motor `lib/run-tests.php`. El motor también puede invocarse
+directamente:
+
+```bash
+php tests/tools/phpunit/scripts/lib/run-tests.php [opciones]
+```
 
 ## Opciones
 
@@ -65,33 +70,46 @@ y acentos; la búsqueda normaliza ambos lados.
 
 ### Ambas suites, todos los módulos
 
+```powershell
+# Windows
+powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\run-tests.ps1
+```
+
 ```bash
-php tests/tools/phpunit/scripts/run-tests.php
+# Linux/macOS
+./tests/tools/phpunit/scripts/run-tests.sh
 ```
 
 ### Una sola suite
 
+```powershell
+# Windows
+powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\run-tests.ps1 --suite=integration
+powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\run-tests.ps1 --suite=smoke
+```
+
 ```bash
-php tests/tools/phpunit/scripts/run-tests.php --suite=integration
-php tests/tools/phpunit/scripts/run-tests.php --suite=smoke
+# Linux/macOS
+./tests/tools/phpunit/scripts/run-tests.sh --suite=integration
+./tests/tools/phpunit/scripts/run-tests.sh --suite=smoke
 ```
 
 ### Un módulo
 
 ```bash
 # Integración + humo de Venta
-php tests/tools/phpunit/scripts/run-tests.php --module=13
+./tests/tools/phpunit/scripts/run-tests.sh --module=13
 
 # Solo el humo de Venta
-php tests/tools/phpunit/scripts/run-tests.php --module=Venta --suite=smoke
+./tests/tools/phpunit/scripts/run-tests.sh --module=Venta --suite=smoke
 ```
 
 ### Ver antes de ejecutar
 
 ```bash
-php tests/tools/phpunit/scripts/run-tests.php --list
-php tests/tools/phpunit/scripts/run-tests.php --dry-run
-php tests/tools/phpunit/scripts/run-tests.php --help
+./tests/tools/phpunit/scripts/run-tests.sh --list
+./tests/tools/phpunit/scripts/run-tests.sh --dry-run
+./tests/tools/phpunit/scripts/run-tests.sh --help
 ```
 
 ### SQLite manual
@@ -100,7 +118,7 @@ Si `pdo_sqlite` no está habilitado globalmente, indica la ruta de la extensión
 (repetible):
 
 ```bash
-php tests/tools/phpunit/scripts/run-tests.php --suite=integration \
+./tests/tools/phpunit/scripts/run-tests.sh --suite=integration \
   --extension=/usr/lib/php/modules/sqlite3.so \
   --extension=/usr/lib/php/modules/pdo_sqlite.so
 ```
@@ -108,7 +126,8 @@ php tests/tools/phpunit/scripts/run-tests.php --suite=integration \
 En Windows:
 
 ```powershell
-php tests\tools\phpunit\scripts\run-tests.php --extension=C:\xampp\php\ext\php_pdo_sqlite.dll
+powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\run-tests.ps1 `
+  --suite=integration --extension=C:\xampp\php\ext\php_pdo_sqlite.dll
 ```
 
 ## Qué genera
@@ -145,7 +164,7 @@ como `NO EJECUTADA`, el humo sí corre y el script termina con `3`.
 | `Módulo no encontrado` | Número fuera de 01–31 o nombre mal escrito. | Ejecuta `--list`. |
 | `Opción no reconocida` | Argumento con formato incorrecto. | Usa `--opcion=valor` o `--opcion valor`. |
 | `No se encontró PHPUnit` | Falta `vendor/`. | Ejecuta `composer install`. |
-| Quiero Unit también | El script no lo incluye por diseño. | Usa `run-module.ps1` o PHPUnit. |
+| Quiero Unit también | El script no lo incluye por diseño. | Usa `run-module` o PHPUnit. |
 
 ## Ver también
 

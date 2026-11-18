@@ -1,6 +1,8 @@
-# `run-module.ps1` — pruebas de un módulo completo
+# `run-module` — pruebas de un módulo completo
 
-> **Tipo:** PHPUnit · Unit + Integration + Smoke · PowerShell
+> **Tipo:** PHPUnit · Unit + Integration + Smoke · PowerShell y Bash
+>
+> **Ejecutores:** `run-module.ps1` (Windows) y `run-module.sh` (Linux/macOS)
 >
 > **Atajo:** ejecuta las **tres suites** de uno o de los 31 módulos y compara los
 > conteos contra `tests/tools/reportes/formatos/resultados/traceability.json`.
@@ -28,16 +30,25 @@ ejecutan **945 pruebas de modelo** (938 PASS y 7 SKIP documentados).
 - PHP 8.2 o superior en el `PATH`.
 - PHPUnit instalado en `vendor/` (`composer install`).
 - Driver `pdo_sqlite` habilitado.
-- PowerShell 5.1 o superior (Windows PowerShell o PowerShell 7).
-- `tests/tools/reportes/formatos/resultados/traceability.json` existente. Si falta, regénéralo con
-  [`generate_traceability.md`](../../reportes/scripts/generate_traceability.md).
+- PowerShell 5.1+ en Windows, o Bash en Linux/macOS.
+- `tests/tools/reportes/formatos/resultados/traceability.json` existente. Si
+  falta, regénéralo con
+  [`generate_traceability`](../../reportes/scripts/generate_traceability.md).
 
 No hace falta MySQL, Apache ni XAMPP.
 
 ## Uso
 
+### Windows (PowerShell)
+
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\run-module.ps1 <módulo>
+```
+
+### Linux / macOS (Bash)
+
+```bash
+./tests/tools/phpunit/scripts/run-module.sh <módulo>
 ```
 
 El argumento es **uno solo** y acepta cualquiera de estas formas:
@@ -57,31 +68,34 @@ El argumento es **uno solo** y acepta cualquiera de estas formas:
 ### Un módulo
 
 ```powershell
-# Por número
+# Windows: por número, por nombre o por requisito
 powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\run-module.ps1 05
-
-# Por nombre
 powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\run-module.ps1 Lote
-
-# Por requisito
 powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\run-module.ps1 RF-05
+```
+
+```bash
+# Linux/macOS: los mismos argumentos
+./tests/tools/phpunit/scripts/run-module.sh 05
+./tests/tools/phpunit/scripts/run-module.sh Lote
+./tests/tools/phpunit/scripts/run-module.sh RF-05
 ```
 
 Salida esperada (resumida):
 
 ```text
->>> Lote :: tests\Unit\Catalogo\LoteTest.php
+>>> Lote :: tests/Unit/Catalogo/LoteTest.php
 OK (18 tests, 83 assertions)
->>> Lote :: tests\Integration\Catalogo\LoteRepositoryTest.php
+>>> Lote :: tests/Integration/Catalogo/LoteRepositoryTest.php
 OK (20 tests, 1155 assertions)
 >>> Lote :: --filter CP-SMOKE-05
 OK (2 tests, 24 assertions)
 
 Modulo: Lote (RF-05) - Lote
-Suite       Ejecutadas Esperadas Pass Fail Skip Aserciones Estado
-Unitaria            18        18   18    0    0         83 COINCIDE
-Integracion         20        20   20    0    0       1155 COINCIDE
-Humo                 2         2    2    0    0         24 COINCIDE
+Suite         Ejecutadas   Esperadas    Pass   Fail   Skip   Estado
+Unitaria      18           18           18     0      0      COINCIDE
+Integracion   20           20           20     0      0      COINCIDE
+Humo          2            2            2      0      0      COINCIDE
 
 Modulos: 1 | COINCIDE: 1 | NO COINCIDE: 0
 RESULTADO: COINCIDE con tests/tools/reportes/formatos/resultados/traceability.json
@@ -90,11 +104,13 @@ RESULTADO: COINCIDE con tests/tools/reportes/formatos/resultados/traceability.js
 ### Los 31 módulos
 
 ```powershell
-# Explícito
+# Windows
 powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\run-module.ps1 all
+```
 
-# O sin argumento: hace exactamente lo mismo
-powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\run-module.ps1
+```bash
+# Linux/macOS
+./tests/tools/phpunit/scripts/run-module.sh all
 ```
 
 Salida esperada al final:
@@ -120,8 +136,9 @@ PHPUnit; solo la muestra si un módulo falla.
 | `tests/tools/phpunit/formatos/resultados/module-<Modelo>-integration.xml` | JUnit de la suite de integración. |
 | `tests/tools/phpunit/formatos/resultados/module-<Modelo>-smoke.xml` | JUnit del caso de humo. |
 
-Estos XML **no** alimentan `generate_traceability.php`; ese generador usa
-`tests/tools/phpunit/formatos/resultados/junit-{unit,integration,smoke}.xml`. Consulta
+Estos XML **no** alimentan `generate_traceability`; ese generador usa
+`tests/tools/phpunit/formatos/resultados/junit-{unit,integration,smoke}.xml`.
+Consulta
 [`generate_traceability.md`](../../reportes/scripts/generate_traceability.md).
 
 ## Códigos de salida
@@ -130,6 +147,8 @@ Estos XML **no** alimentan `generate_traceability.php`; ese generador usa
 | ---: | --- |
 | `0` | Todos los módulos comprobados coinciden con la matriz. |
 | `1` | Al menos una suite no coincide o PHPUnit devolvió error. Al final se listan los módulos afectados. |
+| `2` | El argumento no corresponde a ningún módulo o se pasaron opciones inválidas. |
+| `3` | Error de entorno: falta PHP, PHPUnit, `tests/phpunit.xml` o la matriz. |
 
 ## Interpretar el resultado
 
@@ -145,12 +164,12 @@ Estos XML **no** alimentan `generate_traceability.php`; ese generador usa
 
 | Síntoma | Causa probable | Solución |
 | --- | --- | --- |
-| `No se encontro el modulo '...'` | El argumento no coincide con ninguna forma válida. | Usa número, modelo, sidebar, `RF-NN` o `all`. |
-| `No existe ...traceability.json` | Falta la matriz. | Ejecuta [`generate_traceability.php`](../../reportes/scripts/generate_traceability.md). |
+| `no se encontró el módulo` | El argumento no coincide con ninguna forma válida. | Usa número, modelo, sidebar, `RF-NN` o `all`. |
+| `falta la matriz ...traceability.json` | Falta la matriz. | Ejecuta [`generate_traceability`](../../reportes/scripts/generate_traceability.md). |
 | `No se pudo extraer el ID de humo` | El caso de humo de la matriz no tiene el formato `CP-SMOKE-NN`. | Regenera la matriz. |
 | Un módulo da `NO COINCIDE` sin fallos | Cambió el número de pruebas u omitidas. | Regenera la matriz o revisa el test modificado. |
-| Fallan todas las integraciones | Falta `pdo_sqlite`. | Habilita la extensión o usa `run-tests.php --extension=...`. |
-| Los acentos se ven raros | PowerShell 5.1 leyó el `.ps1` como ANSI. | El script está en ASCII a propósito; no lo guardes como UTF-8 sin BOM. |
+| Fallan todas las integraciones | Falta `pdo_sqlite`. | Habilita la extensión o usa `run-tests` con `--extension=...`. |
+| Los acentos se ven raros en Windows | PowerShell 5.1 leyó el `.ps1` como ANSI. | El script está en ASCII a propósito; no lo guardes como UTF-8 sin BOM. |
 
 ## Ver también
 
@@ -160,4 +179,5 @@ Estos XML **no** alimentan `generate_traceability.php`; ese generador usa
 - Recetas para una sola suite, archivo o método:
   [`README.md#recetas-phpunit`](../../README.md#recetas-phpunit)
 - Explicación de cada suite: [`GUIA_PRUEBAS.md`](../../../GUIA_PRUEBAS.md)
-- Matriz de trazabilidad: [`TRACEABILITY.md`](../../reportes/formatos/resultados/TRACEABILITY.md)
+- Matriz de trazabilidad:
+  [`TRACEABILITY.md`](../../reportes/formatos/resultados/TRACEABILITY.md)

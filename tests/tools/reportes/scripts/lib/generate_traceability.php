@@ -6,7 +6,7 @@ declare(strict_types=1);
  * Genera la matriz de trazabilidad a partir de los logs JUnit de PHPUnit.
  *
  * Uso:
- *   php tests/tools/reportes/scripts/generate_traceability.php
+ *   php tests/tools/reportes/scripts/lib/generate_traceability.php
  *
  * Lee (si existen):
  *   tests/tools/phpunit/formatos/resultados/junit-unit.xml
@@ -18,7 +18,7 @@ declare(strict_types=1);
  *   tests/tools/reportes/formatos/resultados/traceability.json
  */
 
-$root = dirname(__DIR__, 4);
+$root = dirname(__DIR__, 5);
 $testsDir = $root . '/tests';
 $resultsDir = $testsDir . '/tools/phpunit/formatos/resultados';
 
@@ -410,7 +410,7 @@ $unitCases = loadJunit($resultsDir . '/junit-unit.xml');
 $integrationCases = loadJunit($resultsDir . '/junit-integration.xml');
 $smokeCasesAll = loadJunit($resultsDir . '/junit-smoke.xml');
 
-$formatDir = dirname(__DIR__) . '/formatos';
+$formatDir = dirname(__DIR__, 2) . '/formatos';
 $templateDir = $formatDir . '/plantillas';
 $outputDir = $formatDir . '/resultados';
 

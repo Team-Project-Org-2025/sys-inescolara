@@ -2,8 +2,9 @@
 
 Esta es la **referencia manual** de los **93 casos** (31 módulos × 3 suites:
 unitaria, integración y humo), comando por comando. Si prefieres automatizarlo,
-usa [`tools/phpunit/scripts/run-module.ps1`](tools/phpunit/scripts/run-module.md), que ejecuta esos mismos
-comandos y compara los conteos con la matriz.
+usa [`tools/phpunit/scripts/run-module.ps1`](tools/phpunit/scripts/run-module.md)
+(Windows) o `run-module.sh` (Linux/macOS), que ejecutan esos mismos
+comandos y comparan los conteos con la matriz.
 
 Copia y pega los comandos de cada módulo, en orden. Cada bloque ejecuta las
 tres pruebas del módulo: unitaria, integración y humo.
@@ -34,26 +35,27 @@ en Unit (por ejemplo `Error al guardar ...`) no son fallos.
 
 > Guía completa: [`tools/phpunit/scripts/run-tests.md`](tools/phpunit/scripts/run-tests.md).
 
-El ejecutor `tests/tools/phpunit/scripts/run-tests.php` funciona igual en Linux, macOS y
-Windows. Ejecuta las suites de integración y humo, muestra un resumen por
-suite y guarda el log y el XML JUnit en `tests/tools/phpunit/formatos/resultados/`.
+Los ejecutores `tests/tools/phpunit/scripts/run-tests.ps1` (Windows) y
+`run-tests.sh` (Linux/macOS) envuelven al motor `lib/run-tests.php`. Ejecutan
+las suites de integración y humo, muestran un resumen por suite y guardan el log
+y el XML JUnit en `tests/tools/phpunit/formatos/resultados/`.
 
 ```bash
 # Ambas suites, los 31 módulos
-php tests/tools/phpunit/scripts/run-tests.php
+php tests/tools/phpunit/scripts/lib/run-tests.php
 
 # Solo una suite
-php tests/tools/phpunit/scripts/run-tests.php --suite=integration
-php tests/tools/phpunit/scripts/run-tests.php --suite=smoke
+php tests/tools/phpunit/scripts/lib/run-tests.php --suite=integration
+php tests/tools/phpunit/scripts/lib/run-tests.php --suite=smoke
 
 # Un módulo por número o por nombre
-php tests/tools/phpunit/scripts/run-tests.php --module=13
-php tests/tools/phpunit/scripts/run-tests.php --module=Venta --suite=smoke
+php tests/tools/phpunit/scripts/lib/run-tests.php --module=13
+php tests/tools/phpunit/scripts/lib/run-tests.php --module=Venta --suite=smoke
 
 # Utilidades
-php tests/tools/phpunit/scripts/run-tests.php --list       # enumera los 31 módulos
-php tests/tools/phpunit/scripts/run-tests.php --dry-run    # muestra los comandos sin ejecutar
-php tests/tools/phpunit/scripts/run-tests.php --help
+php tests/tools/phpunit/scripts/lib/run-tests.php --list       # enumera los 31 módulos
+php tests/tools/phpunit/scripts/lib/run-tests.php --dry-run    # muestra los comandos sin ejecutar
+php tests/tools/phpunit/scripts/lib/run-tests.php --help
 ```
 
 Atajos por sistema operativo:
@@ -62,17 +64,19 @@ Atajos por sistema operativo:
 # Linux / macOS
 ./tests/tools/phpunit/scripts/run-tests.sh
 ./tests/tools/phpunit/scripts/run-tests.sh --suite=integration --module=13
+```
 
-# Windows (CMD o PowerShell)
-tests\tools\phpunit\scripts\run-tests.bat
-tests\tools\phpunit\scripts\run-tests.bat --suite=smoke --module=13
+```powershell
+# Windows (PowerShell)
+powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\run-tests.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\run-tests.ps1 --suite=smoke --module=13
 ```
 
 Si `pdo_sqlite` no está habilitado globalmente, indique la ruta de la
 extensión (repetible):
 
 ```bash
-php tests/tools/phpunit/scripts/run-tests.php --suite=integration \
+php tests/tools/phpunit/scripts/lib/run-tests.php --suite=integration \
   --extension=/usr/lib/php/modules/sqlite3.so \
   --extension=/usr/lib/php/modules/pdo_sqlite.so
 ```
@@ -412,8 +416,10 @@ php vendor\phpunit\phpunit\phpunit -c tests\phpunit.xml --testsuite Smoke --filt
 php vendor\phpunit\phpunit\phpunit -c tests\phpunit.xml --do-not-cache-result
 
 # Regenerar la matriz desde los JUnit
-php tests\tools\reportes\scripts\generate_traceability.php
+powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\reportes\scripts\generate_traceability.ps1
 ```
+
+En Linux/macOS: `./tests/tools/reportes/scripts/generate_traceability.sh`.
 
 Guía del generador: [`tools/reportes/scripts/generate_traceability.md`](tools/reportes/scripts/generate_traceability.md).
 

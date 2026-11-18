@@ -15,18 +15,27 @@ requisitos funcionales del sistema.
 
 - PHP 8.2+ y dependencias de Composer (`composer install`).
 - MySQL con las bases `sysinescolara` y `SysInescolara-Seguridad`.
-- Google Chrome / Chromium / Brave. Por defecto se usa `/opt/brave-bin/brave`.
+- Google Chrome / Chromium / Brave. En Linux/macOS se usa
+  `/opt/brave-bin/brave`; en Windows se detecta Chrome o Edge.
 - `chromedriver` compatible. El script lo descarga automáticamente en
   `tests/aceptacion/bin/` si no existe.
 
 ## Ejecución
 
 ```bash
-# Toda la suite
+# Linux/macOS — toda la suite
 ./tests/tools/aceptacion/scripts/run-aceptacion.sh
 
-# Un archivo concreto
+# Linux/macOS — un archivo concreto
 ./tests/tools/aceptacion/scripts/run-aceptacion.sh AutenticacionCest
+```
+
+```powershell
+# Windows — toda la suite
+powershell -ExecutionPolicy Bypass -File tests\tools\aceptacion\scripts\run-aceptacion.ps1
+
+# Windows — un archivo concreto
+powershell -ExecutionPolicy Bypass -File tests\tools\aceptacion\scripts\run-aceptacion.ps1 AutenticacionCest
 ```
 
 El script:

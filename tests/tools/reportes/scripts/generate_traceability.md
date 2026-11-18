@@ -1,9 +1,15 @@
-# `generate_traceability.php` — regenerar la matriz PHPUnit
+# `generate_traceability` — regenerar la matriz PHPUnit
 
-> **Tipo:** reporte · PHP
+> **Tipo:** reporte · PowerShell y Bash
+>
+> **Ejecutores:** `generate_traceability.ps1` (Windows) y
+> `generate_traceability.sh` (Linux/macOS)
+>
+> **Motor interno:** `lib/generate_traceability.php`
 >
 > **Atajo:** lee los JUnit de las tres suites y reescribe
-> `tests/tools/reportes/formatos/resultados/TRACEABILITY.md` y `tests/tools/reportes/formatos/resultados/traceability.json`.
+> `tests/tools/reportes/formatos/resultados/TRACEABILITY.md` y
+> `tests/tools/reportes/formatos/resultados/traceability.json`.
 
 ## Qué hace
 
@@ -16,14 +22,15 @@
 4. Reescribe, respetando las plantillas de
    `tests/tools/reportes/formatos/plantillas/`:
    - `tests/tools/reportes/formatos/resultados/TRACEABILITY.md` (tabla legible).
-   - `tests/tools/reportes/formatos/resultados/traceability.json` (datos que consume `run-module.ps1`).
+   - `tests/tools/reportes/formatos/resultados/traceability.json` (datos que
+     consume `run-module`).
 
 Si falta un JUnit, la suite correspondiente queda como `NO EJECUTADO` /
 `Sin log JUnit`; no inventa resultados.
 
 > **Importante:** el generador solo lee `junit-unit.xml`, `junit-integration.xml`
-> y `junit-smoke.xml`. Los `module-<Modelo>-*.xml` de `run-module.ps1` **no**
-> se usan aquí.
+> y `junit-smoke.xml`. Los `module-<Modelo>-*.xml` de `run-module` **no** se usan
+> aquí.
 
 ## Requisitos
 
@@ -31,13 +38,14 @@ Si falta un JUnit, la suite correspondiente queda como `NO EJECUTADO` /
 - Haber ejecutado las tres suites completas con `--log-junit` en los nombres
   exactos indicados.
 - No necesita MySQL, Apache ni navegador.
+- PowerShell 5.1+ en Windows, o Bash en Linux/macOS.
 
 ## Uso
 
 ### 1. Generar los tres JUnit
 
 ```powershell
-# Crear la carpeta si no existe
+# Windows (PowerShell)
 New-Item -ItemType Directory -Force tests\tools\phpunit\formatos\resultados | Out-Null
 
 php vendor\phpunit\phpunit\phpunit -c tests\phpunit.xml --testsuite Unit        --log-junit tests\tools\phpunit\formatos\resultados\junit-unit.xml        --do-not-cache-result
@@ -45,10 +53,31 @@ php vendor\phpunit\phpunit\phpunit -c tests\phpunit.xml --testsuite Integration 
 php vendor\phpunit\phpunit\phpunit -c tests\phpunit.xml --testsuite Smoke       --log-junit tests\tools\phpunit\formatos\resultados\junit-smoke.xml       --do-not-cache-result
 ```
 
+```bash
+# Linux/macOS (Bash)
+mkdir -p tests/tools/phpunit/formatos/resultados
+
+php vendor/phpunit/phpunit/phpunit -c tests/phpunit.xml --testsuite Unit        --log-junit tests/tools/phpunit/formatos/resultados/junit-unit.xml        --do-not-cache-result
+php vendor/phpunit/phpunit/phpunit -c tests/phpunit.xml --testsuite Integration --log-junit tests/tools/phpunit/formatos/resultados/junit-integration.xml --do-not-cache-result
+php vendor/phpunit/phpunit/phpunit -c tests/phpunit.xml --testsuite Smoke       --log-junit tests/tools/phpunit/formatos/resultados/junit-smoke.xml       --do-not-cache-result
+```
+
 ### 2. Regenerar la matriz
 
 ```powershell
-php tests\tools\reportes\scripts\generate_traceability.php
+# Windows
+powershell -ExecutionPolicy Bypass -File tests\tools\reportes\scripts\generate_traceability.ps1
+```
+
+```bash
+# Linux/macOS
+./tests/tools/reportes/scripts/generate_traceability.sh
+```
+
+El motor también puede invocarse directamente:
+
+```bash
+php tests/tools/reportes/scripts/lib/generate_traceability.php
 ```
 
 ## Salida esperada
@@ -68,16 +97,16 @@ Matriz generada: 31 requisitos, 93 casos (93 PASS, 0 FAIL, 0 SKIP, 0 sin ejecuta
 | `tests/tools/reportes/formatos/resultados/TRACEABILITY.md` | Se sobrescribe con el estado real de cada caso. |
 | `tests/tools/reportes/formatos/resultados/traceability.json` | Se sobrescribe con los conteos y metadatos. |
 
-`tests/tools/reportes/formatos/resultados/traceability.json` es la fuente que usa
-[`run-module.ps1`](../../phpunit/scripts/run-module.md) para comparar los conteos. Después de agregar
-o quitar pruebas, regenera la matriz para que el script no marque
-`NO COINCIDE`.
+`traceability.json` es la fuente que usa
+[`run-module`](../../phpunit/scripts/run-module.md) para comparar los conteos.
+Después de agregar o quitar pruebas, regenera la matriz para que el script no
+marque `NO COINCIDE`.
 
 ## Cuándo ejecutarlo
 
 - Después de cambiar pruebas unitarias, de integración o de humo.
 - Después de agregar un modelo o un caso `CP-SMOKE-NN`.
-- Cuando `run-module.ps1` diga que falta `traceability.json`.
+- Cuando `run-module` diga que falta `traceability.json`.
 - Antes de cerrar una entrega, para dejar la matriz al día.
 
 ## Solución de problemas
@@ -85,7 +114,7 @@ o quitar pruebas, regenera la matriz para que el script no marque
 | Síntoma | Causa probable | Solución |
 | --- | --- | --- |
 | Todo aparece `NO EJECUTADO` | No existen los `junit-*.xml` o tienen otro nombre. | Ejecuta los tres comandos del paso 1. |
-| `run-module.ps1` dice `NO COINCIDE` | La matriz quedó desactualizada. | Vuelve a generar los JUnit y la matriz. |
+| `run-module` dice `NO COINCIDE` | La matriz quedó desactualizada. | Vuelve a generar los JUnit y la matriz. |
 | Los conteos no cuadran | Se ejecutó solo una suite o se usaron `module-*.xml`. | Usa los nombres `junit-unit`, `junit-integration`, `junit-smoke`. |
 | `PHP Parse error` | Versión de PHP demasiado antigua. | Usa PHP 8.2+. |
 

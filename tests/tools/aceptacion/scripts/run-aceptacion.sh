@@ -99,7 +99,7 @@ else
 fi
 
 echo ">>> Preparando usuario de pruebas (e2e_admin)"
-php "$ROOT/tests/tools/interfaz/scripts/seed-interfaz.php"
+php "$ROOT/tests/tools/interfaz/scripts/lib/seed-interfaz.php"
 
 echo ">>> Ejecutando Codeception"
 cd "$ROOT"
