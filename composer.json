@@ -3,7 +3,14 @@
     "type": "project",
     "require": {
         "dompdf/dompdf": "^3.1",
-        "phpmailer/phpmailer": "^7.1"
+        "phpmailer/phpmailer": "^7.1",
+        "symfony/console": "^7.0",
+        "symfony/css-selector": "^7.0",
+        "symfony/event-dispatcher": "^7.0",
+        "symfony/finder": "^7.0",
+        "symfony/string": "^7.0",
+        "symfony/var-dumper": "^7.0",
+        "symfony/yaml": "^7.0"
     },
     "license": "MIT",
     "autoload": {
@@ -15,7 +22,7 @@
     "require-dev": {
         "phpunit/phpunit": "^11.5",
         "php-webdriver/webdriver": "^1.16",
-        "codeception/codeception": "^5.2",
+        "codeception/codeception": "^5.3",
         "codeception/module-webdriver": "^4.0",
         "codeception/module-db": "^3.1",
         "codeception/module-asserts": "^3.1"

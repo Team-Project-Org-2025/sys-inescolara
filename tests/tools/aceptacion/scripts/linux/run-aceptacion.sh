@@ -13,7 +13,7 @@
 
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../../.." && pwd)"
 ACE_DIR="$ROOT/tests/aceptacion"
 APP_PORT="${ACEPTACION_PORT:-8099}"
 DRIVER_PORT="${ACEPTACION_DRIVER_PORT:-9515}"
