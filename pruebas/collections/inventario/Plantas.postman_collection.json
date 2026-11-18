@@ -1,0 +1,794 @@
+{
+  "info": {
+    "_postman_id": "8f2c1a44-5b7e-4c9a-9d61-0a1b2c3d4e01",
+    "name": "SYSINECOLARA · Plantas",
+    "description": "CRUD completo de Plantas + casos negativos (401/403/400).\n\nRequiere:\n- Apache y MySQL en marcha.\n- `pruebas/data/seed.sql` importado (especie id 1).\n- Variables `password` y `viewerPassword` en el entorno.\n\nOrden: Auth → Listado → Crear → Editar → Eliminar → Negativos → Logout.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Todos los endpoints de modulo exigen el header AJAX.",
+          "pm.request.headers.upsert({ key: 'X-Requested-With', value: 'XMLHttpRequest' });"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "plantaId",
+      "value": ""
+    },
+    {
+      "key": "nombreEditado",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "00 · Auth (admin)",
+      "item": [
+        {
+          "name": "401 · GET sin sesion",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.cookies.clear();",
+                  "pm.request.headers.remove('Cookie');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('401 sin sesion', () => pm.response.to.have.status(401));",
+                  "",
+                  "const body = pm.response.json();",
+                  "",
+                  "pm.test('success = false', () => pm.expect(body.success).to.eql(false));",
+                  "",
+                  "pm.test('Mensaje No autorizado', () => {",
+                  "  pm.expect(body.message).to.match(/no autorizado/i);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/plantas?action=get_plants",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "plantas"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "get_plants"
+                }
+              ]
+            },
+            "description": "Sin cookie de sesion el endpoint responde 401 JSON."
+          },
+          "response": []
+        },
+        {
+          "name": "POST /login (admin)",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Login responde 302 o dashboard', () => {",
+                  "  pm.expect([200, 302], 'Status: ' + pm.response.code).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "pm.test('Sesion PHP establecida', () => {",
+                  "  pm.expect(pm.cookies.get('PHPSESSID')).to.be.a('string');",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "  pm.test('Sin mensaje de error en el HTML', () => {",
+                  "    pm.expect(pm.response.text()).to.not.include('id=\"loginError\"');",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "nombre_usuario",
+                  "value": "{{usuario}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{password}}",
+                  "type": "text"
+                },
+                {
+                  "key": "g-recaptcha-response",
+                  "value": "{{recaptchaToken}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            },
+            "description": "Login de administrador. No devuelve JSON."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "01 · Listado",
+      "item": [
+        {
+          "name": "GET get_plants",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "",
+                  "const body = pm.response.json();",
+                  "",
+                  "pm.test('success = true', () => {",
+                  "  pm.expect(body.success).to.eql(true);",
+                  "});",
+                  "",
+                  "pm.test('plantas es un arreglo', () => {",
+                  "  pm.expect(body.plantas).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test('count coincide con el arreglo', () => {",
+                  "  pm.expect(body.count).to.eql(body.plantas.length);",
+                  "});",
+                  "",
+                  "pm.test('cada planta trae id y nombre_comun', () => {",
+                  "  body.plantas.forEach((p) => {",
+                  "    pm.expect(p).to.have.property('id');",
+                  "    pm.expect(p).to.have.property('nombre_comun');",
+                  "  });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/plantas?action=get_plants",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "plantas"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "get_plants"
+                }
+              ]
+            },
+            "description": "Listado de plantas activas."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "02 · Crear",
+      "item": [
+        {
+          "name": "POST add_ajax",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('success = true', () => pm.expect(body.success).to.eql(true));",
+                  "",
+                  "pm.test('Devuelve el id creado', () => {",
+                  "  pm.expect(body.plant).to.be.an('object');",
+                  "  pm.expect(body.plant.id).to.be.a('number');",
+                  "});",
+                  "",
+                  "if (body.success) {",
+                  "  pm.collectionVariables.set('plantaId', String(body.plant.id));",
+                  "  pm.collectionVariables.set('nombreOriginal', body.plant.nombre_comun);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "nombre_comun",
+                  "value": "Rosa Postman",
+                  "type": "text"
+                },
+                {
+                  "key": "nombre_tecnico",
+                  "value": "Rosa canina",
+                  "type": "text"
+                },
+                {
+                  "key": "especie_id",
+                  "value": "1",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/plantas?action=add_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "plantas"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "add_ajax"
+                }
+              ]
+            },
+            "description": "Crea una planta. Guarda el id en {{plantaId}}."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "03 · Editar",
+      "item": [
+        {
+          "name": "POST edit_ajax",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "",
+                  "const body = pm.response.json();",
+                  "",
+                  "pm.test('success = true', () => {",
+                  "  pm.expect(body.success).to.eql(true);",
+                  "});",
+                  "",
+                  "const baseUrl = pm.environment.get('baseUrl');",
+                  "const id = pm.collectionVariables.get('plantaId');",
+                  "const nombreEditado = 'Rosa Editada';",
+                  "pm.collectionVariables.set('nombreEditado', nombreEditado);",
+                  "",
+                  "pm.sendRequest({",
+                  "  url: baseUrl + '/plantas?action=get_plants',",
+                  "  header: { 'X-Requested-With': 'XMLHttpRequest' }",
+                  "}, (err, res) => {",
+                  "  pm.test('El cambio persiste en el listado', () => {",
+                  "    pm.expect(err).to.be.null;",
+                  "    const item = res.json().plantas.find((p) => String(p.id) === String(id));",
+                  "    pm.expect(item, 'planta ' + id).to.exist;",
+                  "    pm.expect(item.nombre_comun).to.eql(nombreEditado);",
+                  "  });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id",
+                  "value": "{{plantaId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "nombre_comun",
+                  "value": "Rosa Editada",
+                  "type": "text"
+                },
+                {
+                  "key": "nombre_tecnico",
+                  "value": "Rosa canina",
+                  "type": "text"
+                },
+                {
+                  "key": "especie_id",
+                  "value": "1",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/plantas?action=edit_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "plantas"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "edit_ajax"
+                }
+              ]
+            },
+            "description": "Edita la planta creada y verifica el cambio con un GET."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "04 · Eliminar",
+      "item": [
+        {
+          "name": "POST delete_ajax",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "",
+                  "const body = pm.response.json();",
+                  "",
+                  "pm.test('success = true', () => {",
+                  "  pm.expect(body.success).to.eql(true);",
+                  "});",
+                  "",
+                  "pm.test('Devuelve plantId', () => {",
+                  "  pm.expect(body.plantId).to.be.a('number');",
+                  "  pm.expect(String(body.plantId)).to.eql(String(pm.collectionVariables.get('plantaId')));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id",
+                  "value": "{{plantaId}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/plantas?action=delete_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "plantas"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "delete_ajax"
+                }
+              ]
+            },
+            "description": "Soft delete: activo = 0."
+          },
+          "response": []
+        },
+        {
+          "name": "GET get_plants (verificar eliminacion)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "",
+                  "const id = pm.collectionVariables.get('plantaId');",
+                  "const plantas = pm.response.json().plantas;",
+                  "",
+                  "pm.test('La planta ya no aparece en el listado', () => {",
+                  "  const item = plantas.find((p) => p.id === id);",
+                  "  pm.expect(item, 'planta ' + id + ' sigue visible').to.be.undefined;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/plantas?action=get_plants",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "plantas"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "get_plants"
+                }
+              ]
+            },
+            "description": "Verifica que el borrado logico se refleje en el listado."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "05 · Negativos",
+      "item": [
+        {
+          "name": "POST /login (admin, restaurar)",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Sesion admin restaurada', () => {",
+                  "  pm.expect([200, 302]).to.include(pm.response.code);",
+                  "  pm.expect(pm.cookies.get('PHPSESSID')).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "nombre_usuario",
+                  "value": "{{usuario}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{password}}",
+                  "type": "text"
+                },
+                {
+                  "key": "g-recaptcha-response",
+                  "value": "{{recaptchaToken}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            },
+            "description": "Helper: recupera la sesion de administrador."
+          },
+          "response": []
+        },
+        {
+          "name": "POST /login (viewer)",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Sesion viewer establecida', () => {",
+                  "  pm.expect([200, 302]).to.include(pm.response.code);",
+                  "  pm.expect(pm.cookies.get('PHPSESSID')).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "nombre_usuario",
+                  "value": "{{viewerUsuario}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{viewerPassword}}",
+                  "type": "text"
+                },
+                {
+                  "key": "g-recaptcha-response",
+                  "value": "{{recaptchaToken}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            },
+            "description": "Usuario sin permisos para probar el 403."
+          },
+          "response": []
+        },
+        {
+          "name": "403 · POST add_ajax sin permiso",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('403 sin permiso', () => pm.response.to.have.status(403));",
+                  "",
+                  "const body = pm.response.json();",
+                  "",
+                  "pm.test('success = false', () => pm.expect(body.success).to.eql(false));",
+                  "",
+                  "pm.test('Mensaje de permiso', () => {",
+                  "  pm.expect(body.message).to.match(/permiso/i);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "nombre_comun",
+                  "value": "No deberia crearse",
+                  "type": "text"
+                },
+                {
+                  "key": "especie_id",
+                  "value": "1",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/plantas?action=add_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "plantas"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "add_ajax"
+                }
+              ]
+            },
+            "description": "El usuario viewer no tiene plantas:crear."
+          },
+          "response": []
+        },
+        {
+          "name": "POST /login (admin, restaurar 2)",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Sesion admin restaurada', () => {",
+                  "  pm.expect([200, 302]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "nombre_usuario",
+                  "value": "{{usuario}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{password}}",
+                  "type": "text"
+                },
+                {
+                  "key": "g-recaptcha-response",
+                  "value": "{{recaptchaToken}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            },
+            "description": "Helper: vuelve a la sesion de administrador."
+          },
+          "response": []
+        },
+        {
+          "name": "400 · accion inexistente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400 accion invalida', () => pm.response.to.have.status(400));",
+                  "",
+                  "pm.test('Mensaje de accion invalida', () => {",
+                  "  pm.expect(pm.response.json().message).to.match(/acci[oó]n ajax inv[aá]lida/i);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/plantas?action=no_existe",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "plantas"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "no_existe"
+                }
+              ]
+            },
+            "description": "El match del controlador no contempla la accion."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "06 · Logout",
+      "item": [
+        {
+          "name": "POST logout_ajax",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "",
+                  "const body = pm.response.json();",
+                  "",
+                  "pm.test('Sesion cerrada', () => {",
+                  "  pm.expect(body.success).to.eql(true);",
+                  "});",
+                  "",
+                  "pm.test('Devuelve redirect al login', () => {",
+                  "  pm.expect(body.redirect).to.include('login');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login/logout_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login",
+                "logout_ajax"
+              ]
+            },
+            "description": "Cierra la sesion y deja el cookie jar limpio."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
