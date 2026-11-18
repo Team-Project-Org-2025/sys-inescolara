@@ -57,6 +57,17 @@ fi
 
 cd "${ROOT_DIR}"
 
+case "$(uname -s 2>/dev/null)" in
+    MINGW*|MSYS*|CYGWIN*) DRIVER_NAME='chromedriver.exe' ;;
+    *) DRIVER_NAME='chromedriver' ;;
+esac
+DRIVER="${INTERFAZ_DRIVER:-tests/Interfaz/bin/${DRIVER_NAME}}"
+if [[ ! -f "${DRIVER}" ]]; then
+    echo "ERROR: falta ChromeDriver en ${DRIVER}." >&2
+    echo '       Ejecute primero: ./tests/tools/interfaz/scripts/linux/setup-interfaz.sh' >&2
+    exit 3
+fi
+
 if [[ "${HEADLESS}" -eq 1 ]]; then
     export INTERFAZ_HEADLESS=1
 fi

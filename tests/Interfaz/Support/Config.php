@@ -15,7 +15,59 @@ final class Config
 
     public static function driverPath(): string
     {
-        return self::env('INTERFAZ_DRIVER', PROJECT_ROOT . '/tests/Interfaz/bin/chromedriver.exe');
+        $file = PHP_OS_FAMILY === 'Windows' ? 'chromedriver.exe' : 'chromedriver';
+
+        return self::env('INTERFAZ_DRIVER', PROJECT_ROOT . '/tests/Interfaz/bin/' . $file);
+    }
+
+    /**
+     * Navegador que controlará ChromeDriver. Si no se indica, se detecta el
+     * primero disponible (Chrome, Chromium o Brave).
+     */
+    public static function browserBinary(): string
+    {
+        $explicit = self::env('INTERFAZ_BROWSER_BIN', self::env('CHROME_BIN', ''));
+        if ($explicit !== '') {
+            return $explicit;
+        }
+
+        foreach (self::browserCandidates() as $candidate) {
+            if (is_file($candidate)) {
+                return $candidate;
+            }
+        }
+
+        return '';
+    }
+
+    /**
+     * @return list<string>
+     */
+    private static function browserCandidates(): array
+    {
+        if (PHP_OS_FAMILY === 'Windows') {
+            return [
+                'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+                'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+                'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
+                'C:\\Program Files\\BraveSoftware\\Brave-Browser\\Application\\brave.exe',
+            ];
+        }
+
+        return [
+            '/usr/bin/google-chrome',
+            '/usr/bin/google-chrome-stable',
+            '/opt/google/chrome/chrome',
+            '/usr/bin/chromium',
+            '/usr/bin/chromium-browser',
+            '/snap/bin/chromium',
+            '/usr/bin/brave',
+            '/usr/bin/brave-browser',
+            '/opt/brave.com/brave/brave',
+            '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+            '/Applications/Chromium.app/Contents/MacOS/Chromium',
+            '/Applications/Brave Browser.app/Contents/MacOS/Brave Browser',
+        ];
     }
 
     public static function headless(): bool

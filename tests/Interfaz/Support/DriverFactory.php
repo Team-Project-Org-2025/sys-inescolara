@@ -25,8 +25,14 @@ final class DriverFactory
 
         $driverPath = Config::driverPath();
         if (!is_file($driverPath)) {
+            $setup = PHP_OS_FAMILY === 'Windows'
+                ? 'tests\\tools\\interfaz\\scripts\\windows\\setup-interfaz.ps1'
+                : 'tests/tools/interfaz/scripts/linux/setup-interfaz.sh';
+
             throw new \RuntimeException(
-                'No se encontró chromedriver.exe en ' . $driverPath . '. Ejecute tests/tools/interfaz/scripts/windows/setup-interfaz.ps1.'
+                'No se encontró ' . basename($driverPath) . ' en ' . $driverPath . '. '
+                . 'Ejecute ' . $setup . ' o instale el binario con '
+                . 'php tests/tools/interfaz/scripts/lib/install-chromedriver.php'
             );
         }
 
@@ -44,6 +50,12 @@ final class DriverFactory
             '--no-first-run',
             '--no-default-browser-check',
         ]);
+
+        $binary = Config::browserBinary();
+        if ($binary !== '') {
+            $options->setBinary($binary);
+        }
+
         if (Config::headless()) {
             $options->addArguments(['--headless=new', '--disable-gpu']);
         }
@@ -81,7 +93,11 @@ final class DriverFactory
         if (is_resource(self::$process)) {
             $status = proc_get_status(self::$process);
             if (($status['running'] ?? false) && !empty($status['pid'])) {
-                @exec('taskkill /F /T /PID ' . (int) $status['pid'] . ' 2>NUL');
+                if (PHP_OS_FAMILY === 'Windows') {
+                    @exec('taskkill /F /T /PID ' . (int) $status['pid'] . ' 2>NUL');
+                } else {
+                    @exec('kill -TERM ' . (int) $status['pid'] . ' 2>/dev/null');
+                }
             }
             @proc_terminate(self::$process);
             @proc_close(self::$process);

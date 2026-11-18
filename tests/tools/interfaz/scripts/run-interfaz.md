@@ -9,12 +9,14 @@
 
 ## Qué hace
 
-1. Si no se indica omitir la semilla, ejecuta `lib/seed-interfaz.php` para
+1. Comprueba que exista ChromeDriver (`tests/Interfaz/bin/`) y avisa cómo
+   instalarlo si falta; `setup-interfaz` lo descarga automáticamente.
+2. Si no se indica omitir la semilla, ejecuta `lib/seed-interfaz.php` para
    crear/actualizar `e2e_admin`.
-2. Crea `tests/tools/interfaz/formatos/resultados/`.
-3. Ejecuta PHPUnit con `tests/Interfaz/phpunit.xml`.
-4. Guarda el JUnit en `tests/tools/interfaz/formatos/resultados/junit-<nombre>.xml`.
-5. Devuelve el código de salida de PHPUnit.
+3. Crea `tests/tools/interfaz/formatos/resultados/`.
+4. Ejecuta PHPUnit con `tests/Interfaz/phpunit.xml`.
+5. Guarda el JUnit en `tests/tools/interfaz/formatos/resultados/junit-<nombre>.xml`.
+6. Devuelve el código de salida de PHPUnit.
 
 Las pruebas recorren la aplicación real en
 `http://localhost/sys-inescolara/` y **escriben en la base de datos de
@@ -25,9 +27,11 @@ producción.
 
 - XAMPP con **Apache** y **MySQL** iniciados.
 - PHP 8.2+ y dependencias de Composer (`composer install`).
-- Google Chrome y un ChromeDriver compatible en
-  `tests/Interfaz/bin/chromedriver.exe` (Windows) o
-  `tests/Interfaz/bin/chromedriver` (Linux/macOS).
+- Google Chrome, Chromium o Brave y un ChromeDriver compatible en
+  `tests/Interfaz/bin/` (`chromedriver.exe` en Windows, `chromedriver` en
+  Linux/macOS). `setup-interfaz` lo descarga si falta.
+- Claves de prueba de reCAPTCHA en el `.env` para que el login sea automatizable
+  (ver [`setup-interfaz.md`](setup-interfaz.md#recaptcha-en-las-pruebas)).
 - Usuario de prueba `e2e_admin` / `E2eAdmin123!`.
 - Entorno preparado con [`setup-interfaz`](setup-interfaz.md).
 
@@ -154,7 +158,9 @@ fallos o errores de configuración.
 | Síntoma | Causa probable | Solución |
 | --- | --- | --- |
 | `No se pudo preparar el usuario de prueba` | MySQL apagado o credenciales incorrectas. | Inicia MySQL y revisa `.env`. |
-| Chrome no abre | ChromeDriver no coincide con Chrome. | Actualiza el binario en `tests/Interfaz/bin/`. |
+| `falta ChromeDriver en tests/Interfaz/bin` | No se ejecutó la preparación. | Ejecuta [`setup-interfaz`](setup-interfaz.md) (descarga el binario). |
+| `Verificación de seguridad fallida` en el login | `.env` con claves reCAPTCHA reales. | Usa las claves de prueba de Google (ver `setup-interfaz.md`). |
+| Chrome no abre | ChromeDriver no coincide con el navegador. | `php tests/tools/interfaz/scripts/lib/install-chromedriver.php --force`. |
 | La app devuelve 404 | Apache apagado o URL incorrecta. | Inicia Apache y revisa `INTERFAZ_BASE_URL`. |
 | El login falla | Usuario no creado o contraseña cambiada. | Ejecuta [`setup-interfaz`](setup-interfaz.md) sin omitir la semilla. |
 | Quiero ver el navegador | `-Headless` / `--headless` activo. | Quita la opción. |

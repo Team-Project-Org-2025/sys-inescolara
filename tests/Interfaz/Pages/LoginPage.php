@@ -51,8 +51,9 @@ final class LoginPage extends BasePage
         });
 
         if (str_contains((string) $this->driver->getCurrentURL(), '/login')) {
-            $error = $this->driver->findElement(\Facebook\WebDriver\WebDriverBy::cssSelector('#loginError'))->getText();
-            throw new \RuntimeException('No se pudo iniciar sesión: ' . trim((string) $error));
+            $error = trim((string) $this->driver->findElement(\Facebook\WebDriver\WebDriverBy::cssSelector('#loginError'))->getText());
+            $this->failIfCaptchaRejected($error);
+            throw new \RuntimeException('No se pudo iniciar sesión: ' . $error);
         }
 
         Session::markLoggedIn(true);
@@ -65,7 +66,29 @@ final class LoginPage extends BasePage
         $this->solveCaptcha();
         $this->submit();
         $this->waitForVisibleCss('#loginError', 25);
-        return trim((string) $this->driver->findElement($this->byCss('#loginError'))->getText());
+        $error = trim((string) $this->driver->findElement($this->byCss('#loginError'))->getText());
+        $this->failIfCaptchaRejected($error);
+
+        return $error;
+    }
+
+    /**
+     * El servidor rechaza los inicios de sesión cuando reCAPTCHA está
+     * configurado con claves reales: la suite no puede resolver el reto. Se
+     * avisa con la causa real en lugar de dejar un fallo confuso.
+     */
+    private function failIfCaptchaRejected(string $error): void
+    {
+        if (stripos($error, 'verificación de seguridad') === false) {
+            return;
+        }
+
+        throw new \RuntimeException(
+            'El entorno rechazó el inicio de sesión por reCAPTCHA. '
+            . 'Para las pruebas E2E usa las claves de prueba de Google en el .env de la raíz: '
+            . 'RECAPTCHA_SITE_KEY=6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI y '
+            . 'RECAPTCHA_SECRET_KEY=6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe'
+        );
     }
 
     public function logout(): void

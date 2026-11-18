@@ -10,9 +10,12 @@ XAMPP (`http://localhost/sys-inescolara/`).
 
 - XAMPP con **Apache** y **MySQL** iniciados.
 - PHP 8.2+ (`php -v`).
-- Google Chrome y un ChromeDriver compatible en
-  `tests/Interfaz/bin/chromedriver.exe`.
+- Google Chrome, Chromium o Brave. El ChromeDriver compatible lo instala
+  `setup-interfaz` en `tests/Interfaz/bin/` (`chromedriver.exe` en Windows,
+  `chromedriver` en Linux/macOS).
 - Dependencias de desarrollo instaladas (`vendor/php-webdriver/webdriver`).
+- Claves de prueba de reCAPTCHA en el `.env` (ver
+  [setup-interfaz.md](../tools/interfaz/scripts/setup-interfaz.md#recaptcha-en-las-pruebas)).
 - Usuario de prueba `e2e_admin` / `E2eAdmin123!` (lo crea el seed).
 
 ## Preparación
@@ -22,8 +25,9 @@ composer install
 powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\windows\setup-interfaz.ps1
 ```
 
-El script verifica PHP, PHPUnit, php-webdriver y ChromeDriver, crea las carpetas
-de resultados y ejecuta la semilla interna
+El script verifica PHP, PHPUnit y php-webdriver, **descarga ChromeDriver si
+falta** (según el navegador detectado), crea las carpetas de resultados y
+ejecuta la semilla interna
 `tests/tools/interfaz/scripts/lib/seed-interfaz.php`. Para omitir la semilla:
 
 ```powershell
@@ -36,6 +40,10 @@ En Linux/macOS:
 composer install
 ./tests/tools/interfaz/scripts/linux/setup-interfaz.sh
 ./tests/tools/interfaz/scripts/linux/setup-interfaz.sh --skip-seed
+
+# Aplicar las claves de prueba de reCAPTCHA (y revertirlas)
+./tests/tools/interfaz/scripts/linux/setup-interfaz.sh --test-recaptcha
+./tests/tools/interfaz/scripts/linux/setup-interfaz.sh --restore-recaptcha
 ```
 
 ## Ejecución
@@ -85,7 +93,8 @@ sobrescribirlas con variables de entorno:
 | Variable | Valor por defecto |
 | --- | --- |
 | `INTERFAZ_BASE_URL` | `http://localhost/sys-inescolara/` |
-| `INTERFAZ_DRIVER` | `tests/Interfaz/bin/chromedriver.exe` |
+| `INTERFAZ_DRIVER` | `tests/Interfaz/bin/chromedriver` (`chromedriver.exe` en Windows) |
+| `INTERFAZ_BROWSER_BIN` | detectado: Chrome, Chromium o Brave |
 | `INTERFAZ_HEADLESS` | `0` |
 | `INTERFAZ_USER` | `e2e_admin` |
 | `INTERFAZ_PASSWORD` | `E2eAdmin123!` |
