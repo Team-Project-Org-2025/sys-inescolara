@@ -35,3 +35,4 @@ postgres-data/
 /public/assets/uploads/
 
 /logs/
+tests/aceptacion/_output/
