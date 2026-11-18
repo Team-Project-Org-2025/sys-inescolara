@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Regenera la matriz de aceptación (ACEPTACION.md).
 
@@ -9,7 +9,7 @@
     en tests\tools\reportes\formatos\resultados\.
 
 .EXAMPLE
-    powershell -ExecutionPolicy Bypass -File tests\tools\reportes\scripts\generate_aceptacion.ps1
+    powershell -ExecutionPolicy Bypass -File tests\tools\reportes\scripts\windows\generate_aceptacion.ps1
 #>
 param(
     [Parameter(ValueFromRemainingArguments = $true)]
@@ -18,7 +18,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-$root = Resolve-Path (Join-Path $PSScriptRoot '..\..\..\..')
+$root = Resolve-Path (Join-Path $PSScriptRoot '..\..\..\..\..')
 Set-Location $root
 
 if (-not (Get-Command php -ErrorAction SilentlyContinue)) {
@@ -26,7 +26,7 @@ if (-not (Get-Command php -ErrorAction SilentlyContinue)) {
     exit 3
 }
 
-$runner = Join-Path $PSScriptRoot 'lib\generate_aceptacion.php'
+$runner = Join-Path $PSScriptRoot '..\lib\generate_aceptacion.php'
 if (-not (Test-Path -LiteralPath $runner)) {
     Write-Host "[ERROR] No se encontró el generador: $runner" -ForegroundColor Red
     exit 3

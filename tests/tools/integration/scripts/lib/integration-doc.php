@@ -5,7 +5,7 @@ declare(strict_types=1);
 /**
  * Motor del formato Word de pruebas de integración.
  *
- * Invocado por tests/tools/integration/scripts/run-integration-doc.sh.
+ * Invocado por tests/tools/integration/scripts/linux/run-integration-doc.sh.
  * También puede ejecutarse directamente:
  *
  *   php tests/tools/integration/scripts/lib/integration-doc.php

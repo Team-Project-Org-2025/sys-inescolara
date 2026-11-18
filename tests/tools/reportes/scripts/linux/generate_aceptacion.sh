@@ -9,14 +9,14 @@
 # en tests/tools/reportes/formatos/resultados/.
 #
 # Uso:
-#   ./tests/tools/reportes/scripts/generate_aceptacion.sh
+#   ./tests/tools/reportes/scripts/linux/generate_aceptacion.sh
 #
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(cd "${SCRIPT_DIR}/../../../.." && pwd)"
+ROOT_DIR="$(cd "${SCRIPT_DIR}/../../../../.." && pwd)"
 PHP_BIN="${PHP_BIN:-php}"
-RUNNER="${SCRIPT_DIR}/lib/generate_aceptacion.php"
+RUNNER="${SCRIPT_DIR}/../lib/generate_aceptacion.php"
 
 if ! command -v "${PHP_BIN}" >/dev/null 2>&1; then
     echo "[ERROR] No se encontró '${PHP_BIN}' en el PATH." >&2

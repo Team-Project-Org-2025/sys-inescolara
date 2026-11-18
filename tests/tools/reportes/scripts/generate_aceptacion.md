@@ -2,8 +2,8 @@
 
 > **Tipo:** reporte · PowerShell y Bash
 >
-> **Ejecutores:** `generate_aceptacion.ps1` (Windows) y
-> `generate_aceptacion.sh` (Linux/macOS)
+> **Ejecutores:** `windows/generate_aceptacion.ps1` (Windows) y
+> `linux/generate_aceptacion.sh` (Linux/macOS)
 >
 > **Motor interno:** `lib/generate_aceptacion.php`
 >
@@ -37,12 +37,12 @@ Si no existe el reporte, la matriz se genera con todos los casos como
 
 ```bash
 # Linux/macOS
-./tests/tools/aceptacion/scripts/run-aceptacion.sh
+./tests/tools/aceptacion/scripts/linux/run-aceptacion.sh
 ```
 
 ```powershell
 # Windows
-powershell -ExecutionPolicy Bypass -File tests\tools\aceptacion\scripts\run-aceptacion.ps1
+powershell -ExecutionPolicy Bypass -File tests\tools\aceptacion\scripts\windows\run-aceptacion.ps1
 ```
 
 El ejecutor descarga ChromeDriver si falta, levanta la aplicación y el driver,
@@ -53,12 +53,12 @@ crea el usuario `e2e_admin`, ejecuta Codeception y guarda
 
 ```powershell
 # Windows
-powershell -ExecutionPolicy Bypass -File tests\tools\reportes\scripts\generate_aceptacion.ps1
+powershell -ExecutionPolicy Bypass -File tests\tools\reportes\scripts\windows\generate_aceptacion.ps1
 ```
 
 ```bash
 # Linux/macOS
-./tests/tools/reportes/scripts/generate_aceptacion.sh
+./tests/tools/reportes/scripts/linux/generate_aceptacion.sh
 ```
 
 El motor también puede invocarse directamente:

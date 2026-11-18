@@ -2,9 +2,9 @@
 #
 # Ejecuta la suite de aceptación (Codeception + WebDriver) de Sys Inescolara.
 #
-#   ./tests/tools/aceptacion/scripts/run-aceptacion.sh              # toda la suite
-#   ./tests/tools/aceptacion/scripts/run-aceptacion.sh AutenticacionCest
-#   ACEPTACION_BROWSER=/usr/bin/chromium ./tests/tools/aceptacion/scripts/run-aceptacion.sh
+#   ./tests/tools/aceptacion/scripts/linux/run-aceptacion.sh              # toda la suite
+#   ./tests/tools/aceptacion/scripts/linux/run-aceptacion.sh AutenticacionCest
+#   ACEPTACION_BROWSER=/usr/bin/chromium ./tests/tools/aceptacion/scripts/linux/run-aceptacion.sh
 #
 # El script levanta, si no están ya activos:
 #   - la aplicación en un servidor PHP embebido (tests/aceptacion/server)

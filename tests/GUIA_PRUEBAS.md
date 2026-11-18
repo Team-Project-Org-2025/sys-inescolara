@@ -204,7 +204,7 @@ Humo), no una sola. No hay que indicar la suite.
 #### Ejemplo: solo Lote (`05`)
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\run-module.ps1 05
+powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\windows\run-module.ps1 05
 ```
 
 Qué hace, en orden:
@@ -250,10 +250,10 @@ base de datos; **no son fallos**.
 
 ```powershell
 # Explícito
-powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\run-module.ps1 all
+powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\windows\run-module.ps1 all
 
 # O sin argumento: hace exactamente lo mismo
-powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\run-module.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\windows\run-module.ps1
 ```
 
 Salida esperada al final:
@@ -316,7 +316,7 @@ fallos**. Lo que manda es el código de salida y la línea `OK`/`FAILURES!`.
 Para otro módulo cambia solo la ruta y el ID de humo. Los tres comandos de cada
 uno de los 31 módulos están listos para copiar en
 [`COMANDOS_RAPIDOS.md`](COMANDOS_RAPIDOS.md). El script equivalente es
-[`tools/phpunit/scripts/run-module.ps1`](tools/phpunit/scripts/run-module.md); para una sola suite, archivo o
+[`tools/phpunit/scripts/windows/run-module.ps1`](tools/phpunit/scripts/run-module.md); para una sola suite, archivo o
 método usa las [recetas PHPUnit](tools/README.md#recetas-phpunit).
 
 > **Por qué la ruta y no `--filter`:** `--filter` es una coincidencia por
@@ -401,10 +401,10 @@ Debe imprimir `OK, but some tests were skipped!` con
 `Tests: 949, Assertions: 11683, Skipped: 7` y código de salida `0`. Después:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File tests\tools\reportes\scripts\generate_traceability.ps1
+powershell -ExecutionPolicy Bypass -File tests\tools\reportes\scripts\windows\generate_traceability.ps1
 ```
 
-En Linux/macOS: `./tests/tools/reportes/scripts/generate_traceability.sh`.
+En Linux/macOS: `./tests/tools/reportes/scripts/linux/generate_traceability.sh`.
 
 Debe reportar `31 requisitos, 93 casos (93 PASS, 0 FAIL, 0 SKIP, 0 sin ejecutar)`
 y, en la línea siguiente, **945 pruebas de modelo** (938 PASS, 7 SKIP).
@@ -469,10 +469,10 @@ php vendor\phpunit\phpunit\phpunit -c tests\phpunit.xml --testsuite Smoke       
 2. Regenera los documentos:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File tests\tools\reportes\scripts\generate_traceability.ps1
+powershell -ExecutionPolicy Bypass -File tests\tools\reportes\scripts\windows\generate_traceability.ps1
 ```
 
-En Linux/macOS: `./tests/tools/reportes/scripts/generate_traceability.sh`.
+En Linux/macOS: `./tests/tools/reportes/scripts/linux/generate_traceability.sh`.
 
 Esto sobrescribe `tests/tools/reportes/formatos/resultados/TRACEABILITY.md` y `tests/tools/reportes/formatos/resultados/traceability.json` con el
 estado real (`PASS`, `FAIL`, `SKIP` o `NO EJECUTADO`) de cada caso.

@@ -2,7 +2,7 @@
 
 > **Tipo:** PHPUnit · Integration + Smoke · PowerShell y Bash
 >
-> **Ejecutores:** `run-tests.ps1` (Windows) y `run-tests.sh` (Linux/macOS)
+> **Ejecutores:** `windows/run-tests.ps1` (Windows) y `linux/run-tests.sh` (Linux/macOS)
 >
 > **Motor interno:** `lib/run-tests.php`
 
@@ -30,13 +30,13 @@ log + JUnit en `tests/tools/phpunit/formatos/resultados/`.
 ### Windows (PowerShell)
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\run-tests.ps1 [opciones]
+powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\windows\run-tests.ps1 [opciones]
 ```
 
 ### Linux / macOS (Bash)
 
 ```bash
-./tests/tools/phpunit/scripts/run-tests.sh [opciones]
+./tests/tools/phpunit/scripts/linux/run-tests.sh [opciones]
 ```
 
 Los dos ejecutores solo comprueban que `php` exista y reenvían todos los
@@ -72,44 +72,44 @@ y acentos; la búsqueda normaliza ambos lados.
 
 ```powershell
 # Windows
-powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\run-tests.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\windows\run-tests.ps1
 ```
 
 ```bash
 # Linux/macOS
-./tests/tools/phpunit/scripts/run-tests.sh
+./tests/tools/phpunit/scripts/linux/run-tests.sh
 ```
 
 ### Una sola suite
 
 ```powershell
 # Windows
-powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\run-tests.ps1 --suite=integration
-powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\run-tests.ps1 --suite=smoke
+powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\windows\run-tests.ps1 --suite=integration
+powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\windows\run-tests.ps1 --suite=smoke
 ```
 
 ```bash
 # Linux/macOS
-./tests/tools/phpunit/scripts/run-tests.sh --suite=integration
-./tests/tools/phpunit/scripts/run-tests.sh --suite=smoke
+./tests/tools/phpunit/scripts/linux/run-tests.sh --suite=integration
+./tests/tools/phpunit/scripts/linux/run-tests.sh --suite=smoke
 ```
 
 ### Un módulo
 
 ```bash
 # Integración + humo de Venta
-./tests/tools/phpunit/scripts/run-tests.sh --module=13
+./tests/tools/phpunit/scripts/linux/run-tests.sh --module=13
 
 # Solo el humo de Venta
-./tests/tools/phpunit/scripts/run-tests.sh --module=Venta --suite=smoke
+./tests/tools/phpunit/scripts/linux/run-tests.sh --module=Venta --suite=smoke
 ```
 
 ### Ver antes de ejecutar
 
 ```bash
-./tests/tools/phpunit/scripts/run-tests.sh --list
-./tests/tools/phpunit/scripts/run-tests.sh --dry-run
-./tests/tools/phpunit/scripts/run-tests.sh --help
+./tests/tools/phpunit/scripts/linux/run-tests.sh --list
+./tests/tools/phpunit/scripts/linux/run-tests.sh --dry-run
+./tests/tools/phpunit/scripts/linux/run-tests.sh --help
 ```
 
 ### SQLite manual
@@ -118,7 +118,7 @@ Si `pdo_sqlite` no está habilitado globalmente, indica la ruta de la extensión
 (repetible):
 
 ```bash
-./tests/tools/phpunit/scripts/run-tests.sh --suite=integration \
+./tests/tools/phpunit/scripts/linux/run-tests.sh --suite=integration \
   --extension=/usr/lib/php/modules/sqlite3.so \
   --extension=/usr/lib/php/modules/pdo_sqlite.so
 ```
@@ -126,7 +126,7 @@ Si `pdo_sqlite` no está habilitado globalmente, indica la ruta de la extensión
 En Windows:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\run-tests.ps1 `
+powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\windows\run-tests.ps1 `
   --suite=integration --extension=C:\xampp\php\ext\php_pdo_sqlite.dll
 ```
 

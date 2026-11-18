@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Regenera la matriz de trazabilidad (TRACEABILITY.md y traceability.json).
 
@@ -8,7 +8,7 @@
     matriz en tests\tools\reportes\formatos\resultados\.
 
 .EXAMPLE
-    powershell -ExecutionPolicy Bypass -File tests\tools\reportes\scripts\generate_traceability.ps1
+    powershell -ExecutionPolicy Bypass -File tests\tools\reportes\scripts\windows\generate_traceability.ps1
 #>
 param(
     [Parameter(ValueFromRemainingArguments = $true)]
@@ -17,7 +17,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-$root = Resolve-Path (Join-Path $PSScriptRoot '..\..\..\..')
+$root = Resolve-Path (Join-Path $PSScriptRoot '..\..\..\..\..')
 Set-Location $root
 
 if (-not (Get-Command php -ErrorAction SilentlyContinue)) {
@@ -25,7 +25,7 @@ if (-not (Get-Command php -ErrorAction SilentlyContinue)) {
     exit 3
 }
 
-$runner = Join-Path $PSScriptRoot 'lib\generate_traceability.php'
+$runner = Join-Path $PSScriptRoot '..\lib\generate_traceability.php'
 if (-not (Test-Path -LiteralPath $runner)) {
     Write-Host "[ERROR] No se encontró el generador: $runner" -ForegroundColor Red
     exit 3

@@ -2,8 +2,8 @@
 
 > **Tipo:** PHPUnit · Word (Open XML) · PowerShell y Bash
 >
-> **Ejecutores:** `run-integration-doc.ps1` (Windows) y
-> `run-integration-doc.sh` (Linux/macOS)
+> **Ejecutores:** `windows/run-integration-doc.ps1` (Windows) y
+> `linux/run-integration-doc.sh` (Linux/macOS)
 >
 > **Atajo:** ejecuta las 31 pruebas de integración, genera una captura nueva por
 > módulo y llena una **copia** del formato Word. El documento original nunca se
@@ -62,40 +62,40 @@ ZIP propio sobre `zlib`.
 
 ```powershell
 # Los 31 módulos (recomendado)
-powershell -ExecutionPolicy Bypass -File tests\tools\integration\scripts\run-integration-doc.ps1
+powershell -ExecutionPolicy Bypass -File tests\tools\integration\scripts\windows\run-integration-doc.ps1
 
 # Un módulo por número o por nombre
-powershell -ExecutionPolicy Bypass -File tests\tools\integration\scripts\run-integration-doc.ps1 -Module 29
-powershell -ExecutionPolicy Bypass -File tests\tools\integration\scripts\run-integration-doc.ps1 -Module Backup
+powershell -ExecutionPolicy Bypass -File tests\tools\integration\scripts\windows\run-integration-doc.ps1 -Module 29
+powershell -ExecutionPolicy Bypass -File tests\tools\integration\scripts\windows\run-integration-doc.ps1 -Module Backup
 
 # Elegir la ruta de salida
-powershell -ExecutionPolicy Bypass -File tests\tools\integration\scripts\run-integration-doc.ps1 -Module PasswordReset -Output C:\temp\cuadro-31.docx
+powershell -ExecutionPolicy Bypass -File tests\tools\integration\scripts\windows\run-integration-doc.ps1 -Module PasswordReset -Output C:\temp\cuadro-31.docx
 
 # Conservar los JUnit temporales
-powershell -ExecutionPolicy Bypass -File tests\tools\integration\scripts\run-integration-doc.ps1 -KeepWorking
+powershell -ExecutionPolicy Bypass -File tests\tools\integration\scripts\windows\run-integration-doc.ps1 -KeepWorking
 ```
 
 ### Linux / macOS (Bash)
 
 ```bash
 # Los 31 módulos (recomendado)
-./tests/tools/integration/scripts/run-integration-doc.sh
+./tests/tools/integration/scripts/linux/run-integration-doc.sh
 
 # Un módulo por número o por nombre
-./tests/tools/integration/scripts/run-integration-doc.sh --module=29
-./tests/tools/integration/scripts/run-integration-doc.sh --module=Backup
+./tests/tools/integration/scripts/linux/run-integration-doc.sh --module=29
+./tests/tools/integration/scripts/linux/run-integration-doc.sh --module=Backup
 
 # Elegir la ruta de salida
-./tests/tools/integration/scripts/run-integration-doc.sh --module=PasswordReset --output=/tmp/cuadro-31.docx
+./tests/tools/integration/scripts/linux/run-integration-doc.sh --module=PasswordReset --output=/tmp/cuadro-31.docx
 
 # Conservar los JUnit temporales
-./tests/tools/integration/scripts/run-integration-doc.sh --keep-working
+./tests/tools/integration/scripts/linux/run-integration-doc.sh --keep-working
 ```
 
 Si el navegador no está en una ruta conocida:
 
 ```bash
-CHROME_BIN=/usr/bin/chromium ./tests/tools/integration/scripts/run-integration-doc.sh
+CHROME_BIN=/usr/bin/chromium ./tests/tools/integration/scripts/linux/run-integration-doc.sh
 ```
 
 ## Parámetros

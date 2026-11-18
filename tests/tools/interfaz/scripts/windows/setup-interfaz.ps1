@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Prepara el entorno de las pruebas de interfaz (Selenium + ChromeDriver).
 
@@ -7,10 +7,10 @@
     semilla del usuario de prueba y prepara las carpetas de resultados.
 
 .EXAMPLE
-    powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\setup-interfaz.ps1
+    powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\windows\setup-interfaz.ps1
 
 .EXAMPLE
-    powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\setup-interfaz.ps1 -SkipSeed
+    powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\windows\setup-interfaz.ps1 -SkipSeed
 #>
 param(
     [switch]$SkipSeed,
@@ -18,7 +18,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$root = Resolve-Path (Join-Path $PSScriptRoot '..\..\..\..')
+$root = Resolve-Path (Join-Path $PSScriptRoot '..\..\..\..\..')
 Set-Location $root
 
 Write-Host '==> Verificando PHP' -ForegroundColor Cyan
@@ -67,4 +67,4 @@ try {
 
 Write-Host ''
 Write-Host 'Entorno de interfaz listo.' -ForegroundColor Green
-Write-Host 'Ejecute: powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\run-interfaz.ps1'
+Write-Host 'Ejecute: powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\windows\run-interfaz.ps1'

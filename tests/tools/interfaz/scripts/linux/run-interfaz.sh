@@ -7,15 +7,15 @@
 # JUnit en tests/tools/interfaz/formatos/resultados/junit-<suite>.xml.
 #
 # Uso:
-#   ./tests/tools/interfaz/scripts/run-interfaz.sh
-#   ./tests/tools/interfaz/scripts/run-interfaz.sh --suite Inventario
-#   ./tests/tools/interfaz/scripts/run-interfaz.sh --filter VentasTest --headless
-#   ./tests/tools/interfaz/scripts/run-interfaz.sh --skip-seed
+#   ./tests/tools/interfaz/scripts/linux/run-interfaz.sh
+#   ./tests/tools/interfaz/scripts/linux/run-interfaz.sh --suite Inventario
+#   ./tests/tools/interfaz/scripts/linux/run-interfaz.sh --filter VentasTest --headless
+#   ./tests/tools/interfaz/scripts/linux/run-interfaz.sh --skip-seed
 #
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(cd "${SCRIPT_DIR}/../../../.." && pwd)"
+ROOT_DIR="$(cd "${SCRIPT_DIR}/../../../../.." && pwd)"
 PHP_BIN="${PHP_BIN:-php}"
 PHPUNIT="${ROOT_DIR}/vendor/phpunit/phpunit/phpunit"
 

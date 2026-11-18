@@ -19,7 +19,7 @@ XAMPP (`http://localhost/sys-inescolara/`).
 
 ```powershell
 composer install
-powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\setup-interfaz.ps1
+powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\windows\setup-interfaz.ps1
 ```
 
 El script verifica PHP, PHPUnit, php-webdriver y ChromeDriver, crea las carpetas
@@ -27,45 +27,45 @@ de resultados y ejecuta la semilla interna
 `tests/tools/interfaz/scripts/lib/seed-interfaz.php`. Para omitir la semilla:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\setup-interfaz.ps1 -SkipSeed
+powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\windows\setup-interfaz.ps1 -SkipSeed
 ```
 
 En Linux/macOS:
 
 ```bash
 composer install
-./tests/tools/interfaz/scripts/setup-interfaz.sh
-./tests/tools/interfaz/scripts/setup-interfaz.sh --skip-seed
+./tests/tools/interfaz/scripts/linux/setup-interfaz.sh
+./tests/tools/interfaz/scripts/linux/setup-interfaz.sh --skip-seed
 ```
 
 ## Ejecución
 
 ```powershell
 # Toda la suite
-powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\run-interfaz.ps1
+powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\windows\run-interfaz.ps1
 
 # Una suite (Autenticacion, Navegacion, Publico, Catalogo, Inventario,
 # Comercial, Operaciones, Sistema)
-powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\run-interfaz.ps1 -Suite Inventario
+powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\windows\run-interfaz.ps1 -Suite Inventario
 
 # Un archivo o prueba concreta
-powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\run-interfaz.ps1 -Filter VentasTest
+powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\windows\run-interfaz.ps1 -Filter VentasTest
 
 # Sin ventana de Chrome
-powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\run-interfaz.ps1 -Headless
+powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\windows\run-interfaz.ps1 -Headless
 
 # Sin volver a crear el usuario
-powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\run-interfaz.ps1 -SkipSeed
+powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\windows\run-interfaz.ps1 -SkipSeed
 ```
 
 En Linux/macOS:
 
 ```bash
-./tests/tools/interfaz/scripts/run-interfaz.sh
-./tests/tools/interfaz/scripts/run-interfaz.sh --suite Inventario
-./tests/tools/interfaz/scripts/run-interfaz.sh --filter VentasTest
-./tests/tools/interfaz/scripts/run-interfaz.sh --headless
-./tests/tools/interfaz/scripts/run-interfaz.sh --skip-seed
+./tests/tools/interfaz/scripts/linux/run-interfaz.sh
+./tests/tools/interfaz/scripts/linux/run-interfaz.sh --suite Inventario
+./tests/tools/interfaz/scripts/linux/run-interfaz.sh --filter VentasTest
+./tests/tools/interfaz/scripts/linux/run-interfaz.sh --headless
+./tests/tools/interfaz/scripts/linux/run-interfaz.sh --skip-seed
 ```
 
 También se puede invocar PHPUnit directamente:

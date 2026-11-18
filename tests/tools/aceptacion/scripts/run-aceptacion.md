@@ -2,7 +2,7 @@
 
 > **Tipo:** Codeception + WebDriver · PowerShell y Bash
 >
-> **Ejecutores:** `run-aceptacion.ps1` (Windows) y `run-aceptacion.sh` (Linux/macOS)
+> **Ejecutores:** `windows/run-aceptacion.ps1` (Windows) y `linux/run-aceptacion.sh` (Linux/macOS)
 >
 > **Atajo:** levanta la aplicación y ChromeDriver, prepara el usuario
 > `e2e_admin`, ejecuta la suite y deja el JUnit en
@@ -39,17 +39,17 @@ Linux/macOS el valor por defecto es `/opt/brave-bin/brave`. Define
 ### Windows (PowerShell)
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File tests\tools\aceptacion\scripts\run-aceptacion.ps1
-powershell -ExecutionPolicy Bypass -File tests\tools\aceptacion\scripts\run-aceptacion.ps1 AutenticacionCest
+powershell -ExecutionPolicy Bypass -File tests\tools\aceptacion\scripts\windows\run-aceptacion.ps1
+powershell -ExecutionPolicy Bypass -File tests\tools\aceptacion\scripts\windows\run-aceptacion.ps1 AutenticacionCest
 $env:ACEPTACION_BROWSER = 'C:\Program Files\Google\Chrome\Application\chrome.exe'
 ```
 
 ### Linux / macOS (Bash)
 
 ```bash
-./tests/tools/aceptacion/scripts/run-aceptacion.sh
-./tests/tools/aceptacion/scripts/run-aceptacion.sh AutenticacionCest
-ACEPTACION_BROWSER=/usr/bin/chromium ./tests/tools/aceptacion/scripts/run-aceptacion.sh
+./tests/tools/aceptacion/scripts/linux/run-aceptacion.sh
+./tests/tools/aceptacion/scripts/linux/run-aceptacion.sh AutenticacionCest
+ACEPTACION_BROWSER=/usr/bin/chromium ./tests/tools/aceptacion/scripts/linux/run-aceptacion.sh
 ```
 
 El argumento opcional es el nombre del archivo o `Cest` que Codeception debe
@@ -83,17 +83,17 @@ La carpeta `resultados/` está ignorada por git; la plantilla
 
 ```bash
 # 1) Ejecutar la suite
-./tests/tools/aceptacion/scripts/run-aceptacion.sh
+./tests/tools/aceptacion/scripts/linux/run-aceptacion.sh
 
 # 2) Regenerar ACEPTACION.md
-./tests/tools/reportes/scripts/generate_aceptacion.sh
+./tests/tools/reportes/scripts/linux/generate_aceptacion.sh
 ```
 
 En Windows:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File tests\tools\aceptacion\scripts\run-aceptacion.ps1
-powershell -ExecutionPolicy Bypass -File tests\tools\reportes\scripts\generate_aceptacion.ps1
+powershell -ExecutionPolicy Bypass -File tests\tools\aceptacion\scripts\windows\run-aceptacion.ps1
+powershell -ExecutionPolicy Bypass -File tests\tools\reportes\scripts\windows\generate_aceptacion.ps1
 ```
 
 La guía del generador está en

@@ -1,15 +1,15 @@
-<#
+﻿<#
 .SYNOPSIS
     Ejecuta las pruebas de uno o de los 31 modulos y compara contra la matriz.
 
 .DESCRIPTION
     Un modulo:
-        powershell -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\run-module.ps1 Planta
-        powershell -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\run-module.ps1 01
-        powershell -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\run-module.ps1 "Cuenta por cobrar"
+        powershell -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\windows\run-module.ps1 Planta
+        powershell -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\windows\run-module.ps1 01
+        powershell -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\windows\run-module.ps1 "Cuenta por cobrar"
 
     Todos los modulos (31):
-        powershell -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\run-module.ps1 all
+        powershell -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\windows\run-module.ps1 all
 
     Para cada modulo ejecuta sus tres suites: unitaria, integracion y humo.
     Guarda los JUnit en tests\tools\phpunit\formatos\resultados\module-<Modelo>-{unit,integration,smoke}.xml
@@ -24,12 +24,12 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-$root = Resolve-Path (Join-Path $PSScriptRoot '..\..\..\..')
+$root = Resolve-Path (Join-Path $PSScriptRoot '..\..\..\..\..')
 Set-Location $root
 
 $jsonPath = Join-Path $root 'tests\tools\reportes\formatos\resultados\traceability.json'
 if (-not (Test-Path $jsonPath)) {
-    throw "No existe $jsonPath. Ejecuta primero: powershell -ExecutionPolicy Bypass -File tests\tools\reportes\scripts\generate_traceability.ps1"
+    throw "No existe $jsonPath. Ejecuta primero: powershell -ExecutionPolicy Bypass -File tests\tools\reportes\scripts\windows\generate_traceability.ps1"
 }
 
 $data = Get-Content $jsonPath -Raw | ConvertFrom-Json

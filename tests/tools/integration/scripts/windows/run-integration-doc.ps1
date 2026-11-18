@@ -26,13 +26,13 @@
     Conserva los JUnit temporales de la corrida.
 
 .EXAMPLE
-    powershell -ExecutionPolicy Bypass -File tests\tools\integration\scripts\run-integration-doc.ps1
+    powershell -ExecutionPolicy Bypass -File tests\tools\integration\scripts\windows\run-integration-doc.ps1
 
 .EXAMPLE
-    powershell -ExecutionPolicy Bypass -File tests\tools\integration\scripts\run-integration-doc.ps1 -Module 29
+    powershell -ExecutionPolicy Bypass -File tests\tools\integration\scripts\windows\run-integration-doc.ps1 -Module 29
 
 .EXAMPLE
-    powershell -ExecutionPolicy Bypass -File tests\tools\integration\scripts\run-integration-doc.ps1 -Module Backup -Output C:\temp\cuadro-29.docx
+    powershell -ExecutionPolicy Bypass -File tests\tools\integration\scripts\windows\run-integration-doc.ps1 -Module Backup -Output C:\temp\cuadro-29.docx
 #>
 [CmdletBinding()]
 param(
@@ -46,7 +46,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-$script:Root        = (Resolve-Path (Join-Path $PSScriptRoot '..\..\..\..')).Path
+$script:Root        = (Resolve-Path (Join-Path $PSScriptRoot '..\..\..\..\..')).Path
 $script:AreaDir     = Join-Path $script:Root 'tests\tools\integration'
 $script:Template    = Join-Path $script:AreaDir 'formatos\plantillas\Formato-Prueba-Integración.docx'
 $script:ResultsDir  = Join-Path $script:AreaDir 'formatos\resultados'

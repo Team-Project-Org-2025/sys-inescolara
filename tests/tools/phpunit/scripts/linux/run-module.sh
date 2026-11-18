@@ -6,11 +6,11 @@
 # tests/tools/reportes/formatos/resultados/traceability.json.
 #
 # Uso:
-#   ./tests/tools/phpunit/scripts/run-module.sh
-#   ./tests/tools/phpunit/scripts/run-module.sh all
-#   ./tests/tools/phpunit/scripts/run-module.sh Planta
-#   ./tests/tools/phpunit/scripts/run-module.sh 01
-#   ./tests/tools/phpunit/scripts/run-module.sh "Cuenta por cobrar"
+#   ./tests/tools/phpunit/scripts/linux/run-module.sh
+#   ./tests/tools/phpunit/scripts/linux/run-module.sh all
+#   ./tests/tools/phpunit/scripts/linux/run-module.sh Planta
+#   ./tests/tools/phpunit/scripts/linux/run-module.sh 01
+#   ./tests/tools/phpunit/scripts/linux/run-module.sh "Cuenta por cobrar"
 #
 # Códigos de salida:
 #   0  Todos los módulos coinciden con la matriz.
@@ -21,7 +21,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(cd "${SCRIPT_DIR}/../../../.." && pwd)"
+ROOT_DIR="$(cd "${SCRIPT_DIR}/../../../../.." && pwd)"
 PHP_BIN="${PHP_BIN:-php}"
 PHPUNIT="${ROOT_DIR}/vendor/phpunit/phpunit/phpunit"
 CONFIG="${ROOT_DIR}/tests/phpunit.xml"

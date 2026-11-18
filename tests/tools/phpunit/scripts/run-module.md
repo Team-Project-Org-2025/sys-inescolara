@@ -2,7 +2,7 @@
 
 > **Tipo:** PHPUnit · Unit + Integration + Smoke · PowerShell y Bash
 >
-> **Ejecutores:** `run-module.ps1` (Windows) y `run-module.sh` (Linux/macOS)
+> **Ejecutores:** `windows/run-module.ps1` (Windows) y `linux/run-module.sh` (Linux/macOS)
 >
 > **Atajo:** ejecuta las **tres suites** de uno o de los 31 módulos y compara los
 > conteos contra `tests/tools/reportes/formatos/resultados/traceability.json`.
@@ -42,13 +42,13 @@ No hace falta MySQL, Apache ni XAMPP.
 ### Windows (PowerShell)
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\run-module.ps1 <módulo>
+powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\windows\run-module.ps1 <módulo>
 ```
 
 ### Linux / macOS (Bash)
 
 ```bash
-./tests/tools/phpunit/scripts/run-module.sh <módulo>
+./tests/tools/phpunit/scripts/linux/run-module.sh <módulo>
 ```
 
 El argumento es **uno solo** y acepta cualquiera de estas formas:
@@ -69,16 +69,16 @@ El argumento es **uno solo** y acepta cualquiera de estas formas:
 
 ```powershell
 # Windows: por número, por nombre o por requisito
-powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\run-module.ps1 05
-powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\run-module.ps1 Lote
-powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\run-module.ps1 RF-05
+powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\windows\run-module.ps1 05
+powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\windows\run-module.ps1 Lote
+powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\windows\run-module.ps1 RF-05
 ```
 
 ```bash
 # Linux/macOS: los mismos argumentos
-./tests/tools/phpunit/scripts/run-module.sh 05
-./tests/tools/phpunit/scripts/run-module.sh Lote
-./tests/tools/phpunit/scripts/run-module.sh RF-05
+./tests/tools/phpunit/scripts/linux/run-module.sh 05
+./tests/tools/phpunit/scripts/linux/run-module.sh Lote
+./tests/tools/phpunit/scripts/linux/run-module.sh RF-05
 ```
 
 Salida esperada (resumida):
@@ -105,12 +105,12 @@ RESULTADO: COINCIDE con tests/tools/reportes/formatos/resultados/traceability.js
 
 ```powershell
 # Windows
-powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\run-module.ps1 all
+powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\windows\run-module.ps1 all
 ```
 
 ```bash
 # Linux/macOS
-./tests/tools/phpunit/scripts/run-module.sh all
+./tests/tools/phpunit/scripts/linux/run-module.sh all
 ```
 
 Salida esperada al final:

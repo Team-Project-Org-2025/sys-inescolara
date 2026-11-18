@@ -2,7 +2,7 @@
 
 > **Tipo:** preparación · PowerShell y Bash
 >
-> **Ejecutores:** `setup-interfaz.ps1` (Windows) y `setup-interfaz.sh` (Linux/macOS)
+> **Ejecutores:** `windows/setup-interfaz.ps1` (Windows) y `linux/setup-interfaz.sh` (Linux/macOS)
 >
 > **Atajo:** verifica PHP, PHPUnit, php-webdriver y ChromeDriver, crea las
 > carpetas de resultados y deja listo el usuario de prueba.
@@ -36,13 +36,13 @@ No inicia Apache, MySQL ni ChromeDriver: solo comprueba y prepara.
 ### Windows (PowerShell)
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\setup-interfaz.ps1 [-SkipSeed] [-Install]
+powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\windows\setup-interfaz.ps1 [-SkipSeed] [-Install]
 ```
 
 ### Linux / macOS (Bash)
 
 ```bash
-./tests/tools/interfaz/scripts/setup-interfaz.sh [--skip-seed] [--install]
+./tests/tools/interfaz/scripts/linux/setup-interfaz.sh [--skip-seed] [--install]
 ```
 
 ### Parámetros
@@ -59,37 +59,37 @@ powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\setup-inte
 ```powershell
 # Windows
 composer install
-powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\setup-interfaz.ps1
+powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\windows\setup-interfaz.ps1
 ```
 
 ```bash
 # Linux/macOS
 composer install
-./tests/tools/interfaz/scripts/setup-interfaz.sh
+./tests/tools/interfaz/scripts/linux/setup-interfaz.sh
 ```
 
 ### Sin tocar el usuario
 
 ```powershell
 # Windows
-powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\setup-interfaz.ps1 -SkipSeed
+powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\windows\setup-interfaz.ps1 -SkipSeed
 ```
 
 ```bash
 # Linux/macOS
-./tests/tools/interfaz/scripts/setup-interfaz.sh --skip-seed
+./tests/tools/interfaz/scripts/linux/setup-interfaz.sh --skip-seed
 ```
 
 ### Forzar dependencias
 
 ```powershell
 # Windows
-powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\setup-interfaz.ps1 -Install
+powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\windows\setup-interfaz.ps1 -Install
 ```
 
 ```bash
 # Linux/macOS
-./tests/tools/interfaz/scripts/setup-interfaz.sh --install
+./tests/tools/interfaz/scripts/linux/setup-interfaz.sh --install
 ```
 
 ## Salida esperada

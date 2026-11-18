@@ -4,17 +4,17 @@
 # Envoltura para Linux/macOS de tests/tools/phpunit/scripts/lib/run-tests.php
 #
 # Uso:
-#   ./tests/tools/phpunit/scripts/run-tests.sh
-#   ./tests/tools/phpunit/scripts/run-tests.sh --suite=integration
-#   ./tests/tools/phpunit/scripts/run-tests.sh --suite=smoke
-#   ./tests/tools/phpunit/scripts/run-tests.sh --module=13
+#   ./tests/tools/phpunit/scripts/linux/run-tests.sh
+#   ./tests/tools/phpunit/scripts/linux/run-tests.sh --suite=integration
+#   ./tests/tools/phpunit/scripts/linux/run-tests.sh --suite=smoke
+#   ./tests/tools/phpunit/scripts/linux/run-tests.sh --module=13
 #
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(cd "${SCRIPT_DIR}/../../../.." && pwd)"
+ROOT_DIR="$(cd "${SCRIPT_DIR}/../../../../.." && pwd)"
 PHP_BIN="${PHP_BIN:-php}"
-RUNNER="${SCRIPT_DIR}/lib/run-tests.php"
+RUNNER="${SCRIPT_DIR}/../lib/run-tests.php"
 
 if ! command -v php >/dev/null 2>&1; then
     echo "[ERROR] No se encontró el ejecutable 'php' en el PATH." >&2

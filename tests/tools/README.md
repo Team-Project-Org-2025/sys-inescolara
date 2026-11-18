@@ -5,11 +5,11 @@ dónde quedan sus resultados**. Cada área de prueba tiene la misma estructura:
 
 ```text
 tests/tools/<área>/
-├── scripts/                 ← ejecutables PowerShell + Bash y su guía .md
-│   ├── <script>.ps1         ← Windows
-│   ├── <script>.sh          ← Linux / macOS
+├── scripts/                 ← ejecutables separados por sistema + guía .md
+│   ├── windows/             ← solo PowerShell (.ps1)
+│   ├── linux/               ← solo Bash (.sh, Linux/macOS)
 │   ├── lib/                 ← motor interno compartido (PHP)
-│   └── <script>.md
+│   └── <script>.md          ← guía común de ambas variantes
 └── formatos/
     ├── plantillas/          ← formatos vacíos (estructura a seguir)
     └── resultados/          ← formatos llenos (salida de las pruebas)
@@ -17,16 +17,19 @@ tests/tools/<área>/
 
 Reglas del estándar:
 
-1. **`scripts/`** contiene los ejecutables y su documentación. Cada ejecutor
-   existe en **PowerShell** y en **Bash**; nunca se guardan resultados ahí.
-2. **`scripts/lib/`** contiene los motores internos en PHP. No se ejecutan
+1. **`scripts/windows/`** contiene únicamente los ejecutables **PowerShell**.
+2. **`scripts/linux/`** contiene únicamente los ejecutables **Bash** para
+   Linux y macOS. Nunca se mezclan ambos sistemas en la misma carpeta.
+3. La guía **`scripts/<script>.md`** es común: documenta los parámetros de las
+   dos variantes y sus comandos.
+4. **`scripts/lib/`** contiene los motores internos en PHP. No se ejecutan
    directamente: los invocan los wrappers `.ps1` y `.sh`.
-3. **`formatos/plantillas/`** contiene el formato vacío que define columnas,
+5. **`formatos/plantillas/`** contiene el formato vacío que define columnas,
    secciones y campos obligatorios.
-4. **`formatos/resultados/`** contiene el formato lleno que producen los
+6. **`formatos/resultados/`** contiene el formato lleno que producen los
    scripts, respetando la plantilla. Las matrices y los JUnit viven aquí.
-5. Los resultados están ignorados por git; las plantillas sí se versionan.
-6. Toda ejecución se lanza **desde la raíz del proyecto**:
+7. Los resultados están ignorados por git; las plantillas sí se versionan.
+8. Toda ejecución se lanza **desde la raíz del proyecto**:
 
    ```powershell
    cd C:\xampp\htdocs\sys-inescolara
@@ -37,40 +40,62 @@ tests/tools/
 ├── README.md
 ├── phpunit/
 │   ├── scripts/
-│   │   ├── run-module.ps1 + run-module.sh + run-module.md
-│   │   ├── run-tests.ps1 + run-tests.sh + run-tests.md
-│   │   └── lib/run-tests.php          ← motor Integration + Smoke
+│   │   ├── windows/
+│   │   │   ├── run-module.ps1
+│   │   │   └── run-tests.ps1
+│   │   ├── linux/
+│   │   │   ├── run-module.sh
+│   │   │   └── run-tests.sh
+│   │   ├── lib/run-tests.php          ← motor Integration + Smoke
+│   │   ├── run-module.md
+│   │   └── run-tests.md
 │   └── formatos/
 │       ├── plantillas/junit-reporte.xml
 │       └── resultados/                 ← JUnit y logs de PHPUnit
 ├── integration/
 │   ├── scripts/
-│   │   ├── run-integration-doc.ps1 + run-integration-doc.sh + run-integration-doc.md
-│   │   └── lib/integration-doc.php    ← motor del Word (Bash)
+│   │   ├── windows/run-integration-doc.ps1
+│   │   ├── linux/run-integration-doc.sh
+│   │   ├── lib/integration-doc.php    ← motor del Word (Bash)
+│   │   └── run-integration-doc.md
 │   └── formatos/
 │       ├── plantillas/Formato-Prueba-Integración.docx
 │       └── resultados/                 ← copia llena, capturas y manifiesto
 ├── interfaz/
 │   ├── scripts/
-│   │   ├── run-interfaz.ps1 + run-interfaz.sh + run-interfaz.md
-│   │   ├── setup-interfaz.ps1 + setup-interfaz.sh + setup-interfaz.md
-│   │   └── lib/seed-interfaz.php      ← semilla interna del usuario E2E
+│   │   ├── windows/
+│   │   │   ├── run-interfaz.ps1
+│   │   │   └── setup-interfaz.ps1
+│   │   ├── linux/
+│   │   │   ├── run-interfaz.sh
+│   │   │   └── setup-interfaz.sh
+│   │   ├── lib/seed-interfaz.php      ← semilla interna del usuario E2E
+│   │   ├── run-interfaz.md
+│   │   └── setup-interfaz.md
 │   └── formatos/
 │       ├── plantillas/junit-reporte.xml
 │       └── resultados/                 ← JUnit, capturas y descargas
 ├── aceptacion/
 │   ├── scripts/
-│   │   └── run-aceptacion.ps1 + run-aceptacion.sh + run-aceptacion.md
+│   │   ├── windows/run-aceptacion.ps1
+│   │   ├── linux/run-aceptacion.sh
+│   │   └── run-aceptacion.md
 │   └── formatos/
 │       ├── plantillas/junit-reporte.xml
 │       └── resultados/                 ← report.xml y logs de Codeception
 └── reportes/
     ├── scripts/
-    │   ├── generate_traceability.ps1 + generate_traceability.sh + generate_traceability.md
-    │   ├── generate_aceptacion.ps1 + generate_aceptacion.sh + generate_aceptacion.md
-    │   └── lib/
-    │       ├── generate_traceability.php
-    │       └── generate_aceptacion.php
+    │   ├── windows/
+    │   │   ├── generate_traceability.ps1
+    │   │   └── generate_aceptacion.ps1
+    │   ├── linux/
+    │   │   ├── generate_traceability.sh
+    │   │   └── generate_aceptacion.sh
+    │   ├── lib/
+    │   │   ├── generate_traceability.php
+    │   │   └── generate_aceptacion.php
+    │   ├── generate_traceability.md
+    │   └── generate_aceptacion.md
     └── formatos/
         ├── plantillas/
         │   ├── TRACEABILITY.plantilla.md
@@ -88,53 +113,53 @@ directo sirve para una suite, un archivo, una clase o un método concreto.
 `run-integration-doc` ejecuta las 31 pruebas de integración y produce una copia
 llena del formato Word con capturas nuevas.
 
-## Windows o Linux
+## Carpetas por sistema
 
-Todos los ejecutores tienen dos variantes equivalentes:
+Cada ejecutor existe dos veces, en carpetas separadas para que no se confundan:
 
 | Windows (PowerShell) | Linux / macOS (Bash) |
 | --- | --- |
-| `tests\tools\phpunit\scripts\run-module.ps1` | `./tests/tools/phpunit/scripts/run-module.sh` |
-| `tests\tools\phpunit\scripts\run-tests.ps1` | `./tests/tools/phpunit/scripts/run-tests.sh` |
-| `tests\tools\integration\scripts\run-integration-doc.ps1` | `./tests/tools/integration/scripts/run-integration-doc.sh` |
-| `tests\tools\interfaz\scripts\run-interfaz.ps1` | `./tests/tools/interfaz/scripts/run-interfaz.sh` |
-| `tests\tools\interfaz\scripts\setup-interfaz.ps1` | `./tests/tools/interfaz/scripts/setup-interfaz.sh` |
-| `tests\tools\aceptacion\scripts\run-aceptacion.ps1` | `./tests/tools/aceptacion/scripts/run-aceptacion.sh` |
-| `tests\tools\reportes\scripts\generate_traceability.ps1` | `./tests/tools/reportes/scripts/generate_traceability.sh` |
-| `tests\tools\reportes\scripts\generate_aceptacion.ps1` | `./tests/tools/reportes/scripts/generate_aceptacion.sh` |
+| `tests\tools\phpunit\scripts\windows\run-module.ps1` | `./tests/tools/phpunit/scripts/linux/run-module.sh` |
+| `tests\tools\phpunit\scripts\windows\run-tests.ps1` | `./tests/tools/phpunit/scripts/linux/run-tests.sh` |
+| `tests\tools\integration\scripts\windows\run-integration-doc.ps1` | `./tests/tools/integration/scripts/linux/run-integration-doc.sh` |
+| `tests\tools\interfaz\scripts\windows\run-interfaz.ps1` | `./tests/tools/interfaz/scripts/linux/run-interfaz.sh` |
+| `tests\tools\interfaz\scripts\windows\setup-interfaz.ps1` | `./tests/tools/interfaz/scripts/linux/setup-interfaz.sh` |
+| `tests\tools\aceptacion\scripts\windows\run-aceptacion.ps1` | `./tests/tools/aceptacion/scripts/linux/run-aceptacion.sh` |
+| `tests\tools\reportes\scripts\windows\generate_traceability.ps1` | `./tests/tools/reportes/scripts/linux/generate_traceability.sh` |
+| `tests\tools\reportes\scripts\windows\generate_aceptacion.ps1` | `./tests/tools/reportes/scripts/linux/generate_aceptacion.sh` |
 
 La guía de cada ejecutor muestra ambos comandos y sus parámetros.
 
 ## Buscar por necesidad
 
-| Quiero… | Herramienta | Guía |
-| --- | --- | --- |
-| Probar los **31 módulos** (Unit + Integration + Smoke) y comparar contra la matriz | `phpunit/scripts/run-module.ps1 all` · `run-module.sh all` | [`phpunit/scripts/run-module.md`](phpunit/scripts/run-module.md) |
-| Probar **un módulo completo** (sus 3 suites) | `phpunit/scripts/run-module.ps1 05` · `run-module.sh 05` | [`phpunit/scripts/run-module.md`](phpunit/scripts/run-module.md) |
-| Probar **integración + humo** en Windows, Linux o macOS | `phpunit/scripts/run-tests.ps1` · `run-tests.sh` | [`phpunit/scripts/run-tests.md`](phpunit/scripts/run-tests.md) |
-| Probar **una sola suite** (`Unit`, `Integration` o `Smoke`) | PHPUnit | [Recetas PHPUnit](#recetas-phpunit) |
-| Probar **un archivo, una clase o un método** concreto | PHPUnit | [Recetas PHPUnit](#recetas-phpunit) |
-| Guardar el JUnit que consume la matriz de trazabilidad | PHPUnit | [Recetas PHPUnit](#recetas-phpunit) |
-| Llenar el **formato Word de integración** con capturas nuevas | `integration/scripts/run-integration-doc.ps1` · `.sh` | [`integration/scripts/run-integration-doc.md`](integration/scripts/run-integration-doc.md) |
-| Probar la **interfaz web** con Selenium | `interfaz/scripts/run-interfaz.ps1` · `.sh` | [`interfaz/scripts/run-interfaz.md`](interfaz/scripts/run-interfaz.md) |
-| Preparar ChromeDriver, carpetas y usuario E2E | `interfaz/scripts/setup-interfaz.ps1` · `.sh` | [`interfaz/scripts/setup-interfaz.md`](interfaz/scripts/setup-interfaz.md) |
-| Regenerar `TRACEABILITY.md` y `traceability.json` | `reportes/scripts/generate_traceability.ps1` · `.sh` | [`reportes/scripts/generate_traceability.md`](reportes/scripts/generate_traceability.md) |
-| Regenerar `ACEPTACION.md` | `reportes/scripts/generate_aceptacion.ps1` · `.sh` | [`reportes/scripts/generate_aceptacion.md`](reportes/scripts/generate_aceptacion.md) |
-| Pruebas de **aceptación** (Codeception + navegador) | `aceptacion/scripts/run-aceptacion.ps1` · `.sh` | [`aceptacion/scripts/run-aceptacion.md`](aceptacion/scripts/run-aceptacion.md) |
-| Pruebas de **API** (Postman/Newman) | `pruebas/scripts/run.sh` | [`../../pruebas/README.md`](../../pruebas/README.md) |
+| Quiero… | Windows (PowerShell) | Linux / macOS (Bash) | Guía |
+| --- | --- | --- | --- |
+| Probar los **31 módulos** (Unit + Integration + Smoke) y comparar contra la matriz | `phpunit/scripts/windows/run-module.ps1 all` | `phpunit/scripts/linux/run-module.sh all` | [`phpunit/scripts/run-module.md`](phpunit/scripts/run-module.md) |
+| Probar **un módulo completo** (sus 3 suites) | `phpunit/scripts/windows/run-module.ps1 05` | `phpunit/scripts/linux/run-module.sh 05` | [`phpunit/scripts/run-module.md`](phpunit/scripts/run-module.md) |
+| Probar **integración + humo** en Windows, Linux o macOS | `phpunit/scripts/windows/run-tests.ps1` | `phpunit/scripts/linux/run-tests.sh` | [`phpunit/scripts/run-tests.md`](phpunit/scripts/run-tests.md) |
+| Probar **una sola suite** (`Unit`, `Integration` o `Smoke`) | PHPUnit | PHPUnit | [Recetas PHPUnit](#recetas-phpunit) |
+| Probar **un archivo, una clase o un método** concreto | PHPUnit | PHPUnit | [Recetas PHPUnit](#recetas-phpunit) |
+| Guardar el JUnit que consume la matriz de trazabilidad | PHPUnit | PHPUnit | [Recetas PHPUnit](#recetas-phpunit) |
+| Llenar el **formato Word de integración** con capturas nuevas | `integration/scripts/windows/run-integration-doc.ps1` | `integration/scripts/linux/run-integration-doc.sh` | [`integration/scripts/run-integration-doc.md`](integration/scripts/run-integration-doc.md) |
+| Probar la **interfaz web** con Selenium | `interfaz/scripts/windows/run-interfaz.ps1` | `interfaz/scripts/linux/run-interfaz.sh` | [`interfaz/scripts/run-interfaz.md`](interfaz/scripts/run-interfaz.md) |
+| Preparar ChromeDriver, carpetas y usuario E2E | `interfaz/scripts/windows/setup-interfaz.ps1` | `interfaz/scripts/linux/setup-interfaz.sh` | [`interfaz/scripts/setup-interfaz.md`](interfaz/scripts/setup-interfaz.md) |
+| Regenerar `TRACEABILITY.md` y `traceability.json` | `reportes/scripts/windows/generate_traceability.ps1` | `reportes/scripts/linux/generate_traceability.sh` | [`reportes/scripts/generate_traceability.md`](reportes/scripts/generate_traceability.md) |
+| Regenerar `ACEPTACION.md` | `reportes/scripts/windows/generate_aceptacion.ps1` | `reportes/scripts/linux/generate_aceptacion.sh` | [`reportes/scripts/generate_aceptacion.md`](reportes/scripts/generate_aceptacion.md) |
+| Pruebas de **aceptación** (Codeception + navegador) | `aceptacion/scripts/windows/run-aceptacion.ps1` | `aceptacion/scripts/linux/run-aceptacion.sh` | [`aceptacion/scripts/run-aceptacion.md`](aceptacion/scripts/run-aceptacion.md) |
+| Pruebas de **API** (Postman/Newman) | — | `pruebas/scripts/run.sh` | [`../../pruebas/README.md`](../../pruebas/README.md) |
 
 ## Scripts
 
-| Script | Qué hace | Guía |
-| --- | --- | --- |
-| `phpunit/scripts/run-module.ps1` · `.sh` | Unit + Integration + Smoke de uno o de los 31 módulos, comparado con la matriz. | [`run-module.md`](phpunit/scripts/run-module.md) |
-| `phpunit/scripts/run-tests.ps1` · `.sh` | Integration + Smoke (todos o un módulo). Envoltorio de `lib/run-tests.php`. | [`run-tests.md`](phpunit/scripts/run-tests.md) |
-| `integration/scripts/run-integration-doc.ps1` · `.sh` | Ejecuta las 31 pruebas de integración y llena una copia del formato Word con capturas nuevas. | [`run-integration-doc.md`](integration/scripts/run-integration-doc.md) |
-| `interfaz/scripts/run-interfaz.ps1` · `.sh` | Suite E2E de Selenium (toda, una suite o un filtro). | [`run-interfaz.md`](interfaz/scripts/run-interfaz.md) |
-| `interfaz/scripts/setup-interfaz.ps1` · `.sh` | Verifica PHPUnit/php-webdriver/ChromeDriver y prepara el entorno E2E. | [`setup-interfaz.md`](interfaz/scripts/setup-interfaz.md) |
-| `aceptacion/scripts/run-aceptacion.ps1` · `.sh` | Levanta la app y ChromeDriver, ejecuta Codeception y deja el JUnit de aceptación. | [`run-aceptacion.md`](aceptacion/scripts/run-aceptacion.md) |
-| `reportes/scripts/generate_traceability.ps1` · `.sh` | Regenera la matriz PHPUnit desde los JUnit de `phpunit/formatos/resultados/`. | [`generate_traceability.md`](reportes/scripts/generate_traceability.md) |
-| `reportes/scripts/generate_aceptacion.ps1` · `.sh` | Regenera la matriz de aceptación desde el JUnit de Codeception. | [`generate_aceptacion.md`](reportes/scripts/generate_aceptacion.md) |
+| Windows (PowerShell) | Linux / macOS (Bash) | Qué hace | Guía |
+| --- | --- | --- | --- |
+| `phpunit/scripts/windows/run-module.ps1` | `phpunit/scripts/linux/run-module.sh` | Unit + Integration + Smoke de uno o de los 31 módulos, comparado con la matriz. | [`run-module.md`](phpunit/scripts/run-module.md) |
+| `phpunit/scripts/windows/run-tests.ps1` | `phpunit/scripts/linux/run-tests.sh` | Integration + Smoke (todos o un módulo). Envoltorio de `lib/run-tests.php`. | [`run-tests.md`](phpunit/scripts/run-tests.md) |
+| `integration/scripts/windows/run-integration-doc.ps1` | `integration/scripts/linux/run-integration-doc.sh` | Ejecuta las 31 pruebas de integración y llena una copia del formato Word con capturas nuevas. | [`run-integration-doc.md`](integration/scripts/run-integration-doc.md) |
+| `interfaz/scripts/windows/run-interfaz.ps1` | `interfaz/scripts/linux/run-interfaz.sh` | Suite E2E de Selenium (toda, una suite o un filtro). | [`run-interfaz.md`](interfaz/scripts/run-interfaz.md) |
+| `interfaz/scripts/windows/setup-interfaz.ps1` | `interfaz/scripts/linux/setup-interfaz.sh` | Verifica PHPUnit/php-webdriver/ChromeDriver y prepara el entorno E2E. | [`setup-interfaz.md`](interfaz/scripts/setup-interfaz.md) |
+| `aceptacion/scripts/windows/run-aceptacion.ps1` | `aceptacion/scripts/linux/run-aceptacion.sh` | Levanta la app y ChromeDriver, ejecuta Codeception y deja el JUnit de aceptación. | [`run-aceptacion.md`](aceptacion/scripts/run-aceptacion.md) |
+| `reportes/scripts/windows/generate_traceability.ps1` | `reportes/scripts/linux/generate_traceability.sh` | Regenera la matriz PHPUnit desde los JUnit de `phpunit/formatos/resultados/`. | [`generate_traceability.md`](reportes/scripts/generate_traceability.md) |
+| `reportes/scripts/windows/generate_aceptacion.ps1` | `reportes/scripts/linux/generate_aceptacion.sh` | Regenera la matriz de aceptación desde el JUnit de Codeception. | [`generate_aceptacion.md`](reportes/scripts/generate_aceptacion.md) |
 
 Motores internos (no se ejecutan directamente):
 

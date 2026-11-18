@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Ejecuta la suite de aceptación (Codeception + WebDriver) de Sys Inescolara.
 
@@ -9,14 +9,14 @@
     tests\tools\aceptacion\formatos\resultados\report.xml.
 
 .EXAMPLE
-    powershell -ExecutionPolicy Bypass -File tests\tools\aceptacion\scripts\run-aceptacion.ps1
+    powershell -ExecutionPolicy Bypass -File tests\tools\aceptacion\scripts\windows\run-aceptacion.ps1
 
 .EXAMPLE
-    powershell -ExecutionPolicy Bypass -File tests\tools\aceptacion\scripts\run-aceptacion.ps1 AutenticacionCest
+    powershell -ExecutionPolicy Bypass -File tests\tools\aceptacion\scripts\windows\run-aceptacion.ps1 AutenticacionCest
 
 .EXAMPLE
     $env:ACEPTACION_BROWSER = 'C:\Program Files\Google\Chrome\Application\chrome.exe'
-    powershell -ExecutionPolicy Bypass -File tests\tools\aceptacion\scripts\run-aceptacion.ps1
+    powershell -ExecutionPolicy Bypass -File tests\tools\aceptacion\scripts\windows\run-aceptacion.ps1
 #>
 param(
     [Parameter(Position = 0)]
@@ -25,7 +25,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-$root = Resolve-Path (Join-Path $PSScriptRoot '..\..\..\..')
+$root = Resolve-Path (Join-Path $PSScriptRoot '..\..\..\..\..')
 Set-Location $root
 
 $aceDir      = Join-Path $root 'tests\aceptacion'

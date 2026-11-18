@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Ejecuta las suites de integración y humo de todos los módulos o de uno solo.
 
@@ -10,13 +10,13 @@
     run-module.ps1.
 
 .EXAMPLE
-    powershell -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\run-tests.ps1
+    powershell -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\windows\run-tests.ps1
 
 .EXAMPLE
-    powershell -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\run-tests.ps1 --suite=smoke --module=13
+    powershell -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\windows\run-tests.ps1 --suite=smoke --module=13
 
 .EXAMPLE
-    powershell -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\run-tests.ps1 --list
+    powershell -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\windows\run-tests.ps1 --list
 #>
 param(
     [Parameter(ValueFromRemainingArguments = $true)]
@@ -25,7 +25,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-$root = Resolve-Path (Join-Path $PSScriptRoot '..\..\..\..')
+$root = Resolve-Path (Join-Path $PSScriptRoot '..\..\..\..\..')
 Set-Location $root
 
 $php = Get-Command php -ErrorAction SilentlyContinue
@@ -35,7 +35,7 @@ if ($null -eq $php) {
     exit 3
 }
 
-$runner = Join-Path $PSScriptRoot 'lib\run-tests.php'
+$runner = Join-Path $PSScriptRoot '..\lib\run-tests.php'
 if (-not (Test-Path -LiteralPath $runner)) {
     Write-Host "[ERROR] No se encontró el ejecutor: $runner" -ForegroundColor Red
     exit 3

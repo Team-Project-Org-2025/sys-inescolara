@@ -7,14 +7,14 @@
 # y prepara las carpetas de resultados.
 #
 # Uso:
-#   ./tests/tools/interfaz/scripts/setup-interfaz.sh
-#   ./tests/tools/interfaz/scripts/setup-interfaz.sh --skip-seed
-#   ./tests/tools/interfaz/scripts/setup-interfaz.sh --install
+#   ./tests/tools/interfaz/scripts/linux/setup-interfaz.sh
+#   ./tests/tools/interfaz/scripts/linux/setup-interfaz.sh --skip-seed
+#   ./tests/tools/interfaz/scripts/linux/setup-interfaz.sh --install
 #
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(cd "${SCRIPT_DIR}/../../../.." && pwd)"
+ROOT_DIR="$(cd "${SCRIPT_DIR}/../../../../.." && pwd)"
 PHP_BIN="${PHP_BIN:-php}"
 
 SKIP_SEED=0
@@ -104,4 +104,4 @@ fi
 
 echo
 echo 'Entorno de interfaz listo.'
-echo 'Ejecute: ./tests/tools/interfaz/scripts/run-interfaz.sh'
+echo 'Ejecute: ./tests/tools/interfaz/scripts/linux/run-interfaz.sh'

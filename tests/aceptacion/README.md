@@ -24,18 +24,18 @@ requisitos funcionales del sistema.
 
 ```bash
 # Linux/macOS — toda la suite
-./tests/tools/aceptacion/scripts/run-aceptacion.sh
+./tests/tools/aceptacion/scripts/linux/run-aceptacion.sh
 
 # Linux/macOS — un archivo concreto
-./tests/tools/aceptacion/scripts/run-aceptacion.sh AutenticacionCest
+./tests/tools/aceptacion/scripts/linux/run-aceptacion.sh AutenticacionCest
 ```
 
 ```powershell
 # Windows — toda la suite
-powershell -ExecutionPolicy Bypass -File tests\tools\aceptacion\scripts\run-aceptacion.ps1
+powershell -ExecutionPolicy Bypass -File tests\tools\aceptacion\scripts\windows\run-aceptacion.ps1
 
 # Windows — un archivo concreto
-powershell -ExecutionPolicy Bypass -File tests\tools\aceptacion\scripts\run-aceptacion.ps1 AutenticacionCest
+powershell -ExecutionPolicy Bypass -File tests\tools\aceptacion\scripts\windows\run-aceptacion.ps1 AutenticacionCest
 ```
 
 El script:

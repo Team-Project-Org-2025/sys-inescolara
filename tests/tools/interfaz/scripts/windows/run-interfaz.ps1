@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Ejecuta la suite de pruebas de interfaz con Selenium.
 
@@ -8,13 +8,13 @@
     tests\tools\interfaz\formatos\resultados\junit-<suite>.xml.
 
 .EXAMPLE
-    powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\run-interfaz.ps1
+    powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\windows\run-interfaz.ps1
 
 .EXAMPLE
-    powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\run-interfaz.ps1 -Suite Inventario
+    powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\windows\run-interfaz.ps1 -Suite Inventario
 
 .EXAMPLE
-    powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\run-interfaz.ps1 -Filter VentasTest -Headless
+    powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\windows\run-interfaz.ps1 -Filter VentasTest -Headless
 #>
 param(
     [string]$Suite = 'all',
@@ -24,7 +24,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$root = Resolve-Path (Join-Path $PSScriptRoot '..\..\..\..')
+$root = Resolve-Path (Join-Path $PSScriptRoot '..\..\..\..\..')
 Set-Location $root
 
 if ($Headless) {

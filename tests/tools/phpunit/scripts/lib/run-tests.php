@@ -148,10 +148,10 @@ Ejemplos:
   php tests/tools/phpunit/scripts/lib/run-tests.php --dry-run
 
 En Linux/macOS también puede usar:
-  ./tests/tools/phpunit/scripts/run-tests.sh
+  ./tests/tools/phpunit/scripts/linux/run-tests.sh
 
 En Windows:
-  powershell -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\run-tests.ps1
+  powershell -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\windows\run-tests.ps1
 
 Requisitos:
   - PHP 8.2 o superior con las extensiones PDO y pdo_sqlite para integración.

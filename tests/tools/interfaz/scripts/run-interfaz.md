@@ -2,7 +2,7 @@
 
 > **Tipo:** Selenium + php-webdriver · PowerShell y Bash
 >
-> **Ejecutores:** `run-interfaz.ps1` (Windows) y `run-interfaz.sh` (Linux/macOS)
+> **Ejecutores:** `windows/run-interfaz.ps1` (Windows) y `linux/run-interfaz.sh` (Linux/macOS)
 >
 > **Atajo:** ejecuta la suite de interfaz completa, una suite concreta o un
 > filtro de PHPUnit, y guarda el JUnit y las capturas de fallos.
@@ -36,13 +36,13 @@ Si es la primera vez:
 ```powershell
 # Windows
 composer install
-powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\setup-interfaz.ps1
+powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\windows\setup-interfaz.ps1
 ```
 
 ```bash
 # Linux/macOS
 composer install
-./tests/tools/interfaz/scripts/setup-interfaz.sh
+./tests/tools/interfaz/scripts/linux/setup-interfaz.sh
 ```
 
 ## Uso
@@ -50,13 +50,13 @@ composer install
 ### Windows (PowerShell)
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\run-interfaz.ps1 [-Suite <nombre>] [-Filter <patrón>] [-Headless] [-SkipSeed]
+powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\windows\run-interfaz.ps1 [-Suite <nombre>] [-Filter <patrón>] [-Headless] [-SkipSeed]
 ```
 
 ### Linux / macOS (Bash)
 
 ```bash
-./tests/tools/interfaz/scripts/run-interfaz.sh [--suite <nombre>] [--filter <patrón>] [--headless] [--skip-seed]
+./tests/tools/interfaz/scripts/linux/run-interfaz.sh [--suite <nombre>] [--filter <patrón>] [--headless] [--skip-seed]
 ```
 
 ## Parámetros
@@ -74,52 +74,52 @@ powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\run-interf
 
 ```powershell
 # Windows
-powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\run-interfaz.ps1
+powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\windows\run-interfaz.ps1
 ```
 
 ```bash
 # Linux/macOS
-./tests/tools/interfaz/scripts/run-interfaz.sh
+./tests/tools/interfaz/scripts/linux/run-interfaz.sh
 ```
 
 ### Una suite
 
 ```powershell
 # Windows
-powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\run-interfaz.ps1 -Suite Inventario
-powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\run-interfaz.ps1 -Suite Comercial -Headless
+powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\windows\run-interfaz.ps1 -Suite Inventario
+powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\windows\run-interfaz.ps1 -Suite Comercial -Headless
 ```
 
 ```bash
 # Linux/macOS
-./tests/tools/interfaz/scripts/run-interfaz.sh --suite Inventario
-./tests/tools/interfaz/scripts/run-interfaz.sh --suite Comercial --headless
+./tests/tools/interfaz/scripts/linux/run-interfaz.sh --suite Inventario
+./tests/tools/interfaz/scripts/linux/run-interfaz.sh --suite Comercial --headless
 ```
 
 ### Un archivo o una prueba concreta
 
 ```powershell
 # Windows: una clase y un método
-powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\run-interfaz.ps1 -Filter VentasTest
-powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\run-interfaz.ps1 -Filter 'VentasTest::registra_una_venta_de_contado_con_pago_completo'
+powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\windows\run-interfaz.ps1 -Filter VentasTest
+powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\windows\run-interfaz.ps1 -Filter 'VentasTest::registra_una_venta_de_contado_con_pago_completo'
 ```
 
 ```bash
 # Linux/macOS
-./tests/tools/interfaz/scripts/run-interfaz.sh --filter VentasTest
-./tests/tools/interfaz/scripts/run-interfaz.sh --filter 'VentasTest::registra_una_venta_de_contado_con_pago_completo'
+./tests/tools/interfaz/scripts/linux/run-interfaz.sh --filter VentasTest
+./tests/tools/interfaz/scripts/linux/run-interfaz.sh --filter 'VentasTest::registra_una_venta_de_contado_con_pago_completo'
 ```
 
 ### Sin recrear el usuario
 
 ```powershell
 # Windows
-powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\run-interfaz.ps1 -SkipSeed
+powershell -ExecutionPolicy Bypass -File tests\tools\interfaz\scripts\windows\run-interfaz.ps1 -SkipSeed
 ```
 
 ```bash
 # Linux/macOS
-./tests/tools/interfaz/scripts/run-interfaz.sh --skip-seed
+./tests/tools/interfaz/scripts/linux/run-interfaz.sh --skip-seed
 ```
 
 ## Cobertura por suite

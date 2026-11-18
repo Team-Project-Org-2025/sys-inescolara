@@ -2,8 +2,8 @@
 
 > **Tipo:** reporte · PowerShell y Bash
 >
-> **Ejecutores:** `generate_traceability.ps1` (Windows) y
-> `generate_traceability.sh` (Linux/macOS)
+> **Ejecutores:** `windows/generate_traceability.ps1` (Windows) y
+> `linux/generate_traceability.sh` (Linux/macOS)
 >
 > **Motor interno:** `lib/generate_traceability.php`
 >
@@ -66,12 +66,12 @@ php vendor/phpunit/phpunit/phpunit -c tests/phpunit.xml --testsuite Smoke       
 
 ```powershell
 # Windows
-powershell -ExecutionPolicy Bypass -File tests\tools\reportes\scripts\generate_traceability.ps1
+powershell -ExecutionPolicy Bypass -File tests\tools\reportes\scripts\windows\generate_traceability.ps1
 ```
 
 ```bash
 # Linux/macOS
-./tests/tools/reportes/scripts/generate_traceability.sh
+./tests/tools/reportes/scripts/linux/generate_traceability.sh
 ```
 
 El motor también puede invocarse directamente:

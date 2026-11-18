@@ -2,7 +2,7 @@
 
 Esta es la **referencia manual** de los **93 casos** (31 módulos × 3 suites:
 unitaria, integración y humo), comando por comando. Si prefieres automatizarlo,
-usa [`tools/phpunit/scripts/run-module.ps1`](tools/phpunit/scripts/run-module.md)
+usa [`tools/phpunit/scripts/windows/run-module.ps1`](tools/phpunit/scripts/run-module.md)
 (Windows) o `run-module.sh` (Linux/macOS), que ejecutan esos mismos
 comandos y comparan los conteos con la matriz.
 
@@ -26,16 +26,18 @@ Cada comando debe terminar con código de salida `0` y la línea `OK` o
 en Unit (por ejemplo `Error al guardar ...`) no son fallos.
 
 > Atajo: el script recibe el número o el nombre del módulo y ejecuta sus tres
-> suites. `... run-module.ps1 05` prueba solo Lote; `... run-module.ps1 all`
-> (o sin argumento) prueba los 31 y compara todo contra la matriz:
+> suites. `run-module.ps1 05` (carpeta `scripts\windows`) prueba solo Lote;
+> `run-module.ps1 all` (o sin argumento) prueba los 31 y compara todo contra la
+> matriz. En Linux/macOS usa `scripts/linux/run-module.sh` con los mismos
+> argumentos.
 >
-> `powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\run-module.ps1 all`
+> `powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\windows\run-module.ps1 all`
 
 ## Ejecutor multiplataforma (integración + humo)
 
 > Guía completa: [`tools/phpunit/scripts/run-tests.md`](tools/phpunit/scripts/run-tests.md).
 
-Los ejecutores `tests/tools/phpunit/scripts/run-tests.ps1` (Windows) y
+Los ejecutores `tests/tools/phpunit/scripts/windows/run-tests.ps1` (Windows) y
 `run-tests.sh` (Linux/macOS) envuelven al motor `lib/run-tests.php`. Ejecutan
 las suites de integración y humo, muestran un resumen por suite y guardan el log
 y el XML JUnit en `tests/tools/phpunit/formatos/resultados/`.
@@ -62,14 +64,14 @@ Atajos por sistema operativo:
 
 ```bash
 # Linux / macOS
-./tests/tools/phpunit/scripts/run-tests.sh
-./tests/tools/phpunit/scripts/run-tests.sh --suite=integration --module=13
+./tests/tools/phpunit/scripts/linux/run-tests.sh
+./tests/tools/phpunit/scripts/linux/run-tests.sh --suite=integration --module=13
 ```
 
 ```powershell
 # Windows (PowerShell)
-powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\run-tests.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\run-tests.ps1 --suite=smoke --module=13
+powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\windows\run-tests.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\phpunit\scripts\windows\run-tests.ps1 --suite=smoke --module=13
 ```
 
 Si `pdo_sqlite` no está habilitado globalmente, indique la ruta de la
@@ -416,10 +418,10 @@ php vendor\phpunit\phpunit\phpunit -c tests\phpunit.xml --testsuite Smoke --filt
 php vendor\phpunit\phpunit\phpunit -c tests\phpunit.xml --do-not-cache-result
 
 # Regenerar la matriz desde los JUnit
-powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\reportes\scripts\generate_traceability.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File tests\tools\reportes\scripts\windows\generate_traceability.ps1
 ```
 
-En Linux/macOS: `./tests/tools/reportes/scripts/generate_traceability.sh`.
+En Linux/macOS: `./tests/tools/reportes/scripts/linux/generate_traceability.sh`.
 
 Guía del generador: [`tools/reportes/scripts/generate_traceability.md`](tools/reportes/scripts/generate_traceability.md).
 

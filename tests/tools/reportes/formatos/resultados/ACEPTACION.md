@@ -108,4 +108,4 @@ Generado: `2026-11-18 00:08:30` · Codeception 5 + WebDriver (Brave/Chrome headl
 - La suite usa las claves de prueba oficiales de Google reCAPTCHA v2 en `tests/aceptacion/server/index.php`; no modifica `.env` ni la aplicación en producción.
 - Las pruebas de aceptación de módulos validan carga real, encabezado, contenido y DataTables por AJAX. Las pruebas CRUD crean datos con prefijo `ACE` y los eliminan al final.
 - Un caso `PASS` exige que el escenario completo haya terminado sin excepciones ni aserciones fallidas.
-- Para regenerar esta matriz: `./tests/tools/aceptacion/scripts/run-aceptacion.sh` y luego `./tests/tools/reportes/scripts/generate_aceptacion.sh`.
+- Para regenerar esta matriz: `./tests/tools/aceptacion/scripts/linux/run-aceptacion.sh` y luego `./tests/tools/reportes/scripts/linux/generate_aceptacion.sh`.
