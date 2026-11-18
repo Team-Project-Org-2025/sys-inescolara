@@ -38,6 +38,12 @@ tests/tools/
 │   └── formatos/
 │       ├── plantillas/junit-reporte.xml
 │       └── resultados/                 ← JUnit y logs de PHPUnit
+├── integration/
+│   ├── scripts/
+│   │   └── run-integration-doc.ps1 + run-integration-doc.md
+│   └── formatos/
+│       ├── plantillas/Formato-Prueba-Integración.docx
+│       └── resultados/                 ← copia llena, capturas y manifiesto
 ├── interfaz/
 │   ├── scripts/
 │   │   ├── run-interfaz.ps1 + run-interfaz.md
@@ -70,6 +76,8 @@ tests/tools/
 En resumen: `run-module.ps1` cubre **93 casos** (31 módulos × Unit + Integration
 + Smoke) y **945 pruebas**; `run-tests.php` cubre Integration + Smoke; y PHPUnit
 directo sirve para una suite, un archivo, una clase o un método concreto.
+`run-integration-doc.ps1` ejecuta las 31 pruebas de integración y produce una
+copia llena del formato Word con capturas nuevas.
 
 ## Buscar por necesidad
 
@@ -81,6 +89,7 @@ directo sirve para una suite, un archivo, una clase o un método concreto.
 | Probar **una sola suite** (`Unit`, `Integration` o `Smoke`) | PHPUnit | [Recetas PHPUnit](#recetas-phpunit) |
 | Probar **un archivo, una clase o un método** concreto | PHPUnit | [Recetas PHPUnit](#recetas-phpunit) |
 | Guardar el JUnit que consume la matriz de trazabilidad | PHPUnit | [Recetas PHPUnit](#recetas-phpunit) |
+| Llenar el **formato Word de integración** con capturas nuevas | `integration/scripts/run-integration-doc.ps1` | [`integration/scripts/run-integration-doc.md`](integration/scripts/run-integration-doc.md) |
 | Probar la **interfaz web** con Selenium | `interfaz/scripts/run-interfaz.ps1` | [`interfaz/scripts/run-interfaz.md`](interfaz/scripts/run-interfaz.md) |
 | Preparar ChromeDriver, carpetas y usuario E2E | `interfaz/scripts/setup-interfaz.ps1` | [`interfaz/scripts/setup-interfaz.md`](interfaz/scripts/setup-interfaz.md) |
 | Crear o actualizar el usuario `e2e_admin` | `interfaz/scripts/seed-interfaz.php` | [`interfaz/scripts/seed-interfaz.md`](interfaz/scripts/seed-interfaz.md) |
@@ -97,6 +106,7 @@ directo sirve para una suite, un archivo, una clase o un método concreto.
 | `phpunit/scripts/run-tests.php` | PHP | Integration + Smoke (todos o un módulo) en cualquier sistema operativo. | [`run-tests.md`](phpunit/scripts/run-tests.md) |
 | `phpunit/scripts/run-tests.sh` | Bash | Atajo de `run-tests.php` para Linux/macOS. | [`run-tests.md`](phpunit/scripts/run-tests.md) |
 | `phpunit/scripts/run-tests.bat` | CMD | Atajo de `run-tests.php` para Windows. | [`run-tests.md`](phpunit/scripts/run-tests.md) |
+| `integration/scripts/run-integration-doc.ps1` | PowerShell | Ejecuta las 31 pruebas de integración y llena una copia del formato Word con capturas nuevas. | [`run-integration-doc.md`](integration/scripts/run-integration-doc.md) |
 | `interfaz/scripts/run-interfaz.ps1` | PowerShell | Suite E2E de Selenium (toda, una suite o un filtro). | [`run-interfaz.md`](interfaz/scripts/run-interfaz.md) |
 | `interfaz/scripts/setup-interfaz.ps1` | PowerShell | Verifica PHPUnit/php-webdriver/ChromeDriver y prepara el entorno E2E. | [`setup-interfaz.md`](interfaz/scripts/setup-interfaz.md) |
 | `interfaz/scripts/seed-interfaz.php` | PHP | Crea o actualiza el rol y el usuario de pruebas `e2e_admin`. | [`seed-interfaz.md`](interfaz/scripts/seed-interfaz.md) |
@@ -111,6 +121,7 @@ directo sirve para una suite, un archivo, una clase o un método concreto.
 | Plantilla | Define | La llena |
 | --- | --- | --- |
 | `phpunit/formatos/plantillas/junit-reporte.xml` | Estructura JUnit de PHPUnit (casos, fallos, omitidas). | PHPUnit con `--log-junit`. |
+| `integration/formatos/plantillas/Formato-Prueba-Integración.docx` | Los 31 cuadros del formato Word: objetivos, técnicas, código, caso, resultado con captura y observaciones. | `run-integration-doc.ps1` (sobre una copia). |
 | `interfaz/formatos/plantillas/junit-reporte.xml` | Estructura JUnit de Selenium. | `run-interfaz.ps1`. |
 | `aceptacion/formatos/plantillas/junit-reporte.xml` | Estructura JUnit de Codeception. | `tests/tools/aceptacion/scripts/run-aceptacion.sh`. |
 | `reportes/formatos/plantillas/TRACEABILITY.plantilla.md` | Columnas y secciones de la matriz de trazabilidad. | `generate_traceability.php`. |
@@ -124,6 +135,9 @@ directo sirve para una suite, un archivo, una clase o un método concreto.
 | `phpunit/formatos/resultados/module-<Modelo>-{unit,integration,smoke}.xml` | JUnit por módulo y suite. | `run-module.ps1`. |
 | `phpunit/formatos/resultados/junit-{unit,integration,smoke}.xml` | JUnit de la suite completa. | PHPUnit (recetas). |
 | `phpunit/formatos/resultados/*.log` | Salida de consola de cada corrida. | Los ejecutores. |
+| `integration/formatos/resultados/Formato-Prueba-Integración-<fecha>.docx` | Copia llena del formato Word de integración. | `run-integration-doc.ps1`. |
+| `integration/formatos/resultados/capturas/captura-NN-<Modelo>.png` | Capturas nuevas de la ejecución de cada módulo. | `run-integration-doc.ps1`. |
+| `integration/formatos/resultados/ultima-ejecucion.json` | Conteos, tiempos y estado por módulo. | `run-integration-doc.ps1`. |
 | `interfaz/formatos/resultados/junit-<suite>.xml` | JUnit de Selenium. | `run-interfaz.ps1`. |
 | `interfaz/formatos/resultados/screenshots/` | Capturas de fallos. | La suite E2E. |
 | `aceptacion/formatos/resultados/report.xml` | JUnit de Codeception. | `tests/tools/aceptacion/scripts/run-aceptacion.sh`. |
@@ -136,7 +150,7 @@ directo sirve para una suite, un archivo, una clase o un método concreto.
 | Nivel | Qué prueba | Dónde está | Cómo se ejecuta |
 | --- | --- | --- | --- |
 | `Unit` | Lógica pura del modelo, sin base de datos. | `tests/Unit/` | `run-module.ps1`, PHPUnit |
-| `Integration` | SQL real del modelo contra SQLite en memoria. | `tests/Integration/` | `run-module.ps1`, `run-tests.php`, PHPUnit |
+| `Integration` | SQL real del modelo contra SQLite en memoria. | `tests/Integration/` | `run-module.ps1`, `run-tests.php`, `run-integration-doc.ps1`, PHPUnit |
 | `Smoke` | Autoload, contratos y arranque de los 31 modelos. | `tests/Smoke/` | `run-module.ps1`, `run-tests.php`, PHPUnit |
 | `Interfaz` | Flujos E2E en navegador con Selenium. | `tests/Interfaz/` | `run-interfaz.ps1` |
 | `Aceptación` | Recorrido funcional con Codeception. | `tests/aceptacion/` | `tests/tools/aceptacion/scripts/run-aceptacion.sh` |
@@ -236,6 +250,7 @@ php vendor\phpunit\phpunit\phpunit -c tests\phpunit.xml --testsuite Smoke       
 | Carpeta | Contenido | Ignorado por git |
 | --- | --- | --- |
 | `tests/tools/phpunit/formatos/resultados/` | JUnit y logs de las suites PHPUnit. | Sí |
+| `tests/tools/integration/formatos/resultados/` | Copia llena del Word, capturas y manifiesto de integración. | Sí |
 | `tests/tools/interfaz/formatos/resultados/` | JUnit, capturas y descargas de Selenium. | Sí |
 | `tests/tools/aceptacion/formatos/resultados/` | Reporte JUnit y logs de Codeception. | Sí |
 | `tests/tools/reportes/formatos/resultados/` | Matrices `.md` y `.json` generadas. | No (son entregables) |

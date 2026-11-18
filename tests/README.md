@@ -87,6 +87,12 @@ tests/
     │   └── formatos/
     │       ├── plantillas/junit-reporte.xml
     │       └── resultados/           # JUnit llenos (ignorados por git)
+    ├── integration/
+    │   ├── scripts/
+    │   │   └── run-integration-doc.ps1/.md
+    │   └── formatos/
+    │       ├── plantillas/Formato-Prueba-Integración.docx
+    │       └── resultados/           # copia llena, capturas y manifiesto
     ├── interfaz/
     │   ├── scripts/
     │   │   ├── run-interfaz.ps1/.md
