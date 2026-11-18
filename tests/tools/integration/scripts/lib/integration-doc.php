@@ -14,7 +14,7 @@ declare(strict_types=1);
  *
  * Para cada módulo (RF-01 a RF-31):
  *   1. Ejecuta su archivo de integración con PHPUnit y guarda el JUnit.
- *   2. Genera una captura PNG de la salida real con Chrome headless.
+ *   2. Genera una captura PNG de la salida real con GD (sin navegador).
  *   3. Rellena el cuadro correspondiente en una COPIA del formato Word.
  *
  * No requiere Microsoft Word ni la extensión zip: el .docx se lee y escribe
@@ -102,9 +102,11 @@ if ($OPTIONS['help']) {
       --keep-working       Conserva los JUnit temporales de la corrida
       -h, --help           Muestra esta ayuda
 
-    La captura PNG se genera con Chrome headless. Define CHROME_BIN si el
-    navegador no está en una ruta conocida.
+    La captura PNG se dibuja con la extensión GD de PHP (requiere FreeType).
+    Define CAPTURE_FONT con la ruta de un .ttf monoespaciado si el sistema no
+    tiene una fuente conocida.
 
+    Cada módulo se ejecuta con un límite de 300 s (INTEGRATION_TIMEOUT).
 
     TXT;
     exit(0);
@@ -476,11 +478,18 @@ function templateImageWidths(ZipArchiveLite $zip): array
 }
 
 // ---------------------------------------------------------------------------
-// Chrome headless
+// Fuente monoespaciada para las capturas
 // ---------------------------------------------------------------------------
-function findChrome(): string
+function findMonoFont(): string
 {
-    $fromEnv = getenv('CHROME_BIN') ?: getenv('CHROME_PATH');
+    if (!function_exists('imagettftext')) {
+        throw new RuntimeException(
+            'La extensión GD de PHP no está disponible o se compiló sin FreeType. '
+            . 'Instala php-gd (por ejemplo: sudo apt install php8.2-gd) para generar las capturas.'
+        );
+    }
+
+    $fromEnv = getenv('CAPTURE_FONT') ?: getenv('FONT_BIN');
     if (is_string($fromEnv) && $fromEnv !== '' && is_file($fromEnv)) {
         return $fromEnv;
     }
@@ -488,22 +497,31 @@ function findChrome(): string
     $candidates = [];
     if (DIRECTORY_SEPARATOR === '\\') {
         $candidates = [
-            'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-            'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
-            'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
-            'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
-            'C:\\Program Files\\BraveSoftware\\Brave-Browser\\Application\\brave.exe',
+            'C:\\Windows\\Fonts\\consola.ttf',
+            'C:\\Windows\\Fonts\\cour.ttf',
         ];
     } else {
-        foreach (['google-chrome', 'google-chrome-stable', 'chromium', 'chromium-browser', 'brave-browser', 'brave', 'microsoft-edge'] as $name) {
-            $found = @shell_exec('command -v ' . escapeshellarg($name) . ' 2>/dev/null');
-            if (is_string($found) && trim($found) !== '') {
-                $candidates[] = trim($found);
-            }
+        $candidates = [
+            // Linux
+            '/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf',
+            '/usr/share/fonts/TTF/DejaVuSansMono.ttf',
+            '/usr/share/fonts/dejavu/DejaVuSansMono.ttf',
+            '/usr/share/fonts/truetype/liberation/LiberationMono-Regular.ttf',
+            '/usr/share/fonts/liberation/LiberationMono-Regular.ttf',
+            '/usr/share/fonts/truetype/noto/NotoSansMono-Regular.ttf',
+            '/usr/share/fonts/noto/NotoSansMono-Regular.ttf',
+            '/usr/share/fonts/truetype/ubuntu/UbuntuMono-R.ttf',
+            // macOS
+            '/System/Library/Fonts/Menlo.ttc',
+            '/System/Library/Fonts/Supplemental/Courier New.ttf',
+            '/Library/Fonts/Menlo.ttc',
+        ];
+
+        // Último recurso: preguntar a fontconfig por la monoespaciada del sistema.
+        $fromFontconfig = @shell_exec('fc-match -f %{file} monospace 2>/dev/null');
+        if (is_string($fromFontconfig) && trim($fromFontconfig) !== '') {
+            $candidates[] = trim($fromFontconfig);
         }
-        $candidates[] = '/usr/bin/google-chrome';
-        $candidates[] = '/usr/bin/chromium';
-        $candidates[] = '/usr/bin/chromium-browser';
     }
 
     foreach ($candidates as $candidate) {
@@ -513,30 +531,61 @@ function findChrome(): string
     }
 
     throw new RuntimeException(
-        'No se encontró Chrome/Chromium para generar las capturas. '
-        . 'Define CHROME_BIN con la ruta del navegador.'
+        'No se encontró una fuente monoespaciada para las capturas. '
+        . 'Instala una fuente como DejaVu Sans Mono o define CAPTURE_FONT con la ruta del .ttf.'
     );
 }
 
-function escapeHtml(string $text): string
+/**
+ * Ancho de avance de un carácter de la fuente (en píxeles).
+ */
+function fontAdvance(string $font, float $size): float
 {
-    return htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    $sample = 'MMMMMMMMMMMMMMMMMMMM';
+    $box = @imagettfbbox($size, 0, $font, $sample);
+    if (!is_array($box)) {
+        throw new RuntimeException("No se pudo medir la fuente {$font}.");
+    }
+
+    $width = (float) ($box[2] - $box[0]);
+    return max(1.0, $width / mb_strlen($sample, 'UTF-8'));
+}
+
+/**
+ * Altura de la parte superior de la fuente respecto a la línea base.
+ */
+function fontAscent(string $font, float $size): int
+{
+    $box = @imagettfbbox($size, 0, $font, 'Áy');
+    if (!is_array($box)) {
+        throw new RuntimeException("No se pudo medir la fuente {$font}.");
+    }
+
+    return max(1, -(int) min($box[1], $box[3], $box[5], $box[7]));
 }
 
 /**
  * Genera la captura PNG de la salida de PHPUnit y devuelve sus dimensiones.
  *
+ * Se dibuja directamente con GD (igual que el ejecutor de PowerShell con
+ * System.Drawing), sin navegador: un Chrome headless con perfil nuevo puede
+ * quedarse descargando componentes y no terminar nunca.
+ *
  * @param list<string> $lines
  * @return array{0:int,1:int}
  */
-function renderScreenshot(array $lines, string $path, int $width, string $chrome, string $workDir): array
+function renderScreenshot(array $lines, string $path, int $width, string $font): array
 {
+    // GD interpreta el tamaño en puntos (96 ppp): 10,5 pt ≈ 14 px de CSS,
+    // el mismo tamaño que usa el ejecutor de PowerShell.
+    $fontSize = 10.5;
+    $checkFontSize = 9.0;
     $lineHeight = 19;
     $marginX = 8;
     $marginY = 5;
-    $charWidth = 8.4;
 
-    $maxChars = max(40, (int) floor(($width - (2 * $marginX)) / $charWidth));
+    $advance = fontAdvance($font, $fontSize);
+    $maxChars = max(40, (int) floor(($width - (2 * $marginX)) / $advance));
 
     $prepared = [];
     foreach ($lines as $rawLine) {
@@ -575,9 +624,30 @@ function renderScreenshot(array $lines, string $path, int $width, string $chrome
 
     $height = ($marginY * 2) + (count($prepared) * $lineHeight);
 
-    $html = [];
-    foreach ($prepared as $line) {
-        $brush = '';
+    $image = imagecreatetruecolor($width, $height);
+    if ($image === false) {
+        throw new RuntimeException("No se pudo crear la imagen de la captura {$path}.");
+    }
+
+    /** @var array<string,int> $colors */
+    $colors = [
+        'bg'      => (int) imagecolorallocate($image, 12, 12, 12),
+        'default' => (int) imagecolorallocate($image, 212, 212, 212),
+        'dim'     => (int) imagecolorallocate($image, 150, 150, 150),
+        'ok'      => (int) imagecolorallocate($image, 78, 201, 120),
+        'err'     => (int) imagecolorallocate($image, 244, 71, 71),
+        'warn'    => (int) imagecolorallocate($image, 229, 192, 90),
+        'cyan'    => (int) imagecolorallocate($image, 86, 182, 194),
+    ];
+
+    imagefilledrectangle($image, 0, 0, $width - 1, $height - 1, $colors['bg']);
+
+    $ascent = fontAscent($font, $fontSize);
+
+    foreach ($prepared as $index => $line) {
+        $baseline = $marginY + ($index * $lineHeight) + $ascent;
+
+        $brush = 'default';
         if (preg_match('/^\s*OK\b/', $line) === 1) {
             $brush = 'ok';
         } elseif (preg_match('/FAILURES!|ERRORS!/', $line) === 1) {
@@ -591,91 +661,113 @@ function renderScreenshot(array $lines, string $path, int $width, string $chrome
         }
 
         if (preg_match('/^(\s*)([\x{2714}\x{2713}])(\s.*)$/u', $line, $match) === 1) {
-            $html[] = escapeHtml($match[1])
-                . '<span class="check">' . $match[2] . '</span>'
-                . escapeHtml($match[3]);
+            $lead = $match[1];
+            $mark = $match[2];
+            $rest = $match[3];
+            $x = $marginX;
+
+            if ($lead !== '') {
+                imagettftext($image, $fontSize, 0, $x, $baseline, $colors['default'], $font, $lead);
+                $x += (int) round(mb_strlen($lead, 'UTF-8') * $advance);
+            }
+
+            imagettftext($image, $checkFontSize, 0, $x, $baseline, $colors['ok'], $font, $mark);
+            $x += (int) round($advance);
+
+            imagettftext($image, $fontSize, 0, $x, $baseline, $colors['default'], $font, $rest);
             continue;
         }
 
-        $html[] = $brush === ''
-            ? escapeHtml($line)
-            : '<span class="' . $brush . '">' . escapeHtml($line) . '</span>';
+        if ($line === '') {
+            continue;
+        }
+
+        imagettftext($image, $fontSize, 0, $marginX, $baseline, $colors[$brush], $font, $line);
     }
 
-    $body = implode("\n", $html);
-    $document = <<<HTML
-<!doctype html>
-<html lang="es">
-<head>
-<meta charset="utf-8">
-<style>
-html, body { margin: 0; padding: 0; background: #0c0c0c; }
-pre {
-  margin: 0;
-  padding: {$marginY}px {$marginX}px;
-  font-family: Consolas, "DejaVu Sans Mono", "Liberation Mono", monospace;
-  font-size: 14px;
-  line-height: {$lineHeight}px;
-  color: #d4d4d4;
-  white-space: pre;
-  overflow: hidden;
-}
-.dim { color: #969696; }
-.ok { color: #4ec978; }
-.err { color: #f44747; }
-.warn { color: #e5c05a; }
-.cyan { color: #56b6c2; }
-.check { color: #4ec978; font-size: 12px; }
-</style>
-</head>
-<body><pre>{$body}</pre></body>
-</html>
-HTML;
-
-    $htmlPath = $workDir . '/captura.html';
-    file_put_contents($htmlPath, $document);
-
-    $userDataDir = $workDir . '/chrome-profile';
-    if (!is_dir($userDataDir)) {
-        mkdir($userDataDir, 0777, true);
+    if (!imagepng($image, $path)) {
+        imagedestroy($image);
+        throw new RuntimeException("No se pudo escribir la captura {$path}.");
     }
 
-    $url = 'file:///' . ltrim(str_replace('\\', '/', $htmlPath), '/');
-    $command = [
-        $chrome,
-        '--headless=new',
-        '--disable-gpu',
-        '--no-sandbox',
-        '--hide-scrollbars',
-        '--force-device-scale-factor=1',
-        '--disable-extensions',
-        '--disable-background-networking',
-        '--no-first-run',
-        '--no-default-browser-check',
-        '--virtual-time-budget=1000',
-        '--window-size=' . $width . ',' . $height,
-        '--user-data-dir=' . $userDataDir,
-        '--screenshot=' . $path,
-        $url,
-    ];
+    imagedestroy($image);
 
-    $descriptors = [1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
-    $process = proc_open($command, $descriptors, $pipes, $workDir);
-    if (!is_resource($process)) {
-        throw new RuntimeException('No se pudo iniciar Chrome headless.');
-    }
-
-    $output = stream_get_contents($pipes[1]) ?: '';
-    $errors = stream_get_contents($pipes[2]) ?: '';
-    fclose($pipes[1]);
-    fclose($pipes[2]);
-    $exit = proc_close($process);
-
-    if ($exit !== 0 || !is_file($path)) {
-        throw new RuntimeException("Chrome no generó la captura {$path}.\n{$output}\n{$errors}");
+    if (!is_file($path)) {
+        throw new RuntimeException("No se generó la captura {$path}.");
     }
 
     return pngSize((string) file_get_contents($path));
+}
+
+// ---------------------------------------------------------------------------
+// Ejecución de procesos externos con límite de tiempo
+// ---------------------------------------------------------------------------
+/**
+ * Lanza un proceso y espera su salida sin bloquearse para siempre.
+ *
+ * Evita que la corrida quede colgada si un test o una herramienta externa
+ * no termina. Al vencer el límite se manda SIGTERM y luego SIGKILL.
+ *
+ * @param list<string> $command
+ * @param array<int,array{0:string,1:string,2?:string}> $descriptors
+ */
+function runProcess(array $command, string $cwd, int $timeout, array $descriptors, string $label): int
+{
+    $process = proc_open($command, $descriptors, $pipes, $cwd);
+    if (!is_resource($process)) {
+        throw new RuntimeException("No se pudo iniciar {$label}.");
+    }
+
+    $deadline = $timeout > 0 ? microtime(true) + $timeout : null;
+    $exitCode = null;
+
+    while (true) {
+        $status = proc_get_status($process);
+
+        if (!($status['running'] ?? false)) {
+            $exitCode = (int) ($status['exitcode'] ?? -1);
+            break;
+        }
+
+        if ($deadline !== null && microtime(true) > $deadline) {
+            proc_terminate($process, 15);
+            usleep(500000);
+
+            $status = proc_get_status($process);
+            if ($status['running'] ?? false) {
+                proc_terminate($process, 9);
+            }
+
+            proc_close($process);
+
+            throw new RuntimeException(sprintf(
+                '%s no terminó en %d s y se detuvo. '
+                . 'Ajusta el límite con la variable de entorno INTEGRATION_TIMEOUT.',
+                $label,
+                $timeout
+            ));
+        }
+
+        usleep(20000);
+    }
+
+    $closed = proc_close($process);
+
+    // proc_close devuelve -1 en algunas versiones cuando se usó proc_get_status().
+    return $exitCode !== null && $exitCode >= 0 ? $exitCode : $closed;
+}
+
+/**
+ * Límite por módulo, configurable con INTEGRATION_TIMEOUT (segundos).
+ */
+function moduleTimeout(): int
+{
+    $raw = getenv('INTEGRATION_TIMEOUT');
+    if (is_string($raw) && preg_match('/^\d+$/', trim($raw)) === 1 && (int) $raw > 0) {
+        return (int) $raw;
+    }
+
+    return 300;
 }
 
 // ---------------------------------------------------------------------------
@@ -685,7 +777,7 @@ HTML;
  * @param array<string,mixed> $module
  * @return array<string,mixed>
  */
-function runModule(array $module, string $php, string $phpunit, string $config, string $root, string $workDir, string $chrome, string $capturesDir): array
+function runModule(array $module, string $php, string $phpunit, string $config, string $root, string $workDir, string $font, string $capturesDir): array
 {
     $number = (int) $module['Number'];
     $junit = $workDir . sprintf('/junit-%02d.xml', $number);
@@ -721,11 +813,13 @@ function runModule(array $module, string $php, string $phpunit, string $config, 
     ];
 
     $started = microtime(true);
-    $process = proc_open($command, $descriptors, $pipes, $root);
-    if (!is_resource($process)) {
-        throw new RuntimeException("No se pudo ejecutar PHPUnit para el módulo {$number}.");
-    }
-    $exitCode = proc_close($process);
+    $exitCode = runProcess(
+        $command,
+        $root,
+        moduleTimeout(),
+        $descriptors,
+        "PHPUnit (módulo {$number}, {$module['Model']})"
+    );
     $elapsed = microtime(true) - $started;
 
     $raw = is_file($stdoutPath) ? (string) file_get_contents($stdoutPath) : '';
@@ -760,8 +854,7 @@ function runModule(array $module, string $php, string $phpunit, string $config, 
         $lines,
         $capture,
         (int) $module['ImageWidth'],
-        $chrome,
-        $workDir
+        $font
     );
 
     $status = ($failures > 0 || $errors > 0) ? 'FAIL' : 'PASS';
@@ -1159,13 +1252,32 @@ if (!is_dir($CAPTURES) && !mkdir($CAPTURES, 0777, true) && !is_dir($CAPTURES)) {
 }
 
 $phpVersion = PHP_VERSION;
-$versionLine = @shell_exec(escapeshellarg($PHP_BIN) . ' ' . escapeshellarg($PHPUNIT) . ' --version 2>&1');
-$phpUnitVersion = is_string($versionLine) && preg_match('/PHPUnit\s+([0-9.]+)/', $versionLine, $match) === 1
+
+$versionPath = sys_get_temp_dir() . '/integration-doc-version-' . bin2hex(random_bytes(6)) . '.txt';
+$versionLine = '';
+try {
+    runProcess(
+        [$PHP_BIN, $PHPUNIT, '--version'],
+        $ROOT,
+        30,
+        [1 => ['file', $versionPath, 'w'], 2 => ['file', $versionPath, 'a']],
+        'PHPUnit --version'
+    );
+    $versionLine = is_file($versionPath) ? (string) file_get_contents($versionPath) : '';
+} catch (RuntimeException) {
+    $versionLine = '';
+} finally {
+    if (is_file($versionPath)) {
+        @unlink($versionPath);
+    }
+}
+
+$phpUnitVersion = preg_match('/PHPUnit\s+([0-9.]+)/', $versionLine, $match) === 1
     ? $match[1]
     : '11.x';
 
 try {
-    $chrome = findChrome();
+    $font = findMonoFont();
 } catch (RuntimeException $exception) {
     fwrite(STDERR, 'ERROR: ' . $exception->getMessage() . PHP_EOL);
     exit(3);
@@ -1212,7 +1324,7 @@ try {
     foreach ($selected as $module) {
         echo sprintf('[%02d/31] %-16s ', (int) $module['Number'], (string) $module['Model']);
 
-        $run = runModule($module, $PHP_BIN, $PHPUNIT, $CONFIG, $ROOT, $workDir, $chrome, $CAPTURES);
+        $run = runModule($module, $PHP_BIN, $PHPUNIT, $CONFIG, $ROOT, $workDir, $font, $CAPTURES);
         $runs[] = $run;
         if ($run['Status'] === 'FAIL') {
             $failuresTotal++;

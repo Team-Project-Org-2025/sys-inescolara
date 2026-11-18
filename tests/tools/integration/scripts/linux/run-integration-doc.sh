@@ -3,16 +3,16 @@
 # run-integration-doc.sh — ejecuta las pruebas de integración y llena el Word.
 #
 # Equivalente Bash de run-integration-doc.ps1. Para cada módulo ejecuta su
-# archivo de integración con PHPUnit, genera una captura PNG con Chrome
-# headless y rellena una COPIA del formato Word. El original nunca se modifica.
+# archivo de integración con PHPUnit, genera una captura PNG con GD y rellena
+# una COPIA del formato Word. El original nunca se modifica.
 #
 # Uso:
 #   ./tests/tools/integration/scripts/linux/run-integration-doc.sh
 #   ./tests/tools/integration/scripts/linux/run-integration-doc.sh --module=29
 #   ./tests/tools/integration/scripts/linux/run-integration-doc.sh --module=Backup --output=/tmp/cuadro-29.docx
-#   CHROME_BIN=/usr/bin/chromium ./tests/tools/integration/scripts/linux/run-integration-doc.sh
+#   CAPTURE_FONT=/ruta/DejaVuSansMono.ttf ./tests/tools/integration/scripts/linux/run-integration-doc.sh
 #
-# Requisitos: PHP 8.2+, PHPUnit en vendor/, Chrome o Chromium (CHROME_BIN).
+# Requisitos: PHP 8.2+ con GD/FreeType, PHPUnit en vendor/.
 #
 set -euo pipefail
 

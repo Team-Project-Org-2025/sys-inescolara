@@ -44,10 +44,12 @@ de presentación de PHPUnit.
 
 ## Requisitos
 
-- PHP 8.2 o superior en el `PATH`, con `dom`, `mbstring` y `zlib`.
+- PHP 8.2 o superior en el `PATH`, con `dom`, `mbstring`, `zlib` y `gd`
+  (con FreeType) para dibujar las capturas.
 - PHPUnit instalado en `vendor/` (`composer install`).
 - Driver `pdo_sqlite` habilitado.
-- Chrome, Chromium, Edge o Brave para renderizar las capturas.
+- Al menos una fuente monoespaciada instalada (DejaVu Sans Mono, Liberation
+  Mono, Noto Sans Mono, Menlo…). No hace falta navegador.
 - El formato original en
   `tests/tools/integration/formatos/plantillas/`.
 - PowerShell 5.1+ en Windows, o Bash en Linux/macOS.
@@ -55,6 +57,11 @@ de presentación de PHPUnit.
 El ejecutor Bash no necesita `zip` ni `unzip`: el motor
 `scripts/lib/integration-doc.php` lee y escribe el `.docx` con un lector/escritor
 ZIP propio sobre `zlib`.
+
+Las capturas se dibujan con GD dentro del propio motor (en Windows,
+`System.Drawing`). No se lanza Chrome ni ningún otro navegador: un Chrome
+headless con perfil nuevo puede quedarse descargando componentes y no terminar
+nunca, dejando la corrida colgada.
 
 ## Uso
 
@@ -92,10 +99,17 @@ powershell -ExecutionPolicy Bypass -File tests\tools\integration\scripts\windows
 ./tests/tools/integration/scripts/linux/run-integration-doc.sh --keep-working
 ```
 
-Si el navegador no está en una ruta conocida:
+Si el sistema no tiene una fuente monoespaciada conocida, indícala:
 
 ```bash
-CHROME_BIN=/usr/bin/chromium ./tests/tools/integration/scripts/linux/run-integration-doc.sh
+CAPTURE_FONT=/ruta/a/DejaVuSansMono.ttf ./tests/tools/integration/scripts/linux/run-integration-doc.sh
+```
+
+Cada módulo tiene un límite de 300 s para que una prueba colgada no detenga la
+corrida. Se puede cambiar:
+
+```bash
+INTEGRATION_TIMEOUT=600 ./tests/tools/integration/scripts/linux/run-integration-doc.sh
 ```
 
 ## Parámetros
@@ -146,14 +160,16 @@ se ejecutaron. Los cuadros no elegidos conservan los datos del formato.
 | `0` | Copia generada sin fallos. |
 | `1` | Hay módulos con fallos; revisa el JUnit y las observaciones. |
 | `2` | El filtro de módulo no coincide con ninguno. |
-| `3` | Error de entorno: falta PHP, PHPUnit, Chrome o el formato original. |
+| `3` | Error de entorno: falta PHP, PHPUnit, GD o el formato original. |
 
 ## Solución de problemas
 
 | Síntoma | Causa | Solución |
 | --- | --- | --- |
 | `no se encontró php en el PATH` | PHP no está en el `PATH`. | Abre una consola nueva o agrega `C:\xampp\php`. |
-| `No se encontró Chrome/Chromium` | El navegador no está en una ruta conocida (Linux). | Define `CHROME_BIN` con la ruta del binario. |
+| `No se encontró una fuente monoespaciada` | No hay DejaVu/Liberation/Noto instaladas (Linux). | Define `CAPTURE_FONT` con la ruta de un `.ttf` monoespaciado. |
+| `La extensión GD de PHP no está disponible` | PHP se instaló sin `php-gd` o sin FreeType. | Instala `php-gd` (`sudo apt install php8.2-gd`). |
+| `PHPUnit (módulo NN) no terminó en 300 s` | Una prueba quedó bloqueada. | Revisa ese test; si la máquina es lenta, sube `INTEGRATION_TIMEOUT`. |
 | `falta el formato original` | El `.docx` no está en `plantillas/`. | Restaura el archivo original en esa ruta. |
 | `No se puede tener acceso al archivo` al guardar | La copia está abierta en Word. | Ciérrala y vuelve a ejecutar. |
 | Todos los cuadros salen `NO EJECUTADO` | No se ejecutó PHPUnit. | Revisa la salida y el `--log-junit` temporal. |
