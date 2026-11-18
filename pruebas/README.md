@@ -6,11 +6,19 @@ ejecutarlas está aquí:
 ```text
 pruebas/
 ├── collections/
-│   └── SYSINECOLARA API Tests.postman_collection.json
+│   ├── SYSINECOLARA API Tests.postman_collection.json   suite monolítica anterior
+│   └── inventario/                                      una colección por módulo
+│       ├── Plantas.postman_collection.json
+│       ├── Especies.postman_collection.json
+│       ├── Ubicaciones.postman_collection.json
+│       ├── UnidadesMedida.postman_collection.json
+│       ├── Insumos.postman_collection.json
+│       └── Herramientas.postman_collection.json
 ├── environments/
 │   └── SysInescolara Local.postman_environment.json
 ├── data/
-│   └── plantas.csv
+│   ├── plantas.csv
+│   └── seed.sql          datos mínimos para los CRUD (especies, ubicaciones, unidades)
 ├── scripts/
 │   └── run.sh
 ├── README.md          ← este documento (conceptos y scripts copiables)
@@ -18,9 +26,14 @@ pruebas/
 └── TRACEABILITY.md    ← matriz de trazabilidad de la suite
 ```
 
-La colección cubre: login con sesión PHP + CSRF, listados de **Plantas,
-Especies, Clientes, Insumos, Lotes y Ventas**, y el CRUD de **Plantas**
-(crear con CSV, editar y soft delete).
+**Suite por módulos (actual).** Cada colección de `collections/<dominio>/`
+cubre el CRUD completo del módulo más los negativos `401/403/400`, y se
+corresponde con una ficha en `docs/api/<dominio>/`. Antes de ejecutarla importa
+`pruebas/data/seed.sql`.
+
+**Suite monolítica (anterior).** `SYSINECOLARA API Tests` cubre login con sesión
+PHP + CSRF, listados de **Plantas, Especies, Clientes, Insumos, Lotes y Ventas**,
+y el CRUD de **Plantas** con CSV. Se conserva como referencia.
 
 ### Documentos relacionados
 
@@ -92,6 +105,8 @@ ver “Hallazgos”).
 ## 2. Importar en Postman (GUI)
 
 1. **Import** → arrastra:
+   - la colección del módulo que quieras ejecutar (por ejemplo
+     `pruebas/collections/inventario/Plantas.postman_collection.json`), o
    - `pruebas/collections/SYSINECOLARA API Tests.postman_collection.json`
    - `pruebas/environments/SysInescolara Local.postman_environment.json`
 2. Selecciona el environment **SysInescolara Local** (arriba a la derecha).
@@ -122,14 +137,18 @@ POSTMAN_BASE_URL='https://tu-app.onrender.com' \
   ./pruebas/scripts/run.sh
 ```
 
-Comando equivalente sin el helper:
+Comando equivalente sin el helper (requiere `newman` o Postman CLI):
 
 ```bash
-postman collection run \
-  "pruebas/collections/SYSINECOLARA API Tests.postman_collection.json" \
+newman run \
+  "pruebas/collections/inventario/Plantas.postman_collection.json" \
   -e "pruebas/environments/SysInescolara Local.postman_environment.json" \
-  -d "pruebas/data/plantas.csv"
+  --env-var "password=Admin123!" \
+  --env-var "viewerPassword=Postman123!"
 ```
+
+El environment versionado deja `password` y `viewerPassword` vacíos: pásalos
+como `--env-var` (o edítalos en Postman) para no commitear secretos.
 
 El CLI devuelve **exit code ≠ 0** si alguna aserción falla. Úsalo en CI tal cual.
 
@@ -143,7 +162,9 @@ El CLI devuelve **exit code ≠ 0** si alguna aserción falla. Úsalo en CI tal 
 | `authCookie` | *(se llena sola)* | Valor de `PHPSESSID` |
 | `csrfToken` | *(se llena sola)* | `_csrf_token` del formulario |
 | `usuario` | `admin` | Usuario o correo |
-| `password` | *(secreto)* | Contraseña |
+| `password` | *(secreto)* | Contraseña del administrador |
+| `viewerUsuario` | `postman_viewer` | Usuario sin permisos para el caso 403 |
+| `viewerPassword` | *(secreto)* | Contraseña del usuario viewer |
 | `recaptchaToken` | `PASSED` | Respuesta de reCAPTCHA (llaves de prueba) |
 | `createdPlantId` | *(se llena sola)* | ID de la planta de la iteración |
 | `especieId` | *(se llena sola)* | Primera especie válida detectada |

@@ -1,0 +1,84 @@
+# Cobertura de documentación
+
+Matriz de controladores ↔ fichas ↔ colecciones Postman.
+
+Estados: ✅ documentado y verificado con respuesta real · 🟡 documentado desde
+el código · ⬜ pendiente.
+
+## Autenticación
+
+| Controlador | Rutas | Ficha | Colección | Estado |
+|---|---|---|---|---|
+| `LoginController` | `/login`, `/login/logout`, `/login/logout_ajax`, `/login/check_session`, `/login/dashboard` | [`01-autenticacion.md`](01-autenticacion.md) | — | ✅ |
+| `RecuperarPasswordController` | `/recuperar-password`, `/enviar`, `/cambiar`, `/restablecer` | [`01-autenticacion.md`](01-autenticacion.md) | — | ✅ |
+| `AuthController` | helpers de sesión | — | — | ⬜ |
+
+## Inventario
+
+| Controlador | Rutas | Ficha | Colección | Estado |
+|---|---|---|---|---|
+| `PlantasController` | `/plantas` | [`inventario/plantas.md`](inventario/plantas.md) | `inventario/Plantas` | ✅ |
+| `EspeciesController` | `/especies` | [`inventario/especies.md`](inventario/especies.md) | `inventario/Especies` | ✅ |
+| `UbicacionesController` | `/ubicaciones` | [`inventario/ubicaciones.md`](inventario/ubicaciones.md) | `inventario/Ubicaciones` | ✅ |
+| `UnidadesMedidaController` | `/unidades-medida` | [`inventario/unidades-medida.md`](inventario/unidades-medida.md) | `inventario/UnidadesMedida` | ✅ |
+| `InsumosController` | `/insumos` | [`inventario/insumos.md`](inventario/insumos.md) | `inventario/Insumos` | ✅ |
+| `HerramientasController` | `/herramientas` | [`inventario/herramientas.md`](inventario/herramientas.md) | `inventario/Herramientas` | ✅ |
+| `LotesController` | `/lotes` | — | — | ⬜ |
+| `PreciosController` | `/precios` | — | — | ⬜ |
+| `InventarioController` | `/inventario` | — | — | ⬜ |
+| `MermasController` | `/mermas` | — | — | ⬜ |
+| `TrazabilidadController` | `/trazabilidad` | — | — | ⬜ |
+
+## Comercial
+
+| Controlador | Rutas | Ficha | Colección | Estado |
+|---|---|---|---|---|
+| `ClientesController` | `/clientes` | — | — | ⬜ |
+| `VentasController` | `/ventas` (usa `accion`) | — | — | ⬜ |
+| `Cuentas_cobrarController` | `/cuentas-cobrar` | — | — | ⬜ |
+| `OrnatosController` | `/ornatos` | — | — | ⬜ |
+| `AmpliacionController` | `/ampliacion` | — | — | ⬜ |
+
+## Compras
+
+| Controlador | Rutas | Ficha | Colección | Estado |
+|---|---|---|---|---|
+| `ComprasController` | `/compras` | — | — | ⬜ |
+| `ProveedoresController` | `/proveedores` | — | — | ⬜ |
+| `CuentasPagarController` | `/cuentas-pagar` | — | — | ⬜ |
+
+## Operaciones
+
+| Controlador | Rutas | Ficha | Colección | Estado |
+|---|---|---|---|---|
+| `TareasController` | `/tareas` | — | — | ⬜ |
+| `RecoleccionController` | `/recoleccion` | — | — | ⬜ |
+
+## Sistema
+
+| Controlador | Rutas | Ficha | Colección | Estado |
+|---|---|---|---|---|
+| `DashboardController` | `/dashboard/*` | — | — | ⬜ |
+| `InicioController` | `/` | — | — | ⬜ |
+| `UsuariosController` | `/usuarios` | — | — | ⬜ |
+| `RolesController` | `/roles` | — | — | ⬜ |
+| `AuditlogController` | `/auditlog` | — | — | ⬜ |
+| `BackupsController` | `/backups` | — | — | ⬜ |
+| `ReportsController` | `/reports` | — | — | ⬜ |
+| `NotificationsController` | `/notifications/*` | — | — | ⬜ |
+
+## Público
+
+| Controlador | Rutas | Ficha | Colección | Estado |
+|---|---|---|---|---|
+| `PublicController` | `/`, `/catalogo`, `/servicios`, `/nosotros`, `/contacto` | — | — | ⬜ |
+| `FrontController` | router | — | — | ⬜ |
+
+## Deuda transversal
+
+- Envelopes heterogéneos y nombres de arreglo distintos por módulo.
+- 500 en errores de validación; mensajes internos expuestos.
+- `checkCsrf()` nunca se invoca.
+- Permisos legacy en BD (`PLANTAS_VIEW`) frente a claves `modulo:accion`.
+- Confirmar en `REQUISITOS.md` qué RF quedan fuera del backend (correo,
+  reCAPTCHA, respaldos).
