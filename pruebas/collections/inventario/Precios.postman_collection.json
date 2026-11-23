@@ -1,0 +1,823 @@
+{
+  "info": {
+    "_postman_id": "8f2c1a44-5b7e-4c9a-9d61-0a1b2c3d4f68",
+    "name": "SYSINECOLARA · Precios",
+    "description": "Consultas de precios y actualización de costo/ganancia. Requiere `pruebas/data/seed.sql` (lote 1).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "pm.request.headers.upsert({ key: 'X-Requested-With', value: 'XMLHttpRequest' });",
+          "pm.collectionVariables.set('today', new Date().toISOString().slice(0, 10));"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "today",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "00 · Auth (admin)",
+      "item": [
+        {
+          "name": "401 · GET get_prices sin sesion",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.cookies.clear();",
+                  "pm.request.headers.remove('Cookie');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('401 sin sesion', () => pm.response.to.have.status(401));",
+                  "pm.test('success = false', () => pm.expect(pm.response.json().success).to.eql(false));",
+                  "pm.test('Mensaje No autorizado', () => pm.expect(pm.response.json().message).to.match(/no autorizado/i));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/precios?action=get_prices",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "precios"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "get_prices"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /login (admin)",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Sesion admin', () => {",
+                  "  pm.expect([200, 302]).to.include(pm.response.code);",
+                  "  pm.expect(pm.cookies.get('PHPSESSID')).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "nombre_usuario",
+                  "value": "{{usuario}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{password}}",
+                  "type": "text"
+                },
+                {
+                  "key": "g-recaptcha-response",
+                  "value": "{{recaptchaToken}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "01 · Consultas",
+      "item": [
+        {
+          "name": "GET get_prices",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('success = true', () => pm.expect(body.success).to.eql(true));",
+                  "pm.test('prices es arreglo', () => pm.expect(body.prices).to.be.an('array'));",
+                  "pm.test('count coincide', () => pm.expect(body.count).to.eql(body.prices.length));",
+                  "pm.test('cada precio trae precio_final y valor_total_inventario', () => body.prices.forEach((p) => { pm.expect(p).to.have.property('precio_final'); pm.expect(p).to.have.property('valor_total_inventario'); }));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/precios?action=get_prices",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "precios"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "get_prices"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET get_lotes",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('lotes es arreglo', () => pm.expect(pm.response.json().lotes).to.be.an('array'));",
+                  "pm.test('precio_final numerico', () => pm.response.json().lotes.forEach((l) => pm.expect(l.precio_final).to.be.a('number')));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/precios?action=get_lotes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "precios"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "get_lotes"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET get_insumos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('insumos es arreglo', () => pm.expect(pm.response.json().insumos).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/precios?action=get_insumos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "precios"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "get_insumos"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET get_detalle",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('detalles es arreglo', () => pm.expect(pm.response.json().detalles).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/precios?action=get_detalle",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "precios"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "get_detalle"
+                },
+                {
+                  "key": "id_lote",
+                  "value": "{{seedLoteId}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "02 · Actualizar",
+      "item": [
+        {
+          "name": "POST actualizar_precio_ajax (subir costo)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('success = true', () => pm.expect(pm.response.json().success).to.eql(true));",
+                  "pm.sendRequest({",
+                  "  url: pm.environment.get('baseUrl') + '/precios?action=get_prices',",
+                  "  header: { 'X-Requested-With': 'XMLHttpRequest' }",
+                  "}, (err, res) => {",
+                  "  pm.test('El precio final se recalcula', () => {",
+                  "    pm.expect(err).to.be.null;",
+                  "    const row = res.json().prices.find((p) => p.id_lote === 1);",
+                  "    pm.expect(row, 'lote 1').to.exist;",
+                  "    pm.expect(Number(row.precio_final)).to.eql(7.8);",
+                  "  });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id_lote",
+                  "value": "{{seedLoteId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "costo_unitario",
+                  "value": "6",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/precios?action=actualizar_precio_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "precios"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "actualizar_precio_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST actualizar_precio_ajax (restaurar costo)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('success = true', () => pm.expect(pm.response.json().success).to.eql(true));",
+                  "pm.sendRequest({",
+                  "  url: pm.environment.get('baseUrl') + '/precios?action=get_prices',",
+                  "  header: { 'X-Requested-With': 'XMLHttpRequest' }",
+                  "}, (err, res) => {",
+                  "  pm.test('El precio final se recalcula', () => {",
+                  "    pm.expect(err).to.be.null;",
+                  "    const row = res.json().prices.find((p) => p.id_lote === 1);",
+                  "    pm.expect(row, 'lote 1').to.exist;",
+                  "    pm.expect(Number(row.precio_final)).to.eql(6.5);",
+                  "  });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id_lote",
+                  "value": "{{seedLoteId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "costo_unitario",
+                  "value": "5",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/precios?action=actualizar_precio_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "precios"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "actualizar_precio_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST actualizar_ganancia_ajax (subir ganancia)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('success = true', () => pm.expect(pm.response.json().success).to.eql(true));",
+                  "pm.sendRequest({",
+                  "  url: pm.environment.get('baseUrl') + '/precios?action=get_prices',",
+                  "  header: { 'X-Requested-With': 'XMLHttpRequest' }",
+                  "}, (err, res) => {",
+                  "  pm.test('El precio final se recalcula', () => {",
+                  "    pm.expect(err).to.be.null;",
+                  "    const row = res.json().prices.find((p) => p.id_lote === 1);",
+                  "    pm.expect(row, 'lote 1').to.exist;",
+                  "    pm.expect(Number(row.precio_final)).to.eql(6.75);",
+                  "  });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id_lote",
+                  "value": "{{seedLoteId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "porcentaje_ganancia",
+                  "value": "35",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/precios?action=actualizar_ganancia_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "precios"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "actualizar_ganancia_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST actualizar_ganancia_ajax (restaurar ganancia)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('success = true', () => pm.expect(pm.response.json().success).to.eql(true));",
+                  "pm.sendRequest({",
+                  "  url: pm.environment.get('baseUrl') + '/precios?action=get_prices',",
+                  "  header: { 'X-Requested-With': 'XMLHttpRequest' }",
+                  "}, (err, res) => {",
+                  "  pm.test('El precio final se recalcula', () => {",
+                  "    pm.expect(err).to.be.null;",
+                  "    const row = res.json().prices.find((p) => p.id_lote === 1);",
+                  "    pm.expect(row, 'lote 1').to.exist;",
+                  "    pm.expect(Number(row.precio_final)).to.eql(6.5);",
+                  "  });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id_lote",
+                  "value": "{{seedLoteId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "porcentaje_ganancia",
+                  "value": "30",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/precios?action=actualizar_ganancia_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "precios"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "actualizar_ganancia_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "03 · Negativos",
+      "item": [
+        {
+          "name": "400 · costo con lote invalido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400 lote invalido', () => pm.response.to.have.status(400));",
+                  "pm.test('Mensaje', () => pm.expect(pm.response.json().message).to.match(/ID de lote inv[aá]lido/i));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id_lote",
+                  "value": "0",
+                  "type": "text"
+                },
+                {
+                  "key": "costo_unitario",
+                  "value": "6",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/precios?action=actualizar_precio_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "precios"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "actualizar_precio_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /login (viewer)",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Sesion viewer', () => {",
+                  "  pm.expect([200, 302]).to.include(pm.response.code);",
+                  "  pm.expect(pm.cookies.get('PHPSESSID')).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "nombre_usuario",
+                  "value": "{{viewerUsuario}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{viewerPassword}}",
+                  "type": "text"
+                },
+                {
+                  "key": "g-recaptcha-response",
+                  "value": "{{recaptchaToken}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "403 · actualizar_precio_ajax sin permiso",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('403 sin permiso', () => pm.response.to.have.status(403));",
+                  "pm.test('Mensaje de permiso', () => pm.expect(pm.response.json().message).to.match(/permiso/i));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id_lote",
+                  "value": "{{seedLoteId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "costo_unitario",
+                  "value": "9",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/precios?action=actualizar_precio_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "precios"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "actualizar_precio_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /login (admin, restaurar)",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Sesion admin, restaurar', () => {",
+                  "  pm.expect([200, 302]).to.include(pm.response.code);",
+                  "  pm.expect(pm.cookies.get('PHPSESSID')).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "nombre_usuario",
+                  "value": "{{usuario}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{password}}",
+                  "type": "text"
+                },
+                {
+                  "key": "g-recaptcha-response",
+                  "value": "{{recaptchaToken}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "400 · accion inexistente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400 accion invalida', () => pm.response.to.have.status(400));",
+                  "pm.test('Mensaje de accion invalida', () => pm.expect(pm.response.json().message).to.match(/acci[oó]n ajax inv[aá]lida/i));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/precios?action=no_existe",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "precios"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "no_existe"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "04 · Logout",
+      "item": [
+        {
+          "name": "POST logout_ajax",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Sesion cerrada', () => pm.expect(pm.response.json().success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login/logout_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login",
+                "logout_ajax"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

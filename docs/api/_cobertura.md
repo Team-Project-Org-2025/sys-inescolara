@@ -23,11 +23,11 @@ el código · ⬜ pendiente.
 | `UnidadesMedidaController` | `/unidades-medida` | [`inventario/unidades-medida.md`](inventario/unidades-medida.md) | `inventario/UnidadesMedida` | ✅ |
 | `InsumosController` | `/insumos` | [`inventario/insumos.md`](inventario/insumos.md) | `inventario/Insumos` | ✅ |
 | `HerramientasController` | `/herramientas` | [`inventario/herramientas.md`](inventario/herramientas.md) | `inventario/Herramientas` | ✅ |
-| `LotesController` | `/lotes` | — | — | ⬜ |
-| `PreciosController` | `/precios` | — | — | ⬜ |
-| `InventarioController` | `/inventario` | — | — | ⬜ |
-| `MermasController` | `/mermas` | — | — | ⬜ |
-| `TrazabilidadController` | `/trazabilidad` | — | — | ⬜ |
+| `LotesController` | `/lotes` | [`inventario/lotes.md`](inventario/lotes.md) | `inventario/Lotes` | ✅ |
+| `PreciosController` | `/precios` | [`inventario/precios.md`](inventario/precios.md) | `inventario/Precios` | ✅ |
+| `InventarioController` | `/inventario` | [`inventario/inventario.md`](inventario/inventario.md) | `inventario/Inventario` | ✅ |
+| `MermasController` | `/mermas` | [`inventario/mermas.md`](inventario/mermas.md) | `inventario/Mermas` | ✅ |
+| `TrazabilidadController` | `/trazabilidad` | [`inventario/trazabilidad.md`](inventario/trazabilidad.md) | `inventario/Trazabilidad` | ✅ |
 
 ## Comercial
 

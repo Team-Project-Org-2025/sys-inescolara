@@ -20,7 +20,8 @@ docs/api/
 ├── 00-convenciones.md     reglas transversales
 ├── 01-autenticacion.md    login, sesión, recuperación
 ├── inventario/            plantas, especies, ubicaciones, lotes, precios,
-│                          inventario, mermas, insumos, herramientas, unidades
+│                          inventario, trazabilidad, mermas, insumos,
+│                          herramientas, unidades
 ├── comercial/             clientes, ventas, cuentas-cobrar, ornatos, ampliación
 ├── compras/               compras, proveedores, cuentas-pagar
 ├── operaciones/           tareas, recolección

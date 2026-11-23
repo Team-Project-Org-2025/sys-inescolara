@@ -13,12 +13,17 @@ pruebas/
 │       ├── Ubicaciones.postman_collection.json
 │       ├── UnidadesMedida.postman_collection.json
 │       ├── Insumos.postman_collection.json
-│       └── Herramientas.postman_collection.json
+│       ├── Herramientas.postman_collection.json
+│       ├── Lotes.postman_collection.json
+│       ├── Precios.postman_collection.json
+│       ├── Inventario.postman_collection.json
+│       ├── Trazabilidad.postman_collection.json
+│       └── Mermas.postman_collection.json
 ├── environments/
 │   └── SysInescolara Local.postman_environment.json
 ├── data/
 │   ├── plantas.csv
-│   └── seed.sql          datos mínimos para los CRUD (especies, ubicaciones, unidades)
+│   └── seed.sql          datos mínimos para los CRUD (catálogos, planta y lote base)
 ├── scripts/
 │   └── run.sh
 ├── README.md          ← este documento (conceptos y scripts copiables)
@@ -170,6 +175,10 @@ El CLI devuelve **exit code ≠ 0** si alguna aserción falla. Úsalo en CI tal 
 | `especieId` | *(se llena sola)* | Primera especie válida detectada |
 | `maxResponseTime` | `1000` | Umbral de latencia en ms |
 | `seededCollections` | `plantas,lotes,especies` | Módulos que deben traer datos |
+| `seedPlantaId`, `seedUbicacionId` | `1` | IDs de los registros base de `seed.sql` |
+| `seedEstadoId`, `seedEstadoCuarentenaId` | `5`, `6` | Estados `vivo` y `cuarentena` |
+| `seedCategoriaId`, `seedOrigenId` | `1`, `1` | Catálogos de lote (`germinado`, `Siembra`) |
+| `seedLoteId`, `seedTrazabilidadId` | `1`, `1` | Lote y cuarentena base |
 
 `authCookie`, `csrfToken` y `password` están marcadas como **secret** en
 Postman. No commitees el environment con valores reales; el archivo versionado

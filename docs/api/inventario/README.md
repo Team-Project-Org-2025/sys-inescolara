@@ -11,13 +11,16 @@ medida) y Herramientas (asignación de tareas para el uso).
 | Unidades de medida | [`unidades-medida.md`](unidades-medida.md) | `UnidadesMedida.postman_collection.json` |
 | Insumos | [`insumos.md`](insumos.md) | `Insumos.postman_collection.json` |
 | Herramientas | [`herramientas.md`](herramientas.md) | `Herramientas.postman_collection.json` |
-
-Pendientes de documentar: lotes, precios, inventario, mermas, trazabilidad y
-registro de insumos.
+| Lotes | [`lotes.md`](lotes.md) | `Lotes.postman_collection.json` |
+| Precios | [`precios.md`](precios.md) | `Precios.postman_collection.json` |
+| Inventario | [`inventario.md`](inventario.md) | `Inventario.postman_collection.json` |
+| Trazabilidad | [`trazabilidad.md`](trazabilidad.md) | `Trazabilidad.postman_collection.json` |
+| Mermas | [`mermas.md`](mermas.md) | `Mermas.postman_collection.json` |
 
 ## Patrón común
 
-Los cinco módulos CRUD de esta carpeta comparten estructura:
+Los módulos CRUD de esta carpeta (Plantas, Especies, Ubicaciones, Unidades de
+medida, Insumos, Herramientas y Lotes) comparten estructura:
 
 ```text
 GET  /dashboard/<modulo>          vista con permiso <modulo>:ver
