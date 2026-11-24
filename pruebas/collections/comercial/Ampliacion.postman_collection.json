@@ -1,0 +1,1105 @@
+{
+  "info": {
+    "_postman_id": "9a1b2c3d-0005-4a05-9c05-a1b2c3d4e505",
+    "name": "SYSINECOLARA · Ampliacion",
+    "description": "Intercambios de plantas con salida de lote propio. Crea el lote, lo usa y lo elimina al final.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "pm.request.headers.upsert({ key: 'X-Requested-With', value: 'XMLHttpRequest' });",
+          "const d = new Date(); pm.collectionVariables.set('today', d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'));"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "today",
+      "value": ""
+    },
+    {
+      "key": "ampLoteId",
+      "value": ""
+    },
+    {
+      "key": "ampId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "00 · Auth (admin)",
+      "item": [
+        {
+          "name": "401 · GET get_exchanges sin sesion",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.cookies.clear();",
+                  "pm.request.headers.remove('Cookie');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('401 sin sesion', () => pm.response.to.have.status(401));",
+                  "pm.test('success = false', () => pm.expect(pm.response.json().success).to.eql(false));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ampliacion?action=get_exchanges",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ampliacion"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "get_exchanges"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /login (admin)",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Sesion admin', () => {",
+                  "  pm.expect([200, 302]).to.include(pm.response.code);",
+                  "  pm.expect(pm.cookies.get('PHPSESSID')).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "nombre_usuario",
+                  "value": "{{usuario}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{password}}",
+                  "type": "text"
+                },
+                {
+                  "key": "g-recaptcha-response",
+                  "value": "{{recaptchaToken}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "01 · Consultas",
+      "item": [
+        {
+          "name": "GET get_exchanges",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('ampliaciones es arreglo', () => pm.expect(pm.response.json().ampliaciones).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ampliacion?action=get_exchanges",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ampliacion"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "get_exchanges"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET get_lotes",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('lotes es arreglo', () => pm.expect(pm.response.json().lotes).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ampliacion?action=get_lotes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ampliacion"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "get_lotes"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET get_plantas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('plantas es arreglo', () => pm.expect(pm.response.json().plantas).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ampliacion?action=get_plantas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ampliacion"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "get_plantas"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET get_ubicaciones",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('ubicaciones es arreglo', () => pm.expect(pm.response.json().ubicaciones).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ampliacion?action=get_ubicaciones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ampliacion"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "get_ubicaciones"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET get_especies",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('especies es arreglo', () => pm.expect(pm.response.json().especies).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ampliacion?action=get_especies",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ampliacion"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "get_especies"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET get_gestores",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('gestores es arreglo', () => pm.expect(pm.response.json().gestores).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ampliacion?action=get_gestores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ampliacion"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "get_gestores"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET buscar_clientes",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('clientes es arreglo', () => pm.expect(pm.response.json().clientes).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ampliacion?action=buscar_clientes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ampliacion"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "buscar_clientes"
+                },
+                {
+                  "key": "q",
+                  "value": "Cliente"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "02 · Preparacion y crear",
+      "item": [
+        {
+          "name": "POST lotes add_ajax (lote de prueba)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Lote creado', () => pm.expect(body.success).to.eql(true));",
+                  "pm.test('id de lote', () => pm.expect(body.lote.id).to.be.a('number'));",
+                  "pm.collectionVariables.set('ampLoteId', String(body.lote.id));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id_planta",
+                  "value": "{{seedPlantaId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "id_ubicacion",
+                  "value": "{{seedUbicacionId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "fecha_siembra",
+                  "value": "{{today}}",
+                  "type": "text"
+                },
+                {
+                  "key": "cantidad_inicial",
+                  "value": "10",
+                  "type": "text"
+                },
+                {
+                  "key": "cantidad_actual",
+                  "value": "10",
+                  "type": "text"
+                },
+                {
+                  "key": "id_estado",
+                  "value": "{{seedEstadoId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "id_categoria",
+                  "value": "{{seedCategoriaId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "id_origen",
+                  "value": "{{seedOrigenId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "costo_unitario",
+                  "value": "5",
+                  "type": "text"
+                },
+                {
+                  "key": "porcentaje_ganancia",
+                  "value": "30",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/lotes?action=add_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "lotes"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "add_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST add_ajax (salida)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('success = true', () => pm.expect(body.success).to.eql(true));",
+                  "pm.test('Devuelve el id', () => pm.expect(body.id).to.be.a('number'));",
+                  "pm.collectionVariables.set('ampId', String(body.id));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id_cliente",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "id_usuario_gestor",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "fecha_movimiento",
+                  "value": "{{today}}",
+                  "type": "text"
+                },
+                {
+                  "key": "observacion",
+                  "value": "Ampliacion Postman",
+                  "type": "text"
+                },
+                {
+                  "key": "salida_items",
+                  "value": "[{\"id_lote\":{{ampLoteId}},\"cantidad\":2}]",
+                  "type": "text"
+                },
+                {
+                  "key": "entrada_items",
+                  "value": "[]",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/ampliacion?action=add_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ampliacion"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "add_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET get_detail (stock descontado)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "pm.test('Detalle con salida', () => { pm.expect(body.success).to.eql(true); pm.expect(body.ampliacion.detalles[0].tipo).to.eql('salida'); });",
+                  "pm.test('Stock del lote descontado', () => pm.expect(Number(body.ampliacion.detalles[0].lote_stock_actual)).to.eql(8));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ampliacion?action=get_detail",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ampliacion"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "get_detail"
+                },
+                {
+                  "key": "id",
+                  "value": "{{ampId}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "03 · Editar y eliminar",
+      "item": [
+        {
+          "name": "POST edit_ajax",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('success = true', () => pm.expect(pm.response.json().success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id",
+                  "value": "{{ampId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "id_cliente",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "id_usuario_gestor",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "fecha_movimiento",
+                  "value": "{{today}}",
+                  "type": "text"
+                },
+                {
+                  "key": "observacion",
+                  "value": "Ampliacion Postman Editada",
+                  "type": "text"
+                },
+                {
+                  "key": "salida_items",
+                  "value": "[{\"id_lote\":{{ampLoteId}},\"cantidad\":3}]",
+                  "type": "text"
+                },
+                {
+                  "key": "entrada_items",
+                  "value": "[]",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/ampliacion?action=edit_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ampliacion"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "edit_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET get_detail (stock reajustado)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "pm.test('Stock del lote con 3 en salida', () => pm.expect(Number(body.ampliacion.detalles[0].lote_stock_actual)).to.eql(7));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ampliacion?action=get_detail",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ampliacion"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "get_detail"
+                },
+                {
+                  "key": "id",
+                  "value": "{{ampId}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST delete_ajax",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('success = true', () => pm.expect(pm.response.json().success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id",
+                  "value": "{{ampId}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/ampliacion?action=delete_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ampliacion"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "delete_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST lotes delete_ajax (limpieza)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Lote de prueba eliminado', () => pm.expect(pm.response.json().success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id",
+                  "value": "{{ampLoteId}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/lotes?action=delete_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "lotes"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "delete_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "04 · Negativos",
+      "item": [
+        {
+          "name": "POST /login (viewer)",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Sesion viewer', () => {",
+                  "  pm.expect([200, 302]).to.include(pm.response.code);",
+                  "  pm.expect(pm.cookies.get('PHPSESSID')).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "nombre_usuario",
+                  "value": "{{viewerUsuario}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{viewerPassword}}",
+                  "type": "text"
+                },
+                {
+                  "key": "g-recaptcha-response",
+                  "value": "{{recaptchaToken}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "403 · POST add_ajax sin permiso",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('403 sin permiso', () => pm.response.to.have.status(403));",
+                  "pm.test('Mensaje de permiso', () => pm.expect(pm.response.json().message).to.match(/permiso/i));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id_usuario_gestor",
+                  "value": "1",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/ampliacion?action=add_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ampliacion"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "add_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /login (admin, restaurar)",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Sesion admin, restaurar', () => {",
+                  "  pm.expect([200, 302]).to.include(pm.response.code);",
+                  "  pm.expect(pm.cookies.get('PHPSESSID')).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "nombre_usuario",
+                  "value": "{{usuario}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{password}}",
+                  "type": "text"
+                },
+                {
+                  "key": "g-recaptcha-response",
+                  "value": "{{recaptchaToken}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "500 · sin items",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('500 validacion', () => pm.response.to.have.status(500));",
+                  "pm.test('Mensaje de items', () => pm.expect(pm.response.json().message).to.match(/al menos un item/i));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id_usuario_gestor",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "fecha_movimiento",
+                  "value": "{{today}}",
+                  "type": "text"
+                },
+                {
+                  "key": "salida_items",
+                  "value": "[]",
+                  "type": "text"
+                },
+                {
+                  "key": "entrada_items",
+                  "value": "[]",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/ampliacion?action=add_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ampliacion"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "add_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "400 · accion inexistente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400 accion invalida', () => pm.response.to.have.status(400));",
+                  "pm.test('Mensaje de accion invalida', () => pm.expect(pm.response.json().message).to.match(/acci[oó]n ajax inv[aá]lida/i));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ampliacion?action=no_existe",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ampliacion"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "no_existe"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "05 · Logout",
+      "item": [
+        {
+          "name": "POST logout_ajax",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Sesion cerrada', () => pm.expect(pm.response.json().success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login/logout_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login",
+                "logout_ajax"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

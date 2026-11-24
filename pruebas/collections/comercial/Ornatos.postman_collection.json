@@ -1,0 +1,797 @@
+{
+  "info": {
+    "_postman_id": "9a1b2c3d-0003-4a03-9c03-a1b2c3d4e503",
+    "name": "SYSINECOLARA · Ornatos",
+    "description": "Ornatos y sus detalles. Usa ?accion=. Crea y elimina su propio registro.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "pm.request.headers.upsert({ key: 'X-Requested-With', value: 'XMLHttpRequest' });",
+          "const d = new Date(); pm.collectionVariables.set('today', d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'));"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "today",
+      "value": ""
+    },
+    {
+      "key": "ornatoId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "00 · Auth (admin)",
+      "item": [
+        {
+          "name": "401 · GET listar sin sesion",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.cookies.clear();",
+                  "pm.request.headers.remove('Cookie');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('401 sin sesion', () => pm.response.to.have.status(401));",
+                  "pm.test('success = false', () => pm.expect(pm.response.json().success).to.eql(false));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ornatos?accion=listar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ornatos"
+              ],
+              "query": [
+                {
+                  "key": "accion",
+                  "value": "listar"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /login (admin)",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Sesion admin', () => {",
+                  "  pm.expect([200, 302]).to.include(pm.response.code);",
+                  "  pm.expect(pm.cookies.get('PHPSESSID')).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "nombre_usuario",
+                  "value": "{{usuario}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{password}}",
+                  "type": "text"
+                },
+                {
+                  "key": "g-recaptcha-response",
+                  "value": "{{recaptchaToken}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "01 · Consultas",
+      "item": [
+        {
+          "name": "GET listar",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('ornatos es arreglo', () => pm.expect(body.ornatos).to.be.an('array'));",
+                  "pm.test('total coincide', () => pm.expect(body.total).to.eql(body.ornatos.length));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ornatos?accion=listar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ornatos"
+              ],
+              "query": [
+                {
+                  "key": "accion",
+                  "value": "listar"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET buscar_clientes",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('clientes es arreglo', () => pm.expect(pm.response.json().clientes).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ornatos?accion=buscar_clientes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ornatos"
+              ],
+              "query": [
+                {
+                  "key": "accion",
+                  "value": "buscar_clientes"
+                },
+                {
+                  "key": "q",
+                  "value": "Cliente"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "02 · Crear y editar",
+      "item": [
+        {
+          "name": "POST guardar",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('success = true', () => pm.expect(body.success).to.eql(true));",
+                  "pm.test('Devuelve el id', () => pm.expect(body.id).to.be.a('number'));",
+                  "pm.collectionVariables.set('ornatoId', String(body.id));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id_cliente",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "tipo_ornato",
+                  "value": "Venta",
+                  "type": "text"
+                },
+                {
+                  "key": "descripcion",
+                  "value": "Arreglo Postman",
+                  "type": "text"
+                },
+                {
+                  "key": "ubicacion",
+                  "value": "Vivero Central",
+                  "type": "text"
+                },
+                {
+                  "key": "fecha",
+                  "value": "{{today}}",
+                  "type": "text"
+                },
+                {
+                  "key": "monto_total",
+                  "value": "15.00",
+                  "type": "text"
+                },
+                {
+                  "key": "items",
+                  "value": "[{\"id_lote\":{{seedLoteId}},\"cantidad\":1,\"precio_unitario\":15,\"sub_total\":15}]",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/ornatos?accion=guardar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ornatos"
+              ],
+              "query": [
+                {
+                  "key": "accion",
+                  "value": "guardar"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET detalles",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('detalles es arreglo con el lote', () => { pm.expect(body.detalles).to.be.an('array'); pm.expect(body.detalles[0]).to.have.property('planta_nombre'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ornatos?accion=detalles",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ornatos"
+              ],
+              "query": [
+                {
+                  "key": "accion",
+                  "value": "detalles"
+                },
+                {
+                  "key": "id",
+                  "value": "{{ornatoId}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST actualizar",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('success = true', () => pm.expect(pm.response.json().success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id",
+                  "value": "{{ornatoId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "id_cliente",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "tipo_ornato",
+                  "value": "Donacion",
+                  "type": "text"
+                },
+                {
+                  "key": "descripcion",
+                  "value": "Arreglo Postman Editado",
+                  "type": "text"
+                },
+                {
+                  "key": "ubicacion",
+                  "value": "Vivero Central",
+                  "type": "text"
+                },
+                {
+                  "key": "fecha",
+                  "value": "{{today}}",
+                  "type": "text"
+                },
+                {
+                  "key": "monto_total",
+                  "value": "0",
+                  "type": "text"
+                },
+                {
+                  "key": "items",
+                  "value": "[{\"id_lote\":{{seedLoteId}},\"cantidad\":2,\"precio_unitario\":0,\"sub_total\":0}]",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/ornatos?accion=actualizar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ornatos"
+              ],
+              "query": [
+                {
+                  "key": "accion",
+                  "value": "actualizar"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "03 · Eliminar",
+      "item": [
+        {
+          "name": "POST eliminar",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('success = true', () => pm.expect(pm.response.json().success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id",
+                  "value": "{{ornatoId}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/ornatos?accion=eliminar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ornatos"
+              ],
+              "query": [
+                {
+                  "key": "accion",
+                  "value": "eliminar"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET listar (verificar eliminacion)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const id = pm.collectionVariables.get('ornatoId');",
+                  "pm.test('Ya no aparece activo', () => pm.expect(pm.response.json().ornatos.find((o) => String(o.id) === String(id))).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ornatos?accion=listar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ornatos"
+              ],
+              "query": [
+                {
+                  "key": "accion",
+                  "value": "listar"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "04 · Negativos",
+      "item": [
+        {
+          "name": "POST /login (viewer)",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Sesion viewer', () => {",
+                  "  pm.expect([200, 302]).to.include(pm.response.code);",
+                  "  pm.expect(pm.cookies.get('PHPSESSID')).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "nombre_usuario",
+                  "value": "{{viewerUsuario}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{viewerPassword}}",
+                  "type": "text"
+                },
+                {
+                  "key": "g-recaptcha-response",
+                  "value": "{{recaptchaToken}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "403 · POST guardar sin permiso",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('403 sin permiso', () => pm.response.to.have.status(403));",
+                  "pm.test('Mensaje de permiso', () => pm.expect(pm.response.json().message).to.match(/permiso/i));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id_cliente",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "tipo_ornato",
+                  "value": "Venta",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/ornatos?accion=guardar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ornatos"
+              ],
+              "query": [
+                {
+                  "key": "accion",
+                  "value": "guardar"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /login (admin, restaurar)",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Sesion admin, restaurar', () => {",
+                  "  pm.expect([200, 302]).to.include(pm.response.code);",
+                  "  pm.expect(pm.cookies.get('PHPSESSID')).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "nombre_usuario",
+                  "value": "{{usuario}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{password}}",
+                  "type": "text"
+                },
+                {
+                  "key": "g-recaptcha-response",
+                  "value": "{{recaptchaToken}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "500 · tipo invalido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('500 validacion', () => pm.response.to.have.status(500));",
+                  "pm.test('Mensaje de tipo', () => pm.expect(pm.response.json().message).to.match(/Venta o Donaci[oó]n/i));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id_cliente",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "tipo_ornato",
+                  "value": "Otro",
+                  "type": "text"
+                },
+                {
+                  "key": "fecha",
+                  "value": "{{today}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/ornatos?accion=guardar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ornatos"
+              ],
+              "query": [
+                {
+                  "key": "accion",
+                  "value": "guardar"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "400 · accion inexistente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400 accion invalida', () => pm.response.to.have.status(400));",
+                  "pm.test('Mensaje de accion invalida', () => pm.expect(pm.response.json().message).to.match(/acci[oó]n ajax inv[aá]lida/i));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ornatos?accion=no_existe",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ornatos"
+              ],
+              "query": [
+                {
+                  "key": "accion",
+                  "value": "no_existe"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "05 · Logout",
+      "item": [
+        {
+          "name": "POST logout_ajax",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Sesion cerrada', () => pm.expect(pm.response.json().success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login/logout_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login",
+                "logout_ajax"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

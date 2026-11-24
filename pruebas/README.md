@@ -7,18 +7,24 @@ ejecutarlas está aquí:
 pruebas/
 ├── collections/
 │   ├── SYSINECOLARA API Tests.postman_collection.json   suite monolítica anterior
-│   └── inventario/                                      una colección por módulo
-│       ├── Plantas.postman_collection.json
-│       ├── Especies.postman_collection.json
-│       ├── Ubicaciones.postman_collection.json
-│       ├── UnidadesMedida.postman_collection.json
-│       ├── Insumos.postman_collection.json
-│       ├── Herramientas.postman_collection.json
-│       ├── Lotes.postman_collection.json
-│       ├── Precios.postman_collection.json
-│       ├── Inventario.postman_collection.json
-│       ├── Trazabilidad.postman_collection.json
-│       └── Mermas.postman_collection.json
+│   ├── inventario/                                      una colección por módulo
+│   │   ├── Plantas.postman_collection.json
+│   │   ├── Especies.postman_collection.json
+│   │   ├── Ubicaciones.postman_collection.json
+│   │   ├── UnidadesMedida.postman_collection.json
+│   │   ├── Insumos.postman_collection.json
+│   │   ├── Herramientas.postman_collection.json
+│   │   ├── Lotes.postman_collection.json
+│   │   ├── Precios.postman_collection.json
+│   │   ├── Inventario.postman_collection.json
+│   │   ├── Trazabilidad.postman_collection.json
+│   │   └── Mermas.postman_collection.json
+│   └── comercial/                                       una colección por módulo
+│       ├── Clientes.postman_collection.json
+│       ├── Ventas.postman_collection.json
+│       ├── Ornatos.postman_collection.json
+│       ├── CuentasCobrar.postman_collection.json
+│       └── Ampliacion.postman_collection.json
 ├── environments/
 │   └── SysInescolara Local.postman_environment.json
 ├── data/
@@ -35,6 +41,11 @@ pruebas/
 cubre el CRUD completo del módulo más los negativos `401/403/400`, y se
 corresponde con una ficha en `docs/api/<dominio>/`. Antes de ejecutarla importa
 `pruebas/data/seed.sql`.
+
+**Dominio Comercial.** Ventas y Ornatos usan `?accion=`; el resto, `?action=`.
+Cuentas por cobrar se sirve en `/cuentas_cobrar` (guion bajo). Las colecciones
+de Ventas, Cuentas por cobrar y Ampliación crean su propio lote y lo desactivan
+al final para no alterar el seed.
 
 **Suite monolítica (anterior).** `SYSINECOLARA API Tests` cubre login con sesión
 PHP + CSRF, listados de **Plantas, Especies, Clientes, Insumos, Lotes y Ventas**,
@@ -53,9 +64,10 @@ y el CRUD de **Plantas** con CSV. Se conserva como referencia.
 
 ## 1. Qué debes saber antes de correr
 
-### 1.1 La API no devuelve formato DataTables (todavía)
+### 1.1 La mayoría de los listados no devuelve formato DataTables
 
-Los endpoints de listado devuelven el contrato real del backend:
+Salvo `cuentas_cobrar?action=obtener_lista`, los endpoints de listado devuelven
+el contrato real del backend:
 
 ```json
 { "success": true, "plantas": [ ... ], "count": 1 }

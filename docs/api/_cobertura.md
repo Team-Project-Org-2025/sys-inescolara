@@ -33,11 +33,15 @@ el código · ⬜ pendiente.
 
 | Controlador | Rutas | Ficha | Colección | Estado |
 |---|---|---|---|---|
-| `ClientesController` | `/clientes` | — | — | ⬜ |
-| `VentasController` | `/ventas` (usa `accion`) | — | — | ⬜ |
-| `Cuentas_cobrarController` | `/cuentas-cobrar` | — | — | ⬜ |
-| `OrnatosController` | `/ornatos` | — | — | ⬜ |
-| `AmpliacionController` | `/ampliacion` | — | — | ⬜ |
+| `ClientesController` | `/clientes` | [`comercial/clientes.md`](comercial/clientes.md) | `comercial/Clientes` | ✅ |
+| `VentasController` | `/ventas` (usa `accion`) | [`comercial/ventas.md`](comercial/ventas.md) | `comercial/Ventas` | ✅ |
+| `Cuentas_cobrarController` | `/cuentas_cobrar` | [`comercial/cuentas-cobrar.md`](comercial/cuentas-cobrar.md) | `comercial/CuentasCobrar` | ✅ |
+| `OrnatosController` | `/ornatos` (usa `accion`) | [`comercial/ornatos.md`](comercial/ornatos.md) | `comercial/Ornatos` | ✅ |
+| `AmpliacionController` | `/ampliacion` | [`comercial/ampliacion.md`](comercial/ampliacion.md) | `comercial/Ampliacion` | ✅ |
+
+> `Cuentas_cobrarController` exige guion bajo en la URL. `/cuentas-cobrar`
+> resuelve a `CuentasCobrarController` y devuelve
+> `El controlador 'CuentasCobrar' no existe.`
 
 ## Compras
 

@@ -23,8 +23,8 @@ relativas (`/plantas`) y las colecciones usan `{{baseUrl}}`.
 | Acción por segmento | `GET /notifications/get_unread` | JSON |
 | Pública | `GET /catalogo` | HTML |
 
-> **Excepción:** Ventas usa `?accion=` en lugar de `?action=`. Está así en el
-> controlador y en el JS; cualquier colección nueva debe respetarlo.
+> **Excepción:** Ventas y Ornatos usan `?accion=` en lugar de `?action=`. Está
+> así en el controlador y en el JS; cualquier colección nueva debe respetarlo.
 
 ## 3. Header AJAX
 
