@@ -20,10 +20,15 @@ class Usuario extends Database
     ];
 
 
-    public function __construct()
+    private static bool $bootstrapped = false;
+
+    public function __construct(bool $runBootstrap = false)
     {
         parent::__construct('security');
-        $this->bootstrapDefaults();
+        if ($runBootstrap && !self::$bootstrapped) {
+            $this->bootstrapDefaults();
+            self::$bootstrapped = true;
+        }
     }
 
     private function bootstrapDefaults(): void
@@ -39,6 +44,20 @@ class Usuario extends Database
                 error_log('Error al migrar columna avatar: ' . $e->getMessage());
             }
 
+            // Migración: columnas de trabajador si no existen
+            foreach (['nombre_trabajador', 'apellido_trabajador', 'cedula_trabajador', 'telefono_trabajador', 'cargo'] as $col) {
+                try {
+                    $stmt = $this->db()->query("SHOW COLUMNS FROM usuarios LIKE '$col'");
+                    if (!$stmt->fetch()) {
+                        $type = $col === 'cargo' ? "VARCHAR(50)" : ($col === 'cedula_trabajador' ? "VARCHAR(20)" : "VARCHAR(100)");
+                        $after = $col === 'nombre_trabajador' ? 'AFTER nombre_usuario' : ($col === 'apellido_trabajador' ? 'AFTER nombre_trabajador' : ($col === 'cedula_trabajador' ? 'AFTER apellido_trabajador' : ($col === 'telefono_trabajador' ? 'AFTER cedula_trabajador' : 'AFTER telefono_trabajador')));
+                        $this->db()->exec("ALTER TABLE usuarios ADD COLUMN $col $type DEFAULT NULL $after");
+                    }
+                } catch (\Throwable $e) {
+                    error_log("Error al migrar columna $col: " . $e->getMessage());
+                }
+            }
+
             // Nuevo sistema de permisos basado en módulos + acciones
             // Tabla: modulos
             $this->db()->exec("CREATE TABLE IF NOT EXISTS modulos (
@@ -50,6 +69,24 @@ class Usuario extends Database
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 
             // Tabla: permisos (básicos: ver, crear, editar, eliminar)
+            // Si la tabla ya existe (Schema de seguridad antiguo con codigo_permiso), agregar columna nombre_permiso
+            try {
+                $stmt = $this->db()->query("SHOW COLUMNS FROM permisos LIKE 'nombre_permiso'");
+                if (!$stmt->fetch()) {
+                    $this->db()->exec("ALTER TABLE permisos ADD COLUMN nombre_permiso VARCHAR(20) NOT NULL DEFAULT ''");
+                }
+            } catch (\Throwable $e) {
+                error_log('Error al migrar columna nombre_permiso: ' . $e->getMessage());
+            }
+            // Agregar UNIQUE KEY en nombre_permiso si no existe
+            try {
+                $stmt = $this->db()->query("SHOW INDEX FROM permisos WHERE Key_name = 'uq_nombre_permiso'");
+                if (!$stmt->fetch()) {
+                    $this->db()->exec("ALTER TABLE permisos ADD UNIQUE KEY uq_nombre_permiso (nombre_permiso)");
+                }
+            } catch (\Throwable $e) {
+                error_log('Error al migrar UNIQUE KEY nombre_permiso: ' . $e->getMessage());
+            }
             $this->db()->exec("CREATE TABLE IF NOT EXISTS permisos (
                 id_permiso INT(11) NOT NULL AUTO_INCREMENT,
                 nombre_permiso VARCHAR(20) NOT NULL,
@@ -121,7 +158,6 @@ class Usuario extends Database
                 ['ampliacion', 'Ampliación de especies'],
                 ['proveedores', 'Gestión de proveedores'],
                 ['tareas', 'Asignación y seguimiento de tareas'],
-                ['empleados', 'Gestión de empleados'],
                 ['seed_collection', 'Gestión de recolección de semillas'],
                 ['asistente', 'Asistente IA'],
                 ['reports', 'Reportes y estadísticas'],
@@ -174,9 +210,9 @@ class Usuario extends Database
                 $hash = password_hash('Admin123!', PASSWORD_DEFAULT);
                 $stmt = $this->db()->prepare("
                     INSERT INTO usuarios
-                    (id_usuario, nombre_usuario, password_hash, correo_electronico, id_rol, id_trabajador_ref, estatus, intentos_fallidos, ultimo_acceso, created_at)
+                    (id_usuario, nombre_usuario, password_hash, correo_electronico, id_rol, estatus, intentos_fallidos, ultimo_acceso, created_at)
                     VALUES
-                    (1, 'admin', :password_hash, 'admin@inecolara.gob.ve', 1, NULL, 'Activo', 0, NULL, CURRENT_TIMESTAMP)
+                    (1, 'admin', :password_hash, 'admin@inecolara.gob.ve', 1, 'Activo', 0, NULL, CURRENT_TIMESTAMP)
                 ");
                 $stmt->execute([':password_hash' => $hash]);
             }
@@ -199,8 +235,12 @@ class Usuario extends Database
             'rol_id' => $user['id_rol'] ?? $user['rol_id'] ?? null,
             'nombre_rol' => $user['nombre_rol'] ?? null,
             'estatus' => $user['estatus'] ?? null,
-            'id_trabajador_ref' => $user['id_trabajador_ref'] ?? null,
             'trabajador_nombre' => $trabajadorNombre,
+            'nombre_trabajador' => $user['nombre_trabajador'] ?? null,
+            'apellido_trabajador' => $user['apellido_trabajador'] ?? null,
+            'cedula_trabajador' => $user['cedula_trabajador'] ?? null,
+            'telefono_trabajador' => $user['telefono_trabajador'] ?? null,
+            'cargo' => $user['cargo'] ?? null,
         ];
     }
 
@@ -257,19 +297,6 @@ class Usuario extends Database
         }
     }
 
-    public function getByTrabajadorId(int $idTrabajador): ?array
-    {
-        try {
-            $stmt = $this->db()->prepare("SELECT id_usuario, nombre_usuario, avatar, id_rol FROM usuarios WHERE id_trabajador_ref = :id LIMIT 1");
-            $stmt->execute([':id' => $idTrabajador]);
-            $user = $stmt->fetch(PDO::FETCH_ASSOC);
-            return $user ?: null;
-        } catch (\Throwable $e) {
-            error_log("Error en getByTrabajadorId: " . $e->getMessage());
-            return null;
-        }
-    }
-
     public function getUserByEmail(string $email): ?array
     {
         try {
@@ -313,12 +340,12 @@ class Usuario extends Database
     {
         try {
             $stmt = $this->db()->query("
-                SELECT u.id_usuario, u.nombre_usuario, u.avatar, u.id_rol, u.id_trabajador_ref,
+                SELECT u.id_usuario, u.nombre_usuario, u.avatar, u.id_rol,
                        r.nombre_rol, u.correo_electronico, u.estatus,
-                       t.nombre_trabajador, t.apellido_trabajador
+                       u.nombre_trabajador, u.apellido_trabajador,
+                       u.cedula_trabajador, u.telefono_trabajador, u.cargo
                 FROM usuarios u
                 LEFT JOIN roles r ON r.id_rol = u.id_rol
-                LEFT JOIN `sysinescolara`.`trabajadores` t ON u.id_trabajador_ref = t.id_trabajador
                 ORDER BY u.id_usuario ASC
             ");
             if (!$stmt) {
@@ -357,11 +384,11 @@ class Usuario extends Database
     {
         try {
             $stmt = $this->db()->prepare("
-                SELECT u.id_usuario, u.nombre_usuario, u.avatar, u.id_rol, u.id_trabajador_ref,
+                SELECT u.id_usuario, u.nombre_usuario, u.avatar, u.id_rol,
                        u.correo_electronico, u.estatus,
-                       t.nombre_trabajador, t.apellido_trabajador
+                       u.nombre_trabajador, u.apellido_trabajador,
+                       u.cedula_trabajador, u.telefono_trabajador, u.cargo
                 FROM usuarios u
-                LEFT JOIN `sysinescolara`.`trabajadores` t ON u.id_trabajador_ref = t.id_trabajador
                 WHERE u.id_usuario = :id
             ");
             $stmt->execute([':id' => $id]);
@@ -373,7 +400,7 @@ class Usuario extends Database
         }
     }
 
-    public function add(string $nombreUsuario, string $password, int $rolId, ?string $correoElectronico = null, ?string $avatar = null, ?int $idTrabajadorRef = null)
+    public function add(string $nombreUsuario, string $password, int $rolId, ?string $correoElectronico = null, ?string $avatar = null)
     {
         $this->validateData([
             'nombre_usuario' => $nombreUsuario,
@@ -392,8 +419,8 @@ class Usuario extends Database
         }
 
         $stmt = $this->db()->prepare("
-            INSERT INTO usuarios (nombre_usuario, password_hash, id_rol, correo_electronico, avatar, id_trabajador_ref)
-            VALUES (:nombre_usuario, :password_hash, :id_rol, :correo_electronico, :avatar, :id_trabajador_ref)
+            INSERT INTO usuarios (nombre_usuario, password_hash, id_rol, correo_electronico, avatar)
+            VALUES (:nombre_usuario, :password_hash, :id_rol, :correo_electronico, :avatar)
         ");
 
         $result = $stmt->execute([
@@ -402,7 +429,6 @@ class Usuario extends Database
             ':id_rol' => $rolId,
             ':correo_electronico' => $correoElectronico,
             ':avatar' => $avatar,
-            ':id_trabajador_ref' => $idTrabajadorRef,
         ]);
         if ($result) {
             AuditLog::record('CREATE', 'usuarios', $this->db()->lastInsertId(), null, [
@@ -414,7 +440,7 @@ class Usuario extends Database
     }
 
 
-    public function update(int $id, string $nombreUsuario, int $rolId, ?string $correoElectronico = null, ?string $password = null, ?string $avatar = null, ?int $idTrabajadorRef = null)
+    public function update(int $id, string $nombreUsuario, int $rolId, ?string $correoElectronico = null, ?string $password = null, ?string $avatar = null)
     {
         $this->validateData([
             'nombre_usuario' => $nombreUsuario,
@@ -426,13 +452,12 @@ class Usuario extends Database
             throw new Exception("No existe el usuario con ID: $id");
         }
 
-        $sql = "UPDATE usuarios SET nombre_usuario = :nombre_usuario, id_rol = :id_rol, correo_electronico = :correo_electronico, id_trabajador_ref = :id_trabajador_ref";
+        $sql = "UPDATE usuarios SET nombre_usuario = :nombre_usuario, id_rol = :id_rol, correo_electronico = :correo_electronico";
         $params = [
             ':id' => $id,
             ':nombre_usuario' => $nombreUsuario,
             ':id_rol' => $rolId,
             ':correo_electronico' => $correoElectronico,
-            ':id_trabajador_ref' => $idTrabajadorRef,
         ];
 
         if ($password !== null && $password !== '') {
@@ -526,7 +551,7 @@ class Usuario extends Database
     {
         try {
             $modulos = $this->db()->query("SELECT id_modulo, nombre_modulo, descripcion_modulo FROM modulos ORDER BY nombre_modulo ASC")->fetchAll(PDO::FETCH_ASSOC);
-            $acciones = $this->db()->query("SELECT id_permiso, nombre_permiso FROM permisos ORDER BY id_permiso ASC")->fetchAll(PDO::FETCH_ASSOC);
+            $acciones = $this->db()->query("SELECT id_permiso, nombre_permiso FROM permisos WHERE nombre_permiso IN ('ver','crear','editar','eliminar') ORDER BY id_permiso ASC")->fetchAll(PDO::FETCH_ASSOC);
             return ['modulos' => $modulos, 'acciones' => $acciones];
         } catch (\Throwable $e) {
             error_log("Error al obtener todos los permisos: " . $e->getMessage());

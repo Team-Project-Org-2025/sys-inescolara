@@ -33,10 +33,15 @@ class Cliente extends Database implements ReadableInterface, DeletableInterface
     protected array $fillable = ['nombre_cliente', 'apellido_cliente', 'tipo_cedula_cliente', 'cedula_cliente', 'contacto_cliente', 'activo'];
     protected array $guarded = ['id'];
 
-    public function __construct(array $attributes = [])
+    private static bool $bootstrapped = false;
+
+    public function __construct(array $attributes = [], bool $runBootstrap = false)
     {
         parent::__construct();
-        $this->bootstrapDefaults();
+        if ($runBootstrap && !self::$bootstrapped) {
+            $this->bootstrapDefaults();
+            self::$bootstrapped = true;
+        }
         if (!empty($attributes)) {
             $this->fill($attributes);
         }

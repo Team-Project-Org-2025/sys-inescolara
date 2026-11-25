@@ -6,7 +6,7 @@ namespace SysInescolara\controllers;
 
 require_once __DIR__ . '/controller_helpers.php';
 
-use Exception;
+use Throwable;
 
 
 
@@ -118,7 +118,7 @@ class FrontController
             }
             try {
                 call_user_func_array([$controller, $this->action], $this->params);
-            } catch (Exception $e) {
+            } catch (Throwable $e) {
                 $this->renderNotFound("Error interno: " . $e->getMessage());
             }
             return;
@@ -134,7 +134,7 @@ class FrontController
 
         try {
             call_user_func_array($this->action, $this->params);
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             $this->renderNotFound("Error interno: " . $e->getMessage());
         }
     }

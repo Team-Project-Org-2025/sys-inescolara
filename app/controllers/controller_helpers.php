@@ -2,6 +2,9 @@
 
 function jsonResponse(array $data, int $statusCode = 200): void
 {
+    while (ob_get_level() > 0) {
+        ob_end_clean();
+    }
     if (!headers_sent()) {
         header('Content-Type: application/json; charset=utf-8');
     }
@@ -10,10 +13,13 @@ function jsonResponse(array $data, int $statusCode = 200): void
     exit();
 }
 
-function handleError(\Exception $e, bool $isAjax): void
+function handleError(\Throwable $e, bool $isAjax): void
 {
     if ($isAjax) {
         jsonResponse(['success' => false, 'message' => $e->getMessage()], 500);
+    }
+    while (ob_get_level() > 0) {
+        ob_end_clean();
     }
     http_response_code(500);
     echo 'Error: ' . htmlspecialchars($e->getMessage());

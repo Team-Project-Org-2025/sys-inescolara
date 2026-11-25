@@ -48,7 +48,7 @@ $(document).ready(function () {
         },
         {
           data: 'precio',
-          render: (data) => data !== null ? `Bs ${Number(data).toFixed(2)}` : '<span class="text-muted">—</span>',
+          render: (data) => data !== null ? `$${Number(data).toFixed(2)}` : '<span class="text-muted">—</span>',
         },
       ],
       pageLength: 15,

@@ -27,11 +27,10 @@ class Inventory extends Database
                         'unidades' AS unidad,
                         NULL AS ubicacion,
                         (
-                            SELECT c3.precio_final_sugerido
-                            FROM calculo_precio c3
-                            JOIN lote l3 ON c3.id_lote = l3.id_lote
+                            SELECT l3.costo_unitario
+                            FROM lote l3
                             WHERE l3.id_planta = p.id_planta AND l3.activo = 1
-                            ORDER BY c3.fecha_calculo DESC, c3.id_calculo DESC
+                            ORDER BY l3.fecha_siembra DESC
                             LIMIT 1
                         ) AS precio,
                         p.id_planta AS item_id
@@ -79,12 +78,11 @@ class Inventory extends Database
                         l.cantidad_actual,
                         'unidades',
                         u.nombre_ubicacion,
-                        c2.precio_final_sugerido,
+                        l.costo_unitario,
                         l.id_lote
                     FROM lote l
                     LEFT JOIN plantas p ON l.id_planta = p.id_planta AND p.activo = 1
                     LEFT JOIN ubicacion u ON l.id_ubicacion = u.id_ubicacion AND u.activo = 1
-                    LEFT JOIN calculo_precio c2 ON l.id_lote = c2.id_lote
                     WHERE l.activo = 1
                 ) AS inv
                 ORDER BY tipo, nombre

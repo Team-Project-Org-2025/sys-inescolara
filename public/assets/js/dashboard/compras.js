@@ -20,7 +20,7 @@ $(document).ready(function () {
     { value: 'maduro', label: 'Maduro' },
   ];
 
-  function agregarFilaItem(tipo, idItem, nombre, cantidad, costoUnitario, categoriaLote, idUbicacion) {
+  function agregarFilaItem(tipo, idItem, nombre, cantidad, costoUnitario, categoriaLote, idUbicacion, costoLote) {
     const subtotal = (parseFloat(cantidad) || 0) * (parseFloat(costoUnitario) || 0);
     const fila = `
       <tr>
@@ -42,6 +42,7 @@ $(document).ready(function () {
               </button>
             </div>
             <div class="d-flex gap-1 planta-extras ${tipo !== 'planta' ? 'd-none' : ''}">
+              <input type="number" class="form-control form-control-sm item-costo-lote" placeholder="Costo Lote" step="0.01" min="0" value="${costoLote || 0}" style="min-width:100px">
               <select class="form-select form-select-sm item-categoria" style="min-width:120px">
                 <option value="germinado">Germinado</option>
                 <option value="en_crecimiento" ${categoriaLote === 'en_crecimiento' ? 'selected' : ''}>En Crecimiento</option>
@@ -145,8 +146,10 @@ $(document).ready(function () {
         valido = false;
         return;
       }
-      const item = { tipo_item: tipo, id_item: idItem, cantidad, costo_unitario: costo };
+      const fkKey = { insumo: 'id_insumo', herramienta: 'id_herramienta', planta: 'id_planta' }[tipo];
+      const item = { [fkKey]: idItem, cantidad, costo_unitario: costo };
       if (tipo === 'planta') {
+        item.costo_unitario = parseFloat($(this).find('.item-costo-lote').val()) || costo;
         item.categoria_lote = $(this).find('.item-categoria').val() || 'germinado';
         const ubi = $(this).find('.item-ubicacion').val();
         if (ubi) item.id_ubicacion = parseInt(ubi);
@@ -282,7 +285,7 @@ $(document).ready(function () {
   });
 
   $('#btnAddItem').on('click', function () {
-    agregarFilaItem('insumo', null, '', 1, 0);
+    agregarFilaItem('insumo', null, '', 1, 0, 'germinado', null, 0);
   });
 
   // ============================================================
@@ -379,7 +382,7 @@ $(document).ready(function () {
       `${hoyLocal.getFullYear()}-${String(hoyLocal.getMonth()+1).padStart(2,'0')}-${String(hoyLocal.getDate()).padStart(2,'0')}`
     );
     $('#itemsBody').empty();
-    agregarFilaItem('insumo', null, '', 1, 0);
+    agregarFilaItem('insumo', null, '', 1, 0, 'germinado', null, 0);
     actualizarTotales();
     $('#compraModal').modal('show');
   });
@@ -464,10 +467,14 @@ $(document).ready(function () {
 
       if (r.details && r.details.length) {
         r.details.forEach((d) => {
-          agregarFilaItem(d.tipo_item, d.id_item, d.item_nombre, d.cantidad, d.costo_unitario, d.categoria_lote, d.id_ubicacion);
+          let tipo = 'insumo';
+          let idItem = d.id_insumo;
+          if (d.id_herramienta) { tipo = 'herramienta'; idItem = d.id_herramienta; }
+          else if (d.id_planta) { tipo = 'planta'; idItem = d.id_planta; }
+          agregarFilaItem(tipo, idItem, d.item_nombre, d.cantidad, d.costo_unitario, d.categoria_lote, d.id_ubicacion, d.costo_unitario);
         });
       } else {
-        agregarFilaItem('insumo', null, '', 1, 0);
+        agregarFilaItem('insumo', null, '', 1, 0, 'germinado', null, 0);
       }
       actualizarTotales();
       $('#compraModal').modal('show');

@@ -43,7 +43,11 @@ include_once __DIR__ . '/../common/modal.php';
                                     <th>Nombre de Usuario</th>
                                     <th>Correo Electrónico</th>
                                     <th>Rol</th>
-                                    <th>Trabajador</th>
+                                    <th>Nombre Trabajador</th>
+                                    <th>Apellido Trabajador</th>
+                                    <th>Cédula</th>
+                                    <th>Teléfono</th>
+                                    <th>Cargo</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
@@ -60,26 +64,30 @@ function renderPermisosChecklist(array $allPermisos): void
 {
     $modulos = $allPermisos['modulos'] ?? [];
     $acciones = $allPermisos['acciones'] ?? [];
-    foreach ($modulos as $modulo):
-        $idModulo = $modulo['id_modulo'];
-        $nombreModulo = $modulo['nombre_modulo'];
     ?>
-    <div style="margin-bottom:10px;">
-        <div style="font-size:0.8rem;font-weight:600;color:var(--text-primary);margin-bottom:4px;"><?= htmlspecialchars($nombreModulo) ?></div>
-        <div style="display:flex;flex-wrap:wrap;gap:4px 12px;">
-            <?php foreach ($acciones as $accion):
-                $value = $idModulo . ':' . $accion['id_permiso'];
-                $label = ucfirst($accion['nombre_permiso']);
-            ?>
-            <label style="display:flex;align-items:center;gap:4px;font-size:0.8rem;cursor:pointer;">
-                <input type="checkbox" name="permisos[]" value="<?= $value ?>">
-                <?= htmlspecialchars($label) ?>
-            </label>
+    <div style="position:sticky;top:0;z-index:1;background:var(--bg-secondary);padding:6px 2px 4px;margin:0 -12px;padding-left:12px;padding-right:12px;border-bottom:2px solid var(--color-gray-200);">
+        <div style="display:flex;gap:16px 24px;font-size:0.78rem;">
+            <span style="min-width:120px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.03em;">Módulo</span>
+            <?php foreach ($acciones as $accion): ?>
+                <span style="min-width:60px;text-align:center;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.03em;"><?= ucfirst($accion['nombre_permiso']) ?></span>
             <?php endforeach; ?>
         </div>
     </div>
-    <?php
-    endforeach;
+    <?php foreach ($modulos as $modulo):
+        $idModulo = $modulo['id_modulo'];
+        $nombreModulo = $modulo['nombre_modulo'];
+    ?>
+    <div style="display:flex;align-items:center;gap:16px 24px;padding:5px 2px;font-size:0.8rem;border-bottom:1px solid var(--color-gray-100);">
+        <span style="min-width:120px;font-weight:500;color:var(--text-primary);"><?= htmlspecialchars($nombreModulo) ?></span>
+        <?php foreach ($acciones as $accion):
+            $value = $idModulo . ':' . $accion['id_permiso'];
+        ?>
+        <label style="display:flex;align-items:center;justify-content:center;min-width:60px;gap:3px;cursor:pointer;">
+            <input type="checkbox" name="permisos[]" value="<?= $value ?>">
+        </label>
+        <?php endforeach; ?>
+    </div>
+    <?php endforeach;
 }
 ?>
 
@@ -109,14 +117,24 @@ function renderPermisosChecklist(array $allPermisos): void
             </select>
         </div>
         <div class="mb-3">
-            <label class="form-label">Vinculado a trabajador</label>
-            <select class="form-select" name="id_trabajador_ref">
-                <option value="">— Sin vincular —</option>
-                <?php foreach ($trabajadores as $t): ?>
-                <option value="<?= $t['id'] ?>"><?= htmlspecialchars($t['nombre_trabajador'] . ' ' . ($t['apellido_trabajador'] ?? '')) ?></option>
-                <?php endforeach; ?>
-            </select>
-            <small class="text-muted">Opcional. Vincula este usuario a un trabajador para notificaciones de tareas.</small>
+            <label class="form-label">Nombre del Trabajador</label>
+            <input type="text" class="form-control" name="nombre_trabajador" maxlength="100">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Apellido del Trabajador</label>
+            <input type="text" class="form-control" name="apellido_trabajador" maxlength="100">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Cédula del Trabajador</label>
+            <input type="text" class="form-control" name="cedula_trabajador" maxlength="20">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Teléfono del Trabajador</label>
+            <input type="text" class="form-control" name="telefono_trabajador" maxlength="20">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Cargo</label>
+            <input type="text" class="form-control" name="cargo" maxlength="100">
         </div>
         <div class="mb-3 permisos-checklist" id="addPermisosChecklist" style="display:none;">
             <label class="form-label">Módulos y acciones permitidas</label>
@@ -162,14 +180,24 @@ function renderPermisosChecklist(array $allPermisos): void
             <small class="text-muted" id="editUserRoleNote" style="display:none;">El rol del superusuario no se puede modificar.</small>
         </div>
         <div class="mb-3">
-            <label class="form-label">Vinculado a trabajador</label>
-            <select class="form-select" name="id_trabajador_ref" id="editTrabajadorRef">
-                <option value="">— Sin vincular —</option>
-                <?php foreach ($trabajadores as $t): ?>
-                <option value="<?= $t['id'] ?>"><?= htmlspecialchars($t['nombre_trabajador'] . ' ' . ($t['apellido_trabajador'] ?? '')) ?></option>
-                <?php endforeach; ?>
-            </select>
-            <small class="text-muted">Opcional. Vincula este usuario a un trabajador para notificaciones de tareas.</small>
+            <label class="form-label">Nombre del Trabajador</label>
+            <input type="text" class="form-control" name="nombre_trabajador" id="editNombreTrabajador" maxlength="100">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Apellido del Trabajador</label>
+            <input type="text" class="form-control" name="apellido_trabajador" id="editApellidoTrabajador" maxlength="100">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Cédula del Trabajador</label>
+            <input type="text" class="form-control" name="cedula_trabajador" id="editCedulaTrabajador" maxlength="20">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Teléfono del Trabajador</label>
+            <input type="text" class="form-control" name="telefono_trabajador" id="editTelefonoTrabajador" maxlength="20">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Cargo</label>
+            <input type="text" class="form-control" name="cargo" id="editCargo" maxlength="100">
         </div>
         <div class="mb-3 permisos-checklist" id="editPermisosChecklist" style="display:none;">
             <label class="form-label">Módulos y acciones permitidas</label>

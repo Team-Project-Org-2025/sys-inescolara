@@ -8,7 +8,7 @@ $isPlanta = in_array($current, ['plantas', 'especies', 'ubicaciones']);
 $isActivos = in_array($current, ['inventario', 'lotes', 'trazabilidad', 'insumos', 'herramientas', 'unidades-medida', 'mermas']);
 $isVenta = in_array($current, ['ventas', 'precios', 'clientes', 'cuentas-cobrar', 'cuentas-pagar', 'compras']);
 $isServicios = in_array($current, ['ornatos', 'ampliacion', 'proveedores']);
-$isTarea = in_array($current, ['tareas', 'empleados', 'seed-collection']);
+$isTarea = in_array($current, ['tareas', 'seed-collection']);
 $isConfiguracion = in_array($current, ['usuarios', 'roles', 'auditlog', 'backups']);
 
 $showInventario = Auth::hasModuleAccess('plantas', 'ver')
@@ -33,8 +33,7 @@ $showComercial = Auth::hasModuleAccess('ventas', 'ver')
     || Auth::hasModuleAccess('lotes', 'ver')
     || Auth::hasModuleAccess('proveedores', 'ver');
 
-$showOperaciones = Auth::hasModuleAccess('empleados', 'ver')
-    || Auth::hasModuleAccess('tareas', 'ver')
+$showOperaciones = Auth::hasModuleAccess('tareas', 'ver')
     || Auth::hasModuleAccess('seed_collection', 'ver');
 
 $showHerramientas = Auth::hasModuleAccess('asistente', 'ver')
@@ -293,7 +292,7 @@ $showSistema = Auth::hasModuleAccess('usuarios', 'ver')
         <?php if ($showOperaciones): ?>
         <div class="sidebar-section-label">OPERACIONES</div>
 
-        <?php if (Auth::hasModuleAccess('empleados', 'ver') || Auth::hasModuleAccess('tareas', 'ver') || Auth::hasModuleAccess('seed_collection', 'ver')): ?>
+        <?php if (Auth::hasModuleAccess('tareas', 'ver') || Auth::hasModuleAccess('seed_collection', 'ver')): ?>
         <div class="nav-group">
             <button class="nav-group-btn <?= $isTarea ? 'open-bg' : '' ?>">
                 <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
@@ -307,14 +306,6 @@ $showSistema = Auth::hasModuleAccess('usuarios', 'ver')
                         <a href="<?= BASE_URL ?>dashboard/tareas" class="nav-link <?= $current === 'tareas' ? 'active' : '' ?>">
                             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
                             <span>Asignar tarea</span>
-                        </a>
-                    </li>
-                    <?php endif; ?>
-                    <?php if (Auth::hasModuleAccess('empleados', 'ver')): ?>
-                    <li>
-                        <a href="<?= BASE_URL ?>dashboard/empleados" class="nav-link <?= $current === 'empleados' ? 'active' : '' ?>">
-                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
-                            <span>Gestionar Empleados</span>
                         </a>
                     </li>
                     <?php endif; ?>

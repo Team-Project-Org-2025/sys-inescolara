@@ -40,11 +40,11 @@ class DashboardData extends Database
         try { $stats['total_plantas'] = (int) $this->db()->query("SELECT COUNT(*) FROM plantas WHERE activo = 1")->fetchColumn(); } catch (\Throwable $e) { $stats['total_plantas'] = 0; }
         try { $stats['total_clientes'] = (int) $this->db()->query("SELECT COUNT(*) FROM cliente WHERE activo = 1")->fetchColumn(); } catch (\Throwable $e) { $stats['total_clientes'] = 0; }
         try { $stats['total_proveedores'] = (int) $this->db()->query("SELECT COUNT(*) FROM proveedores WHERE activo = 1")->fetchColumn(); } catch (\Throwable $e) { $stats['total_proveedores'] = 0; }
-        try { $stats['total_trabajadores'] = (int) $this->db()->query("SELECT COUNT(*) FROM trabajadores WHERE activo = 1")->fetchColumn(); } catch (\Throwable $e) { $stats['total_trabajadores'] = 0; }
+        try { $stats['total_trabajadores'] = (int) $this->db()->query("SELECT COUNT(*) FROM `SysInescolara-Seguridad`.usuarios WHERE estatus = 'Activo'")->fetchColumn(); } catch (\Throwable $e) { $stats['total_trabajadores'] = 0; }
         try { $stats['total_lotes'] = (int) $this->db()->query("SELECT COUNT(*) FROM lote WHERE activo = 1")->fetchColumn(); } catch (\Throwable $e) { $stats['total_lotes'] = 0; }
         try { $stats['total_insumos'] = (int) $this->db()->query("SELECT COUNT(*) FROM insumo WHERE activo = 1")->fetchColumn(); } catch (\Throwable $e) { $stats['total_insumos'] = 0; }
         try { $stats['total_herramientas'] = (int) $this->db()->query("SELECT COUNT(*) FROM herramienta WHERE activo = 1")->fetchColumn(); } catch (\Throwable $e) { $stats['total_herramientas'] = 0; }
-        try { $stats['total_precios_vigentes'] = (int) $this->db()->query("SELECT COUNT(*) FROM calculo_precio")->fetchColumn(); } catch (\Throwable $e) { $stats['total_precios_vigentes'] = 0; }
+        try { $stats['total_precios_vigentes'] = (int) $this->db()->query("SELECT COUNT(*) FROM lote WHERE activo = 1 AND costo_unitario > 0")->fetchColumn(); } catch (\Throwable $e) { $stats['total_precios_vigentes'] = 0; }
         try {
             $stmt = $this->db()->query("SELECT COUNT(*) FROM movimiento_planta WHERE tipo_movimiento = 'Venta'");
             $stats['total_ventas'] = (int) $stmt->fetchColumn();
@@ -131,13 +131,11 @@ class DashboardData extends Database
     {
         try {
             $stmt = $this->db()->prepare("
-                SELECT at.id_asignacion, t.nombre_tarea, tr.nombre_trabajador,
-                       at.fecha_asignacion, at.fecha_cumplimiento, at.estatus_tarea,
-                       l.id_lote
+                SELECT at.id_asignacion, at.nombre_tarea, at.descripcion,
+                       tr.nombre_usuario AS nombre_trabajador,
+                       at.fecha_asignacion, at.fecha_cumplimiento, at.estatus_tarea
                 FROM asignar_tarea at
-                JOIN tareas t ON at.id_tarea = t.id_tarea AND t.activo = 1
-                LEFT JOIN trabajadores tr ON at.id_trabajador = tr.id_trabajador AND tr.activo = 1
-                LEFT JOIN lote l ON at.id_lote = l.id_lote AND l.activo = 1
+                LEFT JOIN `SysInescolara-Seguridad`.usuarios tr ON at.id_usuario = tr.id_usuario
                 WHERE at.estatus_tarea NOT IN ('completada','cancelada')
                 ORDER BY at.fecha_cumplimiento ASC
                 LIMIT 6
@@ -173,9 +171,10 @@ class DashboardData extends Database
     {
         try {
             $stmt = $this->db()->prepare("
-                SELECT l.id_lote, l.cantidad_actual, l.estado, p.nombre_comun AS planta_nombre
+                SELECT l.id_lote, l.cantidad_actual, e.nombre AS estado_nombre, p.nombre_comun AS planta_nombre
                 FROM lote l
                 LEFT JOIN plantas p ON l.id_planta = p.id_planta AND p.activo = 1
+                LEFT JOIN estado e ON l.id_estado = e.id_estado
                 WHERE l.cantidad_actual < :threshold AND l.activo = 1
                 ORDER BY l.cantidad_actual ASC
                 LIMIT 10
@@ -248,10 +247,11 @@ class DashboardData extends Database
     {
         try {
             return $this->db()->query("
-                SELECT l.estado, COUNT(*) AS total_lotes, SUM(l.cantidad_actual) AS total_plantas
+                SELECT e.nombre AS estado, COUNT(*) AS total_lotes, SUM(l.cantidad_actual) AS total_plantas
                 FROM lote l
+                LEFT JOIN estado e ON l.id_estado = e.id_estado
                 WHERE l.activo = 1
-                GROUP BY l.estado
+                GROUP BY e.nombre
                 ORDER BY total_lotes DESC
             ")->fetchAll();
         } catch (\Throwable $e) {

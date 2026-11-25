@@ -14,7 +14,7 @@ class SeedCollection extends Database implements ReadableInterface, DeletableInt
     use ValidationTrait;
 
     private ?int $id = null;
-    private ?int $idTrabajador = null;
+    private ?int $idUsuario = null;
     private ?int $idUbicacion = null;
     private ?string $fechaAsignacion = null;
     private ?string $fechaRecoleccion = null;
@@ -23,13 +23,13 @@ class SeedCollection extends Database implements ReadableInterface, DeletableInt
     private int $activo = 1;
 
     protected array $validationRules = [
-        'id_trabajador'    => ['type' => 'cantidad','required' => true],
+        'id_usuario'       => ['type' => 'cantidad','required' => true],
         'id_ubicacion'     => ['type' => 'cantidad','required' => true],
         'fecha_asignacion' => ['type' => null,      'required' => true],
         'observacion'      => ['type' => null,      'required' => false],
     ];
 
-    protected array $fillable = ['id_trabajador', 'id_ubicacion', 'fecha_asignacion', 'fecha_recoleccion', 'estatus', 'observacion', 'activo'];
+    protected array $fillable = ['id_usuario', 'id_ubicacion', 'fecha_asignacion', 'fecha_recoleccion', 'estatus', 'observacion', 'activo'];
     protected array $guarded = ['id_recoleccion'];
 
     public function __construct(array $attributes = [])
@@ -57,7 +57,7 @@ class SeedCollection extends Database implements ReadableInterface, DeletableInt
     {
         $map = [
             'id_recoleccion'    => 'id',
-            'id_trabajador'     => 'idTrabajador',
+            'id_usuario'       => 'idUsuario',
             'id_ubicacion'      => 'idUbicacion',
             'fecha_asignacion'  => 'fechaAsignacion',
             'fecha_recoleccion' => 'fechaRecoleccion',
@@ -70,7 +70,7 @@ class SeedCollection extends Database implements ReadableInterface, DeletableInt
 
     // --- Getters ---
     public function getId(): ?int { return $this->id; }
-    public function getIdTrabajador(): ?int { return $this->idTrabajador; }
+    public function getIdUsuario(): ?int { return $this->idUsuario; }
     public function getIdUbicacion(): ?int { return $this->idUbicacion; }
     public function getFechaAsignacion(): ?string { return $this->fechaAsignacion; }
     public function getFechaRecoleccion(): ?string { return $this->fechaRecoleccion; }
@@ -79,9 +79,9 @@ class SeedCollection extends Database implements ReadableInterface, DeletableInt
     public function isActivo(): bool { return $this->activo === 1; }
 
     // --- Setters ---
-    public function setIdTrabajador(?int $idTrabajador): self
+    public function setIdUsuario(?int $idUsuario): self
     {
-        $this->idTrabajador = $idTrabajador;
+        $this->idUsuario = $idUsuario;
         return $this;
     }
 
@@ -124,7 +124,7 @@ class SeedCollection extends Database implements ReadableInterface, DeletableInt
     private function validate(): void
     {
         $this->validateData([
-            'id_trabajador'    => $this->idTrabajador,
+            'id_usuario'       => $this->idUsuario,
             'id_ubicacion'     => $this->idUbicacion,
             'fecha_asignacion' => $this->fechaAsignacion,
             'observacion'      => $this->observacion,
@@ -137,11 +137,11 @@ class SeedCollection extends Database implements ReadableInterface, DeletableInt
 
         try {
             if ($this->id === null) {
-                $sql = "INSERT INTO recoleccion_semillas (id_trabajador, id_ubicacion, fecha_asignacion, fecha_recoleccion, estatus, observacion, activo)
-                        VALUES (:id_trabajador, :id_ubicacion, :fecha_asignacion, :fecha_recoleccion, :estatus, :observacion, :activo)";
+                $sql = "INSERT INTO recoleccion_semillas (id_usuario, id_ubicacion, fecha_asignacion, fecha_recoleccion, estatus, observacion, activo)
+                        VALUES (:id_usuario, :id_ubicacion, :fecha_asignacion, :fecha_recoleccion, :estatus, :observacion, :activo)";
                 $stmt = $this->db()->prepare($sql);
                 $success = $stmt->execute([
-                    ':id_trabajador'     => $this->idTrabajador,
+                    ':id_usuario'        => $this->idUsuario,
                     ':id_ubicacion'      => $this->idUbicacion,
                     ':fecha_asignacion'  => $this->fechaAsignacion,
                     ':fecha_recoleccion' => $this->fechaRecoleccion,
@@ -153,7 +153,7 @@ class SeedCollection extends Database implements ReadableInterface, DeletableInt
                 if ($success) {
                     $this->id = (int) $this->db()->lastInsertId();
                     AuditLog::record('CREATE', 'recoleccion_semillas', $this->id, null, [
-                        'id_trabajador'    => $this->idTrabajador,
+                        'id_usuario'       => $this->idUsuario,
                         'id_ubicacion'     => $this->idUbicacion,
                         'fecha_asignacion' => $this->fechaAsignacion,
                         'estatus'          => $this->estatus,
@@ -163,14 +163,14 @@ class SeedCollection extends Database implements ReadableInterface, DeletableInt
                 return $success;
             } else {
                 $oldData = $this->getById($this->id);
-                $sql = "UPDATE recoleccion_semillas SET id_trabajador = :id_trabajador, id_ubicacion = :id_ubicacion,
+                $sql = "UPDATE recoleccion_semillas SET id_usuario = :id_usuario, id_ubicacion = :id_ubicacion,
                         fecha_asignacion = :fecha_asignacion, fecha_recoleccion = :fecha_recoleccion,
                         estatus = :estatus, observacion = :observacion, activo = :activo
                         WHERE id_recoleccion = :id";
                 $stmt = $this->db()->prepare($sql);
                 $success = $stmt->execute([
                     ':id'                => $this->id,
-                    ':id_trabajador'     => $this->idTrabajador,
+                    ':id_usuario'        => $this->idUsuario,
                     ':id_ubicacion'      => $this->idUbicacion,
                     ':fecha_asignacion'  => $this->fechaAsignacion,
                     ':fecha_recoleccion' => $this->fechaRecoleccion,
@@ -180,7 +180,7 @@ class SeedCollection extends Database implements ReadableInterface, DeletableInt
                 ]);
                 if ($success) {
                     AuditLog::record('UPDATE', 'recoleccion_semillas', $this->id, $oldData, [
-                        'id_trabajador'    => $this->idTrabajador,
+                        'id_usuario'       => $this->idUsuario,
                         'id_ubicacion'     => $this->idUbicacion,
                         'fecha_asignacion' => $this->fechaAsignacion,
                         'estatus'          => $this->estatus,
@@ -229,7 +229,7 @@ class SeedCollection extends Database implements ReadableInterface, DeletableInt
         $found = self::find($id);
         if ($found) {
             $this->id = $found->getId();
-            $this->idTrabajador = $found->getIdTrabajador();
+            $this->idUsuario = $found->getIdUsuario();
             $this->idUbicacion = $found->getIdUbicacion();
             $this->fechaAsignacion = $found->getFechaAsignacion();
             $this->fechaRecoleccion = $found->getFechaRecoleccion();
@@ -246,22 +246,38 @@ class SeedCollection extends Database implements ReadableInterface, DeletableInt
         try {
             $sql = "SELECT
                         r.id_recoleccion AS id,
-                        r.id_trabajador,
+                        r.id_usuario,
                         r.id_ubicacion,
                         r.fecha_asignacion,
                         r.fecha_recoleccion,
                         r.estatus,
                         r.observacion,
                         (SELECT COUNT(*) FROM recoleccion_semillas_detalle d WHERE d.id_recoleccion = r.id_recoleccion) AS total_detalles,
-                        CONCAT(t.nombre_trabajador, ' ', t.apellido_trabajador) AS trabajador_nombre,
-                        u.nombre_ubicacion
+                        ub.nombre_ubicacion
                     FROM recoleccion_semillas r
-                    LEFT JOIN trabajadores t ON r.id_trabajador = t.id_trabajador
-                    LEFT JOIN ubicacion u ON r.id_ubicacion = u.id_ubicacion
+                    LEFT JOIN ubicacion ub ON r.id_ubicacion = ub.id_ubicacion
                     WHERE r.activo = 1
                     ORDER BY r.fecha_asignacion DESC, r.id_recoleccion DESC";
             $stmt = $this->db()->query($sql);
-            return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+            $rows = $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+
+            $userModel = new \SysInescolara\models\Usuario();
+            $allUsers = $userModel->getAll();
+            $usersMap = [];
+            foreach ($allUsers as $u) {
+                $usersMap[$u['id']] = $u;
+            }
+
+            foreach ($rows as &$row) {
+                $uid = (int)($row['id_usuario'] ?? 0);
+                $user = $usersMap[$uid] ?? null;
+                $row['trabajador_nombre'] = $user
+                    ? trim(($user['nombre_usuario'] ?? '') . ' ' . ($user['apellido_trabajador'] ?? ''))
+                    : '—';
+            }
+            unset($row);
+
+            return $rows;
         } catch (\Throwable $e) {
             error_log('Error en SeedCollection::getAll: ' . $e->getMessage());
             return [];
@@ -273,15 +289,22 @@ class SeedCollection extends Database implements ReadableInterface, DeletableInt
         try {
             $stmt = $this->db()->prepare("
                 SELECT r.*,
-                       CONCAT(t.nombre_trabajador, ' ', t.apellido_trabajador) AS trabajador_nombre,
-                       u.nombre_ubicacion
+                       ub.nombre_ubicacion
                 FROM recoleccion_semillas r
-                LEFT JOIN trabajadores t ON r.id_trabajador = t.id_trabajador
-                LEFT JOIN ubicacion u ON r.id_ubicacion = u.id_ubicacion
+                LEFT JOIN ubicacion ub ON r.id_ubicacion = ub.id_ubicacion
                 WHERE r.id_recoleccion = :id
             ");
             $stmt->execute([':id' => $id]);
-            return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            if (!$row) return null;
+
+            $userModel = new \SysInescolara\models\Usuario();
+            $user = $userModel->getById((int)$row['id_usuario']);
+            $row['trabajador_nombre'] = $user
+                ? trim(($user['nombre_usuario'] ?? '') . ' ' . ($user['apellido_trabajador'] ?? ''))
+                : '—';
+
+            return $row;
         } catch (\Throwable $e) {
             error_log('Error en SeedCollection::getById: ' . $e->getMessage());
             return null;
@@ -320,10 +343,10 @@ class SeedCollection extends Database implements ReadableInterface, DeletableInt
         }
     }
 
-    public function add(int $idTrabajador, int $idUbicacion, string $fechaAsignacion, ?string $observacion = null): bool
+    public function add(int $idUsuario, int $idUbicacion, string $fechaAsignacion, ?string $observacion = null): bool
     {
         $this->fill([
-            'id_trabajador'    => $idTrabajador,
+            'id_usuario'       => $idUsuario,
             'id_ubicacion'     => $idUbicacion,
             'fecha_asignacion' => $fechaAsignacion,
             'estatus'          => 'Pendiente',
@@ -332,13 +355,13 @@ class SeedCollection extends Database implements ReadableInterface, DeletableInt
         return $this->save();
     }
 
-    public function update(int $id, int $idTrabajador, int $idUbicacion, string $fechaAsignacion, ?string $observacion = null): bool
+    public function update(int $id, int $idUsuario, int $idUbicacion, string $fechaAsignacion, ?string $observacion = null): bool
     {
         if (!$this->loadById($id)) {
             throw new \Exception('No existe la recolección solicitada para modificar.');
         }
         $this->fill([
-            'id_trabajador'    => $idTrabajador,
+            'id_usuario'       => $idUsuario,
             'id_ubicacion'     => $idUbicacion,
             'fecha_asignacion' => $fechaAsignacion,
             'observacion'      => $observacion,
@@ -422,49 +445,59 @@ class SeedCollection extends Database implements ReadableInterface, DeletableInt
     {
         $suppliesModel = new Insumo();
         $createdCount = 0;
+        $errors = [];
 
         try {
             $this->db()->beginTransaction();
 
-            foreach ($items as $item) {
-                $nombreSemilla = trim((string)($item['nombre_semilla'] ?? ''));
-                if ($nombreSemilla === '') continue;
-                $idUnidadMedida = (int)($item['id_unidad_medida'] ?? 0);
-                if ($idUnidadMedida <= 0) continue;
+            foreach ($items as $idx => $item) {
+                $idInsumo = (int)($item['id_insumo'] ?? 0);
                 $cantidad = floatval($item['cantidad'] ?? 0);
-                if ($cantidad <= 0) continue;
-                $plantaOrigen = trim((string)($item['planta_origen'] ?? ''));
-                if ($plantaOrigen === '') $plantaOrigen = null;
+                if ($cantidad <= 0) { $errors[] = "Fila " . ($idx + 1) . ": cantidad inválida"; continue; }
 
-                $existing = $suppliesModel->findByNameAndCategory($nombreSemilla, 'Semillas');
-
-                if ($existing) {
-                    $supplyId = (int)$existing['id_insumo'];
-                    $ok = $suppliesModel->increaseStock($supplyId, $cantidad);
+                if ($idInsumo > 0) {
+                    $existing = $suppliesModel->getById($idInsumo);
+                    if (!$existing) { $errors[] = "Fila " . ($idx + 1) . ": insumo no encontrado"; continue; }
+                    $ok = $suppliesModel->increaseStock($idInsumo, $cantidad);
+                    if (!$ok) { $errors[] = "Fila " . ($idx + 1) . ": error al aumentar stock del insumo #" . $idInsumo; continue; }
+                    $nombreSemilla = $existing['nombre_insumo'];
+                    $idUnidadMedida = (int)$existing['id_unidad_medida'];
+                    $supplyId = $idInsumo;
                 } else {
-                    $nuevoInsumo = new Insumo([
-                        'nombre_insumo'          => $nombreSemilla,
-                        'id_unidad_medida'       => $idUnidadMedida,
-                        'categoria'              => 'Semillas',
-                        'stock_actual'           => $cantidad,
-                        'costo_unitario_actual'  => 0,
-                    ]);
-                    $ok = $nuevoInsumo->save();
-                    if (!$ok) continue;
-                    $supplyId = $nuevoInsumo->getId();
+                    $nombreSemilla = trim((string)($item['nombre_insumo'] ?? ''));
+                    if ($nombreSemilla === '') { $errors[] = "Fila " . ($idx + 1) . ": nombre de insumo vacío"; continue; }
+                    $idUnidadMedida = (int)($item['id_unidad_medida'] ?? 0);
+                    if ($idUnidadMedida <= 0) { $errors[] = "Fila " . ($idx + 1) . ": unidad de medida inválida"; continue; }
+
+                    $existing = $suppliesModel->findByNameAndCategory($nombreSemilla, 'Semillas');
+                    if ($existing) {
+                        $supplyId = (int)$existing['id_insumo'];
+                        $ok = $suppliesModel->increaseStock($supplyId, $cantidad);
+                        if (!$ok) { $errors[] = "Fila " . ($idx + 1) . ": error al aumentar stock de '$nombreSemilla'"; continue; }
+                    } else {
+                        $nuevoInsumo = new Insumo([
+                            'nombre_insumo'          => $nombreSemilla,
+                            'id_unidad_medida'       => $idUnidadMedida,
+                            'categoria'              => 'Semillas',
+                            'stock_actual'           => $cantidad,
+                            'costo_unitario_actual'  => 0,
+                        ]);
+                        $ok = $nuevoInsumo->save();
+                        if (!$ok) { $errors[] = "Fila " . ($idx + 1) . ": error al crear insumo '$nombreSemilla' (verifique unidad de medida y nombre)"; continue; }
+                        $supplyId = $nuevoInsumo->getId();
+                    }
                 }
 
-                if (!$ok) continue;
-
-                $ok = $this->addDetail($idRecoleccion, $plantaOrigen, $nombreSemilla, $idUnidadMedida, $cantidad, $supplyId);
-                if (!$ok) continue;
+                $ok = $this->addDetail($idRecoleccion, null, $nombreSemilla, $idUnidadMedida, $cantidad, $supplyId);
+                if (!$ok) { $errors[] = "Fila " . ($idx + 1) . ": error al registrar detalle de '$nombreSemilla'"; continue; }
 
                 $createdCount++;
             }
 
             if ($createdCount === 0) {
                 $this->db()->rollBack();
-                return 0;
+                $errorMsg = !empty($errors) ? implode('; ', $errors) : 'Datos inválidos';
+                throw new \Exception($errorMsg);
             }
 
             $this->db()->commit();

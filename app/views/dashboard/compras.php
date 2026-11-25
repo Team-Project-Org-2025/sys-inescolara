@@ -118,12 +118,12 @@ include_once __DIR__ . '/../common/modal.php';
                 <tfoot>
                     <tr>
                         <td colspan="4" class="text-end">Subtotal (Items):</td>
-                        <td class="text-end" id="itemsTotal">Bs 0,00</td>
+                        <td class="text-end" id="itemsTotal">$0,00</td>
                         <td></td>
                     </tr>
                     <tr class="fw-bold table-active">
                         <td colspan="4" class="text-end">Total:</td>
-                        <td class="text-end" id="itemsTotalFinal">Bs 0,00</td>
+                        <td class="text-end" id="itemsTotalFinal">$0,00</td>
                         <td></td>
                     </tr>
                 </tfoot>
