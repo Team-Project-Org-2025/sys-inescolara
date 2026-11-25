@@ -1,0 +1,435 @@
+{
+  "info": {
+    "_postman_id": "c0a00000-0010-4000-8000-000000000010",
+    "name": "SYSINECOLARA · Reportes",
+    "description": "Módulos, filtros, datos y PDF de reportes.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "pm.request.headers.upsert({ key: 'X-Requested-With', value: 'XMLHttpRequest' });",
+          "const d = new Date(); pm.collectionVariables.set('today', d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'));"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "today",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "00 · Auth",
+      "item": [
+        {
+          "name": "401 · sin sesion (redirect)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.cookies.clear();",
+                  "pm.request.headers.remove('Cookie');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde (redirect o login)', () => pm.expect([200,301,302,401]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reports?action=get_modules",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reports"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "get_modules"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /login (admin)",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('login admin', () => {",
+                  "  pm.expect([200,302]).to.include(pm.response.code);",
+                  "  pm.expect(pm.cookies.get('PHPSESSID')).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "nombre_usuario",
+                  "value": "{{usuario}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{password}}",
+                  "type": "text"
+                },
+                {
+                  "key": "g-recaptcha-response",
+                  "value": "{{recaptchaToken}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "01 · Lectura",
+      "item": [
+        {
+          "name": "GET get_modules",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('modules array', () => pm.expect(pm.response.json().modules).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reports?action=get_modules",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reports"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "get_modules"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET get_filters",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('filters array', () => pm.expect(pm.response.json().filters).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reports?action=get_filters&module=plantas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reports"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "get_filters"
+                },
+                {
+                  "key": "module",
+                  "value": "plantas"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET get_report_data",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('columns array', () => pm.expect(b.columns).to.be.an('array'));",
+                  "pm.test('rows array', () => pm.expect(b.rows).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reports?action=get_report_data&module=plantas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reports"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "get_report_data"
+                },
+                {
+                  "key": "module",
+                  "value": "plantas"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET generate_pdf",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 PDF', () => pm.response.to.have.status(200));",
+                  "pm.test('content-type pdf', () => pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/pdf'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reports?action=generate_pdf&module=plantas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reports"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "generate_pdf"
+                },
+                {
+                  "key": "module",
+                  "value": "plantas"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "02 · Negativos",
+      "item": [
+        {
+          "name": "400 · get_filters sin module",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reports?action=get_filters",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reports"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "get_filters"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "400 · get_report_data sin module",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reports?action=get_report_data",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reports"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "get_report_data"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "400 · accion inexistente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400 accion invalida', () => pm.response.to.have.status(400));",
+                  "pm.test('mensaje', () => pm.expect(pm.response.json().message).to.match(/acci[oó]n ajax inv[aá]lida/i));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reports?action=no_existe",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reports"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "no_existe"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "03 · Logout",
+      "item": [
+        {
+          "name": "POST logout_ajax",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 logout', () => pm.response.to.have.status(200));",
+                  "pm.test('sesion cerrada', () => pm.expect(pm.response.json().success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login/logout_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login",
+                "logout_ajax"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

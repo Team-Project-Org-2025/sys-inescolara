@@ -1,0 +1,659 @@
+{
+  "info": {
+    "_postman_id": "c0a00000-0007-4000-8000-000000000007",
+    "name": "SYSINECOLARA · Roles",
+    "description": "CRUD de roles. add_ajax devuelve id de auditoria (deuda).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "pm.request.headers.upsert({ key: 'X-Requested-With', value: 'XMLHttpRequest' });",
+          "const d = new Date(); pm.collectionVariables.set('today', d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'));"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "today",
+      "value": ""
+    },
+    {
+      "key": "rolId",
+      "value": ""
+    },
+    {
+      "key": "rolNombre",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "00 · Auth",
+      "item": [
+        {
+          "name": "401 · sin sesion",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.cookies.clear();",
+                  "pm.request.headers.remove('Cookie');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('401 sin sesion', () => pm.response.to.have.status(401));",
+                  "pm.test('success = false', () => pm.expect(pm.response.json().success).to.eql(false));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/roles?action=get_roles",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "roles"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "get_roles"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /login (admin)",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('login admin', () => {",
+                  "  pm.expect([200,302]).to.include(pm.response.code);",
+                  "  pm.expect(pm.cookies.get('PHPSESSID')).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "nombre_usuario",
+                  "value": "{{usuario}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{password}}",
+                  "type": "text"
+                },
+                {
+                  "key": "g-recaptcha-response",
+                  "value": "{{recaptchaToken}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "01 · Listado",
+      "item": [
+        {
+          "name": "GET get_roles",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('roles array', () => pm.expect(pm.response.json().roles).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/roles?action=get_roles",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "roles"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "get_roles"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "02 · Crear y editar",
+      "item": [
+        {
+          "name": "POST add_ajax",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const L='ABCDEFGHIJKLMNOPQRSTUVWXYZ'; let s=''; for(let i=0;i<5;i++) s+=L[Math.floor(Math.random()*L.length)]; pm.collectionVariables.set('rolNombre','RolPostman'+s);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('success', () => pm.expect(pm.response.json().success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "nombre_rol",
+                  "value": "{{rolNombre}}",
+                  "type": "text"
+                },
+                {
+                  "key": "descripcion_rol",
+                  "value": "Descripcion rol",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/roles?action=add_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "roles"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "add_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET get_roles (buscar id real)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const n = pm.collectionVariables.get('rolNombre');",
+                  "const row = pm.response.json().roles.find((r) => r.nombre_rol === n);",
+                  "pm.test('rol creado encontrado', () => pm.expect(row).to.exist);",
+                  "pm.collectionVariables.set('rolId', String(row.id));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/roles?action=get_roles",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "roles"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "get_roles"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST edit_ajax",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id",
+                  "value": "{{rolId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "nombre_rol",
+                  "value": "{{rolNombre}}",
+                  "type": "text"
+                },
+                {
+                  "key": "descripcion_rol",
+                  "value": "Descripcion editada",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/roles?action=edit_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "roles"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "edit_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "03 · Eliminar",
+      "item": [
+        {
+          "name": "POST delete_ajax",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id",
+                  "value": "{{rolId}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/roles?action=delete_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "roles"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "delete_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "04 · Negativos",
+      "item": [
+        {
+          "name": "POST /login (viewer)",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('login viewer', () => {",
+                  "  pm.expect([200,302]).to.include(pm.response.code);",
+                  "  pm.expect(pm.cookies.get('PHPSESSID')).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "nombre_usuario",
+                  "value": "{{viewerUsuario}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{viewerPassword}}",
+                  "type": "text"
+                },
+                {
+                  "key": "g-recaptcha-response",
+                  "value": "{{recaptchaToken}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "403 · add sin permiso",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('403', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "nombre_rol",
+                  "value": "Viewer",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/roles?action=add_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "roles"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "add_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /login (admin)",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('login admin', () => {",
+                  "  pm.expect([200,302]).to.include(pm.response.code);",
+                  "  pm.expect(pm.cookies.get('PHPSESSID')).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "nombre_usuario",
+                  "value": "{{usuario}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{password}}",
+                  "type": "text"
+                },
+                {
+                  "key": "g-recaptcha-response",
+                  "value": "{{recaptchaToken}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "500 · eliminar rol por defecto",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('500', () => pm.response.to.have.status(500));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id",
+                  "value": "2",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/roles?action=delete_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "roles"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "delete_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "400 · accion inexistente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400 accion invalida', () => pm.response.to.have.status(400));",
+                  "pm.test('mensaje', () => pm.expect(pm.response.json().message).to.match(/acci[oó]n ajax inv[aá]lida/i));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/roles?action=no_existe",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "roles"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "no_existe"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "05 · Logout",
+      "item": [
+        {
+          "name": "POST logout_ajax",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 logout', () => pm.response.to.have.status(200));",
+                  "pm.test('sesion cerrada', () => pm.expect(pm.response.json().success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login/logout_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login",
+                "logout_ajax"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

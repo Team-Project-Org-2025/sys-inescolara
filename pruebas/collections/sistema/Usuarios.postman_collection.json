@@ -1,0 +1,731 @@
+{
+  "info": {
+    "_postman_id": "c0a00000-0006-4000-8000-000000000006",
+    "name": "SYSINECOLARA · Usuarios",
+    "description": "CRUD de usuarios del sistema de seguridad. add_ajax devuelve id de auditoria (deuda).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "pm.request.headers.upsert({ key: 'X-Requested-With', value: 'XMLHttpRequest' });",
+          "const d = new Date(); pm.collectionVariables.set('today', d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'));"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "today",
+      "value": ""
+    },
+    {
+      "key": "userId",
+      "value": ""
+    },
+    {
+      "key": "uname",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "00 · Auth",
+      "item": [
+        {
+          "name": "401 · sin sesion",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.cookies.clear();",
+                  "pm.request.headers.remove('Cookie');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('401 sin sesion', () => pm.response.to.have.status(401));",
+                  "pm.test('success = false', () => pm.expect(pm.response.json().success).to.eql(false));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios?action=get_users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "get_users"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /login (admin)",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('login admin', () => {",
+                  "  pm.expect([200,302]).to.include(pm.response.code);",
+                  "  pm.expect(pm.cookies.get('PHPSESSID')).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "nombre_usuario",
+                  "value": "{{usuario}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{password}}",
+                  "type": "text"
+                },
+                {
+                  "key": "g-recaptcha-response",
+                  "value": "{{recaptchaToken}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "01 · Listado",
+      "item": [
+        {
+          "name": "GET get_users",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('users array', () => pm.expect(pm.response.json().users).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios?action=get_users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "get_users"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "02 · Crear y editar",
+      "item": [
+        {
+          "name": "POST add_ajax",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('uname', 'postman_u' + String(Date.now()).slice(-6));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test('success', () => pm.expect(b.success).to.eql(true));",
+                  "pm.test('devuelve id (aunque puede ser id de auditoria)', () => pm.expect(b.user.id).to.be.a('number'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "nombre_usuario",
+                  "value": "{{uname}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "Postman123!",
+                  "type": "text"
+                },
+                {
+                  "key": "rol_id",
+                  "value": "2",
+                  "type": "text"
+                },
+                {
+                  "key": "correo_electronico",
+                  "value": "postman_u@example.test",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/usuarios?action=add_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "add_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET get_users (buscar id real)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const uname = pm.collectionVariables.get('uname');",
+                  "const row = pm.response.json().users.find((u) => u.nombre_usuario === uname);",
+                  "pm.test('usuario creado encontrado', () => pm.expect(row).to.exist);",
+                  "pm.collectionVariables.set('userId', String(row.id));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios?action=get_users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "get_users"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST edit_ajax",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id",
+                  "value": "{{userId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "nombre_usuario",
+                  "value": "{{uname}}",
+                  "type": "text"
+                },
+                {
+                  "key": "rol_id",
+                  "value": "2",
+                  "type": "text"
+                },
+                {
+                  "key": "correo_electronico",
+                  "value": "postman_u_edit@example.test",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/usuarios?action=edit_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "edit_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "03 · Eliminar",
+      "item": [
+        {
+          "name": "POST delete_ajax",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('success', () => pm.expect(pm.response.json().success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id",
+                  "value": "{{userId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "current_password",
+                  "value": "{{password}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/usuarios?action=delete_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "delete_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "04 · Negativos",
+      "item": [
+        {
+          "name": "POST /login (viewer)",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('login viewer', () => {",
+                  "  pm.expect([200,302]).to.include(pm.response.code);",
+                  "  pm.expect(pm.cookies.get('PHPSESSID')).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "nombre_usuario",
+                  "value": "{{viewerUsuario}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{viewerPassword}}",
+                  "type": "text"
+                },
+                {
+                  "key": "g-recaptcha-response",
+                  "value": "{{recaptchaToken}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "403 · add sin permiso",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('403', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "nombre_usuario",
+                  "value": "x",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/usuarios?action=add_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "add_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /login (admin)",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('login admin', () => {",
+                  "  pm.expect([200,302]).to.include(pm.response.code);",
+                  "  pm.expect(pm.cookies.get('PHPSESSID')).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "nombre_usuario",
+                  "value": "{{usuario}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{password}}",
+                  "type": "text"
+                },
+                {
+                  "key": "g-recaptcha-response",
+                  "value": "{{recaptchaToken}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "400 · eliminar superusuario",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "current_password",
+                  "value": "{{password}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/usuarios?action=delete_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "delete_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "400 · eliminar sin current_password",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id",
+                  "value": "5",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/usuarios?action=delete_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "delete_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "400 · accion inexistente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400 accion invalida', () => pm.response.to.have.status(400));",
+                  "pm.test('mensaje', () => pm.expect(pm.response.json().message).to.match(/acci[oó]n ajax inv[aá]lida/i));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios?action=no_existe",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "no_existe"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "05 · Logout",
+      "item": [
+        {
+          "name": "POST logout_ajax",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 logout', () => pm.response.to.have.status(200));",
+                  "pm.test('sesion cerrada', () => pm.expect(pm.response.json().success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login/logout_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login",
+                "logout_ajax"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,987 @@
+{
+  "info": {
+    "_postman_id": "c0a00000-0005-4000-8000-000000000005",
+    "name": "SYSINECOLARA · Recoleccion",
+    "description": "Recoleccion de semillas: alta, edicion, completado, registro de insumos y limpieza.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "pm.request.headers.upsert({ key: 'X-Requested-With', value: 'XMLHttpRequest' });",
+          "const d = new Date(); pm.collectionVariables.set('today', d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'));"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "today",
+      "value": ""
+    },
+    {
+      "key": "recId",
+      "value": ""
+    },
+    {
+      "key": "recId2",
+      "value": ""
+    },
+    {
+      "key": "semilla1",
+      "value": ""
+    },
+    {
+      "key": "semilla2",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "00 · Auth",
+      "item": [
+        {
+          "name": "401 · sin sesion",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.cookies.clear();",
+                  "pm.request.headers.remove('Cookie');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('401 sin sesion', () => pm.response.to.have.status(401));",
+                  "pm.test('success = false', () => pm.expect(pm.response.json().success).to.eql(false));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/recoleccion?action=get_recolecciones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "recoleccion"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "get_recolecciones"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /login (admin)",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('login admin', () => {",
+                  "  pm.expect([200,302]).to.include(pm.response.code);",
+                  "  pm.expect(pm.cookies.get('PHPSESSID')).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "nombre_usuario",
+                  "value": "{{usuario}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{password}}",
+                  "type": "text"
+                },
+                {
+                  "key": "g-recaptcha-response",
+                  "value": "{{recaptchaToken}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "01 · Crear y editar",
+      "item": [
+        {
+          "name": "POST add_ajax",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set('recId', String(pm.response.json().id));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id_usuario",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "id_ubicacion",
+                  "value": "{{seedUbicacionId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "fecha_asignacion",
+                  "value": "{{today}}",
+                  "type": "text"
+                },
+                {
+                  "key": "observacion",
+                  "value": "Recoleccion Postman",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/recoleccion?action=add_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "recoleccion"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "add_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET get_recolecciones",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const id = pm.collectionVariables.get('recId');",
+                  "pm.test('incluye recoleccion', () => pm.expect(pm.response.json().recolecciones.find((r) => String(r.id) === String(id))).to.exist);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/recoleccion?action=get_recolecciones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "recoleccion"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "get_recolecciones"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET get_details",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/recoleccion?action=get_details&id={{recId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "recoleccion"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "get_details"
+                },
+                {
+                  "key": "id",
+                  "value": "{{recId}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST edit_ajax",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id",
+                  "value": "{{recId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "id_usuario",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "id_ubicacion",
+                  "value": "{{seedUbicacionId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "fecha_asignacion",
+                  "value": "{{today}}",
+                  "type": "text"
+                },
+                {
+                  "key": "observacion",
+                  "value": "Recoleccion Postman Editada",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/recoleccion?action=edit_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "recoleccion"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "edit_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "02 · Completar y registrar insumo",
+      "item": [
+        {
+          "name": "POST completar_ajax",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id",
+                  "value": "{{recId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "fecha_recoleccion",
+                  "value": "{{today}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/recoleccion?action=completar_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "recoleccion"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "completar_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST registrar_insumo_ajax",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('registro ok', () => pm.expect(pm.response.json().success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id",
+                  "value": "{{recId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "items",
+                  "value": "[{\"nombre_insumo\":\"Semilla Postman A\",\"id_unidad_medida\":1,\"cantidad\":5}]",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/recoleccion?action=registrar_insumo_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "recoleccion"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "registrar_insumo_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET get_details (insumos)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('estado Realizada', () => pm.expect(b.recoleccion.estatus).to.eql('Realizada'));",
+                  "pm.test('detalles con semilla', () => pm.expect(b.detalles.length).to.be.above(0));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/recoleccion?action=get_details&id={{recId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "recoleccion"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "get_details"
+                },
+                {
+                  "key": "id",
+                  "value": "{{recId}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "03 · registrar_y_completar (2da recoleccion)",
+      "item": [
+        {
+          "name": "POST add_ajax (2)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('recId2', String(pm.response.json().id));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id_usuario",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "id_ubicacion",
+                  "value": "{{seedUbicacionId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "fecha_asignacion",
+                  "value": "{{today}}",
+                  "type": "text"
+                },
+                {
+                  "key": "observacion",
+                  "value": "Recoleccion Postman B",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/recoleccion?action=add_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "recoleccion"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "add_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST registrar_y_completar_ajax",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('success', () => pm.expect(pm.response.json().success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id",
+                  "value": "{{recId2}}",
+                  "type": "text"
+                },
+                {
+                  "key": "items",
+                  "value": "[{\"nombre_insumo\":\"Semilla Postman B\",\"id_unidad_medida\":1,\"cantidad\":3}]",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/recoleccion?action=registrar_y_completar_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "recoleccion"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "registrar_y_completar_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "04 · Limpieza",
+      "item": [
+        {
+          "name": "POST delete_ajax (1)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id",
+                  "value": "{{recId}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/recoleccion?action=delete_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "recoleccion"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "delete_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST delete_ajax (2)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id",
+                  "value": "{{recId2}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/recoleccion?action=delete_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "recoleccion"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "delete_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "05 · Negativos",
+      "item": [
+        {
+          "name": "POST /login (viewer)",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('login viewer', () => {",
+                  "  pm.expect([200,302]).to.include(pm.response.code);",
+                  "  pm.expect(pm.cookies.get('PHPSESSID')).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "nombre_usuario",
+                  "value": "{{viewerUsuario}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{viewerPassword}}",
+                  "type": "text"
+                },
+                {
+                  "key": "g-recaptcha-response",
+                  "value": "{{recaptchaToken}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "403 · add sin permiso",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('403', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id_usuario",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "id_ubicacion",
+                  "value": "1",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/recoleccion?action=add_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "recoleccion"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "add_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /login (admin)",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('login admin', () => {",
+                  "  pm.expect([200,302]).to.include(pm.response.code);",
+                  "  pm.expect(pm.cookies.get('PHPSESSID')).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "nombre_usuario",
+                  "value": "{{usuario}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{password}}",
+                  "type": "text"
+                },
+                {
+                  "key": "g-recaptcha-response",
+                  "value": "{{recaptchaToken}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "500 · sin ubicacion",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('500', () => pm.response.to.have.status(500));",
+                  "pm.test('mensaje ubicacion', () => pm.expect(pm.response.json().message).to.match(/ubicaci[oó]n es requerida/i));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id_usuario",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "fecha_asignacion",
+                  "value": "{{today}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/recoleccion?action=add_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "recoleccion"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "add_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "400 · accion inexistente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400 accion invalida', () => pm.response.to.have.status(400));",
+                  "pm.test('mensaje', () => pm.expect(pm.response.json().message).to.match(/acci[oó]n ajax inv[aá]lida/i));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/recoleccion?action=no_existe",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "recoleccion"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "no_existe"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "06 · Logout",
+      "item": [
+        {
+          "name": "POST logout_ajax",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 logout', () => pm.response.to.have.status(200));",
+                  "pm.test('sesion cerrada', () => pm.expect(pm.response.json().success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login/logout_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login",
+                "logout_ajax"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

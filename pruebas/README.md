@@ -19,12 +19,29 @@ pruebas/
 │   │   ├── Inventario.postman_collection.json
 │   │   ├── Trazabilidad.postman_collection.json
 │   │   └── Mermas.postman_collection.json
-│   └── comercial/                                       una colección por módulo
-│       ├── Clientes.postman_collection.json
-│       ├── Ventas.postman_collection.json
-│       ├── Ornatos.postman_collection.json
-│       ├── CuentasCobrar.postman_collection.json
-│       └── Ampliacion.postman_collection.json
+│   ├── comercial/                                       una colección por módulo
+│   │   ├── Clientes.postman_collection.json
+│   │   ├── Ventas.postman_collection.json
+│   │   ├── Ornatos.postman_collection.json
+│   │   ├── CuentasCobrar.postman_collection.json
+│   │   └── Ampliacion.postman_collection.json
+│   ├── compras/                                         una colección por módulo
+│   │   ├── Proveedores.postman_collection.json
+│   │   ├── Compras.postman_collection.json
+│   │   └── CuentasPagar.postman_collection.json
+│   ├── operaciones/                                     una colección por módulo
+│   │   ├── Tareas.postman_collection.json
+│   │   └── Recoleccion.postman_collection.json
+│   ├── sistema/                                         una colección por módulo
+│   │   ├── Usuarios.postman_collection.json
+│   │   ├── Roles.postman_collection.json
+│   │   ├── Auditlog.postman_collection.json
+│   │   ├── Backups.postman_collection.json
+│   │   ├── Reports.postman_collection.json
+│   │   ├── Notifications.postman_collection.json
+│   │   └── Dashboard.postman_collection.json
+│   └── publico/                                         smoke test de vistas
+│       └── Publico.postman_collection.json
 ├── environments/
 │   └── SysInescolara Local.postman_environment.json
 ├── data/
@@ -442,6 +459,15 @@ defecto válidos (`Planta Postman`, especie detectada).
    del CSV.
 6. **El login depende de reCAPTCHA**, por lo que la corrida headless exige
    llaves de prueba en local.
+7. **Compras vía `?action=` no valida permisos de escritura.** El despachador
+   llama a los manejadores internos; solo la ruta por segmento
+   (`/compras/agregar_ajax`) ejecuta `checkPermisoOrFail`.
+8. **`add_ajax` de Usuarios y Roles devuelve el id de auditoría**, no el id del
+   registro, por leer `lastInsertId()` tras escribir el log.
+9. **`compras?action=agregar_planta_rapido` está roto** (404: `Planta::add()`
+   no existe).
+10. **`tareas?action=complete_ajax`** exige `consumptions`/`tool_estados` como
+    arrays; con form-urlencoded se pasan como string y lanza `TypeError`.
 
 ---
 

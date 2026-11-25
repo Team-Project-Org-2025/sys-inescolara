@@ -47,36 +47,36 @@ el código · ⬜ pendiente.
 
 | Controlador | Rutas | Ficha | Colección | Estado |
 |---|---|---|---|---|
-| `ComprasController` | `/compras` | — | — | ⬜ |
-| `ProveedoresController` | `/proveedores` | — | — | ⬜ |
-| `CuentasPagarController` | `/cuentas-pagar` | — | — | ⬜ |
+| `ComprasController` | `/compras` | [`compras/compras.md`](compras/compras.md) | `compras/Compras` | ✅ |
+| `ProveedoresController` | `/proveedores` | [`compras/proveedores.md`](compras/proveedores.md) | `compras/Proveedores` | ✅ |
+| `CuentasPagarController` | `/cuentas-pagar` | [`compras/cuentas-pagar.md`](compras/cuentas-pagar.md) | `compras/CuentasPagar` | ✅ |
 
 ## Operaciones
 
 | Controlador | Rutas | Ficha | Colección | Estado |
 |---|---|---|---|---|
-| `TareasController` | `/tareas` | — | — | ⬜ |
-| `RecoleccionController` | `/recoleccion` | — | — | ⬜ |
+| `TareasController` | `/tareas` | [`operaciones/tareas.md`](operaciones/tareas.md) | `operaciones/Tareas` | ✅ |
+| `RecoleccionController` | `/recoleccion` | [`operaciones/recoleccion.md`](operaciones/recoleccion.md) | `operaciones/Recoleccion` | ✅ |
 
 ## Sistema
 
 | Controlador | Rutas | Ficha | Colección | Estado |
 |---|---|---|---|---|
-| `DashboardController` | `/dashboard/*` | — | — | ⬜ |
-| `InicioController` | `/` | — | — | ⬜ |
-| `UsuariosController` | `/usuarios` | — | — | ⬜ |
-| `RolesController` | `/roles` | — | — | ⬜ |
-| `AuditlogController` | `/auditlog` | — | — | ⬜ |
-| `BackupsController` | `/backups` | — | — | ⬜ |
-| `ReportsController` | `/reports` | — | — | ⬜ |
-| `NotificationsController` | `/notifications/*` | — | — | ⬜ |
+| `DashboardController` | `/dashboard/*` | [`sistema/dashboard.md`](sistema/dashboard.md) | `sistema/Dashboard` | ✅ |
+| `InicioController` | `/inicio` | [`sistema/dashboard.md`](sistema/dashboard.md) | `sistema/Dashboard` | ✅ |
+| `UsuariosController` | `/usuarios` | [`sistema/usuarios.md`](sistema/usuarios.md) | `sistema/Usuarios` | ✅ |
+| `RolesController` | `/roles` | [`sistema/roles.md`](sistema/roles.md) | `sistema/Roles` | ✅ |
+| `AuditlogController` | `/auditlog` | [`sistema/auditlog.md`](sistema/auditlog.md) | `sistema/Auditlog` | ✅ |
+| `BackupsController` | `/backups` | [`sistema/backups.md`](sistema/backups.md) | `sistema/Backups` | ✅ |
+| `ReportsController` | `/reports` | [`sistema/reports.md`](sistema/reports.md) | `sistema/Reports` | ✅ |
+| `NotificationsController` | `/notifications/*` | [`sistema/notifications.md`](sistema/notifications.md) | `sistema/Notifications` | ✅ |
 
 ## Público
 
 | Controlador | Rutas | Ficha | Colección | Estado |
 |---|---|---|---|---|
-| `PublicController` | `/`, `/catalogo`, `/servicios`, `/nosotros`, `/contacto` | — | — | ⬜ |
-| `FrontController` | router | — | — | ⬜ |
+| `PublicController` | `/`, `/catalogo`, `/servicios`, `/nosotros`, `/contacto` | [`publico/publico.md`](publico/publico.md) | `publico/Publico` | ✅ |
+| `FrontController` | router | [`publico/publico.md`](publico/publico.md) | `publico/Publico` | ✅ |
 
 ## Deuda transversal
 

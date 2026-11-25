@@ -1,0 +1,742 @@
+{
+  "info": {
+    "_postman_id": "c0a00000-0001-4000-8000-000000000001",
+    "name": "SYSINECOLARA · Proveedores",
+    "description": "CRUD de proveedores. RIF único aleatorio por corrida. ?action=.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "pm.request.headers.upsert({ key: 'X-Requested-With', value: 'XMLHttpRequest' });",
+          "const d = new Date(); pm.collectionVariables.set('today', d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'));"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "today",
+      "value": ""
+    },
+    {
+      "key": "provId",
+      "value": ""
+    },
+    {
+      "key": "rif",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "00 · Auth",
+      "item": [
+        {
+          "name": "401 · sin sesion",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.cookies.clear();",
+                  "pm.request.headers.remove('Cookie');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('401 sin sesion', () => pm.response.to.have.status(401));",
+                  "pm.test('success = false', () => pm.expect(pm.response.json().success).to.eql(false));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/proveedores?action=get_suppliers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "proveedores"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "get_suppliers"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /login (admin)",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('login admin', () => {",
+                  "  pm.expect([200,302]).to.include(pm.response.code);",
+                  "  pm.expect(pm.cookies.get('PHPSESSID')).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "nombre_usuario",
+                  "value": "{{usuario}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{password}}",
+                  "type": "text"
+                },
+                {
+                  "key": "g-recaptcha-response",
+                  "value": "{{recaptchaToken}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "01 · Listado",
+      "item": [
+        {
+          "name": "GET get_suppliers",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test('suppliers es array', () => pm.expect(b.suppliers).to.be.an('array'));",
+                  "pm.test('count fijo en 0', () => pm.expect(b.count).to.eql(0));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/proveedores?action=get_suppliers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "proveedores"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "get_suppliers"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "02 · Crear",
+      "item": [
+        {
+          "name": "POST add_ajax",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('rif', 'J-' + String(Date.now()).slice(-8) + '-' + String(Date.now()).slice(-1));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test('success', () => pm.expect(b.success).to.eql(true));",
+                  "pm.collectionVariables.set('provId', String(b.proveedor.id));",
+                  "pm.collectionVariables.set('provNombre', b.proveedor.nombre_proveedor);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "nombre_proveedor",
+                  "value": "Proveedor Postman",
+                  "type": "text"
+                },
+                {
+                  "key": "rif_proveedor",
+                  "value": "{{rif}}",
+                  "type": "text"
+                },
+                {
+                  "key": "contacto_vendedor",
+                  "value": "Contacto Postman",
+                  "type": "text"
+                },
+                {
+                  "key": "telefono_proveedor",
+                  "value": "04141234567",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/proveedores?action=add_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "proveedores"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "add_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "03 · Editar",
+      "item": [
+        {
+          "name": "POST edit_ajax",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('nombre editado', () => pm.expect(pm.response.json().proveedor.nombre_proveedor).to.eql('Proveedor Postman Editado'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id",
+                  "value": "{{provId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "nombre_proveedor",
+                  "value": "Proveedor Postman Editado",
+                  "type": "text"
+                },
+                {
+                  "key": "rif_proveedor",
+                  "value": "{{rif}}",
+                  "type": "text"
+                },
+                {
+                  "key": "contacto_vendedor",
+                  "value": "Contacto Postman",
+                  "type": "text"
+                },
+                {
+                  "key": "telefono_proveedor",
+                  "value": "04141234567",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/proveedores?action=edit_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "proveedores"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "edit_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET get_suppliers (verificar)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const id = pm.collectionVariables.get('provId');",
+                  "const row = pm.response.json().suppliers.find((s) => String(s.id) === String(id));",
+                  "pm.test('refleja edicion', () => { pm.expect(row).to.exist; pm.expect(row.nombre_proveedor).to.eql('Proveedor Postman Editado'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/proveedores?action=get_suppliers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "proveedores"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "get_suppliers"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "04 · Eliminar",
+      "item": [
+        {
+          "name": "POST delete_ajax",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('success', () => pm.expect(pm.response.json().success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id",
+                  "value": "{{provId}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/proveedores?action=delete_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "proveedores"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "delete_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "05 · Negativos",
+      "item": [
+        {
+          "name": "POST /login (viewer)",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('login viewer', () => {",
+                  "  pm.expect([200,302]).to.include(pm.response.code);",
+                  "  pm.expect(pm.cookies.get('PHPSESSID')).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "nombre_usuario",
+                  "value": "{{viewerUsuario}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{viewerPassword}}",
+                  "type": "text"
+                },
+                {
+                  "key": "g-recaptcha-response",
+                  "value": "{{recaptchaToken}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "403 · add sin permiso",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('403', () => pm.response.to.have.status(403));",
+                  "pm.test('mensaje permiso', () => pm.expect(pm.response.json().message).to.match(/permiso/i));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "nombre_proveedor",
+                  "value": "Viewer",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/proveedores?action=add_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "proveedores"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "add_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /login (admin)",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('login admin', () => {",
+                  "  pm.expect([200,302]).to.include(pm.response.code);",
+                  "  pm.expect(pm.cookies.get('PHPSESSID')).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "nombre_usuario",
+                  "value": "{{usuario}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{password}}",
+                  "type": "text"
+                },
+                {
+                  "key": "g-recaptcha-response",
+                  "value": "{{recaptchaToken}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "500 · nombre vacio",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('500', () => pm.response.to.have.status(500));",
+                  "pm.test('mensaje nombre', () => pm.expect(pm.response.json().message).to.match(/nombre del proveedor es requerido/i));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "nombre_proveedor",
+                  "value": "",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/proveedores?action=add_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "proveedores"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "add_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "500 · rif invalido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('500', () => pm.response.to.have.status(500));",
+                  "pm.test('mensaje rif', () => pm.expect(pm.response.json().message).to.match(/rif/i));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "nombre_proveedor",
+                  "value": "Proveedor Mal RIF",
+                  "type": "text"
+                },
+                {
+                  "key": "rif_proveedor",
+                  "value": "XXX",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/proveedores?action=add_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "proveedores"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "add_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "400 · accion inexistente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400 accion invalida', () => pm.response.to.have.status(400));",
+                  "pm.test('mensaje', () => pm.expect(pm.response.json().message).to.match(/acci[oó]n ajax inv[aá]lida/i));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/proveedores?action=no_existe",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "proveedores"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "no_existe"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "06 · Logout",
+      "item": [
+        {
+          "name": "POST logout_ajax",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 logout', () => pm.response.to.have.status(200));",
+                  "pm.test('sesion cerrada', () => pm.expect(pm.response.json().success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login/logout_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login",
+                "logout_ajax"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

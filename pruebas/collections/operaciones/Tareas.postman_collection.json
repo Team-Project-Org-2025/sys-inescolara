@@ -1,0 +1,822 @@
+{
+  "info": {
+    "_postman_id": "c0a00000-0004-4000-8000-000000000004",
+    "name": "SYSINECOLARA · Tareas",
+    "description": "Asignacion, edicion, completado y cancelacion de tareas. ?action=.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "pm.request.headers.upsert({ key: 'X-Requested-With', value: 'XMLHttpRequest' });",
+          "const d = new Date(); pm.collectionVariables.set('today', d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'));"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "today",
+      "value": ""
+    },
+    {
+      "key": "tareaId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "00 · Auth",
+      "item": [
+        {
+          "name": "401 · sin sesion",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.cookies.clear();",
+                  "pm.request.headers.remove('Cookie');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('401 sin sesion', () => pm.response.to.have.status(401));",
+                  "pm.test('success = false', () => pm.expect(pm.response.json().success).to.eql(false));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tareas?action=get_assignments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tareas"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "get_assignments"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /login (admin)",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('login admin', () => {",
+                  "  pm.expect([200,302]).to.include(pm.response.code);",
+                  "  pm.expect(pm.cookies.get('PHPSESSID')).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "nombre_usuario",
+                  "value": "{{usuario}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{password}}",
+                  "type": "text"
+                },
+                {
+                  "key": "g-recaptcha-response",
+                  "value": "{{recaptchaToken}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "01 · Crear y consultar",
+      "item": [
+        {
+          "name": "POST assign_ajax",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test('success', () => pm.expect(b.success).to.eql(true));",
+                  "pm.collectionVariables.set('tareaId', String(b.id_asignacion));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "nombre_tarea",
+                  "value": "Tarea Postman",
+                  "type": "text"
+                },
+                {
+                  "key": "descripcion",
+                  "value": "Descripcion",
+                  "type": "text"
+                },
+                {
+                  "key": "id_usuario",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "fecha_asignacion",
+                  "value": "{{today}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tareas?action=assign_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tareas"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "assign_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET get_assignments",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const id = pm.collectionVariables.get('tareaId');",
+                  "const row = pm.response.json().assignments.find((a) => String(a.id_asignacion) === String(id));",
+                  "pm.test('incluye la tarea', () => pm.expect(row).to.exist);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tareas?action=get_assignments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tareas"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "get_assignments"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET get_assignment",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('estado pendiente', () => pm.expect(b.assignment.estatus_tarea).to.eql('pendiente'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tareas?action=get_assignment&id={{tareaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tareas"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "get_assignment"
+                },
+                {
+                  "key": "id",
+                  "value": "{{tareaId}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "02 · Editar y completar",
+      "item": [
+        {
+          "name": "POST edit_ajax",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id_asignacion",
+                  "value": "{{tareaId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "nombre_tarea",
+                  "value": "Tarea Postman Editada",
+                  "type": "text"
+                },
+                {
+                  "key": "descripcion",
+                  "value": "Desc editada",
+                  "type": "text"
+                },
+                {
+                  "key": "id_usuario",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "fecha_asignacion",
+                  "value": "{{today}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tareas?action=edit_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tareas"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "edit_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST complete_ajax",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('success', () => pm.expect(pm.response.json().success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id",
+                  "value": "{{tareaId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "fecha_cumplimiento",
+                  "value": "{{today}}",
+                  "type": "text"
+                },
+                {
+                  "key": "horas_dedicadas",
+                  "value": "2",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tareas?action=complete_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tareas"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "complete_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET get_assignment (completada)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('estado completada', () => pm.expect(pm.response.json().assignment.estatus_tarea).to.eql('completada'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tareas?action=get_assignment&id={{tareaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tareas"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "get_assignment"
+                },
+                {
+                  "key": "id",
+                  "value": "{{tareaId}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "03 · Cancelar",
+      "item": [
+        {
+          "name": "POST cancel_ajax",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id",
+                  "value": "{{tareaId}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tareas?action=cancel_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tareas"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "cancel_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET get_assignment (cancelada)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('estado cancelada', () => pm.expect(pm.response.json().assignment.estatus_tarea).to.eql('cancelada'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tareas?action=get_assignment&id={{tareaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tareas"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "get_assignment"
+                },
+                {
+                  "key": "id",
+                  "value": "{{tareaId}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "04 · Catalogos",
+      "item": [
+        {
+          "name": "GET get_tools_refresh",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('tools array', () => pm.expect(pm.response.json().tools).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tareas?action=get_tools_refresh",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tareas"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "get_tools_refresh"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET get_insumos_refresh",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('insumos array', () => pm.expect(pm.response.json().insumos).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tareas?action=get_insumos_refresh",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tareas"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "get_insumos_refresh"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "05 · Negativos",
+      "item": [
+        {
+          "name": "400 · sin nombre",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400', () => pm.response.to.have.status(400));",
+                  "pm.test('mensaje', () => pm.expect(pm.response.json().message).to.match(/nombre de la tarea es obligatorio/i));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id_usuario",
+                  "value": "1",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tareas?action=assign_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tareas"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "assign_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "400 · accion inexistente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400 accion invalida', () => pm.response.to.have.status(400));",
+                  "pm.test('mensaje', () => pm.expect(pm.response.json().message).to.match(/acci[oó]n ajax inv[aá]lida/i));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tareas?action=no_existe",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tareas"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "no_existe"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /login (viewer)",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('login viewer', () => {",
+                  "  pm.expect([200,302]).to.include(pm.response.code);",
+                  "  pm.expect(pm.cookies.get('PHPSESSID')).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "nombre_usuario",
+                  "value": "{{viewerUsuario}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{viewerPassword}}",
+                  "type": "text"
+                },
+                {
+                  "key": "g-recaptcha-response",
+                  "value": "{{recaptchaToken}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "403 · assign sin permiso",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('403', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "nombre_tarea",
+                  "value": "Viewer",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tareas?action=assign_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tareas"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "assign_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "06 · Logout",
+      "item": [
+        {
+          "name": "POST logout_ajax",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 logout', () => pm.response.to.have.status(200));",
+                  "pm.test('sesion cerrada', () => pm.expect(pm.response.json().success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login/logout_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login",
+                "logout_ajax"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

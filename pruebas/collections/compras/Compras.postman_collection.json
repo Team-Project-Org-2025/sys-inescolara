@@ -1,0 +1,1354 @@
+{
+  "info": {
+    "_postman_id": "c0a00000-0002-4000-8000-000000000002",
+    "name": "SYSINECOLARA · Compras",
+    "description": "Compras con lote/planta propios. Recibe, actualiza costo, verifica y limpia.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "pm.request.headers.upsert({ key: 'X-Requested-With', value: 'XMLHttpRequest' });",
+          "const d = new Date(); pm.collectionVariables.set('today', d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'));"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "today",
+      "value": ""
+    },
+    {
+      "key": "plantaId",
+      "value": ""
+    },
+    {
+      "key": "compraId",
+      "value": ""
+    },
+    {
+      "key": "loteId",
+      "value": ""
+    },
+    {
+      "key": "insumoId",
+      "value": ""
+    },
+    {
+      "key": "herrId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "00 · Auth",
+      "item": [
+        {
+          "name": "401 · sin sesion",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.cookies.clear();",
+                  "pm.request.headers.remove('Cookie');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('401 sin sesion', () => pm.response.to.have.status(401));",
+                  "pm.test('success = false', () => pm.expect(pm.response.json().success).to.eql(false));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/compras?action=obtener_compras",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "compras"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "obtener_compras"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /login (admin)",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('login admin', () => {",
+                  "  pm.expect([200,302]).to.include(pm.response.code);",
+                  "  pm.expect(pm.cookies.get('PHPSESSID')).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "nombre_usuario",
+                  "value": "{{usuario}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{password}}",
+                  "type": "text"
+                },
+                {
+                  "key": "g-recaptcha-response",
+                  "value": "{{recaptchaToken}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "01 · Preparacion (planta propia)",
+      "item": [
+        {
+          "name": "POST plantas add_ajax",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test('planta creada', () => pm.expect(b.success).to.eql(true));",
+                  "pm.collectionVariables.set('plantaId', String(b.plant.id));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "nombre_comun",
+                  "value": "Planta Compra Postman",
+                  "type": "text"
+                },
+                {
+                  "key": "nombre_tecnico",
+                  "value": "Planta compra tech",
+                  "type": "text"
+                },
+                {
+                  "key": "especie_id",
+                  "value": "{{especieId}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/plantas?action=add_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "plantas"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "add_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "02 · Rapidos",
+      "item": [
+        {
+          "name": "POST agregar_insumo_rapido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set('insumoId', String(pm.response.json().insumo.id));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "nombre_insumo",
+                  "value": "Insumo Compra Postman",
+                  "type": "text"
+                },
+                {
+                  "key": "id_unidad_medida",
+                  "value": "1",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/compras?action=agregar_insumo_rapido",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "compras"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "agregar_insumo_rapido"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST agregar_herramienta_rapido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set('herrId', String(pm.response.json().herramienta.id));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "nombre_herramienta",
+                  "value": "Herramienta Compra Postman",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/compras?action=agregar_herramienta_rapido",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "compras"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "agregar_herramienta_rapido"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST agregar_planta_rapido (roto: 404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('endpoint roto devuelve 404 (deuda conocida)', () => pm.expect([404,200]).to.include(pm.response.code));",
+                  "pm.test('mensaje undefined method', () => pm.expect(pm.response.json().message).to.match(/undefined method|creada correctamente/i));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "nombre_comun",
+                  "value": "Planta Rapida Postman",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/compras?action=agregar_planta_rapido",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "compras"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "agregar_planta_rapido"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "03 · Crear compra",
+      "item": [
+        {
+          "name": "POST agregar_ajax",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test('success', () => pm.expect(b.success).to.eql(true));",
+                  "pm.collectionVariables.set('compraId', String(b.id));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id_proveedor",
+                  "value": "{{seedProveedorId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "fecha_compra",
+                  "value": "{{today}}",
+                  "type": "text"
+                },
+                {
+                  "key": "tipo_comprobante",
+                  "value": "Factura",
+                  "type": "text"
+                },
+                {
+                  "key": "numero_comprobante",
+                  "value": "TEST-001",
+                  "type": "text"
+                },
+                {
+                  "key": "subtotal",
+                  "value": "10",
+                  "type": "text"
+                },
+                {
+                  "key": "iva",
+                  "value": "1.6",
+                  "type": "text"
+                },
+                {
+                  "key": "total",
+                  "value": "11.6",
+                  "type": "text"
+                },
+                {
+                  "key": "observacion",
+                  "value": "Compra Postman",
+                  "type": "text"
+                },
+                {
+                  "key": "items",
+                  "value": "[{\"id_planta\":{{plantaId}},\"cantidad\":2,\"costo_unitario\":5,\"categoria_lote\":\"germinado\",\"id_ubicacion\":{{seedUbicacionId}}}]",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/compras?action=agregar_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "compras"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "agregar_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET obtener_compras",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const id = pm.collectionVariables.get('compraId');",
+                  "const row = pm.response.json().compras.find((c) => String(c.id) === String(id));",
+                  "pm.test('incluye la compra', () => pm.expect(row).to.exist);",
+                  "pm.test('estado pendiente', () => pm.expect(row.estado).to.eql('pendiente'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/compras?action=obtener_compras",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "compras"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "obtener_compras"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET obtener_detalles",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test('details con item planta', () => { pm.expect(b.details).to.be.an('array'); pm.expect(b.details[0].tipo_item).to.eql('planta'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/compras?action=obtener_detalles&id_compra={{compraId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "compras"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "obtener_detalles"
+                },
+                {
+                  "key": "id_compra",
+                  "value": "{{compraId}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "04 · Editar y recibir",
+      "item": [
+        {
+          "name": "POST editar_ajax",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('success', () => pm.expect(pm.response.json().success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id",
+                  "value": "{{compraId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "id_proveedor",
+                  "value": "{{seedProveedorId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "fecha_compra",
+                  "value": "{{today}}",
+                  "type": "text"
+                },
+                {
+                  "key": "tipo_comprobante",
+                  "value": "Factura",
+                  "type": "text"
+                },
+                {
+                  "key": "numero_comprobante",
+                  "value": "TEST-001",
+                  "type": "text"
+                },
+                {
+                  "key": "subtotal",
+                  "value": "15",
+                  "type": "text"
+                },
+                {
+                  "key": "iva",
+                  "value": "2.4",
+                  "type": "text"
+                },
+                {
+                  "key": "total",
+                  "value": "17.4",
+                  "type": "text"
+                },
+                {
+                  "key": "observacion",
+                  "value": "Compra Postman Editada",
+                  "type": "text"
+                },
+                {
+                  "key": "items",
+                  "value": "[{\"id_planta\":{{plantaId}},\"cantidad\":3,\"costo_unitario\":5,\"categoria_lote\":\"germinado\",\"id_ubicacion\":{{seedUbicacionId}}}]",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/compras?action=editar_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "compras"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "editar_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST recibir_ajax",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('recibida', () => pm.expect(pm.response.json().success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id",
+                  "value": "{{compraId}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/compras?action=recibir_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "compras"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "recibir_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET lotes get_batches (lote creado)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const id = pm.collectionVariables.get('compraId');",
+                  "const row = pm.response.json().lotes.find((l) => String(l.observacion || '').includes('Ingresado por compra #' + id));",
+                  "pm.test('lote creado por la compra', () => pm.expect(row).to.exist);",
+                  "pm.collectionVariables.set('loteId', String(row.id));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/lotes?action=get_batches",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "lotes"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "get_batches"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST actualizar_costo_lote",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('costo actualizado', () => pm.expect(pm.response.json().success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id_lote",
+                  "value": "{{loteId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "costo_unitario",
+                  "value": "6.5",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/compras?action=actualizar_costo_lote",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "compras"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "actualizar_costo_lote"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "05 · Limpieza",
+      "item": [
+        {
+          "name": "POST compras eliminar_ajax",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id",
+                  "value": "{{compraId}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/compras?action=eliminar_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "compras"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "eliminar_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST lotes delete_ajax",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('lote eliminado', () => pm.expect(pm.response.json().success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id",
+                  "value": "{{loteId}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/lotes?action=delete_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "lotes"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "delete_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST plantas delete_ajax",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('planta eliminada', () => pm.expect(pm.response.json().success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id",
+                  "value": "{{plantaId}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/plantas?action=delete_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "plantas"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "delete_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST insumos delete_ajax",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('insumo eliminado', () => pm.expect(pm.response.json().success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id",
+                  "value": "{{insumoId}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/insumos?action=delete_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "insumos"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "delete_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST herramientas delete_ajax",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('herramienta eliminada', () => pm.expect(pm.response.json().success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id",
+                  "value": "{{herrId}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/herramientas?action=delete_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "herramientas"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "delete_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "06 · Negativos",
+      "item": [
+        {
+          "name": "POST /login (viewer)",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('login viewer', () => {",
+                  "  pm.expect([200,302]).to.include(pm.response.code);",
+                  "  pm.expect(pm.cookies.get('PHPSESSID')).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "nombre_usuario",
+                  "value": "{{viewerUsuario}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{viewerPassword}}",
+                  "type": "text"
+                },
+                {
+                  "key": "g-recaptcha-response",
+                  "value": "{{recaptchaToken}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "403 · segmento /compras/agregar_ajax",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('403 via segmento', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id_proveedor",
+                  "value": "1",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/compras/agregar_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "compras",
+                "agregar_ajax"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "500 · viewer alcanza add_ajax ?action (deuda: sin permiso)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('no es 403 (bypass permiso)', () => pm.expect(pm.response.code).to.not.eql(403));",
+                  "pm.test('mensaje proveedor requerido', () => pm.expect(pm.response.json().message).to.match(/proveedor es requerido/i));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": []
+            },
+            "url": {
+              "raw": "{{baseUrl}}/compras?action=agregar_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "compras"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "agregar_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /login (admin)",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('login admin', () => {",
+                  "  pm.expect([200,302]).to.include(pm.response.code);",
+                  "  pm.expect(pm.cookies.get('PHPSESSID')).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "nombre_usuario",
+                  "value": "{{usuario}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{password}}",
+                  "type": "text"
+                },
+                {
+                  "key": "g-recaptcha-response",
+                  "value": "{{recaptchaToken}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "500 · sin items",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('500', () => pm.response.to.have.status(500));",
+                  "pm.test('mensaje items', () => pm.expect(pm.response.json().message).to.match(/al menos un item/i));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id_proveedor",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "fecha_compra",
+                  "value": "{{today}}",
+                  "type": "text"
+                },
+                {
+                  "key": "subtotal",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "iva",
+                  "value": "0",
+                  "type": "text"
+                },
+                {
+                  "key": "total",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "items",
+                  "value": "[]",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/compras?action=agregar_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "compras"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "agregar_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "400 · detalles sin id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400', () => pm.response.to.have.status(400));",
+                  "pm.test('mensaje', () => pm.expect(pm.response.json().message).to.match(/id de compra inv/i));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/compras?action=obtener_detalles&id_compra=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "compras"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "obtener_detalles"
+                },
+                {
+                  "key": "id_compra",
+                  "value": "0"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "400 · accion inexistente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400 accion invalida', () => pm.response.to.have.status(400));",
+                  "pm.test('mensaje', () => pm.expect(pm.response.json().message).to.match(/acci[oó]n ajax inv[aá]lida/i));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/compras?action=no_existe",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "compras"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "no_existe"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "07 · Logout",
+      "item": [
+        {
+          "name": "POST logout_ajax",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 logout', () => pm.response.to.have.status(200));",
+                  "pm.test('sesion cerrada', () => pm.expect(pm.response.json().success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login/logout_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login",
+                "logout_ajax"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

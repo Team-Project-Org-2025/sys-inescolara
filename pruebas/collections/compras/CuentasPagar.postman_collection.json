@@ -1,0 +1,1093 @@
+{
+  "info": {
+    "_postman_id": "c0a00000-0003-4000-8000-000000000003",
+    "name": "SYSINECOLARA · Cuentas por pagar",
+    "description": "Cuentas de compras y pagos. Crea su propia compra y la elimina.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "pm.request.headers.upsert({ key: 'X-Requested-With', value: 'XMLHttpRequest' });",
+          "const d = new Date(); pm.collectionVariables.set('today', d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'));"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "today",
+      "value": ""
+    },
+    {
+      "key": "compraId",
+      "value": ""
+    },
+    {
+      "key": "cuentaId",
+      "value": ""
+    },
+    {
+      "key": "pago1",
+      "value": ""
+    },
+    {
+      "key": "pago2",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "00 · Auth",
+      "item": [
+        {
+          "name": "401 · sin sesion",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.cookies.clear();",
+                  "pm.request.headers.remove('Cookie');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('401 sin sesion', () => pm.response.to.have.status(401));",
+                  "pm.test('success = false', () => pm.expect(pm.response.json().success).to.eql(false));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/cuentas-pagar?action=obtener_cuentas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cuentas-pagar"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "obtener_cuentas"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /login (admin)",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('login admin', () => {",
+                  "  pm.expect([200,302]).to.include(pm.response.code);",
+                  "  pm.expect(pm.cookies.get('PHPSESSID')).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "nombre_usuario",
+                  "value": "{{usuario}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{password}}",
+                  "type": "text"
+                },
+                {
+                  "key": "g-recaptcha-response",
+                  "value": "{{recaptchaToken}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "01 · Preparacion (compra)",
+      "item": [
+        {
+          "name": "POST compras agregar_ajax",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set('compraId', String(pm.response.json().id));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id_proveedor",
+                  "value": "{{seedProveedorId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "fecha_compra",
+                  "value": "{{today}}",
+                  "type": "text"
+                },
+                {
+                  "key": "tipo_comprobante",
+                  "value": "Factura",
+                  "type": "text"
+                },
+                {
+                  "key": "numero_comprobante",
+                  "value": "CP-TEST",
+                  "type": "text"
+                },
+                {
+                  "key": "subtotal",
+                  "value": "17.24",
+                  "type": "text"
+                },
+                {
+                  "key": "iva",
+                  "value": "2.76",
+                  "type": "text"
+                },
+                {
+                  "key": "total",
+                  "value": "20",
+                  "type": "text"
+                },
+                {
+                  "key": "observacion",
+                  "value": "Compra CuentasPagar",
+                  "type": "text"
+                },
+                {
+                  "key": "items",
+                  "value": "[{\"id_planta\":{{seedPlantaId}},\"cantidad\":2,\"costo_unitario\":10,\"categoria_lote\":\"germinado\",\"id_ubicacion\":{{seedUbicacionId}}}]",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/compras?action=agregar_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "compras"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "agregar_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "02 · Consultas",
+      "item": [
+        {
+          "name": "GET obtener_cuentas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const id = pm.collectionVariables.get('compraId');",
+                  "const row = pm.response.json().cuentas.find((c) => String(c.id_compra) === String(id));",
+                  "pm.test('cuenta creada', () => pm.expect(row).to.exist);",
+                  "pm.collectionVariables.set('cuentaId', String(row.id));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/cuentas-pagar?action=obtener_cuentas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cuentas-pagar"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "obtener_cuentas"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET obtener_detalle",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('saldo pendiente 20', () => pm.expect(Number(b.cuenta.saldo_pendiente)).to.eql(20));",
+                  "pm.test('estado pendiente', () => pm.expect(b.cuenta.estado).to.eql('pendiente'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/cuentas-pagar?action=obtener_detalle&id_cuenta={{cuentaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cuentas-pagar"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "obtener_detalle"
+                },
+                {
+                  "key": "id_cuenta",
+                  "value": "{{cuentaId}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET obtener_pagos (vacio)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('pagos array', () => pm.expect(pm.response.json().pagos).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/cuentas-pagar?action=obtener_pagos&id_cuenta={{cuentaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cuentas-pagar"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "obtener_pagos"
+                },
+                {
+                  "key": "id_cuenta",
+                  "value": "{{cuentaId}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "03 · Pagos",
+      "item": [
+        {
+          "name": "POST registrar_pago (5)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('success', () => pm.expect(pm.response.json().success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id",
+                  "value": "{{cuentaId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "monto",
+                  "value": "5",
+                  "type": "text"
+                },
+                {
+                  "key": "fecha_pago",
+                  "value": "{{today}}",
+                  "type": "text"
+                },
+                {
+                  "key": "tipo_pago",
+                  "value": "Efectivo",
+                  "type": "text"
+                },
+                {
+                  "key": "observacion",
+                  "value": "Abono Postman",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/cuentas-pagar?action=registrar_pago",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cuentas-pagar"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "registrar_pago"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET obtener_detalle (saldo 15)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('saldo 15', () => pm.expect(Number(b.cuenta.saldo_pendiente)).to.eql(15));",
+                  "pm.test('estado parcial', () => pm.expect(b.cuenta.estado).to.eql('parcial'));",
+                  "pm.collectionVariables.set('pago1', String(b.pagos[0].id_pago_compra));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/cuentas-pagar?action=obtener_detalle&id_cuenta={{cuentaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cuentas-pagar"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "obtener_detalle"
+                },
+                {
+                  "key": "id_cuenta",
+                  "value": "{{cuentaId}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST registrar_pago (15)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id",
+                  "value": "{{cuentaId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "monto",
+                  "value": "15",
+                  "type": "text"
+                },
+                {
+                  "key": "fecha_pago",
+                  "value": "{{today}}",
+                  "type": "text"
+                },
+                {
+                  "key": "tipo_pago",
+                  "value": "Efectivo",
+                  "type": "text"
+                },
+                {
+                  "key": "observacion",
+                  "value": "Saldo Postman",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/cuentas-pagar?action=registrar_pago",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cuentas-pagar"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "registrar_pago"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET obtener_detalle (pagada)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('saldo 0', () => pm.expect(Number(b.cuenta.saldo_pendiente)).to.eql(0));",
+                  "pm.test('estado pagada', () => pm.expect(b.cuenta.estado).to.eql('pagada'));",
+                  "const p = b.pagos;",
+                  "pm.collectionVariables.set('pago1', String(p[0].id_pago_compra));",
+                  "pm.collectionVariables.set('pago2', String(p[1].id_pago_compra));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/cuentas-pagar?action=obtener_detalle&id_cuenta={{cuentaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cuentas-pagar"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "obtener_detalle"
+                },
+                {
+                  "key": "id_cuenta",
+                  "value": "{{cuentaId}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "500 · pago extra",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('500', () => pm.response.to.have.status(500));",
+                  "pm.test('mensaje supera saldo', () => pm.expect(pm.response.json().message).to.match(/supera el saldo/i));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id",
+                  "value": "{{cuentaId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "monto",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "fecha_pago",
+                  "value": "{{today}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/cuentas-pagar?action=registrar_pago",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cuentas-pagar"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "registrar_pago"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "04 · Anular y limpiar",
+      "item": [
+        {
+          "name": "POST anular_pago (1)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id_pago",
+                  "value": "{{pago1}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/cuentas-pagar?action=anular_pago",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cuentas-pagar"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "anular_pago"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST anular_pago (2)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id_pago",
+                  "value": "{{pago2}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/cuentas-pagar?action=anular_pago",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cuentas-pagar"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "anular_pago"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST compras eliminar_ajax",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('compra eliminada', () => pm.expect(pm.response.json().success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id",
+                  "value": "{{compraId}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/compras?action=eliminar_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "compras"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "eliminar_ajax"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "05 · Negativos",
+      "item": [
+        {
+          "name": "POST /login (viewer)",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('login viewer', () => {",
+                  "  pm.expect([200,302]).to.include(pm.response.code);",
+                  "  pm.expect(pm.cookies.get('PHPSESSID')).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "nombre_usuario",
+                  "value": "{{viewerUsuario}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{viewerPassword}}",
+                  "type": "text"
+                },
+                {
+                  "key": "g-recaptcha-response",
+                  "value": "{{recaptchaToken}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "403 · registrar_pago",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('403', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "monto",
+                  "value": "5",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/cuentas-pagar?action=registrar_pago",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cuentas-pagar"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "registrar_pago"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /login (admin)",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('login admin', () => {",
+                  "  pm.expect([200,302]).to.include(pm.response.code);",
+                  "  pm.expect(pm.cookies.get('PHPSESSID')).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "nombre_usuario",
+                  "value": "{{usuario}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{password}}",
+                  "type": "text"
+                },
+                {
+                  "key": "g-recaptcha-response",
+                  "value": "{{recaptchaToken}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "500 · monto 0",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('500', () => pm.response.to.have.status(500));",
+                  "pm.test('mensaje monto', () => pm.expect(pm.response.json().message).to.match(/monto debe ser mayor/i));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "monto",
+                  "value": "0",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/cuentas-pagar?action=registrar_pago",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cuentas-pagar"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "registrar_pago"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "400 · detalle sin id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/cuentas-pagar?action=obtener_detalle&id_cuenta=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cuentas-pagar"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "obtener_detalle"
+                },
+                {
+                  "key": "id_cuenta",
+                  "value": "0"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "400 · accion inexistente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400 accion invalida', () => pm.response.to.have.status(400));",
+                  "pm.test('mensaje', () => pm.expect(pm.response.json().message).to.match(/acci[oó]n ajax inv[aá]lida/i));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/cuentas-pagar?action=no_existe",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cuentas-pagar"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "no_existe"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "06 · Logout",
+      "item": [
+        {
+          "name": "POST logout_ajax",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 logout', () => pm.response.to.have.status(200));",
+                  "pm.test('sesion cerrada', () => pm.expect(pm.response.json().success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login/logout_ajax",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login",
+                "logout_ajax"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
