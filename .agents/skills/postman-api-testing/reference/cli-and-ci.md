@@ -2,26 +2,24 @@
 
 ## 1. Ejecutar una colección
 
-### Postman CLI
+### Newman (CLI oficial de la suite)
 
 ```bash
-postman collection run "pruebas/collections/inventario/Plantas.postman_collection.json" \
-  -e "pruebas/environments/SysInescolara Local.postman_environment.json" \
-  --env-var "usuario=admin" \
-  --env-var "password=Admin123!"
-```
-
-`postman login` **no** es necesario para corridas locales. El aviso
-"Postman credentials are required for publishing run details" es normal.
-
-### Newman
-
-```bash
+# Una colección
 newman run "pruebas/collections/inventario/Plantas.postman_collection.json" \
   -e "pruebas/environments/SysInescolara Local.postman_environment.json" \
   --env-var "usuario=admin" \
   --env-var "password=Admin123!"
+
+# Todas (helpers versionados)
+./pruebas/scripts/run.sh                      # 29 colecciones
+./pruebas/scripts/run-all.sh                  # + JUnit en results/
+pwsh -File pruebas\scripts\run-all.ps1        # Windows
 ```
+
+Newman no requiere `postman login` ni credenciales de la nube. El Postman CLI
+(`postman collection run`) quedó fuera de la suite: si lo ves en docs viejas,
+usa el equivalente `newman run`.
 
 ## 2. Data-driven con CSV
 
@@ -33,21 +31,29 @@ Rosa de Prueba Uno,Rosa canina,1,15.50
 ```
 
 ```bash
-postman collection run <coleccion> -e <entorno> -d pruebas/data/plantas.csv -n 3
+newman run <coleccion> -e <entorno> -d pruebas/data/plantas.csv -n 3
 ```
 
 En los requests se referencia con `{{nombre_comun}}`, `{{precio}}`, etc.
 `-n 3` fija el número de iteraciones (si se omite, usa las filas del CSV).
+Aplica solo a la suite monolítica anterior; las colecciones por módulo crean y
+limpian sus propios registros.
 
 ## 3. Reportes
 
 ```bash
-postman collection run <coleccion> -e <entorno> \
+newman run <coleccion> -e <entorno> \
   --reporters cli,json \
   --reporter-json-export pruebas/reportes/plantas.json
 ```
 
-`newman` equivalentes: `-r cli,json --reporter-json-export ...`.
+Para JUnit (lo que usa CI):
+
+```bash
+newman run <coleccion> -e <entorno> \
+  --reporters cli,junit \
+  --reporter-junit-export results/<coleccion>.xml
+```
 
 ## 4. Variables por entorno
 
@@ -78,47 +84,25 @@ if (-not (Get-Process mysqld -ErrorAction SilentlyContinue)) {
 curl.exe -s -o NUL -w "%{http_code}" http://localhost/sys-inescolara/login
 
 # 3. Corrida
-postman collection run "..."
+newman run "<coleccion>" -e "<entorno>"
 ```
 
 ## 6. CI (GitHub Actions)
 
-No hay workflow en el repo todavía. Esqueleto mínimo:
+El pipeline real está en [`.github/workflows/api-tests.yml`](../../../../.github/workflows/api-tests.yml)
+con tres jobs:
 
-```yaml
-name: API Tests
+- **`api`** — MariaDB 10.4 + PHP 8.2 + composer + newman; carga
+  `database/sysinescolara_vacia.sql`, corre `php scripts/migrate.php`, siembra
+  `pruebas/data/seed.sql` y `pruebas/data/seed-seguridad.sql`, arranca
+  `php -S 127.0.0.1:8000 tests/aceptacion/server/router.php` (fuerza las llaves
+  reCAPTCHA de prueba) y ejecuta las 29 colecciones exportando JUnit a
+  `results/`.
+- **`phpunit`** — `vendor/bin/phpunit -c tests/phpunit.xml`.
+- **`lint`** — `php -l` sobre `app/` e `index.php`.
 
-on: [push, pull_request]
-
-jobs:
-  postman:
-    runs-on: ubuntu-latest
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
-          MYSQL_DATABASE: sysinescolara
-        ports: ["3306:3306"]
-        options: >-
-          --health-cmd="mysqladmin ping -h localhost"
-          --health-interval=5s --health-timeout=5s --health-retries=10
-    steps:
-      - uses: actions/checkout@v4
-      - run: sudo apt-get install -y php8.2-cli php8.2-mysql
-      - run: composer install --no-interaction
-      - run: mysql -h 127.0.0.1 -u root < database/sysinescolara_vacia.sql
-      - run: mysql -h 127.0.0.1 -u root sysinescolara-seguridad < database/sysinescolara-seguridad.sql
-      - run: php -S 127.0.0.1:8080 -t . &
-      - run: npm install -g newman
-      - run: newman run "pruebas/collections/**/*.postman_collection.json" -e "pruebas/environments/SysInescolara Local.postman_environment.json"
-        env:
-          POSTMAN_BASE_URL: http://127.0.0.1:8080
-```
-
-Ajusta rutas y credenciales al pipeline real. Lo importante: **la BD debe
-importarse antes de correr** y el servidor debe usar las llaves de prueba de
-reCAPTCHA.
+Secretos requeridos en GitHub Actions: `POSTMAN_ADMIN_PASSWORD` y
+`POSTMAN_VIEWER_PASSWORD`.
 
 ## 7. Diagnóstico
 

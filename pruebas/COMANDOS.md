@@ -22,15 +22,15 @@ Instrucciones conceptuales: [`README.md`](README.md)
 | Herramienta | Verificación |
 | --- | --- |
 | Apache/XAMPP o Docker sirviendo la app | `curl -I http://localhost/sys-inescolara/login` → `200` |
-| Postman CLI | `postman --version` → `1.86.0` o superior |
+| Newman (CLI de Postman) | `newman --version` → `5.x` o superior |
 | PHP 8.2+ | `php -v` |
 | `curl` | `curl --version` |
 | Credenciales de un usuario administrador | `usuario` + `password` |
 | Un `especie_id` existente | La suite lo detecta sola en el request `09` |
 
-No necesitas `postman login` para ejecutar una colección local. El aviso
-`Postman credentials are required for publishing run details` es normal y no
-afecta la corrida.
+La suite se ejecuta con **Newman** (`npm install -g newman`), no con el Postman
+CLI ni con `postman login`: no hace falta ninguna credencial de la nube de
+Postman para correr colecciones locales.
 
 ---
 
@@ -56,21 +56,18 @@ Si `plantas` no da `401`, revisa la URL base.
 
 ---
 
-## 2. Instalar el Postman CLI (solo si falta)
+## 2. Instalar Newman (solo si falta)
 
 ```bash
-command -v postman && postman --version
+command -v newman && newman --version
 ```
 
 Si no existe:
 
 ```bash
-npm install -g postman-cli
-postman --version
+npm install -g newman
+newman --version
 ```
-
-> En Linux también puedes usar el instalador oficial:
-> `curl -o- "https://dl-cli.pstmn.io/install/linux64.sh" | sh`
 
 ---
 
@@ -149,36 +146,53 @@ export POSTMAN_PASSWORD='Postman123!'
 
 ---
 
-## 5. Ejecutar la colección
+## 5. Ejecutar las colecciones
 
-### 5.1 Una corrida simple (sin CSV)
+Las colecciones están organizadas **por módulo** en `pruebas/collections/`
+(inventario, comercial, compras, operaciones, sistema, público). La suite
+monolítica `SYSINECOLARA API Tests` quedó deprecada.
+
+### 5.1 Todas las colecciones (un módulo o todas)
 
 ```bash
-POSTMAN_USUARIO="$POSTMAN_USUARIO" POSTMAN_PASSWORD="$POSTMAN_PASSWORD" \
-  ./pruebas/scripts/run.sh
+export POSTMAN_USUARIO='admin'
+export POSTMAN_PASSWORD='tu-password'
+export POSTMAN_VIEWER_PASSWORD='tu-password-viewer'
+
+# Las 29 colecciones
+./pruebas/scripts/run.sh
+
+# Una sola colección
+./pruebas/scripts/run.sh "pruebas/collections/inventario/Plantas.postman_collection.json"
 ```
 
-Equivalente sin el helper:
+### 5.2 Equivalente sin el helper (newman directo)
 
 ```bash
-postman collection run \
-  "pruebas/collections/SYSINECOLARA API Tests.postman_collection.json" \
+newman run \
+  "pruebas/collections/inventario/Plantas.postman_collection.json" \
   -e "pruebas/environments/SysInescolara Local.postman_environment.json" \
+  --env-var "baseUrl=http://localhost/sys-inescolara" \
   --env-var "usuario=$POSTMAN_USUARIO" \
-  --env-var "password=$POSTMAN_PASSWORD"
+  --env-var "password=$POSTMAN_PASSWORD" \
+  --env-var "viewerPassword=$POSTMAN_VIEWER_PASSWORD"
 ```
 
-### 5.2 Data-Driven Testing con 3 filas
+Para correr todo y exportar un JUnit por colección en `results/`:
 
 ```bash
-POSTMAN_USUARIO="$POSTMAN_USUARIO" POSTMAN_PASSWORD="$POSTMAN_PASSWORD" \
-  ./pruebas/scripts/run.sh --csv
+POSTMAN_PASSWORD="$POSTMAN_PASSWORD" POSTMAN_VIEWER_PASSWORD="$POSTMAN_VIEWER_PASSWORD" \
+  ./pruebas/scripts/run-all.sh          # Linux/macOS
+pwsh -File pruebas\scripts\run-all.ps1  # Windows
 ```
 
-Equivalente sin el helper:
+### 5.3 Data-Driven Testing con CSV (solo la suite monolítica)
+
+> La suite por módulo no usa CSV: cada colección crea y limpia sus propios
+> registros. El modo data-driven queda solo para la suite monolítica anterior.
 
 ```bash
-postman collection run \
+newman run \
   "pruebas/collections/SYSINECOLARA API Tests.postman_collection.json" \
   -e "pruebas/environments/SysInescolara Local.postman_environment.json" \
   -d "pruebas/data/plantas.csv" \
@@ -190,57 +204,52 @@ postman collection run \
 forzarlo:
 
 ```bash
-postman collection run ... -d "pruebas/data/plantas.csv" -n 3
+newman run ... -d "pruebas/data/plantas.csv" -n 3
 ```
 
-### 5.3 Contra otro host (Render, staging)
+### 5.4 Contra otro host (Render, staging)
 
 ```bash
-POSTMAN_USUARIO="$POSTMAN_USUARIO" POSTMAN_PASSWORD="$POSTMAN_PASSWORD" \
 POSTMAN_BASE_URL="https://tu-app.onrender.com" \
+POSTMAN_PASSWORD="$POSTMAN_PASSWORD" POSTMAN_VIEWER_PASSWORD="$POSTMAN_VIEWER_PASSWORD" \
   ./pruebas/scripts/run.sh
 ```
 
 O directamente:
 
 ```bash
-postman collection run ... --env-var "baseUrl=https://tu-app.onrender.com"
+newman run ... --env-var "baseUrl=https://tu-app.onrender.com"
 ```
 
 > En Render, el login con llaves reales de reCAPTCHA no se puede automatizar.
 > Usa la sección 6.2 (cookie del navegador) y ejecuta solo `10` y `20`.
 
-### 5.4 Ejecutar solo una carpeta o un request
+### 5.5 Ejecutar solo una carpeta o un request
 
 ```bash
-# Solo autenticación
-postman collection run "pruebas/collections/SYSINECOLARA API Tests.postman_collection.json" \
+# Solo una carpeta de la colección (newman --folder)
+newman run "pruebas/collections/inventario/Plantas.postman_collection.json" \
   -e "pruebas/environments/SysInescolara Local.postman_environment.json" \
-  -i "00 · Autenticación" \
+  -f "Autenticación" \
   --env-var "usuario=$POSTMAN_USUARIO" --env-var "password=$POSTMAN_PASSWORD"
 
-# Solo listados
-postman collection run "pruebas/collections/SYSINECOLARA API Tests.postman_collection.json" \
-  -e "pruebas/environments/SysInescolara Local.postman_environment.json" \
-  -i "10 · GET (listados)"
-
 # Un único request (requiere sesión previa o correr antes la autenticación)
-postman collection run "pruebas/collections/SYSINECOLARA API Tests.postman_collection.json" \
+newman run "pruebas/collections/inventario/Plantas.postman_collection.json" \
   -e "pruebas/environments/SysInescolara Local.postman_environment.json" \
-  -i "10 · GET Plantas"
+  -f "GET Plantas"
 ```
 
-### 5.5 Verificar el código de salida
+### 5.6 Verificar el código de salida
 
 ```bash
-./pruebas/scripts/run.sh --csv
+./pruebas/scripts/run.sh
 echo "exit=$?"
 ```
 
 - `0` → todas las assertions pasaron.
 - distinto de `0` → al menos una assertion falló.
 
-El CLI devuelve el código de salida de las pruebas, no solo del HTTP. Un `200`
+Newman devuelve el código de salida de las pruebas, no solo del HTTP. Un `200`
 puede fallar una assertion.
 
 ---
@@ -251,13 +260,15 @@ puede fallar una assertion.
 
 1. Abre Postman.
 2. **File → Import** (o `Ctrl+O`).
-3. Arrastra estos dos archivos:
-   - `pruebas/collections/SYSINECOLARA API Tests.postman_collection.json`
+3. Arrastra estos archivos:
+   - las colecciones por módulo de `pruebas/collections/<dominio>/`
+     (por ejemplo `pruebas/collections/inventario/Plantas.postman_collection.json`)
    - `pruebas/environments/SysInescolara Local.postman_environment.json`
 4. Arriba a la derecha, selecciona el environment **SysInescolara Local**.
 5. Haz clic en el ojo del environment y edita:
    - `usuario` → tu usuario administrador.
-   - `password` → tu contraseña.
+   - `password` → tu contraseña del administrador.
+   - `viewerPassword` → la contraseña de `postman_viewer` (casos 403).
    - `baseUrl` → tu URL si es distinta de `http://localhost/sys-inescolara`.
 6. Deja `recaptchaToken` en `PASSED` si estás usando las llaves de prueba.
 
@@ -275,47 +286,42 @@ La cookie del navegador caduca cuando cierras la sesión. Si empiezas a recibir
 
 ### 6.3 Collection Runner
 
-1. Clic derecho sobre la colección → **Run collection**.
+1. Clic derecho sobre la colección del módulo → **Run collection**.
 2. Verifica que el environment esté seleccionado.
-3. En **Data**, selecciona `pruebas/data/plantas.csv`.
-4. Deja **Iterations** en `3` (una por fila) o usa el valor que Postman detecte.
-5. **Run SYSINECOLARA API Tests**.
-6. Revisa la pestaña **Tests**: todas las assertions deben estar en verde.
+3. **Run** (las colecciones por módulo no usan CSV).
+4. Revisa la pestaña **Tests**: todas las assertions deben estar en verde.
 
 ---
 
 ## 7. Resultado esperado
 
-Con el CSV de 3 filas:
+Corrida completa de las 29 colecciones por módulo (contra la BD local con
+`pruebas/data/seed.sql`), verificada con `run-all.sh`:
+
+```text
+colecciones:  29
+assertions:  745   (testcases JUnit en results/*.xml)
+failed:        0
+exit code:     0
+```
+
+Recuento desde los JUnit exportados (ojo: el atributo `tests=` del
+`<testsuites>` no refleja el total; cuenta los `<testcase>`):
+
+```bash
+# Linux/macOS
+grep -h -o '<testcase ' results/*.xml | wc -l   # → 745
+grep -h -o '<failure'   results/*.xml | wc -l   # → 0
+```
+
+La suite monolítica anterior (solo referencia), con el CSV de 3 filas:
 
 ```text
 iterations:        3
 requests:         36   (12 × 3)
-test-scripts:     36
-prerequest-scripts: 48
 assertions:      186   (62 × 3)
 failed:            0
 ```
-
-Por iteración:
-
-| Request | Assertions |
-| --- | ---: |
-| `00` logout | 2 |
-| `01` GET login | 6 |
-| `02` POST login | 4 |
-| `09` GET especies | 4 |
-| `10` GET plantas | 7 |
-| `11` GET clientes | 6 |
-| `12` GET insumos | 6 |
-| `13` GET lotes | 7 |
-| `14` GET ventas | 6 |
-| `20` crear planta | 6 |
-| `21` editar planta | 4 |
-| `22` eliminar planta | 4 |
-| **Total** | **62** |
-
-Sin CSV (una iteración) el total es **62 assertions** y **12 requests**.
 
 ---
 
@@ -331,8 +337,8 @@ Sin CSV (una iteración) el total es **62 assertions** y **12 requests**.
 | `plantas` llega vacío | La tabla no tiene filas activas | Crea una planta desde el sistema o revisa el seed |
 | `clientes`, `supplies` o `ventas` vacíos | Tablas sin datos; el test lo permite | Agrega la clave a `seededCollections` si tu BD sí tiene datos |
 | `No se encontró PHPSESSID` | Cookie jar deshabilitado o respuesta sin `Set-Cookie` | La colección tiene fallback por header; revisa que el login devuelva `302` |
-| `--output` falla con “You must be signed in” | El reporte YAML requiere Postman Cloud | Usa la salida de consola o `run.sh`; no necesitas `--output` |
-| `Postman credentials are required...` | Aviso al intentar publicar el run | Ignóralo; la corrida local ya terminó |
+| `--output` falla con “You must be signed in” | El reporte YAML requiere Postman Cloud | Usa `--reporters cli,junit` (Newman); no necesitas `--output` |
+| `Postman credentials are required...` | Aviso residual de Postman Cloud | No aplica con Newman; ignóralo |
 
 Para ver la respuesta cruda de un request, en Postman abre **Console**
 (`Ctrl+Alt+C`) o usa los comandos `curl` de la sección 10.
@@ -444,9 +450,9 @@ echo
 La matriz [`TRACEABILITY.md`](TRACEABILITY.md) es una **foto** de la corrida
 verificada. Si cambias la colección o los datos:
 
-1. Ejecuta la suite con CSV:
+1. Ejecuta la suite completa:
    ```bash
-   ./pruebas/scripts/run.sh --csv
+   ./pruebas/scripts/run.sh
    ```
 2. Si todo pasa, actualiza en `TRACEABILITY.md`:
    - la fecha de generación;
@@ -478,15 +484,19 @@ $env:POSTMAN_USUARIO = "admin"
 $env:POSTMAN_PASSWORD = "tu-password"
 ```
 
-Ejecutar la colección:
+Ejecutar las colecciones (Windows):
 
 ```powershell
-postman collection run `
-  "pruebas\collections\SYSINECOLARA API Tests.postman_collection.json" `
+# Todas con JUnit
+pwsh -File pruebas\scripts\run-all.ps1
+
+# Una sola colección
+newman run `
+  "pruebas\collections\inventario\Plantas.postman_collection.json" `
   -e "pruebas\environments\SysInescolara Local.postman_environment.json" `
-  -d "pruebas\data\plantas.csv" `
   --env-var "usuario=$env:POSTMAN_USUARIO" `
-  --env-var "password=$env:POSTMAN_PASSWORD"
+  --env-var "password=$env:POSTMAN_PASSWORD" `
+  --env-var "viewerPassword=$env:POSTMAN_VIEWER_PASSWORD"
 ```
 
 Para respaldar el `.env`:

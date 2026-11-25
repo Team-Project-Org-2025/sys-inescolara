@@ -47,7 +47,7 @@ pruebas/
 ├── data/
 │   ├── plantas.csv
 │   ├── seed.sql             datos mínimos para los CRUD (catálogos, planta y lote base)
-│   └── seed-seguridad.sql   usuario postman_viewer para los casos 403
+│   └── seed-seguridad.sql   usuarios postman_admin y postman_viewer (403/negativos)
 ├── scripts/
 │   ├── run.sh               corre las 29 colecciones (o una sola)
 │   ├── run-all.sh           corre todo y exporta JUnit (Linux/macOS)
@@ -488,6 +488,18 @@ defecto válidos (`Planta Postman`, especie detectada).
    no existe).
 10. **`tareas?action=complete_ajax`** exige `consumptions`/`tool_estados` como
     arrays; con form-urlencoded se pasan como string y lanza `TypeError`.
+11. **`database/sysinescolara_vacia.sql` no se puede importar en una BD
+    fresca sin `FOREIGN_KEY_CHECKS=0`.** Su tabla `mermas_historico` declara
+    una FK cruzada a `SysInescolara-Seguridad.usuarios` (creada más abajo en
+    el mismo dump) y el archivo no desactiva las restricciones: MySQL/MariaDB
+    responde `ERROR 1005 (errno 150)` y aborta el import. CI lo carga con
+    `mysql --init-command="SET FOREIGN_KEY_CHECKS=0"`; la FK queda registrada
+    y valida en runtime.
+12. **`usuarios?action=delete_ajax` de un usuario inexistente devuelve 500**,
+    no 404/400: el controlador busca el usuario antes de validar
+    `current_password`. Por eso la colección de Usuarios usa `id=5` y
+    `pruebas/data/seed-seguridad.sql` siembra `postman_admin` (id 5) para
+    que el caso pase también en una BD recién creada.
 
 ---
 
@@ -502,20 +514,23 @@ Incluye tres jobs:
 2. **`phpunit`** — ejecuta `vendor/bin/phpunit`.
 3. **`lint`** — `php -l` sobre `app/` e `index.php`.
 
-### Secretos requeridos
+### Secretos (opcionales)
 
 | Secreto | Descripción |
 |---|---|
-| `POSTMAN_ADMIN_PASSWORD` | Contraseña del usuario `admin` (p. ej. `Admin123!`) |
-| `POSTMAN_VIEWER_PASSWORD` | Contraseña de `postman_viewer` (p. ej. `Postman123!`) |
+| `POSTMAN_ADMIN_PASSWORD` | Contraseña de `admin`. Si no existe, CI usa `Admin123!` (la que crea `scripts/migrate.php`) |
+| `POSTMAN_VIEWER_PASSWORD` | Contraseña de `postman_viewer`/`postman_admin`. Si no existe, CI usa `Postman123!` (la del seed) |
 
-Configúralos en **Settings → Secrets and variables → Actions**.
+Configúralos en **Settings → Secrets and variables → Actions** si cambias esas
+contraseñas; sin secretos la corrida funciona igual.
 
 ### Cómo funciona la corrida
 
 ```bash
 # Esquema + migraciones + seed (mismo orden que ejecuta CI)
-mysql -h127.0.0.1 -uroot -proot < database/sysinescolara_vacia.sql
+# Ojo: vacia.sql necesita foreign_key_checks=0 por su FK cruzada a Seguridad
+# (ver hallazgo 11); sin eso falla con errno 150 en una BD fresca.
+mysql -h127.0.0.1 -uroot -proot --init-command="SET FOREIGN_KEY_CHECKS=0" < database/sysinescolara_vacia.sql
 php scripts/migrate.php
 mysql -h127.0.0.1 -uroot -proot < pruebas/data/seed.sql
 mysql -h127.0.0.1 -uroot -proot < pruebas/data/seed-seguridad.sql
@@ -529,6 +544,7 @@ POSTMAN_PASSWORD='Admin123!' POSTMAN_VIEWER_PASSWORD='Postman123!' \
   ./pruebas/scripts/run-all.sh
 ```
 
-> `postman_viewer` lo crea `pruebas/data/seed-seguridad.sql` (rol Trabajador, sin
-> permisos individuales) para que los casos `403` funcionen en un entorno recién
-> creado.
+> `pruebas/data/seed-seguridad.sql` siembra `postman_viewer` (rol Trabajador,
+> sin permisos → casos `403`) y `postman_admin` (id 5 → caso negativo de
+> eliminar de la colección de Usuarios) para que la suite pase en un entorno
+> recién creado.

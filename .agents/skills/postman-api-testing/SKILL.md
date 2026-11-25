@@ -87,17 +87,24 @@ Detalle completo en [`reference/php-session-auth.md`](reference/php-session-auth
 
 ## Comandos
 
+La suite se ejecuta con **newman** (`npm install -g newman`), no con el Postman
+CLI:
+
 ```bash
-# Corrida completa
-postman collection run "pruebas/collections/inventario/Plantas.postman_collection.json" \
+# Todas las colecciones por módulo (29)
+./pruebas/scripts/run.sh
+
+# Una sola colección
+newman run "pruebas/collections/inventario/Plantas.postman_collection.json" \
   -e "pruebas/environments/SysInescolara Local.postman_environment.json" \
   --env-var "usuario=admin" --env-var "password=Admin123!"
 
-# Data-driven con CSV
-... -d pruebas/data/plantas.csv -n 3
+# Correr todo y exportar JUnit a results/
+./pruebas/scripts/run-all.sh            # Linux/macOS
+pwsh -File pruebas\scripts\run-all.ps1  # Windows
 
-# Alternativa open source
-newman run <coleccion> -e <entorno>
+# Data-driven con CSV (solo la suite monolítica anterior)
+newman run <coleccion> -e <entorno> -d pruebas/data/plantas.csv -n 3
 ```
 
 Más detalle en [`reference/cli-and-ci.md`](reference/cli-and-ci.md).

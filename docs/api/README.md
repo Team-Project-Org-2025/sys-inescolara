@@ -46,14 +46,16 @@ Toda ficha verificada se puede reproducir así:
 ```powershell
 # 1. Servicios
 #    Apache (XAMPP) y MySQL en marcha
-# 2. Base de datos
-mysql -u root < database/sysinescolara_vacia.sql
-mysql -u root < database/sysinescolara-seguridad.sql
-mysql -u root < pruebas/data/seed.sql
 
-# 3. Dependencias y migraciones
+# 2. Dependencias
 composer install
+
+# 3. Base de datos (mismo orden que CI; ver hallazgo 11 de pruebas/README.md
+#    sobre FOREIGN_KEY_CHECKS=0 y el orden migrate → seed)
+mysql -u root --init-command="SET FOREIGN_KEY_CHECKS=0" < database/sysinescolara_vacia.sql
 php scripts/migrate.php
+mysql -u root < pruebas/data/seed.sql
+mysql -u root < pruebas/data/seed-seguridad.sql
 
 # 4. Ejecutar la colección del módulo
 newman run "pruebas/collections/inventario/Plantas.postman_collection.json" `

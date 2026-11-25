@@ -4,12 +4,14 @@ on:
   push:
     branches: [ main, feature/postman-api-testing ]
   pull_request:
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
   api:
     name: Newman (29 colecciones)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     services:
       db:
@@ -63,6 +65,9 @@ jobs:
 
       - name: Esperar MySQL
         run: |
+          command -v mysql >/dev/null 2>&1 || {
+            sudo apt-get update -qq && sudo apt-get install -y -qq mariadb-client
+          }
           for i in $(seq 1 30); do
             if mysqladmin ping -h127.0.0.1 -uroot -proot --silent; then
               echo "MySQL listo"
@@ -74,8 +79,13 @@ jobs:
           exit 1
 
       - name: Cargar esquema, migrar y sembrar
+        # Nota: database/sysinescolara_vacia.sql NO desactiva FOREIGN_KEY_CHECKS
+        # y su tabla mermas_historico tiene una FK cruzada a
+        # SysInescolara-Seguridad.usuarios (creada más abajo en el mismo dump).
+        # En una BD fresca eso falla con errno 150, así que se importa con
+        # foreign_key_checks=0 (la FK queda registrada y valida en runtime).
         run: |
-          mysql -h127.0.0.1 -uroot -proot < database/sysinescolara_vacia.sql
+          mysql -h127.0.0.1 -uroot -proot --init-command="SET FOREIGN_KEY_CHECKS=0" < database/sysinescolara_vacia.sql
           php scripts/migrate.php
           mysql -h127.0.0.1 -uroot -proot < pruebas/data/seed.sql
           mysql -h127.0.0.1 -uroot -proot < pruebas/data/seed-seguridad.sql
@@ -84,29 +94,47 @@ jobs:
         run: |
           nohup php -S 127.0.0.1:8000 tests/aceptacion/server/router.php > /tmp/php-server.log 2>&1 &
           echo $! > /tmp/php-server.pid
-          sleep 4
-          curl -s -o /dev/null -w "login=%{http_code}\n" http://127.0.0.1:8000/login
+          for i in $(seq 1 15); do
+            if curl -sf -o /dev/null http://127.0.0.1:8000/login; then
+              echo "Servidor listo"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "El servidor embebido no respondió. Log:" >&2
+          cat /tmp/php-server.log >&2
+          exit 1
 
       - name: Ejecutar colecciones
         run: |
           mkdir -p results
-          set -euo pipefail
+          set -uo pipefail
+          failed=0
           for f in pruebas/collections/*/*.postman_collection.json; do
             name=$(basename "$f" .postman_collection.json)
             echo "=== $name ==="
             newman run "$f" \
               -e "pruebas/environments/SysInescolara Local.postman_environment.json" \
               --env-var "baseUrl=http://127.0.0.1:8000" \
-              --env-var "password=${{ secrets.POSTMAN_ADMIN_PASSWORD }}" \
-              --env-var "viewerPassword=${{ secrets.POSTMAN_VIEWER_PASSWORD }}" \
+              --env-var "password=${{ secrets.POSTMAN_ADMIN_PASSWORD || 'Admin123!' }}" \
+              --env-var "viewerPassword=${{ secrets.POSTMAN_VIEWER_PASSWORD || 'Postman123!' }}" \
               --reporters cli,junit \
-              --reporter-junit-export "results/$name.xml"
+              --reporter-junit-export "results/$name.xml" || failed=1
           done
+          exit $failed
 
       - name: Detener servidor
         if: always()
         run: |
           if [ -f /tmp/php-server.pid ]; then kill "$(cat /tmp/php-server.pid)" 2>/dev/null || true; fi
+
+      - name: Subir log del servidor
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: php-server-log
+          path: /tmp/php-server.log
+          if-no-files-found: ignore
 
       - name: Subir resultados JUnit
         if: always()
@@ -114,10 +142,12 @@ jobs:
         with:
           name: newman-junit
           path: results/
+          if-no-files-found: ignore
 
   phpunit:
     name: PHPUnit
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - name: Configurar PHP
@@ -130,6 +160,7 @@ jobs:
         run: composer install --no-interaction --prefer-dist --no-progress
       - name: Ejecutar PHPUnit
         run: |
+          cp .env.example .env
           mkdir -p results
           vendor/bin/phpunit -c tests/phpunit.xml --log-junit results/phpunit.xml
       - name: Subir resultados
@@ -138,10 +169,12 @@ jobs:
         with:
           name: phpunit-junit
           path: results/
+          if-no-files-found: ignore
 
   lint:
     name: Lint PHP
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
       - name: Configurar PHP
