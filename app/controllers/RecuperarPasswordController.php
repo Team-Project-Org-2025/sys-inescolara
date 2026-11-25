@@ -227,6 +227,10 @@ function cambiar(): void
     $data = $resetModel->validateToken($token);
 
     if (!$data) {
+        $phpNow = date('Y-m-d H:i:s');
+        $dbInfo = $resetModel->debugToken($token);
+        error_log("PasswordReset DEBUG cambiar(): php_now={$phpNow} | token_preview=" . substr($token, 0, 12) . "... | {$dbInfo}");
+
         renderPasswordView('recuperar', [
             'title' => 'Recuperar Contraseña',
             'error' => 'El enlace de recuperación es inválido o ha expirado. Solicita uno nuevo.',

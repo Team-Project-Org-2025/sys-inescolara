@@ -143,10 +143,15 @@ class Especie extends Database implements ReadableInterface, DeletableInterface
 
     public static function all(): array
     {
-        $instance = new static();
-        $stmt = $instance->db()->query("SELECT * FROM especie WHERE activo = 1 ORDER BY nombre_especie ASC");
-        $rows = $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
-        return array_map(fn($row) => new static($row), $rows);
+        try {
+            $instance = new static();
+            $stmt = $instance->db()->query("SELECT * FROM especie WHERE activo = 1 ORDER BY nombre_especie ASC");
+            $rows = $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+            return array_map(fn($row) => new static($row), $rows);
+        } catch (\Throwable $e) {
+            error_log("Error en Especie::all(): " . $e->getMessage());
+            return [];
+        }
     }
 
     public static function where(string $column, $value, string $operator = '='): array
