@@ -268,7 +268,7 @@ pm.request.headers.remove('Cookie');
 
 ```js
 const html = pm.response.text();
-
+WWWWW
 pm.test('Status 200', () => pm.response.to.have.status(200));
 
 const csrfMatch = html.match(/name="_csrf_token"\s+value="([a-f0-9]{32,})"/i);
