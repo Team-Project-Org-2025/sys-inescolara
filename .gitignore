@@ -30,6 +30,7 @@ postgres-data/
 # Test/coverage outputs
 /coverage/
 .phpunit.result.cache
+/results/
 
 /uploads/
 /public/assets/uploads/

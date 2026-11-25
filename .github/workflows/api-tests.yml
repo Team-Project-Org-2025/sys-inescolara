@@ -1,0 +1,154 @@
+name: API tests (Newman)
+
+on:
+  push:
+    branches: [ main, feature/postman-api-testing ]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  api:
+    name: Newman (29 colecciones)
+    runs-on: ubuntu-latest
+
+    services:
+      db:
+        image: mariadb:10.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: sysinescolara
+        ports:
+          - '3306:3306'
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -uroot -proot"
+          --health-interval=5s
+          --health-timeout=10s
+          --health-retries=15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configurar PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: pdo_mysql, mbstring, gd, zip, dom, xml
+          coverage: none
+
+      - name: Configurar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Instalar dependencias
+        run: |
+          composer install --no-interaction --prefer-dist --no-progress
+          npm install -g newman
+
+      - name: Configurar .env
+        run: |
+          cp .env.example .env
+          cat >> .env <<'EOF'
+          DB_HOST=127.0.0.1
+          DB_PORT=3306
+          DB_NAME=sysinescolara
+          DB_USER=root
+          DB_PASSWORD=root
+          DB_SEC_HOST=127.0.0.1
+          DB_SEC_PORT=3306
+          DB_SEC_NAME=SysInescolara-Seguridad
+          DB_SEC_USER=root
+          DB_SEC_PASSWORD=root
+          EOF
+
+      - name: Esperar MySQL
+        run: |
+          for i in $(seq 1 30); do
+            if mysqladmin ping -h127.0.0.1 -uroot -proot --silent; then
+              echo "MySQL listo"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "MySQL no respondió" >&2
+          exit 1
+
+      - name: Cargar esquema, migrar y sembrar
+        run: |
+          mysql -h127.0.0.1 -uroot -proot < database/sysinescolara_vacia.sql
+          php scripts/migrate.php
+          mysql -h127.0.0.1 -uroot -proot < pruebas/data/seed.sql
+          mysql -h127.0.0.1 -uroot -proot < pruebas/data/seed-seguridad.sql
+
+      - name: Levantar servidor embebido
+        run: |
+          nohup php -S 127.0.0.1:8000 tests/aceptacion/server/router.php > /tmp/php-server.log 2>&1 &
+          echo $! > /tmp/php-server.pid
+          sleep 4
+          curl -s -o /dev/null -w "login=%{http_code}\n" http://127.0.0.1:8000/login
+
+      - name: Ejecutar colecciones
+        run: |
+          mkdir -p results
+          set -euo pipefail
+          for f in pruebas/collections/*/*.postman_collection.json; do
+            name=$(basename "$f" .postman_collection.json)
+            echo "=== $name ==="
+            newman run "$f" \
+              -e "pruebas/environments/SysInescolara Local.postman_environment.json" \
+              --env-var "baseUrl=http://127.0.0.1:8000" \
+              --env-var "password=${{ secrets.POSTMAN_ADMIN_PASSWORD }}" \
+              --env-var "viewerPassword=${{ secrets.POSTMAN_VIEWER_PASSWORD }}" \
+              --reporters cli,junit \
+              --reporter-junit-export "results/$name.xml"
+          done
+
+      - name: Detener servidor
+        if: always()
+        run: |
+          if [ -f /tmp/php-server.pid ]; then kill "$(cat /tmp/php-server.pid)" 2>/dev/null || true; fi
+
+      - name: Subir resultados JUnit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: newman-junit
+          path: results/
+
+  phpunit:
+    name: PHPUnit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configurar PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: pdo_mysql, mbstring, dom
+          coverage: none
+      - name: Instalar dependencias
+        run: composer install --no-interaction --prefer-dist --no-progress
+      - name: Ejecutar PHPUnit
+        run: |
+          mkdir -p results
+          vendor/bin/phpunit -c tests/phpunit.xml --log-junit results/phpunit.xml
+      - name: Subir resultados
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phpunit-junit
+          path: results/
+
+  lint:
+    name: Lint PHP
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configurar PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+      - name: Lint
+        run: |
+          find app -name '*.php' -print0 | xargs -0 -n1 php -l
+          php -l index.php

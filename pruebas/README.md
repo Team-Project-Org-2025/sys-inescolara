@@ -46,9 +46,12 @@ pruebas/
 │   └── SysInescolara Local.postman_environment.json
 ├── data/
 │   ├── plantas.csv
-│   └── seed.sql          datos mínimos para los CRUD (catálogos, planta y lote base)
+│   ├── seed.sql             datos mínimos para los CRUD (catálogos, planta y lote base)
+│   └── seed-seguridad.sql   usuario postman_viewer para los casos 403
 ├── scripts/
-│   └── run.sh
+│   ├── run.sh               corre las 29 colecciones (o una sola)
+│   ├── run-all.sh           corre todo y exporta JUnit (Linux/macOS)
+│   └── run-all.ps1          corre todo y exporta JUnit (Windows)
 ├── README.md          ← este documento (conceptos y scripts copiables)
 ├── COMANDOS.md        ← guía paso a paso con todos los comandos
 └── TRACEABILITY.md    ← matriz de trazabilidad de la suite
@@ -154,37 +157,54 @@ cookie anónima y el CSRF, y `02` autentica y guarda la nueva `PHPSESSID`.
 
 ---
 
-## 3. Ejecutar por CLI
+## 3. Ejecutar por CLI (Newman)
 
 ```bash
-# Una corrida simple (sin CSV)
-POSTMAN_USUARIO=admin POSTMAN_PASSWORD='tu-password' \
+# Requisito
+npm install -g newman
+
+# Correr todas las colecciones por módulo
+POSTMAN_PASSWORD='Admin123!' POSTMAN_VIEWER_PASSWORD='Postman123!' \
   ./pruebas/scripts/run.sh
 
-# Data-driven: 3 filas = 3 iteraciones
-POSTMAN_USUARIO=admin POSTMAN_PASSWORD='tu-password' \
-  ./pruebas/scripts/run.sh --csv
+# Correr una sola colección
+POSTMAN_PASSWORD='Admin123!' POSTMAN_VIEWER_PASSWORD='Postman123!' \
+  ./pruebas/scripts/run.sh "pruebas/collections/inventario/Plantas.postman_collection.json"
 
 # Contra otro host (Render, staging, etc.)
-POSTMAN_USUARIO=admin POSTMAN_PASSWORD='tu-password' \
-POSTMAN_BASE_URL='https://tu-app.onrender.com' \
+POSTMAN_PASSWORD='Admin123!' POSTMAN_VIEWER_PASSWORD='Postman123!' \
+  POSTMAN_BASE_URL='https://tu-app.onrender.com' \
   ./pruebas/scripts/run.sh
 ```
 
-Comando equivalente sin el helper (requiere `newman` o Postman CLI):
+Comando equivalente sin el helper:
 
 ```bash
 newman run \
   "pruebas/collections/inventario/Plantas.postman_collection.json" \
   -e "pruebas/environments/SysInescolara Local.postman_environment.json" \
+  --env-var "baseUrl=http://localhost/sys-inescolara" \
   --env-var "password=Admin123!" \
   --env-var "viewerPassword=Postman123!"
+```
+
+Correr todo y exportar JUnit (para CI o reportes):
+
+```bash
+# Linux / macOS
+POSTMAN_PASSWORD='Admin123!' POSTMAN_VIEWER_PASSWORD='Postman123!' \
+  ./pruebas/scripts/run-all.sh
+
+# Windows (PowerShell)
+$env:POSTMAN_PASSWORD='Admin123!'; $env:POSTMAN_VIEWER_PASSWORD='Postman123!'
+pwsh -File pruebas\scripts\run-all.ps1
 ```
 
 El environment versionado deja `password` y `viewerPassword` vacíos: pásalos
 como `--env-var` (o edítalos en Postman) para no commitear secretos.
 
-El CLI devuelve **exit code ≠ 0** si alguna aserción falla. Úsalo en CI tal cual.
+`newman` devuelve **exit code ≠ 0** si alguna aserción falla. Úsalo en CI tal
+cual.
 
 ---
 
@@ -473,22 +493,42 @@ defecto válidos (`Planta Postman`, especie detectada).
 
 ## 8. CI (GitHub Actions)
 
-```yaml
-name: API tests
-on: [push, pull_request]
-jobs:
-  postman:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: npm install -g postman-cli
-      - name: Run collection
-        env:
-          POSTMAN_USUARIO: ${{ secrets.POSTMAN_USUARIO }}
-          POSTMAN_PASSWORD: ${{ secrets.POSTMAN_PASSWORD }}
-          POSTMAN_BASE_URL: ${{ secrets.POSTMAN_BASE_URL }}
-        run: ./pruebas/scripts/run.sh --csv
+El pipeline está en [`.github/workflows/api-tests.yml`](../.github/workflows/api-tests.yml).
+Incluye tres jobs:
+
+1. **`api`** — levanta MariaDB 10.4, carga esquema + migraciones + seed, arranca
+   la app con `php -S` (router de aceptación, que fuerza las llaves reCAPTCHA de
+   prueba) y ejecuta las 29 colecciones con `newman`, exportando `results/*.xml`.
+2. **`phpunit`** — ejecuta `vendor/bin/phpunit`.
+3. **`lint`** — `php -l` sobre `app/` e `index.php`.
+
+### Secretos requeridos
+
+| Secreto | Descripción |
+|---|---|
+| `POSTMAN_ADMIN_PASSWORD` | Contraseña del usuario `admin` (p. ej. `Admin123!`) |
+| `POSTMAN_VIEWER_PASSWORD` | Contraseña de `postman_viewer` (p. ej. `Postman123!`) |
+
+Configúralos en **Settings → Secrets and variables → Actions**.
+
+### Cómo funciona la corrida
+
+```bash
+# Esquema + migraciones + seed (mismo orden que ejecuta CI)
+mysql -h127.0.0.1 -uroot -proot < database/sysinescolara_vacia.sql
+php scripts/migrate.php
+mysql -h127.0.0.1 -uroot -proot < pruebas/data/seed.sql
+mysql -h127.0.0.1 -uroot -proot < pruebas/data/seed-seguridad.sql
+
+# Servidor embebido con router de aceptación (fuerza reCAPTCHA de prueba)
+php -S 127.0.0.1:8000 tests/aceptacion/server/router.php
+
+# Correr todo
+POSTMAN_BASE_URL='http://127.0.0.1:8000' \
+POSTMAN_PASSWORD='Admin123!' POSTMAN_VIEWER_PASSWORD='Postman123!' \
+  ./pruebas/scripts/run-all.sh
 ```
 
-Para CI, el entorno destino debe tener las llaves de reCAPTCHA de prueba o un
-usuario/sesión válidos. Los secretos van en GitHub Secrets, nunca en el repo.
+> `postman_viewer` lo crea `pruebas/data/seed-seguridad.sql` (rol Trabajador, sin
+> permisos individuales) para que los casos `403` funcionen en un entorno recién
+> creado.
