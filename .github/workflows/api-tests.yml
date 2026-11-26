@@ -114,7 +114,7 @@ jobs:
 
           mkdir -p results
           set -uo pipefail
-          failed=0
+          failed=""
           for f in pruebas/collections/*/*.postman_collection.json; do
             name=$(basename "$f" .postman_collection.json)
             echo "=== $name ==="
@@ -124,13 +124,15 @@ jobs:
               --env-var "password=${{ secrets.POSTMAN_ADMIN_PASSWORD || 'Admin123!' }}" \
               --env-var "viewerPassword=${{ secrets.POSTMAN_VIEWER_PASSWORD || 'Postman123!' }}" \
               --reporters cli,junitfull \
-              --reporter-junitfull-export "results/$name.xml" || failed=1
+              --reporter-junitfull-export "results/$name.xml" || failed="$failed $name"
           done
-          if [ "$failed" -ne 0 ]; then
+          if [ -n "$failed" ]; then
+            echo "=== COLECCIONES CON FALLO:$failed ===" >&2
             echo "=== Log del servidor embebido ===" >&2
             cat /tmp/php-server.log >&2
+            exit 1
           fi
-          exit $failed
+          echo "=== 29 colecciones OK ==="
 
       - name: Subir log del servidor
         if: always()
