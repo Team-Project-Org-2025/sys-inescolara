@@ -123,6 +123,7 @@ jobs:
               --env-var "baseUrl=http://127.0.0.1:8000" \
               --env-var "password=${{ secrets.POSTMAN_ADMIN_PASSWORD || 'Admin123!' }}" \
               --env-var "viewerPassword=${{ secrets.POSTMAN_VIEWER_PASSWORD || 'Postman123!' }}" \
+              --reporter-cli-no-success-assertions \
               --reporters cli,junitfull \
               --reporter-junitfull-export "results/$name.xml" || failed="$failed $name"
           done
