@@ -37,8 +37,8 @@ for collection in "${COLLECTIONS[@]}"; do
     --env-var "usuario=${POSTMAN_USUARIO:-admin}" \
     --env-var "password=${POSTMAN_PASSWORD:-}" \
     --env-var "viewerPassword=${POSTMAN_VIEWER_PASSWORD:-}" \
-    --reporters cli,junit \
-    --reporter-junit-export "$OUT/$name.xml"
+    --reporters cli,junitfull \
+    --reporter-junitfull-export "$OUT/$name.xml"
 done
 
 echo "Resultados JUnit en: $OUT"

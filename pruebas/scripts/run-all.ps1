@@ -44,8 +44,8 @@ foreach ($Collection in $Collections) {
         --env-var "usuario=$Usuario" `
         --env-var "password=$Password" `
         --env-var "viewerPassword=$ViewerPassword" `
-        --reporters 'cli,junit' `
-        --reporter-junit-export $Xml
+        --reporters 'cli,junitfull' `
+        --reporter-junitfull-export $Xml
     if ($LASTEXITCODE -ne 0) { $failed += $Name }
     if (-not (Test-Path $Xml)) { $failed += "$Name (sin JUnit)" }
 }

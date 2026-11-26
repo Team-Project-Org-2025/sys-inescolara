@@ -47,12 +47,14 @@ newman run <coleccion> -e <entorno> \
   --reporter-json-export pruebas/reportes/plantas.json
 ```
 
-Para JUnit (lo que usa CI):
+Para JUnit (lo que usa CI, reporter <code>junitfull</code>):
 
 ```bash
+npm install -g newman-reporter-junitfull
+
 newman run <coleccion> -e <entorno> \
-  --reporters cli,junit \
-  --reporter-junit-export results/<coleccion>.xml
+  --reporters cli,junitfull \
+  --reporter-junitfull-export results/<coleccion>.xml
 ```
 
 ## 4. Variables por entorno

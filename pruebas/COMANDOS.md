@@ -300,17 +300,17 @@ Corrida completa de las 29 colecciones por módulo (contra la BD local con
 
 ```text
 colecciones:  29
-assertions:  745   (testcases JUnit en results/*.xml)
+assertions:  778   (testcases JUnit en results/*.xml)
 failed:        0
 exit code:     0
 ```
 
-Recuento desde los JUnit exportados (ojo: el atributo `tests=` del
-`<testsuites>` no refleja el total; cuenta los `<testcase>`):
+Recuento desde los JUnit exportados con el reporter `junitfull` (el `junit`
+nativo de newman cuenta mal los `tests`; `junitfull` sí es fiel):
 
 ```bash
 # Linux/macOS
-grep -h -o '<testcase ' results/*.xml | wc -l   # → 745
+grep -h -o '<testcase ' results/*.xml | wc -l   # → 778
 grep -h -o '<failure'   results/*.xml | wc -l   # → 0
 ```
 
@@ -337,7 +337,7 @@ failed:            0
 | `plantas` llega vacío | La tabla no tiene filas activas | Crea una planta desde el sistema o revisa el seed |
 | `clientes`, `supplies` o `ventas` vacíos | Tablas sin datos; el test lo permite | Agrega la clave a `seededCollections` si tu BD sí tiene datos |
 | `No se encontró PHPSESSID` | Cookie jar deshabilitado o respuesta sin `Set-Cookie` | La colección tiene fallback por header; revisa que el login devuelva `302` |
-| `--output` falla con “You must be signed in” | El reporte YAML requiere Postman Cloud | Usa `--reporters cli,junit` (Newman); no necesitas `--output` |
+| `--output` falla con “You must be signed in” | El reporte YAML requiere Postman Cloud | Usa `--reporters cli,junitfull` (Newman); no necesitas `--output` |
 | `Postman credentials are required...` | Aviso residual de Postman Cloud | No aplica con Newman; ignóralo |
 
 Para ver la respuesta cruda de un request, en Postman abre **Console**

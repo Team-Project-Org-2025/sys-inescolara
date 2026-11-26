@@ -160,8 +160,8 @@ cookie anónima y el CSRF, y `02` autentica y guarda la nueva `PHPSESSID`.
 ## 3. Ejecutar por CLI (Newman)
 
 ```bash
-# Requisito
-npm install -g newman
+# Requisito (junitfull es para exportar JUnit limpio en run-all)
+npm install -g newman newman-reporter-junitfull
 
 # Correr todas las colecciones por módulo
 POSTMAN_PASSWORD='Admin123!' POSTMAN_VIEWER_PASSWORD='Postman123!' \
@@ -188,7 +188,8 @@ newman run \
   --env-var "viewerPassword=Postman123!"
 ```
 
-Correr todo y exportar JUnit (para CI o reportes):
+Correr todo y exportar JUnit (para CI o reportes; usa el reporter `junitfull`,
+cuyo XML tiene conteos correctos, a diferencia del `junit` de newman):
 
 ```bash
 # Linux / macOS
