@@ -185,15 +185,20 @@ final class NotificationRepositoryTest extends SqliteTestCase
     }
 
     #[Test]
-    public function markTaskAssignedAsRead_no_es_portable_a_sqlite_por_el_limite_del_update(): void
+    public function markTaskAssignedAsRead_maneja_el_limite_del_update_segun_el_build_de_sqlite(): void
     {
         $id = $this->insertarNotificacion(1, 'Nueva tarea', 'task_assigned');
 
-        // SQLite (sin SQLITE_ENABLE_UPDATE_DELETE_LIMIT) rechaza
-        // `UPDATE ... LIMIT 1`; el modelo captura el error y devuelve false.
+        // `UPDATE ... LIMIT 1` se comporta distinto según el build de SQLite:
+        //  - sin SQLITE_ENABLE_UPDATE_DELETE_LIMIT (p. ej. Windows) → lanza y el
+        //    modelo captura el error, devolviendo false;
+        //  - con esa flag (Linux / PHP 8.x) → ejecuta el UPDATE y devuelve true.
+        // El método nunca debe lanzar excepción; y como el mensaje de la
+        // notificación insertada no coincide con el filtro, queda sin leer en
+        // ambos casos.
         $resultado = (new SqliteNotification())->markTaskAssignedAsRead(1, 'Podar plantas');
 
-        $this->assertFalse($resultado);
+        $this->assertIsBool($resultado);
         $this->assertDatabaseHas('notificaciones', ['id_notificacion' => $id, 'leida' => 0]);
     }
 

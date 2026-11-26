@@ -126,6 +126,10 @@ jobs:
               --reporters cli,junitfull \
               --reporter-junitfull-export "results/$name.xml" || failed=1
           done
+          if [ "$failed" -ne 0 ]; then
+            echo "=== Log del servidor embebido ===" >&2
+            cat /tmp/php-server.log >&2
+          fi
           exit $failed
 
       - name: Subir log del servidor
