@@ -2,9 +2,9 @@ name: API tests (Newman)
 
 on:
   push:
-    branches: [ main, feature/postman-api-testing ]
+    branches: [ main, develop, feature/postman-api-testing ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, develop ]
   workflow_dispatch:
 
 jobs:
