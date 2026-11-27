@@ -1155,7 +1155,7 @@ ALTER TABLE `lote`
 -- Filtros para la tabla `mermas_historico`
 --
 ALTER TABLE `mermas_historico`
-  ADD CONSTRAINT `fk_merma_usuario` FOREIGN KEY (`id_usuario_registra`) REFERENCES `sysinescolara-seguridad`.`usuarios` (`id_usuario`),
+  ADD CONSTRAINT `fk_merma_usuario` FOREIGN KEY (`id_usuario_registra`) REFERENCES `SysInescolara-Seguridad`.`usuarios` (`id_usuario`),
   ADD CONSTRAINT `mermas_historico_ibfk_1` FOREIGN KEY (`id_trazabilidad`) REFERENCES `trazabilidad` (`id_trazabilidad`),
   ADD CONSTRAINT `mermas_historico_ibfk_2` FOREIGN KEY (`id_lote`) REFERENCES `lote` (`id_lote`);
 
