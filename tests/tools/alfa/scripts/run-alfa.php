@@ -477,13 +477,35 @@ final class AlfaHttpClient
 }
 
 /**
+ * Construye el comando de un proceso PHP hijo conservando los sockets MySQL
+ * configurados en el PHP actual. Algunos entornos (p. ej. un wrapper de `php`
+ * que pasa -d pdo_mysql.default_socket=...) fijan el socket por CLI y
+ * PHP_BINARY no lo hereda, lo que rompe las conexiones a MySQL.
+ *
+ * @param list<string> $args
+ * @return list<string>
+ */
+function phpChildCommand(array $args): array
+{
+    $command = [PHP_BINARY];
+    foreach (['pdo_mysql.default_socket', 'mysqli.default_socket'] as $ini) {
+        $value = ini_get($ini);
+        if (is_string($value) && $value !== '') {
+            $command[] = '-d';
+            $command[] = $ini . '=' . $value;
+        }
+    }
+    return array_merge($command, $args);
+}
+
+/**
  * @return array{process:?resource,log:string,errorLog:string,port:int,command:list<string>}
  */
 function startServer(string $root, string $serverRouter, int $port, string $token, string $resultsDir, string $stamp): array
 {
     $log = $resultsDir . DIRECTORY_SEPARATOR . 'server-' . $stamp . '.log';
     $errorLog = $resultsDir . DIRECTORY_SEPARATOR . 'server-' . $stamp . '.err.log';
-    $command = [PHP_BINARY, '-S', '127.0.0.1:' . $port, '-t', $root, $serverRouter];
+    $command = phpChildCommand(['-S', '127.0.0.1:' . $port, '-t', $root, $serverRouter]);
 
     $descriptors = [
         0 => ['pipe', 'r'],
@@ -1277,7 +1299,7 @@ if (!$options['skipSeed']) {
     $seedLog = $resultsDir . DIRECTORY_SEPARATOR . 'seed-alfa-' . $stamp . '.log';
     $descriptors = [1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
     $seedProcess = @proc_open(
-        [PHP_BINARY, $seeder],
+        phpChildCommand([$seeder]),
         $descriptors,
         $seedPipes,
         $root,
