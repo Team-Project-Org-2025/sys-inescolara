@@ -162,7 +162,17 @@ try {
 
     $codecept = Join-Path $root 'vendor\bin\codecept.bat'
     $codeceptArgs = @('-c', 'tests/aceptacion', 'run')
-    if ($Cest -ne '') { $codeceptArgs += $Cest }
+    if ($Cest -ne '') {
+        # Codeception 5 recibe primero la suite y luego el test. El argumento
+        # del script es un archivo/Cest, salvo que coincida con una suite.
+        $suiteFile = Join-Path $aceDir "$Cest.suite.yml"
+        $suiteDir  = Join-Path $aceDir $Cest
+        if ((Test-Path -LiteralPath $suiteFile) -or (Test-Path -LiteralPath $suiteDir -PathType Container)) {
+            $codeceptArgs += $Cest
+        } else {
+            $codeceptArgs += @('Acceptance', $Cest)
+        }
+    }
     $codeceptArgs += @('--xml', '--no-interaction')
 
     & $codecept @codeceptArgs

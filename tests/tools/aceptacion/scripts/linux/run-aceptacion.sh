@@ -109,7 +109,13 @@ export ACEPTACION_DRIVER_PORT="$DRIVER_PORT"
 
 set +e
 if [[ -n "${1:-}" ]]; then
-    vendor/bin/codecept -c tests/aceptacion run "$1" --xml --no-interaction
+    # Codeception 5 recibe primero la suite y luego el test. El argumento del
+    # script es un archivo/Cest, salvo que coincida con una suite existente.
+    if [[ -f "$ACE_DIR/$1.suite.yml" || -d "$ACE_DIR/$1" ]]; then
+        vendor/bin/codecept -c tests/aceptacion run "$1" --xml --no-interaction
+    else
+        vendor/bin/codecept -c tests/aceptacion run Acceptance "$1" --xml --no-interaction
+    fi
 else
     vendor/bin/codecept -c tests/aceptacion run --xml --no-interaction
 fi
