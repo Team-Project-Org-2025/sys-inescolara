@@ -79,6 +79,7 @@ y el CRUD de **Plantas** con CSV. Se conserva como referencia.
 | [`TRACEABILITY.md`](TRACEABILITY.md) | Matriz de trazabilidad: casos de prueba, cobertura de los 31 requisitos y observaciones de contrato. |
 | [`../tests/tools/reportes/formatos/resultados/TRACEABILITY.md`](../tests/tools/reportes/formatos/resultados/TRACEABILITY.md) | Matriz de la suite PHPUnit, complementaria a esta. |
 | [`../tests/tools/README.md`](../tests/tools/README.md) | Índice de ejecutores de pruebas (PHPUnit, Selenium, aceptación y estos scripts de API). |
+| [`CHECKLIST_DEFENSA.md`](CHECKLIST_DEFENSA.md) | Checklist corto para defensa: preparación, comandos Newman/PHPUnit/lint, XML esperados y evidencias. |
 
 ---
 
